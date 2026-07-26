@@ -25,6 +25,7 @@ This index binds the documentation set into one complete, developer-ready produc
 | 16 | Competitive Advantage | [COMPETITIVE.md](COMPETITIVE.md) — seven moats + three-sided market dynamics |
 | 17 | Production Readiness (testing, deployment, DR, observability) | [DEVELOPER-GUIDE.md](DEVELOPER-GUIDE.md) §7–§11 — CI/CD, testing strategy, SLOs, failure modes & self-healing; [GAP-ANALYSIS.md](GAP-ANALYSIS.md) — priority matrix as the readiness review |
 | — | User Journeys & Agent Workflows | [PLATFORM.md](PLATFORM.md) — Operator Journey (game-type catalogue → prompt → blueprint → forge) + Forge Protocol five-stage workflow |
+| — | MVP Application Build Spec | [APP-BUILD-SPEC.md](APP-BUILD-SPEC.md) — collections, app routes, dashboards, security checklist; working prototype at [../site/studio.html](../site/studio.html) |
 | — | Brand | [../branding/BRANDING.md](../branding/BRANDING.md) + [logo](../branding/logo.svg) + [landing page](../site/index.html) |
 
 ## Reading Order for a New Engineering Team
