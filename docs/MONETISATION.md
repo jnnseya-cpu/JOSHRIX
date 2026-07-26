@@ -35,7 +35,17 @@ Fixed-price forge packages for one-shot creators: **Starter £19 · Creator £49
 
 - **Marketplace commission**: 20–30% per sale (e.g. £100 sale → £30 platform, £70 creator), within the 8–15% floor for subscription-tier operators — casual package users pay the higher band.
 - **Game hosting**: free tier with watermark · £9/month per published game · £29/month for monetised games · £99/month for high-traffic games.
-- **In-game payment commission**: platform share on IAP/economy transactions processed through BitriPay rails per the gateway fee row below.
+- **In-game payment commission**: on every in-game purchase — payment processor fee first, then a platform service fee of 5–15% (standard 10%), creator receives the balance. Example: player pays £10 → processor fee → platform £1 → creator remainder.
+
+## Revenue Share Logic
+
+| Sale Type | Split | Terms |
+|---|---|---|
+| Standard marketplace sale | Creator 70% / Platform 30% | Default for package-tier creators |
+| Non-exclusive sale | Creator 70% / Platform 30% per copy | Creator sells unlimited copies |
+| Exclusive sale | Creator 75% / Platform 25% | Creator sets price; buyer gets full commercial licence; creator forfeits resale rights |
+| In-game purchases | Platform 10% after processor fees | Creator receives balance to wallet |
+| Subscription-tier operators | 8–15% commission band | Lower commission is a core subscription benefit |
 
 ## Subscription Plans
 

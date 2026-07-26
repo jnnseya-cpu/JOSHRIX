@@ -14,3 +14,5 @@ The Super Admin Centre is the command bridge for Groupe Nseya Digital / JNN Glob
 | Marketplace Operations | All listings, flagged content, DMCA requests, pricing anomalies, seller fraud signals | Remove listings, freeze seller accounts, process DMCA, adjust featured placements |
 | Audit Log Viewer | Full immutable audit trail with actor, action, resource, IP, timestamp | Search, filter, export, escalate entries to compliance or legal |
 | API Partner Management | All API keys, usage volumes, rate limit violations, revenue attributed | Revoke keys, adjust rate limits, send notices, manage partner tiers |
+
+Additional oversight views across the modules above: AI credit usage and **provider cost tracking** (model spend per forge vs ACU billed — the platform profit-margin view), **copyright risk queue** and game moderation (marketplace approval workflow), **failed builds**, top-selling games and top creators, abuse detection, payment disputes, and **tax reports**.

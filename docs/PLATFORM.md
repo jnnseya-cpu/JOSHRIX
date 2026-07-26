@@ -125,6 +125,26 @@ The concept's ten creative agents are preserved as capabilities within the seven
 | Quality Assurance Agent | QA Agent | Broken levels, missing assets, payment failure, crashes, unfair scoring, load speed, mobile responsiveness, security, copyright and age-rating risk |
 | Revenue & Ownership Agent | IP Vault + Revenue Dashboard (svc-ip / svc-billing) | Creator/owner/buyer records, commission, earnings, licence types, resale rights, refunds, payouts, tax records |
 
+## Marketplace Types
+
+The marketplace trades five listing classes (the Epic Fab model proves the demand for game-asset ecosystems):
+
+| Class | Examples | Licence Options |
+|---|---|---|
+| Full Games | Complete playable titles | Personal · Commercial · Exclusive sale · Non-exclusive sale · White-label |
+| Game Templates | "Subway runner", "Football penalty", "Quiz game", "Restaurant tycoon" | Non-exclusive by default; buyer forges their own variant |
+| Assets | Characters, maps, sound effects, animations, weapons, vehicles, UI packs | Per-asset commercial licence with provenance metadata |
+| Game Mechanics | Leaderboard module, daily rewards, loot box*, inventory, multiplayer lobby, AI enemy system | Component licence; drops into any forge as a blueprint module (*loot boxes gated by jurisdiction compliance) |
+| Game Services | Custom level design, reskinning, game improvement, trailer creation, publishing support | Service listings from advanced creators; escrowed via marketplace trust rails |
+
+## Game Runtime Layer
+
+Web-first runtimes are the Code Agent's primary build targets: **Phaser.js** for 2D titles and **Three.js** for lightweight 3D, compiled to web play, PWA, embeddable iframe, and mobile wrappers. Unity export integration and external-engine publishing are Phase 3+ paths (Unity's AI-workflow positioning makes it the natural first bridge). Creator payouts run on the BitriPay settlement engine with Stripe Connect as the fallback rail.
+
+## The Killer Feature — Create → Play → Sell in One Flow
+
+The user enters an idea. The AI builds the game. The user tests it. The AI creates the sales page. The user lists it. The platform earns; the creator earns. This single unbroken loop — idea to income without leaving the OS — is the commercial heart of the platform: the real money is not in helping users create games, it is in **owning the infrastructure where games are created, hosted, sold, upgraded, monetised, and resold**.
+
 ## The Forge Protocol — Five-Stage Neural Workflow
 
 | Stage | Agent | Input | Output | Gate |

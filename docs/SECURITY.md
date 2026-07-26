@@ -47,6 +47,28 @@ Every layer of the platform operates under a Zero Trust model: no implicit trust
 | Cybersecurity | ISO 27001; SOC 2 Type II (target) | Zero Trust; mTLS; SIEM (Datadog); vulnerability scanning; pen-testing cadence |
 | Age Rating Compliance | PEGI; ESRB; App Store requirements | QA Agent mandatory age rating before the deployment authorisation token is issued |
 
+## Content & Legal Controls
+
+The policy enforcement layer (see GAP-ANALYSIS §D3) must block, at prompt intake and at every stage boundary:
+
+- Copyrighted characters and marks (Mario, Spider-Man, Disney/Marvel/Nintendo-style clones)
+- Real football club names and sports marks without licence
+- Illegal gambling games (casino-style mechanics require jurisdiction clearance by the Compliance Agent; real-money gambling requires a verified licence)
+- Adult content reachable by minors; hate content; scam games; misleading revenue promises
+- Malware or unsafe exports (enforced structurally by the supply-chain controls in GAP-ANALYSIS §D1)
+
+Every generated game must carry a complete provenance record before marketplace approval:
+
+| Record | Source |
+|---|---|
+| Ownership record | IP Vault (`ip_records`) |
+| AI generation log | `agent_logs` with prompt/model versions |
+| Licence terms | IP certificate |
+| Asset source record | Per-asset provenance metadata from the Asset Agent |
+| Commercial permission status | QA Agent IP-risk assessment |
+| Age rating | QA Agent IARC/PEGI/ESRB classification |
+| Marketplace approval status | Moderation queue decision (see ADMIN.md) |
+
 ## Fraud Detection Architecture
 
 - Every marketplace transaction receives a real-time fraud score (0–100) from the Fraud Detection Agent using a composite signal model: device fingerprint, IP reputation, behavioural pattern, transaction velocity, account age, and payment method risk.
