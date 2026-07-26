@@ -37,7 +37,10 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── INTELLIGENCE.md    AI data intelligence layer + self-managing fleet
 │   ├── CONNECTORS.md      Third-party connector ecosystem catalogue
 │   ├── PRODUCT-PRINCIPLES.md  Positioning, five layers, principles, user segments
-│   └── AGENT-ARCHITECTURE.md  Hierarchical agent operating model and specialists
+│   ├── AGENT-ARCHITECTURE.md  Hierarchical agent operating model and specialists
+│   ├── REALISM-PIPELINE.md    Ultra-realism & 3D output contract for the live forge
+│   ├── APP-BUILD-SPEC.md      MVP build spec: collections, routes, dashboards
+│   └── DEPLOYMENT.md          Hostinger + Vercel + Firebase + Cloud Run architecture
 ├── frontend/              The web app: 20 pages sharing one design system
 │   ├── index.html         Landing page
 │   ├── studio.html        Forge Studio prototype (Create → Play → Sell, playable game)
