@@ -156,7 +156,68 @@ For users who do not want a subscription:
 | Prototype Launch Pack | £49 | Game blueprint; one basic playable web prototype; basic assets; one level; basic QA; private preview |
 | Creator Launch Pack | £199 | Commercial blueprint; up to five levels; basic monetisation; web publishing; marketplace listing; standard QA; basic analytics |
 | Commercial Game Pack | From £499 | Full production plan; advanced AI agents; custom art direction; ten+ levels; game economy; automated testing; commercial publishing; marketplace licence setup |
-| Studio Production Pack | From £2,500 | Dedicated production workflow; full agent fleet; extended scope by agreement |
+| Studio Production Pack | From £2,500 | Dedicated production workflow; advanced architecture; team collaboration; source export; behaviour analytics; commercial launch support |
+
+Packages include a defined ACU allowance; additional consumption is charged from the user wallet.
+
+## Marketplace Revenue Model (detailed)
+
+Revenue on every sale of: complete games, templates, characters, environments, music, sounds, mechanics, code modules, UI packs, level packs, commercial licences, white-label games.
+
+**Commission calculation:** £100 sale × 20% commission → £20 platform, £80 creator gross. Payment processing, applicable tax, refunds, and withholding are deducted separately.
+
+**Exclusive game sales:** 15–20% commission for verified exclusive acquisitions + 2–5% escrow fee + optional legal-document fee + optional technical-verification fee.
+
+**Resale royalties:** creators may set a royalty on eligible secondary sales — e.g. £500 secondary sale → 5% (£25) original-creator royalty + 10% (£50) platform commission, seller receives the remaining net.
+
+## Game Hosting Revenue (detailed)
+
+| Tier | Price | Includes |
+|---|---|---|
+| Free | £0 | Limited traffic; JOSHRIX branding; public projects; no SLA |
+| Creator | £9/game/month | Basic bandwidth; standard analytics |
+| Commercial | £29/game/month | Custom domain; monetisation; enhanced analytics; larger traffic allowance |
+| Professional | From £99/game/month | High traffic; advanced analytics; priority infrastructure; regional distribution |
+| Multiplayer | Metered | Charged by concurrent players, server hours, data transfer, matchmaking events, and regions — the 4× rule applies to variable hosting consumption |
+
+## In-Game Revenue Model
+
+A native payment and entitlement layer supporting: game purchases, subscriptions, game passes, cosmetic items, additional levels, virtual currencies, tournament access, educational licences, premium content.
+
+| Plan | Platform transaction fee |
+|---|---|
+| Creator | 15% |
+| Creator Pro | 12% |
+| Studio | 10% |
+| Business | 8% |
+| Enterprise | Negotiated |
+
+External payment-processing fees are charged separately. **No commission is taken from purely offline or externally processed sales unless the platform supplied the transaction, entitlement, or marketplace infrastructure.**
+
+## Additional Revenue Engines
+
+- **Featured marketplace placement** — daily promotion, weekly featured listing, category sponsorship, homepage promotion, search boosting. £10–£50 for individual creators; £100–£1,000+ for commercial campaigns. **Promoted listings must be visibly labelled.**
+- **Game certification** — paid certifications: Commercial Ready, Rights Verified, Performance, Accessibility, Security review.
+- **Human specialist marketplace** — 15% commission when users hire developers, artists, writers, animators, musicians, QA testers, or marketing specialists.
+- **Publishing services** — app-store preparation, marketing creative, game trailers, store optimisation, localisation, age-rating support, legal document templates.
+- **Enterprise white label** — setup fee (£10,000–£100,000+) + monthly platform licence + AI usage + hosting + seats + support + custom development.
+
+## Creator Growth Programme
+
+**Referrals:** referrer receives 5% of the first year's net subscription revenue; referred customer receives bonus promotional ACUs; commission paid only after the refund period; fraud detection and self-referral blocking required.
+
+**Creator Partner levels:**
+
+| Level | Role | Benefit |
+|---|---|---|
+| Affiliate | Promotes the platform | Commission on subscriptions |
+| Template Creator | Sells templates and assets | Marketplace earnings |
+| Verified Studio | Produces games for customers | Receives leads; lower marketplace commission |
+| Regional Partner | Recruits creators in a country/language market; provides training and support | Negotiated revenue share |
+
+## Margin Protection Controls
+
+Profitability is calculated **before every chargeable AI operation**. Required cost components: AI model cost + image-generation cost + audio-generation cost + video-generation cost + 3D-generation cost + build compute + storage + bandwidth + testing compute + payment fees + support reserve + refund reserve (per the ACU pricing-rule cost engine above). An operation whose projected margin falls below the 4× floor is repriced or blocked by the Cost Governor Agent before execution.
 
 ## ACU (AI Compute Units) — The Core Currency
 
