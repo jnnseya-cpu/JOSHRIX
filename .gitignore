@@ -6,3 +6,6 @@ serviceAccount*.json
 *-credentials.json
 .vercel/
 .firebase/
+functions/node_modules/
+functions/lib/
+functions/src/shared/

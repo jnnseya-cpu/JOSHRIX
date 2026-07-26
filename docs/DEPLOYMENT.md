@@ -39,11 +39,13 @@ The chosen stack, with each service doing only what it is best at.
 
 ## Deploying What Exists Today — Chosen Split
 
-**Backend → Vercel · Frontend (+ shared) → Firebase Hosting.** Both configs are in the repo; each deploy is one command/click.
+**Frontend → Vercel · Backend (+ shared) → Firebase Cloud Functions.** Both configs are in the repo; each deploy is one command/click.
 
-1. **Backend on Vercel**: vercel.com → Add New Project → import `jnnseya-cpu/JOSHRIX` → Deploy. The `api/` directory ships as serverless functions (`/api/health`, `/api/blueprint` — the Idea Agent with Claude primary). With no keys set it runs in **demo mode** (deterministic blueprint, clearly labelled); add `ANTHROPIC_API_KEY` in Project → Settings → Environment Variables to go live. `shared/contracts.ts` compiles into the function bundle — the schema and ACU rules deploy with the backend. (Vercel also serves `frontend/` on the same URL as a bonus preview.)
-2. **Frontend on Firebase Hosting**: `npm i -g firebase-tools && firebase login && firebase use --add <your-project> && firebase deploy --only hosting`. `firebase.json` serves `frontend/` with clean URLs and security headers — all 21 pages including `/play3d`.
-3. **Connect them**: in `frontend/assets/config.js`, set `window.JOSHRIX_API_BASE = 'https://<your-vercel-app>.vercel.app'` and redeploy hosting. The Firebase-hosted pages then call the Vercel API cross-origin (CORS is already enabled on the API). Verify with `https://<vercel-app>.vercel.app/api/health`.
+1. **Frontend on Vercel**: vercel.com → Add New Project → import `jnnseya-cpu/JOSHRIX` → Deploy. The root `vercel.json` serves `frontend/` (all 21 pages including `/play3d`) with clean URLs and security headers, zero-config.
+2. **Backend on Firebase**: `npm i -g firebase-tools && firebase login && firebase use --add <your-project> && firebase deploy --only functions`. `firebase.json` builds and deploys `functions/` — a 2nd-gen HTTPS function `api` in **europe-west2** exposing `GET /health` and `POST /blueprint` (the Idea Agent, Claude primary). The build copies `shared/contracts.ts` into the bundle, so the shared layer deploys inside the backend. With no secret set it runs in **demo mode**; go live with a **freshly issued** key: `firebase functions:secrets:set ANTHROPIC_API_KEY` then redeploy. (Requires the Blaze plan, as all Cloud Functions do.)
+3. **Connect them**: the deploy prints the function URL (like `https://api-xxxxx-ew.a.run.app`). In `frontend/assets/config.js`, set `window.JOSHRIX_API_BASE` to that URL and redeploy Vercel — the pages call the Firebase API cross-origin (CORS enabled; both `/health` and `/api/health` path forms accepted). Verify with `<function-url>/health`.
+
+The `api/` directory is the same backend as Vercel-native serverless functions — an optional same-origin mirror: if you ever run frontend and backend on one Vercel project, `/api/*` works with `JOSHRIX_API_BASE = ''` and no CORS at all.
 
 ## Setup Steps
 

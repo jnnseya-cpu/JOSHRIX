@@ -50,7 +50,9 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── about / careers / press / contact .html
 │   ├── signup / login / dashboard / profile / admin .html
 │   └── assets/            joshrix.css design system, site.js, woff2 fonts
-├── api/                   Deployed backend: Vercel serverless functions
+├── functions/             Deployed backend: Firebase Cloud Functions (2nd gen)
+│   └── src/index.ts       HTTPS `api` fn — /health + /blueprint (Idea Agent, Claude primary)
+├── api/                   Same backend as Vercel functions (optional same-origin mirror)
 │   ├── health.ts          GET /api/health — deployment + provider readiness
 │   ├── blueprint.ts       POST /api/blueprint — Idea Agent (Claude primary, demo fallback)
 │   └── _gateway.ts        Serverless AI gateway (imports shared/contracts.ts)
