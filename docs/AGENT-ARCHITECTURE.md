@@ -159,8 +159,67 @@ Backgrounds, tilesets, props, buildings, terrain, weather, lighting profiles.
 Idle, walk, run, jump, attack, damage, death, celebration, UI transitions.
 
 ### Audio Director Agent
-Music briefs, adaptive soundtrack direction, SFX palettes, UI sound language, mix and loudness standards, and licensing-safe sourcing for every audio asset.
+Music brief, sound-effect manifest, adaptive music rules, volume hierarchy, audio accessibility, loop points.
+
+### Asset Consistency Agent
+Uses multimodal comparison to detect: inconsistent style, incorrect proportions, colour drift, character identity drift, missing animation states, UI mismatch.
+
+### Rights Provenance Agent
+AI-generated game content creates ownership, attribution, and contractual questions — so the platform retains creation logs, model terms, human modifications, and licence records, not merely the final asset. For every asset:
+
+```json
+{
+  "asset_id": "asset_456",
+  "source_type": "ai_generated",
+  "provider": "provider_name",
+  "model_version": "version",
+  "prompt_hash": "sha256",
+  "created_at": "ISO-8601",
+  "human_edits": [],
+  "licence_status": "commercial_use_confirmed",
+  "similarity_checks": [],
+  "restricted_terms_detected": []
+}
+```
+
+## Automated Quality and Simulation Division
+
+### QA Director Agent
+Creates the full test strategy per title.
+
+### Functional Testing Agent
+Menus, controls, rules, scoring, save/load, purchases, progression, level completion, fail states.
+
+### Autonomous Player Agents
+Synthetic player profiles play the game repeatedly: **beginner · child · expert · explorer · speed-runner · completionist · non-paying player · high spender · accessibility user · adversarial user.**
+
+Each run produces: completion rate, failure points, confusion points, exploits, boredom indicators, difficulty curve, economy progression, session duration. (These run inside the QA sandbox of [GAP-ANALYSIS.md](GAP-ANALYSIS.md) §A5.)
+
+### Balance Simulation Agent
+Thousands of simulations to detect: impossible levels, dominant strategies, broken rewards, currency inflation, paywalls, unfair matchmaking, overpowered items, progression stalls.
+
+### Visual Testing Agent
+Screenshot comparison for: broken layout, missing textures, overlapping text, unsupported resolutions, cut-off UI, inconsistent assets.
+
+### Security Testing Agent
+Injection, XSS, insecure storage, exposed keys, authorisation bypass, payment manipulation, item duplication, leaderboard fraud, malicious uploaded assets.
+
+### Release Certification Agent
+Produces the release score that feeds the Forge Protocol's mandatory QA gate:
+
+```json
+{
+  "functional_score": 96,
+  "performance_score": 89,
+  "security_score": 94,
+  "accessibility_score": 83,
+  "content_safety_score": 98,
+  "commercial_readiness_score": 86,
+  "blocking_issues": [],
+  "release_recommendation": "approve_with_minor_conditions"
+}
+```
 
 ---
 
-*Divisions to be detailed as the specification continues: Quality and Simulation, Safety and Rights, Commerce and Publishing, Growth and Live Operations.*
+*Divisions to be detailed as the specification continues: Safety and Rights, Commerce and Publishing, Growth and Live Operations.*

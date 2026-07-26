@@ -15,6 +15,41 @@ The central intelligence architecture. Every engine below is an implemented syst
 | Recommendation Engine | Two-tower retrieval (Pinecone) + ranking model | Marketplace discovery ("players who bought X"), template suggestions in Forge Studio, cross-sell into the Upsell Engine |
 | Decision Intelligence | Decision records + eval harness (GAP-ANALYSIS E1) | Every automated commercial decision (dynamic price, queue priority, model routing) logs its inputs, policy version, and outcome for audit and reinforcement |
 
+## The Behaviour-Learning System
+
+Improves games **without manipulating players unfairly**.
+
+### Event Collection
+Standard event taxonomy: `game_opened` · `session_started` · `tutorial_started` · `tutorial_completed` · `level_started` · `level_failed` · `level_completed` · `item_viewed` · `item_purchased` · `offer_rejected` · `ad_started` · `ad_completed` · `player_churn_signal` · `player_returned` · `error_encountered` · `support_requested`.
+
+### Player Behaviour Profile
+The system infers only non-sensitive behavioural characteristics: preferred session length, difficulty tolerance, genre preference, exploration tendency, social preference, progression speed, likely churn, preferred control style. **It must not infer protected characteristics or exploit psychological vulnerabilities.**
+
+### Player Segmentation
+Example segments: new-and-confused · new-and-progressing · engaged non-payer · socially engaged · high-skill · churn risk · returning · content-complete · potential advocate.
+
+### Adaptive Difficulty
+**Inputs:** failure streak, completion speed, input accuracy, resource use, previous difficulty preference.
+**Adjustable outputs:** enemy speed, hint frequency, checkpoints, reward size, tutorial prompts, matchmaking band.
+**Restrictions:** never secretly alter paid competitive outcomes · never penalise non-paying players · never misrepresent randomness · always provide an option to disable personalisation.
+
+### Churn Prediction
+Features: declining session frequency, tutorial abandonment, repeated failure, reduced session length, unclaimed rewards, social disconnection, negative support sentiment, purchase reversal.
+
+```json
+{
+  "player_id": "anonymous_or_pseudonymous_id",
+  "churn_probability_7d": 0.68,
+  "drivers": ["repeated_level_failure", "declining_session_frequency"],
+  "recommended_intervention": "offer_optional_hint_and_new_route"
+}
+```
+
+### Reinforcement-Learning Experimentation
+**Constrained contextual bandits initially — not uncontrolled reinforcement learning.**
+Approved use cases: tutorial sequence, home-screen arrangement, non-monetary reward timing, recommended game content, difficulty assistance.
+Restricted use cases: **price discrimination and child monetisation are prohibited.**
+
 ## Commercial Engines (Revenue Layer Consumers)
 
 - **Dynamic Pricing Engine** — Revenue Optimisation Agent adjusts ACU top-up pricing, marketplace featured-slot pricing, and priority-queue pricing within admin-set floors/ceilings; every change is a logged decision record with rollback.
