@@ -52,6 +52,32 @@ The final charge may exceed the minimum when the action includes premium platfor
 
 **Exactly 20% of every subscription payment converts into user ACUs.** The remaining 80% pays for platform access: workspace access, project management, standard storage, marketplace access, security, version history, collaboration, game hosting allowance, dashboard access, platform maintenance, support, and product development.
 
+**ACU allocation formula:**
+
+```
+Monthly ACU value = subscription price × 20%
+Monthly ACUs     = subscription price × 20     (e.g. £49 × 20 = 980 ACUs)
+```
+
+**Subscription economics** (when all included ACUs are consumed): 20% of subscription value allocated to ACUs → maximum underlying provider cost 5% → **95% of subscription value retained before operating costs**. Example at £100: £20 ACU retail allocation, ≤£5 provider cost, £95 retained. This protects platform profitability while giving users visible AI spending power.
+
+## Subscription Tier Specifications (detailed)
+
+### Explorer — Free
+Acquire users and prove the platform's value. **Includes:** one active project; limited templates; basic AI assistant; public game preview; JOSHRIX watermark; community support; limited marketplace browsing; **100 one-time introductory ACUs**; non-commercial publishing only; no source export; no payout access. **Commercial objective:** convert after the first playable game; prevent repeated free-account abuse; require payment verification before commercial use.
+
+### Creator — £19/month · 380 ACUs (£3.80 retail, ≤£0.95 provider cost)
+For beginners and independent creators. **Includes:** three active projects; prompt-to-game; basic Game Director, Blueprint, Code, and Asset agents; web publishing; five private previews; commercial-use eligibility; basic marketplace selling; basic analytics; standard hosting; one creator identity; community support; JOSHRIX branding on hosted pages. **Commission: 25%.** Best for first-time creators, students, hobbyists, educational games, basic web-game sellers.
+
+### Creator Pro — £49/month · 980 ACUs (£9.80 retail, ≤£2.45 provider cost)
+For serious creators earning revenue. **Adds:** ten projects; advanced Game Director; Mechanics Architect, Level Design, Narrative, and Economy Design agents; advanced asset generation; source-code export; custom domain; watermark removal; automated QA; behaviour analytics; revenue dashboard; seller verification; priority queue; email support; three identities. **Commission: 20%.** Best for commercial creators, influencers, indie developers, educational-content producers, template sellers.
+
+### Studio — £149/month · 2,980 ACUs (£29.80 retail, ≤£7.45 provider cost)
+For development teams and professionals. **Adds:** fifty projects; ten team seats; Executive Orchestrator; Technical Director, Production Manager, Art Director, Audio Director agents; advanced QA Director; Autonomous Player Testing and Balance Simulation agents; Git integration; team permissions; approval workflows; shared asset library; build history; version comparison; staging + production environments; advanced marketplace analytics; collaboration tools; reduced hosting charges; priority support. **Commission: 15%.** Best for indie studios, creative agencies, dev teams, professional asset sellers, education businesses, media companies.
+
+### Business — £399/month · 7,980 ACUs (£79.80 retail, ≤£19.95 provider cost)
+For brands, agencies, publishers, and game businesses. **Adds:** unlimited draft projects (fair-use); fifty seats; multiple brands and workspaces; white-label games; branded portals; lead-capture games; campaign analytics; customer-data integration; API access; advanced revenue intelligence; portfolio management; commercial licence management; custom domains; advanced segmentation; churn prediction; A/B testing; multilingual generation; regional personalisation; premium support; service-level targets; ten brand identities. **Commission: 10%.** Best for marketing agencies, global brands, publishers, educational institutions, franchise operators, large creator businesses, promotional-game producers.
+
 ## ACU (AI Compute Units) — The Core Currency
 
 ACU is the primary consumption metric of the platform. Every forge cycle consumes ACU proportional to compute intensity, agent usage, model API costs, asset generation volume, and QA depth — aligning platform revenue directly with value delivered: operators pay more when they produce more.
@@ -138,6 +164,7 @@ Twenty per cent of subscription value converts into monthly ACUs (e.g. Creator P
 | Creator | 25% |
 | Creator Pro | 20% |
 | Studio | 15% |
+| Business | 10% |
 | Enterprise | Negotiated |
 
 ### Revenue Ledger
