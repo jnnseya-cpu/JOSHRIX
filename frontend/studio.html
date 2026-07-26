@@ -53,8 +53,8 @@ main{position:relative;z-index:2;max-width:1180px;margin:0 auto;padding:7rem cla
 .step.done{color:var(--green)}
 .step.done .n{background:rgba(74,222,128,.15);border-color:rgba(74,222,128,.5);color:var(--green)}
 /* panels */
-.panel{border:1px solid var(--stroke-bright);border-radius:18px;background:rgba(8,8,16,.72);backdrop-filter:blur(16px);
-  box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 0 60px rgba(124,58,237,.05);overflow:hidden;display:none}
+.panel{border:1px solid var(--stroke-bright);border-radius:18px;background:linear-gradient(180deg,rgba(16,15,30,.85),rgba(8,8,16,.72));backdrop-filter:blur(16px);
+  box-shadow:0 40px 90px rgba(0,0,0,.6),0 0 60px rgba(124,58,237,.12),inset 0 1px 0 rgba(255,255,255,.08),inset 0 0 60px rgba(124,58,237,.05);overflow:hidden;display:none}
 .panel.show{display:block;animation:pin .5s cubic-bezier(.16,1,.3,1)}
 @keyframes pin{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 .panel-bar{display:flex;align-items:center;gap:1rem;padding:.75rem 1.2rem;border-bottom:1px solid var(--stroke);background:rgba(255,255,255,.03)}
@@ -74,7 +74,7 @@ textarea{min-height:110px;resize:vertical;line-height:1.55}
 .btn-primary{padding:.9rem 2.2rem;font-size:1rem;color:#fff;
   background:linear-gradient(90deg,var(--violet),var(--violet-hot) 50%,var(--cyan));background-size:200% 100%;
   clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);
-  box-shadow:0 0 24px rgba(124,58,237,.5);animation:gs 5s linear infinite}
+  box-shadow:0 0 24px rgba(124,58,237,.5),inset 0 1px 0 rgba(255,255,255,.4),inset 0 -10px 16px rgba(0,0,0,.28);animation:gs 5s linear infinite}
 @keyframes gs{to{background-position:200% 0}}
 .btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 34px rgba(124,58,237,.75)}
 .btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
@@ -125,7 +125,8 @@ textarea{min-height:110px;resize:vertical;line-height:1.55}
 /* publish */
 .pub-grid{display:grid;grid-template-columns:1fr 1fr;gap:1.6rem}
 @media(max-width:900px){.pub-grid{grid-template-columns:1fr}}
-.game-frame{border:1px solid var(--stroke-bright);border-radius:14px;overflow:hidden;background:#070512}
+.game-frame{border:1px solid var(--stroke-bright);border-radius:14px;overflow:hidden;background:#070512;
+  box-shadow:0 26px 60px rgba(0,0,0,.6),0 0 44px rgba(124,58,237,.2),inset 0 1px 0 rgba(255,255,255,.09)}
 .game-frame .gf-bar{display:flex;justify-content:space-between;align-items:center;padding:.7rem 1rem;border-bottom:1px solid var(--stroke);
   font-family:var(--mono);font-size:.6rem;letter-spacing:.25em;text-transform:uppercase;color:var(--muted)}
 .game-frame .live{color:var(--green)}
@@ -160,6 +161,12 @@ canvas#game{display:block;width:100%;cursor:crosshair;touch-action:none}
 .chan-go{margin-top:.7rem;width:100%;white-space:normal}
 @media(max-width:680px){.chan{grid-template-columns:46px 1fr}.chan .act{grid-column:1/-1}.chan .act .btn{width:100%}}
 .step.done,.step.active{cursor:pointer}
+/* depth + hover lift */
+.chan,.qa-card,.listing,.bp{transition:transform .3s,box-shadow .3s,border-color .3s}
+.chan:hover,.qa-card:hover,.listing:hover{transform:translateY(-3px);border-color:var(--stroke-bright);
+  box-shadow:0 18px 44px rgba(0,0,0,.5),0 0 26px rgba(124,58,237,.2),inset 0 1px 0 rgba(255,255,255,.07)}
+.chan,.qa-card,.listing{box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.listing .art{box-shadow:inset 0 -20px 40px rgba(0,0,0,.5)}
 footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.6rem;text-align:center;color:rgba(156,163,184,.55);
   font-size:.9rem;font-weight:500}
 </style>
@@ -526,56 +533,199 @@ function initGame() {
   const cv = $('game'), cx = cv.getContext('2d');
   const W = cv.width, H = cv.height;
   const GOAL = { x: W/2 - 170, y: 58, w: 340, h: 96 };
+  const GLINE = GOAL.y + GOAL.h;
+  const HORIZON = GLINE + 8;
   let shots = 0, goals = 0, coins = 0, state = 'aim', msg = 'Drag from the ball to aim & power';
   let ball = { x: W/2, y: H - 70, r: 9 }, shot = null, keeper = { x: W/2, dive: 0, t: 0 };
-  let drag = null, doneRound = false, helped = false; // helped: first shot taken, hide tutorial
+  let drag = null, helped = false, banner = null;
+  const parts = [];
+  const crowd = [];
+  for (let r = 0; r < 8; r++) for (let c = 0; c < 52; c++) crowd.push({
+    x: 6 + c * (W - 12) / 51 + ((r * 13 + c * 7) % 5) - 2,
+    y: 30 + r * 13 + ((c * 11) % 4),
+    hue: [265, 190, 300, 45, 210, 0][(r * 52 + c) % 6],
+    ph: (r * 52 + c) % 97
+  });
+  const depth = y => Math.max(.45, Math.min(1, .45 + .55 * (y - GLINE) / (H - 70 - GLINE)));
 
   function reset() { ball = { x: W/2, y: H - 70, r: 9 }; shot = null; keeper = { x: W/2, dive: 0, t: 0 }; state = 'aim'; }
 
+  function boom(n, x, y) {
+    for (let i = 0; i < n; i++) parts.push({
+      x, y, vx: (Math.random() - .5) * 7, vy: -Math.random() * 5 - 1,
+      rot: Math.random() * 6.3, vr: (Math.random() - .5) * .4,
+      c: ['#7C3AED', '#22D3EE', '#E879F9', '#4ADE80', '#FBBF24', '#fff'][i % 6], life: 60 + Math.random() * 40
+    });
+  }
+
   function draw() {
-    // pitch
-    const sky = cx.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, '#07051a'); sky.addColorStop(.42, '#0d1030'); sky.addColorStop(.43, '#0d3317'); sky.addColorStop(1, '#0a2712');
-    cx.fillStyle = sky; cx.fillRect(0, 0, W, H);
-    // crowd shimmer
-    for (let i = 0; i < 90; i++) { cx.fillStyle = `rgba(${150+Math.random()*100},${140+Math.random()*80},255,${Math.random()*.35})`; cx.fillRect((i*37+((Date.now()/300)|0)*13)%W, 12+(i*13)%140, 2, 2); }
-    // floodlight glow
-    const gl = cx.createRadialGradient(W/2, GOAL.y+40, 10, W/2, GOAL.y+40, 320);
-    gl.addColorStop(0, 'rgba(124,58,237,.16)'); gl.addColorStop(1, 'transparent');
-    cx.fillStyle = gl; cx.fillRect(0, 0, W, H);
-    // pitch stripes
-    for (let i = 0; i < 6; i++) { cx.fillStyle = i % 2 ? 'rgba(255,255,255,.025)' : 'transparent'; cx.fillRect(0, H*.43 + i*(H*.57/6), W, H*.57/6); }
-    // box
-    cx.strokeStyle = 'rgba(255,255,255,.5)'; cx.lineWidth = 2;
-    cx.strokeRect(W/2-230, GOAL.y+GOAL.h, 460, 120);
-    // goal
-    cx.lineWidth = 4; cx.strokeStyle = '#F4F4FA';
-    cx.strokeRect(GOAL.x, GOAL.y, GOAL.w, GOAL.h);
-    cx.lineWidth = 1; cx.strokeStyle = 'rgba(255,255,255,.25)';
-    for (let i = 1; i < 12; i++) { cx.beginPath(); cx.moveTo(GOAL.x + i*GOAL.w/12, GOAL.y); cx.lineTo(GOAL.x + i*GOAL.w/12, GOAL.y+GOAL.h); cx.stroke(); }
-    for (let i = 1; i < 5; i++) { cx.beginPath(); cx.moveTo(GOAL.x, GOAL.y + i*GOAL.h/5); cx.lineTo(GOAL.x+GOAL.w, GOAL.y + i*GOAL.h/5); cx.stroke(); }
-    // keeper
-    const kx = keeper.x + keeper.dive * Math.max(0, Math.min(1, keeper.t)) * 120;
-    const ky = GOAL.y + GOAL.h - 34;
-    cx.fillStyle = '#FBBF24';
-    cx.fillRect(kx - 11, ky, 22, 30);                    // body
-    cx.beginPath(); cx.arc(kx, ky - 8, 9, 0, 7); cx.fill(); // head
-    cx.fillRect(kx - (keeper.dive ? 26 : 17), ky + 2, keeper.dive ? 52 : 34, 6); // arms
-    // ball
-    if (state !== 'aim' || true) {
-      cx.beginPath(); cx.arc(ball.x, ball.y, ball.r, 0, 7);
-      cx.fillStyle = '#fff'; cx.fill();
-      cx.strokeStyle = '#111'; cx.lineWidth = 1.5; cx.stroke();
-      cx.beginPath(); cx.arc(ball.x, ball.y, ball.r*.45, 0, 7); cx.strokeStyle = 'rgba(0,0,0,.5)'; cx.stroke();
+    const now = Date.now();
+    // night sky
+    const sky = cx.createLinearGradient(0, 0, 0, HORIZON);
+    sky.addColorStop(0, '#05030f'); sky.addColorStop(.65, '#0b0824'); sky.addColorStop(1, '#131039');
+    cx.fillStyle = sky; cx.fillRect(0, 0, W, HORIZON);
+    // stadium roof rim + stands
+    cx.fillStyle = '#08060f'; cx.fillRect(0, 0, W, 26);
+    const rim = cx.createLinearGradient(0, 20, 0, 32);
+    rim.addColorStop(0, 'rgba(180,160,255,.35)'); rim.addColorStop(1, 'rgba(180,160,255,0)');
+    cx.fillStyle = rim; cx.fillRect(0, 22, W, 10);
+    const stand = cx.createLinearGradient(0, 26, 0, HORIZON);
+    stand.addColorStop(0, '#171233'); stand.addColorStop(1, '#0c0a1e');
+    cx.fillStyle = stand; cx.fillRect(0, 26, W, HORIZON - 26);
+    // crowd bokeh — twinkling tiers
+    crowd.forEach(p => {
+      const tw = .22 + .32 * Math.abs(Math.sin(now / 480 + p.ph));
+      cx.fillStyle = `hsla(${p.hue},75%,72%,${tw})`;
+      cx.fillRect(p.x, p.y, 2.2, 2.2);
+    });
+    // pitch — perspective mowing bands
+    const grass = cx.createLinearGradient(0, HORIZON, 0, H);
+    grass.addColorStop(0, '#0c2b14'); grass.addColorStop(.5, '#0e3a1a'); grass.addColorStop(1, '#0a2f14');
+    cx.fillStyle = grass; cx.fillRect(0, HORIZON, W, H - HORIZON);
+    for (let i = 0; i < 7; i++) {
+      const y0 = HORIZON + (H - HORIZON) * Math.pow(i / 7, 1.45);
+      const y1 = HORIZON + (H - HORIZON) * Math.pow((i + 1) / 7, 1.45);
+      if (i % 2) { cx.fillStyle = 'rgba(255,255,255,.035)'; cx.fillRect(0, y0, W, y1 - y0); }
     }
-    // aim arrow
+    // converging touchlines
+    cx.strokeStyle = 'rgba(255,255,255,.2)'; cx.lineWidth = 2;
+    cx.beginPath(); cx.moveTo(-30, H + 10); cx.lineTo(GOAL.x - 88, HORIZON + 2); cx.stroke();
+    cx.beginPath(); cx.moveTo(W + 30, H + 10); cx.lineTo(GOAL.x + GOAL.w + 88, HORIZON + 2); cx.stroke();
+    // penalty box — perspective trapezoids
+    const half = y => 96 + 148 * (y - HORIZON) / (H - HORIZON);
+    const byN = GLINE + 4, byF = GLINE + 122, sy = GLINE + 58;
+    cx.strokeStyle = 'rgba(255,255,255,.55)'; cx.lineWidth = 2; cx.lineJoin = 'round';
+    cx.beginPath();
+    cx.moveTo(W/2 - half(byN), byN); cx.lineTo(W/2 - half(byF), byF);
+    cx.lineTo(W/2 + half(byF), byF); cx.lineTo(W/2 + half(byN), byN); cx.stroke();
+    cx.strokeStyle = 'rgba(255,255,255,.38)';
+    cx.beginPath();
+    cx.moveTo(W/2 - half(byN) * .52, byN); cx.lineTo(W/2 - half(sy) * .52, sy);
+    cx.lineTo(W/2 + half(sy) * .52, sy); cx.lineTo(W/2 + half(byN) * .52, byN); cx.stroke();
+    cx.strokeStyle = 'rgba(255,255,255,.45)';
+    cx.beginPath(); cx.ellipse(W/2, byF, 62, 16, 0, .15, Math.PI - .15); cx.stroke();
+    cx.fillStyle = 'rgba(255,255,255,.75)';
+    cx.beginPath(); cx.ellipse(W/2, H - 70, 4.5, 2, 0, 0, 7); cx.fill();
+    // floodlight beams sweeping onto the pitch
+    [[W * .17], [W * .83]].forEach(([lx]) => {
+      const beam = cx.createLinearGradient(lx, 0, W/2, GLINE + 60);
+      beam.addColorStop(0, 'rgba(220,215,255,.13)'); beam.addColorStop(1, 'rgba(220,215,255,0)');
+      cx.fillStyle = beam;
+      cx.beginPath(); cx.moveTo(lx - 26, 0); cx.lineTo(lx + 26, 0);
+      cx.lineTo(W/2 + 190, GLINE + 70); cx.lineTo(W/2 - 190, GLINE + 70); cx.closePath(); cx.fill();
+      cx.fillStyle = 'rgba(240,238,255,.9)';
+      cx.beginPath(); cx.arc(lx, 4, 3, 0, 7); cx.fill();
+      const halo = cx.createRadialGradient(lx, 6, 1, lx, 6, 30);
+      halo.addColorStop(0, 'rgba(220,215,255,.5)'); halo.addColorStop(1, 'rgba(220,215,255,0)');
+      cx.fillStyle = halo; cx.beginPath(); cx.arc(lx, 6, 30, 0, 7); cx.fill();
+    });
+    // goal net — back plane, side + roof panels
+    const bx = GOAL.x + 30, bwd = GOAL.w - 60, by = GOAL.y + 12, bh = GOAL.h - 22;
+    cx.lineWidth = 1; cx.strokeStyle = 'rgba(235,235,255,.2)';
+    for (let i = 0; i <= 12; i++) { const x = bx + i * bwd / 12; cx.beginPath(); cx.moveTo(x, by); cx.lineTo(x, by + bh); cx.stroke(); }
+    for (let i = 0; i <= 5; i++) { const y = by + i * bh / 5; cx.beginPath(); cx.moveTo(bx, y); cx.lineTo(bx + bwd, y); cx.stroke(); }
+    cx.strokeStyle = 'rgba(235,235,255,.12)';
+    for (let i = 0; i <= 5; i++) {
+      cx.beginPath(); cx.moveTo(GOAL.x, GOAL.y + i * GOAL.h / 5); cx.lineTo(bx, by + i * bh / 5); cx.stroke();
+      cx.beginPath(); cx.moveTo(GOAL.x + GOAL.w, GOAL.y + i * GOAL.h / 5); cx.lineTo(bx + bwd, by + i * bh / 5); cx.stroke();
+    }
+    for (let i = 0; i <= 8; i++) {
+      cx.beginPath(); cx.moveTo(GOAL.x + i * GOAL.w / 8, GOAL.y); cx.lineTo(bx + i * bwd / 8, by); cx.stroke();
+    }
+    // goal frame — metallic posts and crossbar
+    const postL = cx.createLinearGradient(GOAL.x - 3, 0, GOAL.x + 4, 0);
+    postL.addColorStop(0, '#9aa0b5'); postL.addColorStop(.45, '#ffffff'); postL.addColorStop(1, '#b9bfd2');
+    cx.fillStyle = postL; cx.fillRect(GOAL.x - 3, GOAL.y - 3, 6, GOAL.h + 5);
+    const postR = cx.createLinearGradient(GOAL.x + GOAL.w - 3, 0, GOAL.x + GOAL.w + 4, 0);
+    postR.addColorStop(0, '#9aa0b5'); postR.addColorStop(.45, '#ffffff'); postR.addColorStop(1, '#b9bfd2');
+    cx.fillStyle = postR; cx.fillRect(GOAL.x + GOAL.w - 3, GOAL.y - 3, 6, GOAL.h + 5);
+    const bar = cx.createLinearGradient(0, GOAL.y - 4, 0, GOAL.y + 3);
+    bar.addColorStop(0, '#ffffff'); bar.addColorStop(1, '#9aa0b5');
+    cx.fillStyle = bar; cx.fillRect(GOAL.x - 3, GOAL.y - 4, GOAL.w + 6, 7);
+    // keeper — articulated figure, cast shadow, dive rotation
+    const kt = Math.max(0, Math.min(1, keeper.t));
+    const kx = keeper.x + keeper.dive * kt * 120;
+    cx.fillStyle = 'rgba(0,0,0,.4)';
+    cx.beginPath(); cx.ellipse(kx, GLINE + 2, 20 + 8 * Math.abs(keeper.dive) * kt, 5, 0, 0, 7); cx.fill();
+    cx.save();
+    cx.translate(kx, GLINE);
+    cx.rotate(keeper.dive * kt * .85);
+    cx.fillStyle = '#101322';
+    cx.fillRect(-8, -14, 6, 14); cx.fillRect(2, -14, 6, 14);
+    cx.fillStyle = '#e8e8f2'; cx.fillRect(-9, -3, 8, 3); cx.fillRect(1, -3, 8, 3);
+    cx.fillStyle = '#15182b'; cx.fillRect(-9, -22, 18, 9);
+    const jers = cx.createLinearGradient(-10, -46, 10, -22);
+    jers.addColorStop(0, '#FDCB4D'); jers.addColorStop(1, '#E98A0E');
+    cx.fillStyle = jers;
+    cx.beginPath(); cx.moveTo(-10, -22); cx.lineTo(-8, -44); cx.lineTo(8, -44); cx.lineTo(10, -22); cx.closePath(); cx.fill();
+    cx.strokeStyle = '#F5B93A'; cx.lineWidth = 5; cx.lineCap = 'round';
+    const spread = keeper.dive ? 1 : .45;
+    cx.beginPath(); cx.moveTo(-8, -40); cx.lineTo(-8 - 14 * spread, -40 - 12 * spread); cx.stroke();
+    cx.beginPath(); cx.moveTo(8, -40); cx.lineTo(8 + 14 * spread, -40 - 12 * spread); cx.stroke();
+    cx.fillStyle = '#fff';
+    cx.beginPath(); cx.arc(-8 - 14 * spread, -40 - 12 * spread, 3.4, 0, 7); cx.fill();
+    cx.beginPath(); cx.arc(8 + 14 * spread, -40 - 12 * spread, 3.4, 0, 7); cx.fill();
+    cx.fillStyle = '#C68958';
+    cx.beginPath(); cx.arc(0, -50, 6.5, 0, 7); cx.fill();
+    cx.fillStyle = '#1a1426';
+    cx.beginPath(); cx.arc(0, -52.5, 6.2, Math.PI, 0); cx.fill();
+    cx.restore();
+    // ball — depth-scaled, shaded, spinning panels, specular
+    const s = depth(ball.y), br = 11.5 * s;
+    cx.fillStyle = 'rgba(0,0,0,.42)';
+    cx.beginPath(); cx.ellipse(ball.x + 2, ball.y + br * .92, br * 1.05, br * .34, 0, 0, 7); cx.fill();
+    const bg = cx.createRadialGradient(ball.x - br * .4, ball.y - br * .45, br * .15, ball.x, ball.y, br * 1.15);
+    bg.addColorStop(0, '#ffffff'); bg.addColorStop(.55, '#e7e9f0'); bg.addColorStop(.85, '#a7adc0'); bg.addColorStop(1, '#7d8398');
+    cx.fillStyle = bg; cx.beginPath(); cx.arc(ball.x, ball.y, br, 0, 7); cx.fill();
+    const rot = (H - 70 - ball.y) * .06;
+    cx.fillStyle = 'rgba(30,34,52,.85)';
+    for (let i = 0; i < 5; i++) {
+      const a = rot + i * 1.257;
+      cx.beginPath(); cx.arc(ball.x + Math.cos(a) * br * .55, ball.y + Math.sin(a) * br * .55, br * .2, 0, 7); cx.fill();
+    }
+    cx.fillStyle = 'rgba(255,255,255,.85)';
+    cx.beginPath(); cx.arc(ball.x - br * .38, ball.y - br * .42, br * .16, 0, 7); cx.fill();
+    // aim arrow + power ring
     if (drag && state === 'aim') {
-      cx.strokeStyle = 'rgba(34,211,238,.9)'; cx.lineWidth = 3; cx.setLineDash([7, 6]);
+      const dx = drag.x - ball.x, dy = drag.y - ball.y;
+      const power = Math.min(1, Math.hypot(dx, dy) / 260);
+      const ag = cx.createLinearGradient(ball.x, ball.y, drag.x, drag.y);
+      ag.addColorStop(0, 'rgba(34,211,238,.95)'); ag.addColorStop(1, 'rgba(168,85,247,.95)');
+      cx.strokeStyle = ag; cx.lineWidth = 3 + power * 3; cx.setLineDash([8, 7]); cx.lineCap = 'round';
       cx.beginPath(); cx.moveTo(ball.x, ball.y); cx.lineTo(drag.x, drag.y); cx.stroke(); cx.setLineDash([]);
+      cx.strokeStyle = 'rgba(34,211,238,.9)'; cx.lineWidth = 3;
+      cx.beginPath(); cx.arc(ball.x, ball.y, br + 7, -Math.PI/2, -Math.PI/2 + power * 6.283); cx.stroke();
+      cx.fillStyle = '#22D3EE'; cx.font = '700 12px Rajdhani, sans-serif'; cx.textAlign = 'center';
+      cx.fillText(`POWER ${Math.round(power * 100)}%`, ball.x, ball.y + br + 22); cx.textAlign = 'left';
+    }
+    // confetti
+    parts.forEach(p => {
+      cx.save(); cx.translate(p.x, p.y); cx.rotate(p.rot);
+      cx.globalAlpha = Math.min(1, p.life / 30);
+      cx.fillStyle = p.c; cx.fillRect(-2.6, -1.4, 5.2, 2.8);
+      cx.restore(); cx.globalAlpha = 1;
+    });
+    // vignette
+    const vg = cx.createRadialGradient(W/2, H * .52, H * .3, W/2, H * .52, H * .78);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.42)');
+    cx.fillStyle = vg; cx.fillRect(0, 0, W, H);
+    // result banner
+    if (banner) {
+      const el = now - banner.t;
+      if (el > 1150) banner = null;
+      else {
+        const a = el < 140 ? el / 140 : el > 900 ? (1150 - el) / 250 : 1;
+        const sc = 1 + .12 * Math.sin(Math.min(1, el / 1150) * Math.PI);
+        cx.save(); cx.translate(W/2, H * .4); cx.scale(sc, sc); cx.globalAlpha = Math.max(0, a);
+        cx.font = '900 40px Orbitron, sans-serif'; cx.textAlign = 'center';
+        cx.shadowColor = banner.c; cx.shadowBlur = 26;
+        cx.fillStyle = banner.c; cx.fillText(banner.txt, 0, 0);
+        cx.restore(); cx.globalAlpha = 1; cx.shadowBlur = 0;
+      }
     }
     // tutorial overlay — until the first shot is taken
     if (!helped && state === 'aim' && !drag) {
-      const pulse = .55 + .45 * Math.sin(Date.now() / 380);
+      const pulse = .55 + .45 * Math.sin(now / 380);
       cx.setLineDash([7, 7]); cx.lineWidth = 3;
       cx.strokeStyle = `rgba(34,211,238,${.35 + pulse * .55})`;
       cx.beginPath(); cx.moveTo(ball.x, ball.y - 14); cx.lineTo(ball.x + 32, ball.y - 92); cx.stroke(); cx.setLineDash([]);
@@ -590,38 +740,44 @@ function initGame() {
       cx.textAlign = 'left';
     }
     // HUD
-    cx.fillStyle = 'rgba(5,5,8,.65)'; cx.fillRect(0, H-34, W, 34);
+    const hud = cx.createLinearGradient(0, H - 34, 0, H);
+    hud.addColorStop(0, 'rgba(5,5,8,.55)'); hud.addColorStop(1, 'rgba(5,5,8,.9)');
+    cx.fillStyle = hud; cx.fillRect(0, H - 34, W, 34);
     cx.fillStyle = '#F4F4FA'; cx.font = '700 13px Rajdhani, sans-serif';
-    cx.fillText(`SHOT ${Math.min(shots+1,5)}/5`, 14, H-13);
-    cx.fillText(`GOALS ${goals}`, 110, H-13);
-    cx.fillStyle = '#FBBF24'; cx.fillText(`ⓒ ${coins} COINS`, 196, H-13);
-    cx.fillStyle = '#22D3EE'; cx.textAlign = 'right'; cx.fillText(msg, W-14, H-13); cx.textAlign = 'left';
+    cx.fillText(`SHOT ${Math.min(shots + 1, 5)}/5`, 14, H - 13);
+    cx.fillText(`GOALS ${goals}`, 110, H - 13);
+    cx.fillStyle = '#FBBF24'; cx.fillText(`ⓒ ${coins} COINS`, 196, H - 13);
+    cx.fillStyle = '#22D3EE'; cx.textAlign = 'right'; cx.fillText(msg, W - 14, H - 13); cx.textAlign = 'left';
   }
 
   function step() {
     if (shot) {
       ball.x += shot.vx; ball.y += shot.vy;
-      shot.vy += 0.06; // slight drift
+      shot.vy += 0.06;
       keeper.t += 0.06;
-      if (ball.y <= GOAL.y + GOAL.h) {
-        // resolve
+      if (ball.y <= GLINE) {
         const inGoal = ball.x > GOAL.x + 8 && ball.x < GOAL.x + GOAL.w - 8;
-        const kx = keeper.x + keeper.dive * Math.max(0, Math.min(1, keeper.t)) * 120;
-        const saved = inGoal && Math.abs(ball.x - kx) < 34;
+        const kt2 = Math.max(0, Math.min(1, keeper.t));
+        const kx2 = keeper.x + keeper.dive * kt2 * 120;
+        const saved = inGoal && Math.abs(ball.x - kx2) < 34;
         shots++;
-        if (inGoal && !saved) { goals++; coins += 10; msg = 'GOAL! +10 coins'; }
-        else if (saved) { msg = 'SAVED by the keeper!'; }
-        else { msg = 'Off target!'; }
+        if (inGoal && !saved) { goals++; coins += 10; msg = 'GOAL! +10 coins'; banner = { txt: 'GOAL!', c: '#4ADE80', t: Date.now() }; boom(70, ball.x, ball.y); }
+        else if (saved) { msg = 'SAVED by the keeper!'; banner = { txt: 'SAVED!', c: '#FBBF24', t: Date.now() }; }
+        else { msg = 'Off target!'; banner = { txt: 'WIDE!', c: '#9CA3B8', t: Date.now() }; }
         shot = null; state = 'resolve';
         setTimeout(() => {
           if (shots >= 5) {
-            doneRound = true;
             msg = goals >= 3 ? `League win! ${goals}/5 — +50 bonus` : `Round over — ${goals}/5. Tap to retry`;
-            if (goals >= 3 && !window.__bonus) { coins += 50; window.__bonus = 1; }
+            if (goals >= 3 && !window.__bonus) { coins += 50; window.__bonus = 1; boom(120, W/2, H/2); }
             state = 'over';
           } else { reset(); msg = 'Drag from the ball to aim & power'; }
         }, 900);
       }
+    }
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i];
+      p.x += p.vx; p.y += p.vy; p.vy += .12; p.rot += p.vr; p.life--;
+      if (p.life <= 0 || p.y > H) parts.splice(i, 1);
     }
     draw();
     requestAnimationFrame(step);
