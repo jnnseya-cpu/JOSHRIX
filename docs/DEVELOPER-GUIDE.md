@@ -81,6 +81,8 @@ Each production agent is a container with a uniform contract:
   | `fast-structured` | Claude Haiku-class | Gemini Flash | Idea variants, metadata, tagging |
   | `image` | SDXL (self-hosted) | DALL-E 3 | Asset Agent |
   | `audio` | ElevenLabs / Suno | Mubert | Asset Agent |
+- **Gateway responsibilities** (the router is a full provider-independent AI gateway spanning OpenAI, Google, Anthropic, open-source hosted models, and image/audio/3D generation providers): model routing · cost calculation · PII redaction · rate limiting · retry · fallback · prompt versioning · response evaluation · caching · provider outage handling.
+- **Runtime characteristics**: durable workflows (Temporal-style), event sourcing, tool permissioning, human approval gates, idempotent tasks, retry policies, state checkpoints, execution budgets — realised as directed acyclic task graphs over event-driven workers in isolated agent sandboxes.
 - **Determinism discipline**: every agent run records prompt template version, model id, temperature, and input hashes in `agent_logs` — any forge output must be explainable and reproducible to the extent the models allow.
 - **Retries**: transient failure → up to 2 retries with jittered backoff on the same provider, then fallback provider, then `agent.failed`. The orchestrator decides whether a stage failure is fatal (QA, Deployment) or degradable (one asset sub-batch).
 
@@ -111,6 +113,22 @@ infra/
 ```
 
 Conventions: TypeScript strict everywhere; contracts package is the only place DTOs/event types are defined (services import, never redeclare); DB access only through the owning service; migrations reviewed like code and always backward-compatible for one release (expand-migrate-contract).
+
+## 5a. Build Infrastructure & Runtime Hosting
+
+Every project build executes inside an **ephemeral container** with: restricted network, read-only base image, resource quota, dependency allow-list, timeout, malware scan, and output checksum (the hermetic sandbox of GAP-ANALYSIS §D1).
+
+Runtime hosting is separated by concern: static web hosting · game session servers · multiplayer authoritative servers · analytics ingestion · user-generated content storage · marketplace services — so a traffic spike in one plane never degrades another.
+
+**Expanded service map** — the target decomposition as the platform grows beyond the Phase-1 services of §1 (each Phase-1 service splits along these seams; no service is removed, they subdivide):
+
+```
+apps/       creator-web · marketplace-web · player-web · admin-web · developer-portal
+services/   identity · workspace · project · blueprint · agent-orchestrator
+            model-gateway · asset · code-generation · build · qa · publishing
+            game-runtime · telemetry · behaviour-intelligence · marketplace
+            licensing · payment · payout · moderation · rights · notification · search
+```
 
 ## 5b. Creator-Surface Toolkit
 

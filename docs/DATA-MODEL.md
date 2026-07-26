@@ -44,6 +44,94 @@ erDiagram
     compliance_flags }o..o{ forge_cycles : flags
 ```
 
+## Application-Layer Data Model (TypeScript)
+
+The creator-platform interfaces over the relational schema (contracts live in `packages/contracts`):
+
+```typescript
+interface Workspace {
+  id: string;
+  name: string;
+  ownerUserId: string;
+  type: "personal" | "team" | "business" | "enterprise";
+  planId: string;
+  acuBalance: number;
+  createdAt: string;
+}
+
+interface GameProject {
+  id: string;
+  workspaceId: string;
+  ownerUserId: string;
+  title: string;
+  description: string;
+  genre: string[];
+  maturity: "concept" | "prototype" | "alpha" | "beta" | "commercial" | "live";
+  targetPlatforms: string[];
+  engineProfile: string;
+  activeVersionId: string;
+  visibility: "private" | "unlisted" | "public";
+  status: "draft" | "generating" | "testing" | "published" | "suspended";
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ProjectVersion {
+  id: string;
+  projectId: string;
+  versionNumber: string;
+  sourceCommit: string;
+  blueprintVersionId: string;
+  buildIds: string[];
+  changeSummary: string;
+  createdBy: string;
+  createdAt: string;
+}
+
+interface AgentRun {
+  id: string;
+  projectId: string;
+  agentType: string;
+  objective: string;
+  status: "queued" | "running" | "awaiting_approval" | "completed" | "failed" | "cancelled";
+  inputRefs: string[];
+  outputRefs: string[];
+  acuEstimate: number;
+  acuConsumed: number;
+  providerCostGbp: number;
+  modelRoute: string;
+  startedAt?: string;
+  completedAt?: string;
+}
+
+interface GameBuild {
+  id: string;
+  projectId: string;
+  versionId: string;
+  target: "web" | "android" | "ios" | "desktop" | "source";
+  status: "queued" | "building" | "testing" | "ready" | "failed";
+  artifactUrl?: string;
+  checksum?: string;
+  qualityGateId?: string;
+  createdAt: string;
+}
+
+interface MarketplaceListing {
+  id: string;
+  sellerWorkspaceId: string;
+  itemType: "game" | "template" | "asset" | "mechanic" | "service";
+  title: string;
+  description: string;
+  priceGbp: number;
+  licenceIds: string[];
+  qualityScore: number;
+  moderationStatus: string;
+  status: "draft" | "review" | "published" | "suspended";
+  createdAt: string;
+  updatedAt: string;
+}
+```
+
 ## Critical Index Strategy
 
 - **operators**: INDEX on email (UNIQUE), status, tier, kyc_status
