@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — JOSHRIX Studio</title>
+<meta name="description" content="Super Admin command bridge — operators, revenue, moderation, and system health.">
+<link rel="stylesheet" href="assets/joshrix.css">
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="noise" aria-hidden="true"></div>
+<nav class="jx">
+  <a class="brand" href="index.html">
+    <svg viewBox="-50 -50 100 100"><defs><linearGradient id="jxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#22D3EE"/></linearGradient></defs><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#jxG)" stroke-width="7" stroke-linejoin="round"/><polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#jxG)"/></svg>
+    <span class="word">JOSHRIX<em>STUDIO</em></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="agent-fleet.html">Fleet</a></li>
+    <li><a href="worlds.html">Worlds</a></li>
+    <li><a href="marketplace.html">Marketplace</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+    <li><a href="how-it-works.html">How It Works</a></li>
+    <li><a href="docs.html">Docs</a></li>
+  </ul>
+  <div class="nav-right">
+    <a class="btn btn-ghost btn-sm" href="login.html">Sign In</a>
+    <a class="btn btn-primary btn-sm" href="studio.html">Launch Studio</a>
+  </div>
+</nav>
+<main class="jx">
+<div class="page-hero reveal">
+  <div class="sec-tag">Super Admin</div>
+  <h1 class="jx">Platform <span class="grad">Command Bridge</span></h1>
+  <p class="lede">Omniscient visibility across operators, forges, revenue, moderation, and system health. Every action below is dual-controlled and written to the immutable audit chain.</p>
+</div><div class="console reveal">
+<div class="console-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t">SUPER ADMIN OS · GROUPE NSEYA / JNN GLOBAL</span><span class="status">ALL SYSTEMS NOMINAL</span></div>
+<div class="modules">
+<div class="module"><h3><span class="st"></span>Operators</h3><span class="num">47.2K</span><div class="bar"><i style="width:72%"></i></div><span class="readout">+1,240 THIS WEEK · 96% KYC PASS</span></div>
+<div class="module"><h3><span class="st"></span>MRR</h3><span class="num">£612K</span><div class="bar ok"><i style="width:81%"></i></div><span class="readout">CHURN 2.1% · ARPU £13.40</span></div>
+<div class="module"><h3><span class="st"></span>Marketplace GMV (30d)</h3><span class="num">£1.84M</span><div class="bar ok"><i style="width:66%"></i></div><span class="readout">TAKE RATE 19.2% · REFUNDS 1.4%</span></div>
+<div class="module"><h3><span class="st"></span>AI Provider Cost</h3><span class="num">£96K</span><div class="bar"><i style="width:24%"></i></div><span class="readout">ACU MARGIN 76.4% · 4× FLOOR HOLDING</span></div>
+<div class="module"><h3><span class="st"></span>Active Forges</h3><span class="num">1,318</span><div class="bar"><i style="width:55%"></i></div><span class="readout">SUCCESS 97.6% · P95 3.2H</span></div>
+<div class="module"><h3><span class="st"></span>Moderation Queue</h3><span class="num">23</span><div class="bar warn"><i style="width:23%"></i></div><span class="readout">4 COPYRIGHT · 2 AGE-RATING · 17 ROUTINE</span></div>
+<div class="module"><h3><span class="st"></span>Security</h3><span class="num">0</span><div class="bar ok"><i style="width:100%"></i></div><span class="readout">SEV1 INCIDENTS · FRAUD HOLDS: 12</span></div>
+<div class="module"><h3><span class="st"></span>Payout Liability</h3><span class="num">£214K</span><div class="bar"><i style="width:48%"></i></div><span class="readout">NEXT SETTLEMENT RUN: 04:00 UTC</span></div>
+</div></div>
+<h2 class="jx reveal">Moderation Queue</h2>
+<table class="jx reveal"><thead><tr><th>ID</th><th>Game</th><th>Issue</th><th>Risk</th><th>AI Notes</th><th>Decision</th></tr></thead><tbody>
+<tr><td>MOD-4412</td><td><b>Super Plumber World</b></td><td>Copyright similarity</td><td><span class="pill amber">HIGH 87</span></td><td>Character 92% similar to protected mark</td><td>Reject · Notify · Ban keyword</td></tr>
+<tr><td>MOD-4413</td><td><b>Lucky Spin Palace</b></td><td>Gambling mechanics</td><td><span class="pill amber">HIGH 78</span></td><td>Paid random rewards + cash-out loop</td><td>Reject · Jurisdiction review</td></tr>
+<tr><td>MOD-4414</td><td><b>Zombie Alley</b></td><td>Age rating appeal</td><td><span class="pill">MED 41</span></td><td>Violence within 16+ threshold</td><td>Approve at 16+</td></tr>
+<tr><td>MOD-4415</td><td><b>Café Tycoon</b></td><td>Routine review</td><td><span class="pill green">LOW 6</span></td><td>All checks clear</td><td>Approve · Feature-eligible</td></tr>
+</tbody></table>
+<h2 class="jx reveal">Admin Actions</h2>
+<div class="reveal">
+<span class="pill">APPROVE GAME</span><span class="pill">REJECT GAME</span><span class="pill">SUSPEND LISTING</span><span class="pill">SUSPEND USER</span>
+<span class="pill">FEATURE GAME</span><span class="pill">EDIT COMMISSION</span><span class="pill">REFUND ORDER</span><span class="pill">RELEASE PAYOUT</span>
+<span class="pill">BLOCK KEYWORD</span><span class="pill">FORCE IP REVIEW</span><span class="pill amber">PAUSE AGENT CLASS</span><span class="pill amber">TRIGGER SECURITY AUDIT</span>
+</div>
+</main>
+<footer class="jx">
+  <div class="foot-grid">
+    <div class="foot-brand">
+      <a class="brand" href="index.html">
+        <svg viewBox="-50 -50 100 100"><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#jxG)" stroke-width="7" stroke-linejoin="round"/><polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#jxG)"/></svg>
+        <span class="word">JOSHRIX<em>STUDIO</em></span>
+      </a>
+      <p class="tagline">Create Worlds. Build Games. Own the Future.</p>
+    </div>
+    <div class="foot-col"><h4>Platform</h4><ul>
+      <li><a href="agent-fleet.html">Agent Fleet</a></li><li><a href="worlds.html">Worlds</a></li>
+      <li><a href="marketplace.html">Marketplace</a></li><li><a href="ip-registry.html">IP Registry</a></li></ul></div>
+    <div class="foot-col"><h4>Operators</h4><ul>
+      <li><a href="studio.html">Start Forging</a></li><li><a href="docs.html">Docs</a></li>
+      <li><a href="showcase.html">Showcase</a></li><li><a href="enterprise.html">Enterprise</a></li></ul></div>
+    <div class="foot-col"><h4>Studio</h4><ul>
+      <li><a href="about.html">About</a></li><li><a href="careers.html">Careers</a></li>
+      <li><a href="press.html">Press Kit</a></li><li><a href="contact.html">Contact</a></li></ul></div>
+    <div class="foot-col"><h4>Account</h4><ul>
+      <li><a href="signup.html">Sign Up</a></li><li><a href="login.html">Sign In</a></li>
+      <li><a href="dashboard.html">Dashboard</a></li><li><a href="profile.html">Profile</a></li></ul></div>
+  </div>
+  <div class="foot-base">
+    <span>© 2026 JOSHRIX Studio. All worlds belong to their creators.</span>
+    <span class="sys">◉ ALL SYSTEMS OPERATIONAL</span>
+  </div>
+</footer>
+<script src="assets/site.js"></script>
+</body>
+</html>

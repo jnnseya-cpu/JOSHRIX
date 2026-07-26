@@ -38,7 +38,17 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── CONNECTORS.md      Third-party connector ecosystem catalogue
 │   ├── PRODUCT-PRINCIPLES.md  Positioning, five layers, principles, user segments
 │   └── AGENT-ARCHITECTURE.md  Hierarchical agent operating model and specialists
-└── site/
-    ├── index.html         Landing page (self-contained premium gaming experience)
-    └── studio.html        Forge Studio prototype: Create → Play → Sell flow with a playable game
+├── frontend/              The web app: 20 pages sharing one design system
+│   ├── index.html         Landing page
+│   ├── studio.html        Forge Studio prototype (Create → Play → Sell, playable game)
+│   ├── agent-fleet / worlds / marketplace / ip-registry .html
+│   ├── how-it-works / pricing / docs / showcase / enterprise .html
+│   ├── about / careers / press / contact .html
+│   ├── signup / login / dashboard / profile / admin .html
+│   └── assets/            joshrix.css design system, site.js, woff2 fonts
+├── backend/
+│   ├── README.md          Backend map (spec lives in docs/)
+│   └── ai-gateway/        Claude-primary AI gateway reference (fixes Genkit error)
+└── shared/
+    └── contracts.ts       Shared types: roles, statuses, blueprint schema, ACU constants
 ```
