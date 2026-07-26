@@ -23,6 +23,7 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── BRANDING.md        Brand guidelines: name, tagline, colors, typography
 │   └── logo.svg           JOSHRIX Studio wordmark logo
 ├── docs/
+│   ├── INDEX.md           Master document map — start here
 │   ├── PLATFORM.md        Platform architecture: agent fleets, modules, payments, stack
 │   ├── SECURITY.md        Zero Trust security architecture
 │   ├── DATA-MODEL.md      Database schema and index strategy
@@ -32,7 +33,9 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── ROADMAP.md         Four-phase developer build roadmap
 │   ├── COMPETITIVE.md     Moats, landscape, commercial dominance model
 │   ├── DEVELOPER-GUIDE.md Master build document: services, events, CI/CD, SLOs
-│   └── GAP-ANALYSIS.md    Forensic review: gaps + proven-pattern solutions
+│   ├── GAP-ANALYSIS.md    Forensic review: gaps + proven-pattern solutions
+│   ├── INTELLIGENCE.md    AI data intelligence layer + self-managing fleet
+│   └── CONNECTORS.md      Third-party connector ecosystem catalogue
 └── site/
     └── index.html         Landing page (self-contained premium gaming experience)
 ```

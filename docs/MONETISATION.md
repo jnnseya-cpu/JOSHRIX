@@ -16,6 +16,27 @@ ACU is the primary consumption metric of the platform. Every forge cycle consume
 | **Total — Starter Game** | **~330–865 ACU** | — |
 | **Total — Professional Game** | **~1,000–2,500 ACU** | Larger asset packs; more complex code |
 
+## Creation Credits & Fixed-Price Packages
+
+Alongside subscriptions, casual creators buy credits directly (£1 ≈ 100 credits, mapped onto ACU):
+
+| Action | Indicative Credits |
+|---|---|
+| Generate game idea | 20 |
+| Create game design | 50 |
+| Generate assets | 100 |
+| Build prototype | 300 |
+| Add payment system | 500 |
+| Create full game | 1,000–10,000 |
+
+Fixed-price forge packages for one-shot creators: **Starter £19 · Creator £49 · Commercial £149 · Pro Studio £499 · Enterprise White Label £2,500+** (game-tier packages surfaced in the journey: Starter Game £19, Playable Web Game £49, Mobile-Ready Game £99, Advanced Game with Marketplace £249, Commercial Game Package £499+). Packages are pre-purchased ACU bundles with a defined scope — the ledger underneath is identical.
+
+## Marketplace Commission & Hosting
+
+- **Marketplace commission**: 20–30% per sale (e.g. £100 sale → £30 platform, £70 creator), within the 8–15% floor for subscription-tier operators — casual package users pay the higher band.
+- **Game hosting**: free tier with watermark · £9/month per published game · £29/month for monetised games · £99/month for high-traffic games.
+- **In-game payment commission**: platform share on IAP/economy transactions processed through BitriPay rails per the gateway fee row below.
+
 ## Subscription Plans
 
 | Plan | Price | ACU Included | Forge Cycles | Key Features |

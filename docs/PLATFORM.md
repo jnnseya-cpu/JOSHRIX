@@ -99,6 +99,32 @@ Cloud-native, event-driven microservices on Google Cloud Platform — horizontal
 
 Deeper specifications: [Zero Trust security & compliance](SECURITY.md) · [database schema](DATA-MODEL.md) · [API specification](API.md) · [monetisation model](MONETISATION.md) · [Super Admin centre](ADMIN.md) · [build roadmap](ROADMAP.md) · [competitive framework](COMPETITIVE.md) · [master developer guide](DEVELOPER-GUIDE.md) · [forensic gap analysis](GAP-ANALYSIS.md).
 
+## The Operator Journey
+
+1. **Choose a game type.** The Forge Initiator offers a curated catalogue: mobile, web, 2D platformer, puzzle, fighting, racing, quiz, kids education, football/sports, card, zombie survival, tycoon, simulation, story adventure, and casino-style (excluding real-money gambling unless legally licensed and jurisdictionally cleared by the Compliance Agent).
+2. **Describe the idea.** A single prompt is enough — e.g. *"a football penalty game where players compete online, unlock boots, buy stadiums, and sell player cards."*
+3. **Receive the blueprint.** The Idea and Strategic agents return the title, category, core gameplay loop, target audience, levels, characters, monetisation model, asset list, technical complexity, estimated build cost, suggested selling price, and a commercial score — with three ranked variants.
+4. **Select a package.** Fixed-price forge packages sit alongside ACU consumption (see [MONETISATION.md](MONETISATION.md)): Starter Game £19 · Playable Web Game £49 · Mobile-Ready Game £99 · Advanced Game with Marketplace £249 · Commercial Game Package £499+.
+5. **The fleet builds.** Game files, assets, animations, menus, scoring, payment hooks, admin dashboard, player database, and marketplace page — per the Forge Protocol below.
+6. **Publish or sell.** Play privately, publish on the JOSHRIX Marketplace, sell the template, licence the game, sell assets, offer paid access, export to web/mobile builds, embed as an iframe or PWA, invite players, or run tournaments.
+
+### Creative Agent Structure → Production Fleet Mapping
+
+The concept's ten creative agents are preserved as capabilities within the seven-agent production fleet:
+
+| Creative Agent | Lives In | Notes |
+|---|---|---|
+| Game Idea Agent | Idea Agent | Genre detection, audience, market scoring, scope guarding, cost/time estimation |
+| Game Design Agent | Strategic Agent | Full design document: rules, win/loss logic, controls, progression, shop logic, economy rules |
+| Code Generation Agent | Code Agent | Prototype, engine logic, scoring, movement, enemy AI, save/load, DB + payment hooks, generated tests |
+| Asset Creation Agent | Asset Agent | Characters, environments, UI, thumbnails — with strict IP protection: prompts and outputs are screened so operators cannot generate copyrighted characters or marks (e.g. Mario, Spider-Man, FIFA clubs, Disney characters) |
+| Story & Dialogue Agent | Asset Agent (narrative sub-pipeline) | Storyline, missions, NPC dialogue, quest logic, tutorials, narration for story/RPG/education titles |
+| Economy & Monetisation Agent | Economy Agent | Ads, IAP, paid download, subscription, battle pass, skins, coins, premium levels, resale, licensing, tournament entry, white-label |
+| Marketplace Listing Agent | Deployment Agent | Sales page, description, screenshots, demo video script, pricing, licence terms, SEO, tags, buyer FAQ |
+| Publishing Agent | Deployment Agent | Web play, mobile export, private links, embeddable iframe, PWA, app-store preparation, external engine export where possible |
+| Quality Assurance Agent | QA Agent | Broken levels, missing assets, payment failure, crashes, unfair scoring, load speed, mobile responsiveness, security, copyright and age-rating risk |
+| Revenue & Ownership Agent | IP Vault + Revenue Dashboard (svc-ip / svc-billing) | Creator/owner/buyer records, commission, earnings, licence types, resale rights, refunds, payouts, tax records |
+
 ## The Forge Protocol — Five-Stage Neural Workflow
 
 | Stage | Agent | Input | Output | Gate |

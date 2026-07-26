@@ -9,6 +9,56 @@
 - Every response includes: `status`, `data`, `meta` (pagination), `error` (if applicable), `request_id`
 - Webhooks signed with HMAC-SHA256 using a per-webhook secret; signature delivered in the `X-Joshrix-Signature` header
 
+## Request / Response Convention
+
+All mutating endpoints require an `Idempotency-Key` header (ULID); retries with the same key replay the original response for 24h (see GAP-ANALYSIS A2).
+
+```http
+POST /v1/forge/initiate HTTP/1.1
+Authorization: Bearer eyJ...
+Idempotency-Key: 01J8ZK7Q2M...
+Content-Type: application/json
+
+{
+  "prompt": "Football penalty game with online duels, unlockable boots, stadium purchases, tradeable player cards",
+  "game_type": "sports",
+  "platforms": ["web", "android"],
+  "budget_tier": "standard",
+  "monetisation": "freemium",
+  "approval_gates": ["concept", "predeploy"]
+}
+```
+
+```json
+{
+  "status": "accepted",
+  "data": {
+    "forge_id": "frg_01J8ZK9A4N...",
+    "state": "ESTIMATING",
+    "estimated_acu": { "min": 380, "max": 720 },
+    "queue_position": 3
+  },
+  "meta": {},
+  "error": null,
+  "request_id": "req_01J8ZKA0..."
+}
+```
+
+### Error Codes
+
+| HTTP | Code | Meaning |
+|---|---|---|
+| 400 | `validation_failed` | Body failed schema validation; `error.fields` lists violations |
+| 401 | `unauthenticated` | Missing/expired token or invalid API key |
+| 402 | `insufficient_acu` | Balance below estimate; response includes top-up link |
+| 403 | `forbidden` | Authenticated but lacks scope/role for this resource |
+| 404 | `not_found` | Resource does not exist or is outside your tenancy |
+| 409 | `idempotency_conflict` | Same key, different request body |
+| 409 | `state_conflict` | Action invalid for current forge state (e.g. approving a non-gated cycle) |
+| 422 | `policy_rejected` | Content policy rejection; `error.appeal_url` provided |
+| 429 | `rate_limited` | Tier limit exceeded; `Retry-After` header set |
+| 5xx | `internal` | Logged against `request_id`; safe to retry with the same idempotency key |
+
 ## Core Endpoints
 
 ### Forge

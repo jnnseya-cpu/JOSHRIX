@@ -13,6 +13,27 @@ Every layer of the platform operates under a Zero Trust model: no implicit trust
 | DDoS Protection | Layer 3/4/7 DDoS mitigation | Cloudflare Magic Transit + WAF; GCP Cloud Armor |
 | Fraud Detection | Real-time transaction scoring; behavioural anomaly detection | Fraud Detection Agent (custom ML model + payment gateway risk signals) |
 
+## Anti-Hacking Framework
+
+| Attack Vector | Defence | Implementation |
+|---|---|---|
+| DDoS (L3/4/7) | Edge absorption + rate shaping | Cloudflare Magic Transit + WAF; GCP Cloud Armor; per-key rate limits at Kong |
+| SQL Injection | Parameterised queries only | Prisma (no raw SQL without review); WAF rulesets; CI grep-gate on `$queryRawUnsafe` |
+| XSS | Output encoding + CSP | React auto-escaping; strict Content-Security-Policy (no inline script); DOMPurify on any rich-text render |
+| CSRF | Token binding | SameSite=Strict cookies; double-submit tokens on state-changing browser routes; API is bearer-token (immune by design) |
+| Session Hijacking | Short-lived, bound sessions | 15-min JWTs + rotating refresh tokens; token binding to device fingerprint; re-auth for sensitive actions |
+| Account Takeover | Risk-based step-up | Anomalous login detection (device/geo/hours) → MFA challenge; credential-hygiene checks on login (HaveIBeenPwned k-anonymity) |
+| Credential Stuffing | Rate + reputation | Per-IP and per-account login throttles; bot scores; breached-password rejection at registration |
+| API Abuse | Behavioural quotas | Per-key anomaly detection → automatic suspension (see Fraud Detection); scope-minimised keys with IP allowlists |
+| Bot Attacks | Managed challenge | Cloudflare Bot Management on marketplace and auth surfaces; invisible challenge before checkout |
+
+## Data Protection (all four states)
+
+- **At rest**: AES-256 via GCP CMEK across Cloud SQL, Firestore, GCS/R2.
+- **In transit**: TLS 1.3 external, mTLS internal (Istio).
+- **In use**: GCP Confidential Computing (AMD SEV) for KYC document processing and payment tokenisation workloads — memory encrypted even against a compromised host.
+- **Tokenisation**: card and mobile-money credentials never touch platform services; gateway tokens only. PII fields carry field-level encryption with per-tenant derived keys, enabling cryptographic erasure for GDPR.
+
 ## Compliance Framework
 
 | Domain | Standard / Control | Implementation |

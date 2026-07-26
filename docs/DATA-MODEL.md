@@ -22,6 +22,28 @@ Primary relational store: PostgreSQL (GCP Cloud SQL). All primary keys are UUIDs
 | audit_log | audit_id | actor_id, actor_type, action, resource_type, resource_id, metadata_json, ip_address, timestamp | → (polymorphic reference) |
 | compliance_flags | flag_id | resource_type, resource_id, flag_type, severity, status, raised_by, resolved_at, notes | → (polymorphic) |
 
+## Entity Relationship Diagram
+
+```mermaid
+erDiagram
+    operators ||--o{ forge_cycles : initiates
+    operators ||--o{ subscriptions : holds
+    operators ||--o{ transactions : makes
+    operators ||--o{ acu_ledger : accrues
+    operators ||--o{ api_keys : owns
+    operators ||--o{ webhooks : registers
+    plans ||--o{ subscriptions : defines
+    forge_cycles ||--o{ agent_logs : produces
+    forge_cycles ||--o| ip_records : registers
+    forge_cycles ||--o{ acu_ledger : consumes
+    ip_records ||--o{ marketplace_listings : listed_as
+    marketplace_listings ||--o{ marketplace_purchases : sold_via
+    marketplace_purchases }o--|| transactions : settled_by
+    webhooks ||--o{ webhook_deliveries : delivers
+    audit_log }o..o{ operators : references
+    compliance_flags }o..o{ forge_cycles : flags
+```
+
 ## Critical Index Strategy
 
 - **operators**: INDEX on email (UNIQUE), status, tier, kyc_status
