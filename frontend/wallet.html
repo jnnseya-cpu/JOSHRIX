@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wallet — JOSHRIX Studio</title>
+<meta name="description" content="Your JOSHRIX wallet: ACU balance, top-up packages, creator earnings and payouts to bank, BitriPay or mobile money.">
+<link rel="stylesheet" href="assets/joshrix.css">
+<style>
+.wal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.1rem;margin-top:2rem}
+.wal-card{border:1px solid var(--stroke);border-radius:14px;padding:1.3rem 1.4rem;background:rgba(22,22,42,.5)}
+.wal-card b{display:block;font-family:var(--mono);font-size:.58rem;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
+.wal-card .big{font-family:var(--mono);font-weight:700;font-size:1.7rem;background:linear-gradient(180deg,#fff,#B9A7F5);-webkit-background-clip:text;background-clip:text;color:transparent}
+.wal-card .sub{margin-top:.4rem;color:var(--muted);font-weight:500;font-size:.92rem}
+.pkg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.9rem;margin-top:1.4rem}
+.pkg{border:1px solid var(--stroke);border-radius:12px;padding:1rem;background:rgba(255,255,255,.02);text-align:center;transition:transform .3s,border-color .3s;cursor:pointer}
+.pkg:hover{transform:translateY(-3px);border-color:var(--cyan)}
+.pkg.hot{border-color:var(--stroke-bright);box-shadow:0 0 24px rgba(124,58,237,.25)}
+.pkg .price{font-family:var(--mono);font-weight:700;font-size:1.25rem;color:var(--text)}
+.pkg .acus{color:var(--cyan);font-family:var(--mono);font-size:.68rem;letter-spacing:.14em;margin-top:.3rem}
+.pkg .buy{margin-top:.7rem;font-size:.7rem;padding:.45rem .9rem}
+.pane{border:1px solid var(--stroke-bright);border-radius:16px;padding:1.6rem;background:rgba(8,8,16,.6);margin-top:1.6rem}
+.pane h3{font-family:var(--mono);font-size:.9rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:1rem}
+.frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;align-items:end}
+.result{margin-top:1rem;font-family:var(--mono);font-size:.75rem;letter-spacing:.05em;color:var(--green);white-space:pre-wrap;line-height:1.7;display:none;
+  border:1px solid rgba(74,222,128,.35);border-radius:10px;padding:.9rem 1rem;background:rgba(74,222,128,.05)}
+.methods{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}
+.methods span{font-family:var(--mono);font-size:.6rem;letter-spacing:.18em;border:1px solid var(--stroke);border-radius:999px;padding:.4rem .9rem;color:var(--muted)}
+table.jx td:first-child{white-space:nowrap}
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="noise" aria-hidden="true"></div>
+<nav class="jx">
+  <a class="brand" href="index.html">
+    <svg viewBox="-50 -50 100 100"><defs><linearGradient id="jxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#22D3EE"/></linearGradient></defs><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#jxG)" stroke-width="7" stroke-linejoin="round"/><polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#jxG)"/></svg>
+    <span class="word">JOSHRIX<em>STUDIO</em></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="marketplace.html">Marketplace</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+    <li><a href="referrals.html">Partners</a></li>
+  </ul>
+  <div class="nav-right">
+    <a class="btn btn-primary btn-sm" href="studio.html">Launch Studio</a>
+  </div>
+</nav>
+<main class="jx">
+  <div class="page-hero reveal">
+    <div class="sec-tag">Wallet · Pay In &amp; Pay Out</div>
+    <h1 class="jx">Your Money, <span class="grad">Both Directions</span></h1>
+    <p class="lede">Top up ACUs to forge. Earn from every sale, licence and remix. Withdraw to bank, BitriPay or mobile money — one wallet, one double-entry ledger, no surprises.</p>
+  </div>
+
+  <div class="wal-grid reveal">
+    <div class="wal-card"><b>ACU Balance</b><span class="big" id="wAcu">1,873</span>
+      <p class="sub" id="wAcuCat">promo 40 · subscription 833 · purchased 1,000</p></div>
+    <div class="wal-card"><b>Available Earnings</b><span class="big" id="wAvail">£482.00</span>
+      <p class="sub">from sales, licences, lineage royalties &amp; referrals</p></div>
+    <div class="wal-card"><b>Pending</b><span class="big" id="wPend">£123.50</span>
+      <p class="sub">inside the refund window — releases automatically</p></div>
+    <div class="wal-card"><b>Lifetime Earned</b><span class="big" id="wLife">£964.00</span>
+      <p class="sub">every penny traceable in the ledger below</p></div>
+  </div>
+
+  <div class="pane reveal">
+    <h3>💳 Pay In — ACU Top-Up Packages</h3>
+    <div class="pkg-grid" id="pkgGrid"></div>
+    <div class="methods"><span>VISA / MASTERCARD (STRIPE)</span><span>BITRIPAY</span><span>MOBILE MONEY</span><span>AUTO TOP-UP £5/£10/£25</span></div>
+    <div class="result" id="topupResult"></div>
+  </div>
+
+  <div class="pane reveal">
+    <h3>🏦 Pay Out — Withdraw Earnings</h3>
+    <div class="frow">
+      <div><label>Amount (£)</label><select id="poAmt"><option value="1000">£10.00 — minimum</option><option value="5000" selected>£50.00</option><option value="25000">£250.00</option><option value="48200">£482.00 — full balance</option></select></div>
+      <div><label>Rail</label><select id="poRail">
+        <option value="bank_transfer">Bank transfer — free · weekly</option>
+        <option value="bank_transfer_instant">Bank transfer — instant · 1% (min 30p)</option>
+        <option value="bitripay">BitriPay — 0.5% · next day</option>
+        <option value="mobile_money">Mobile money — 1.5% · next day</option>
+      </select></div>
+      <div><button class="btn btn-primary" id="btnPayout" style="width:100%">⬇ Request Payout</button></div>
+    </div>
+    <p class="sub" style="color:var(--muted);font-weight:500;margin-top:.8rem">Minimum £10 · KYC verification at £100 cumulative · destinations are tokenised, never stored raw.</p>
+    <div class="result" id="payoutResult"></div>
+  </div>
+
+  <div class="pane reveal">
+    <h3>📒 The Ledger — every transaction, double-entry</h3>
+    <table class="jx">
+      <thead><tr><th>Event</th><th>Split</th><th>Postings (must sum to zero)</th></tr></thead>
+      <tbody id="ledgerBody">
+        <tr><td>£25 ACU top-up</td><td>2,500 ACUs credited</td><td>gateway_clearing +£25.00 · deferred_acu_revenue −£25.00</td></tr>
+        <tr><td>Penalty King sold £4.99</td><td>platform £1.00 · processing £0.27 · you £3.72</td><td>clearing +£4.72 · platform_revenue −£1.00 · creator_earnings −£3.72</td></tr>
+        <tr><td>Remix sold £4.99 (lineage)</td><td>platform £1.00 · ancestor £1.12 · forker £2.60</td><td>clearing +£4.72 · platform −£1.00 · creator −£2.60 · lineage_royalties −£1.12</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+<footer class="jx"><p>© 2026 JOSHRIX Studio — Wallet. Create Worlds. Build Games. Own the Future.</p></footer>
+<script src="assets/config.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const API = (window.JOSHRIX_API_BASE || '');
+const PKGS = [[500,'acu_5'],[1000,'acu_10'],[2500,'acu_25'],[5000,'acu_50'],[10000,'acu_100'],[25000,'acu_250'],[50000,'acu_500'],[100000,'acu_1000']];
+const g = $('pkgGrid');
+PKGS.forEach(([p, id], i) => {
+  const d = document.createElement('div');
+  d.className = 'pkg' + (id === 'acu_25' ? ' hot' : '');
+  d.innerHTML = `<div class="price">£${(p/100).toLocaleString()}</div><div class="acus">${(p).toLocaleString()} ACUs</div><button class="btn btn-ghost buy">Buy</button>`;
+  d.querySelector('.buy').addEventListener('click', async () => {
+    const r = $('topupResult'); r.style.display = 'block';
+    r.textContent = 'Creating payment intent…';
+    try {
+      const resp = await fetch(API + '/api/topup', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ packageId: id, method: 'card' }), signal: AbortSignal.timeout(7000) });
+      const j = await resp.json();
+      r.textContent = resp.ok
+        ? `✓ ${j.intent.status} — ${j.intent.acuCredited.toLocaleString()} ACUs credited for £${(j.intent.amountMinor/100).toFixed(2)}\nledger: ${j.ledger.postings.map(x => x.account + ' ' + (x.deltaMinor>0?'+':'') + '£' + (x.deltaMinor/100).toFixed(2)).join(' · ')}`
+        : '✕ ' + (j.error || 'failed');
+    } catch (e) {
+      r.textContent = `✓ demo (offline) — ${(p).toLocaleString()} ACUs would be credited for £${(p/100).toFixed(2)} on gateway settlement`;
+    }
+  });
+  g.appendChild(d);
+});
+$('btnPayout').addEventListener('click', async () => {
+  const r = $('payoutResult'); r.style.display = 'block';
+  const amt = parseInt($('poAmt').value, 10);
+  const railSel = $('poRail').value;
+  const rail = railSel === 'bank_transfer_instant' ? 'bank_transfer' : railSel;
+  const instant = railSel === 'bank_transfer_instant';
+  r.textContent = 'Submitting payout request…';
+  try {
+    const resp = await fetch(API + '/api/payout', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amountMinor: amt, rail, instant, destinationRef: 'tok_demo_dest_2941' }), signal: AbortSignal.timeout(7000) });
+    const j = await resp.json();
+    r.textContent = resp.ok
+      ? `✓ ${j.payout.status} — £${(j.payout.amountMinor/100).toFixed(2)} via ${j.payout.rail}${j.payout.instant?' (instant)':''}\nfee £${(j.payout.feeMinor/100).toFixed(2)} → you receive £${(j.payout.netMinor/100).toFixed(2)} · ETA ${j.payout.etaDays} day(s)${j.payout.kycRequired?'\n⚠ KYC verification required for this amount':''}`
+      : '✕ ' + (j.error || 'failed');
+  } catch (e) {
+    r.textContent = '✓ demo (offline) — payout request would be queued for the next settlement run';
+  }
+});
+fetch(API + '/api/wallet', { signal: AbortSignal.timeout(6000) }).then(r => r.json()).then(w => {
+  $('wAcu').textContent = w.acu.total.toLocaleString();
+  $('wAvail').textContent = '£' + (w.earnings.availableMinor/100).toFixed(2);
+  $('wPend').textContent = '£' + (w.earnings.pendingMinor/100).toFixed(2);
+  $('wLife').textContent = '£' + (w.earnings.lifetimeMinor/100).toFixed(2);
+}).catch(() => {});
+})();
+</script>
+</body>
+</html>

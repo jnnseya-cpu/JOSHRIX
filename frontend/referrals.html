@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Partner Programme — JOSHRIX Studio</title>
+<meta name="description" content="The JOSHRIX influencer and referral programme: bring your audience, earn up to 10% of first-year subscriptions plus a share of platform commission on referred sales.">
+<link rel="stylesheet" href="assets/joshrix.css">
+<style>
+.tier-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.2rem;margin-top:2rem}
+.tier-card{border:1px solid var(--stroke);border-radius:16px;padding:1.6rem;background:rgba(22,22,42,.5);position:relative;transition:transform .3s,border-color .3s}
+.tier-card:hover{transform:translateY(-4px);border-color:var(--stroke-bright)}
+.tier-card.hot{border-color:var(--stroke-bright);box-shadow:0 0 30px rgba(124,58,237,.25)}
+.tier-card h3{font-family:var(--mono);font-size:1rem;letter-spacing:.12em;text-transform:uppercase}
+.tier-card .share{font-family:var(--mono);font-weight:700;font-size:1.9rem;margin:.7rem 0 .2rem;
+  background:linear-gradient(90deg,var(--violet-hot),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.tier-card .cond{font-family:var(--mono);font-size:.58rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+.tier-card ul{list-style:none;margin-top:1rem;display:flex;flex-direction:column;gap:.45rem}
+.tier-card li{font-weight:500;color:var(--muted);padding-left:1.2rem;position:relative}
+.tier-card li::before{content:"✔";position:absolute;left:0;color:var(--green)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem;margin-top:2rem}
+.step-c{border:1px solid var(--stroke);border-radius:12px;padding:1.2rem;background:rgba(255,255,255,.02)}
+.step-c b{font-family:var(--mono);font-size:.6rem;letter-spacing:.24em;color:var(--cyan)}
+.step-c p{margin-top:.5rem;font-weight:500;color:var(--muted);line-height:1.55}
+.dash{border:1px solid var(--stroke-bright);border-radius:16px;padding:1.6rem;background:rgba(8,8,16,.65);margin-top:2.4rem}
+.dash h3{font-family:var(--mono);font-size:.9rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:1rem}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem}
+.dash-grid div b{display:block;font-family:var(--mono);font-size:.56rem;letter-spacing:.24em;color:var(--muted);text-transform:uppercase}
+.dash-grid div span{font-family:var(--mono);font-weight:700;font-size:1.35rem;background:linear-gradient(180deg,#fff,#B9A7F5);-webkit-background-clip:text;background-clip:text;color:transparent}
+.codebox{display:flex;gap:.6rem;margin-top:1.2rem;flex-wrap:wrap}
+.codebox input{flex:1;min-width:220px;background:rgba(5,5,8,.55);border:1px solid var(--stroke);border-radius:8px;color:var(--cyan);
+  font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;padding:.7rem .9rem;outline:none}
+.fine{margin-top:1.4rem;color:var(--muted);font-weight:500;font-size:.92rem;line-height:1.6}
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="noise" aria-hidden="true"></div>
+<nav class="jx">
+  <a class="brand" href="index.html">
+    <svg viewBox="-50 -50 100 100"><defs><linearGradient id="jxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#22D3EE"/></linearGradient></defs><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#jxG)" stroke-width="7" stroke-linejoin="round"/><polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#jxG)"/></svg>
+    <span class="word">JOSHRIX<em>STUDIO</em></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="showcase.html">Showcase</a></li>
+    <li><a href="marketplace.html">Marketplace</a></li>
+    <li><a href="wallet.html">Wallet</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+  </ul>
+  <div class="nav-right">
+    <a class="btn btn-primary btn-sm" href="signup.html">Become a Partner</a>
+  </div>
+</nav>
+<main class="jx">
+  <div class="page-hero reveal">
+    <div class="sec-tag">Influencer &amp; Referral Programme</div>
+    <h1 class="jx">Bring Your Audience. <span class="grad">Own The Upside.</span></h1>
+    <p class="lede">Players follow people, not polygons. Share your code — your audience gets bonus ACUs, and you earn a share of everything they spend in their first year, paid into the same wallet as your game earnings.</p>
+  </div>
+
+  <div class="steps reveal">
+    <div class="step-c"><b>STEP 01</b><p>Claim your code and link — <span style="color:var(--cyan)">joshrix.com/?ref=JX-YOU</span>. Drop it in a bio, a video, a stream, a group chat.</p></div>
+    <div class="step-c"><b>STEP 02</b><p>Everyone who joins through it gets <b style="color:var(--text)">+100 promotional ACUs</b> — a real head start, on us.</p></div>
+    <div class="step-c"><b>STEP 03</b><p>When they subscribe, you earn <b style="color:var(--text)">5–10% of their first year</b> — released after the 14-day refund window.</p></div>
+    <div class="step-c"><b>STEP 04</b><p>Withdraw through your wallet — same rails as game earnings: bank, BitriPay, mobile money.</p></div>
+  </div>
+
+  <div class="tier-grid reveal">
+    <div class="tier-card">
+      <h3>Partner</h3><span class="share">5%</span>
+      <div class="cond">From your first referral</div>
+      <ul><li>Personal code + link</li><li>+100 promo ACUs per activated referral</li><li>Partner badge on your profile</li></ul>
+    </div>
+    <div class="tier-card hot">
+      <h3>Rising Icon</h3><span class="share">7.5%</span>
+      <div class="cond">25+ activated referrals</div>
+      <ul><li>1% of platform commission on referred sales</li><li>Showcase feature placement</li><li>Early access to new agents</li></ul>
+    </div>
+    <div class="tier-card">
+      <h3>JOSHRIX Icon</h3><span class="share">10%</span>
+      <div class="cond">100+ activated referrals</div>
+      <ul><li>2% of platform commission on referred sales</li><li>Co-marketing campaigns</li><li>Dedicated partner manager</li></ul>
+    </div>
+  </div>
+
+  <div class="dash reveal">
+    <h3>Your Partner Dashboard (live demo)</h3>
+    <div class="dash-grid">
+      <div><b>Clicks</b><span id="rClicks">1,240</span></div>
+      <div><b>Signups</b><span id="rSign">86</span></div>
+      <div><b>Activated</b><span id="rAct">31</span></div>
+      <div><b>Tier</b><span id="rTier">RISING</span></div>
+      <div><b>Earned</b><span id="rEarn">£195.90</span></div>
+      <div><b>On Hold</b><span id="rHold">£24.50</span></div>
+    </div>
+    <div class="codebox">
+      <input id="refLink" readonly value="https://joshrix.com/?ref=JX-JUSTIN">
+      <button class="btn btn-primary" id="btnRefCopy">⧉ Copy My Link</button>
+    </div>
+  </div>
+
+  <p class="fine reveal">Fair-play rules: commission is paid only after the refund period · self-referral is blocked (account, payment method and device heuristics) · fraud detection runs on every activation · earnings share applies to the first 12 months of each referred subscription · marketplace fee share comes from the <b>platform's</b> commission, never from a creator's earnings. Full terms in the partner agreement.</p>
+</main>
+<footer class="jx"><p>© 2026 JOSHRIX Studio — Partner Programme. Create Worlds. Build Games. Own the Future.</p></footer>
+<script src="assets/config.js"></script>
+<script src="assets/site.js"></script>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+$('btnRefCopy').addEventListener('click', () => {
+  $('btnRefCopy').textContent = '✓ Copied';
+  setTimeout(() => { $('btnRefCopy').textContent = '⧉ Copy My Link'; }, 1600);
+  try { navigator.clipboard.writeText($('refLink').value); }
+  catch (e) { $('refLink').select(); document.execCommand('copy'); }
+});
+fetch((window.JOSHRIX_API_BASE || '') + '/api/referrals', { signal: AbortSignal.timeout(6000) })
+  .then(r => r.json()).then(d => {
+    const b = d.dashboard;
+    $('rClicks').textContent = b.clicks.toLocaleString();
+    $('rSign').textContent = b.signups;
+    $('rAct').textContent = b.activated;
+    $('rTier').textContent = b.tier.toUpperCase();
+    $('rEarn').textContent = '£' + (b.earnedMinor / 100).toFixed(2);
+    $('rHold').textContent = '£' + (b.onHoldMinor / 100).toFixed(2);
+    $('refLink').value = b.link;
+  }).catch(() => {});
+})();
+</script>
+</body>
+</html>

@@ -40,6 +40,7 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── AGENT-ARCHITECTURE.md  Hierarchical agent operating model and specialists
 │   ├── REALISM-PIPELINE.md    Ultra-realism & 3D output contract for the live forge
 │   ├── DEEP-DIVE.md           The King Doctrine: competitive autopsy + leapfrog moves
+│   ├── PAYMENTS.md            Implemented pay-in/pay-out structure + referral programme
 │   ├── APP-BUILD-SPEC.md      MVP build spec: collections, routes, dashboards
 │   └── DEPLOYMENT.md          Hostinger + Vercel + Firebase + Cloud Run architecture
 ├── frontend/              The web app: 20 pages sharing one design system
