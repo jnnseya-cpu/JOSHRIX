@@ -8,6 +8,7 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import { generateBlueprint, providerStatus, BLUEPRINT_ACU_CHARGE } from "./gateway";
+import { TelemetryBatchSchema } from "./shared/telemetry";
 
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 
@@ -56,6 +57,21 @@ export const api = onRequest(
       return;
     }
 
-    res.status(404).json({ error: "Not found", routes: ["GET /health", "POST /blueprint"] });
+    if (path === "/telemetry") {
+      if (req.method !== "POST") {
+        res.status(405).json({ error: "POST only" });
+        return;
+      }
+      const parsed = TelemetryBatchSchema.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({ error: "Invalid telemetry batch", issues: parsed.error.issues.slice(0, 5) });
+        return;
+      }
+      // Demo mode: validate + acknowledge. Production: enqueue to the Forge Graph store.
+      res.status(200).json({ accepted: parsed.data.events.length, mode: "demo" });
+      return;
+    }
+
+    res.status(404).json({ error: "Not found", routes: ["GET /health", "POST /blueprint", "POST /telemetry"] });
   },
 );

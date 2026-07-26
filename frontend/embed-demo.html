@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Embed SDK — JOSHRIX Studio</title>
+<meta name="description" content="Embed any certified JOSHRIX game on any website with one script tag — every embed is distribution, every player one tap from creating.">
+<link rel="stylesheet" href="assets/joshrix.css">
+<style>
+.code-block{background:rgba(5,5,8,.7);border:1px solid var(--stroke-bright);border-radius:12px;padding:1.2rem 1.4rem;
+  font-family:var(--mono);font-size:.78rem;letter-spacing:.03em;color:var(--cyan);overflow-x:auto;white-space:pre;line-height:1.7}
+.embed-note{margin-top:1rem;color:var(--muted);font-weight:500}
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="noise" aria-hidden="true"></div>
+<nav class="jx">
+  <a class="brand" href="index.html">
+    <svg viewBox="-50 -50 100 100"><defs><linearGradient id="jxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#22D3EE"/></linearGradient></defs><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#jxG)" stroke-width="7" stroke-linejoin="round"/><polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#jxG)"/></svg>
+    <span class="word">JOSHRIX<em>STUDIO</em></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="worlds.html">Worlds</a></li>
+    <li><a href="marketplace.html">Marketplace</a></li>
+    <li><a href="docs.html">Docs</a></li>
+  </ul>
+  <div class="nav-right">
+    <a class="btn btn-primary btn-sm" href="studio.html">Launch Studio</a>
+  </div>
+</nav>
+<main class="jx">
+  <div class="page-hero reveal">
+    <div class="sec-tag">Embed SDK</div>
+    <h1 class="jx">Your Game. <span class="grad">Every Website.</span></h1>
+    <p class="lede">One script tag embeds any certified JOSHRIX game on any site — a blog, a school page, a fan community. Every embed carries the Forge chip, so every player is one tap from becoming a creator. Distribution without portals, without fees.</p>
+  </div>
+
+  <div class="reveal">
+    <h3 style="font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.8rem">1 · Paste this anywhere</h3>
+    <div class="code-block">&lt;script src="https://joshrix.com/assets/embed.js"
+        data-game="penalty-king-3d"
+        data-width="100%" data-ratio="0.6"&gt;&lt;/script&gt;</div>
+    <p class="embed-note">That's the whole integration. The SDK renders a framed, branded player with the ⚡ Forge chip, and reports an anonymous <code>share.embed_loaded</code> event to the Forge Graph. It never touches the host page beyond its own container.</p>
+  </div>
+
+  <div class="reveal" style="margin-top:3rem">
+    <h3 style="font-family:var(--mono);letter-spacing:.1em;text-transform:uppercase;margin-bottom:.8rem">2 · Live result</h3>
+    <script src="assets/embed.js" data-game="penalty-king-3d" data-base="." data-width="100%" data-ratio="0.6"></script>
+  </div>
+</main>
+<footer class="jx"><p>© 2026 JOSHRIX Studio — Embed SDK. Create Worlds. Build Games. Own the Future.</p></footer>
+<script src="assets/site.js"></script>
+</body>
+</html>

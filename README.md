@@ -46,6 +46,8 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── index.html         Landing page
 │   ├── studio.html        Forge Studio prototype (Create → Test → Sell, playable game)
 │   ├── play3d.html        Web 3D engine profile — real-time 3D Penalty King (Three.js)
+│   ├── embed-demo.html    Embed SDK demo — one script tag, any website
+│   ├── assets/embed.js    The Embed SDK (iframe player + Forge chip + telemetry)
 │   ├── agent-fleet / worlds / marketplace / ip-registry .html
 │   ├── how-it-works / pricing / docs / showcase / enterprise .html
 │   ├── about / careers / press / contact .html
@@ -61,5 +63,6 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── README.md          Backend map (spec lives in docs/)
 │   └── ai-gateway/        Claude-primary AI gateway reference (fixes Genkit error)
 └── shared/
-    └── contracts.ts       Shared types: roles, statuses, blueprint schema, ACU constants
+    ├── contracts.ts       Shared types: roles, statuses, blueprint schema, ACU constants
+    └── telemetry.ts       Forge Graph event contract + Remix Graph lineage schema
 ```

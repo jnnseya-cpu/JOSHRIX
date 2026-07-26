@@ -160,6 +160,9 @@ canvas#game{display:block;width:100%;cursor:crosshair;touch-action:none}
 .chan-sel{margin-top:.6rem;font-size:.92rem;font-weight:600;padding:.5rem .8rem;border-radius:8px}
 .chan-go{margin-top:.7rem;width:100%;white-space:normal}
 .gf-bar .gmute{background:none;border:1px solid var(--stroke-bright);border-radius:6px;color:var(--text);cursor:pointer;padding:.1rem .45rem;font-size:.85rem}
+.lineage{border:1px solid rgba(232,121,249,.4);border-radius:10px;padding:.85rem 1.05rem;margin-bottom:1.2rem;
+  background:rgba(232,121,249,.07);color:var(--text);font-weight:500;line-height:1.55}
+.lineage b{color:var(--magenta)}
 .sharelink{display:flex;gap:.5rem;margin-top:.65rem}
 .sharelink input{flex:1;min-width:0;background:rgba(5,5,8,.55);border:1px solid var(--stroke);border-radius:8px;color:var(--cyan);
   font-family:var(--mono);font-size:.72rem;letter-spacing:.05em;padding:.5rem .7rem;outline:none}
@@ -212,6 +215,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
   <section class="panel show" id="p1">
     <div class="panel-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t">Stage 01 — Neural Synthesis · Idea Agent</span></div>
     <div class="panel-body">
+      <div class="lineage" id="lineageNote" style="display:none">⑂ Remixing <b>Penalty King</b> — lineage will be registered on fork: ancestor <b>JX-IP-00921</b> earns a <b>30% royalty share</b> of this game's creator revenue, forever. You keep 70% — and your remix can be remixed too.</div>
       <label for="prompt">Describe your game — in any language</label>
       <textarea id="prompt">A football penalty game where players compete online, unlock boots, buy stadiums, and sell player cards. Set in African stadiums with weekly leagues.</textarea>
       <div class="row">
@@ -385,6 +389,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
               </div>
               <p class="split">Per sale at Creator Pro (20%): platform <b>£1.00</b> · you keep <b>£3.99</b> — IP certificate <b>JX-IP-00921</b> registered to you.</p>
               <p class="split">⑂ <b>Remix-enabled</b>: others may fork this game by licence — you earn a <b>lineage royalty on every descendant's revenue</b>, forever. Being remixed pays you.</p>
+              <div class="actions" style="margin-top:.7rem"><button class="btn btn-ghost chan-btn" id="btnRemix">⑂ Remix This Game — fork with 70/30 lineage</button></div>
             </div>
           </div>
         </div>
@@ -399,6 +404,18 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
 <script>
 (() => {
 const $ = id => document.getElementById(id);
+/* Forge Graph client — fire-and-forget, never blocks the UI (shared/telemetry.ts contract) */
+const jxSid = 'jx-' + Math.random().toString(36).slice(2, 12);
+const jxTrack = (event, props) => {
+  try {
+    const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
+    fetch(base + '/api/telemetry', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+      body: JSON.stringify({ events: [{ event, ts: Date.now(), sessionId: jxSid, gameId: 'penalty-king',
+        language: $('selLang') ? $('selLang').value : undefined, props }] })
+    }).catch(() => {});
+  } catch (e) { /* telemetry must never break the studio */ }
+};
 let acu = 2000;
 const spend = n => { acu = Math.max(0, acu - n); $('acuBal').textContent = acu.toLocaleString(); };
 
@@ -443,6 +460,7 @@ $('btnBlueprint').addEventListener('click', async () => {
   spend(refining ? 2 : 8);
   $('bp').classList.add('show');
   $('approveRow').style.display = 'flex';
+  jxTrack('forge.blueprint_generated', { provider: remote && remote.provider ? remote.provider : 'local', refine: refining });
 });
 
 /* ---------- Stage 2: agent fleet ---------- */
@@ -482,6 +500,7 @@ $('btnForge').addEventListener('click', () => {
   show('p2');
   forgeAcu0 = acu;
   AudioFX.setLang($('selLang').value === 'auto' ? 'en' : $('selLang').value);
+  jxTrack('forge.blueprint_approved', { scope: $('selScope').value });
   $('qaRow').style.display = 'none';
   AGENTS.forEach((a, i) => {
     const el = $('ag' + i);
@@ -524,12 +543,12 @@ $('btnQA').addEventListener('click', () => {
     }, 300 + i * 250);
   });
   spend(120);
-  setTimeout(() => { $('verdict').classList.add('show'); $('pubRow').style.display = 'flex'; }, 2600);
+  setTimeout(() => { $('verdict').classList.add('show'); $('pubRow').style.display = 'flex'; jxTrack('forge.qa_certified', { funScore: 92 }); }, 2600);
 });
 
 /* ---------- Stage 4: private playtest ---------- */
 let gameOn = false;
-$('btnPlaytest').addEventListener('click', () => { setStep(4); show('p4'); if (!gameOn) { gameOn = true; initGame(); } });
+$('btnPlaytest').addEventListener('click', () => { setStep(4); show('p4'); if (!gameOn) { gameOn = true; initGame(); jxTrack('forge.playtest_started'); } });
 $('btnRefine').addEventListener('click', () => {
   refining = true;
   setStep(1); show('p1');
@@ -540,13 +559,24 @@ $('btnRefine').addEventListener('click', () => {
 });
 
 /* ---------- Stage 5: publish + multi-platform distribution ---------- */
-$('btnPub').addEventListener('click', () => { setStep(5); show('p5'); });
+$('btnPub').addEventListener('click', () => { setStep(5); show('p5'); jxTrack('forge.published'); });
 $('btnReplay').addEventListener('click', () => { setStep(4); show('p4'); });
 $('btnCopy').addEventListener('click', () => {
   $('btnCopy').textContent = '✓ Copied';
   setTimeout(() => { $('btnCopy').textContent = '⧉ Copy'; }, 1600);
   try { navigator.clipboard.writeText($('shareUrl').value); }
   catch (e) { $('shareUrl').select(); document.execCommand('copy'); }
+  jxTrack('share.link_copied');
+});
+$('btnRemix').addEventListener('click', () => {
+  jxTrack('remix.forked', { parent: 'penalty-king', royalty: 0.3 });
+  $('lineageNote').style.display = 'block';
+  $('prompt').value = 'Remix of Penalty King: keep the five-shot penalty core and rising keeper AI, but set it in ';
+  $('btnBlueprint').disabled = false;
+  $('btnBlueprint').textContent = '⚡ Generate Remix Blueprint';
+  $('bpHint').textContent = 'Remix fork — lineage registered to JX-IP-00921 · you keep 70% of creator revenue';
+  setStep(1); show('p1');
+  $('prompt').focus();
 });
 $('btnPwa').addEventListener('click', e => {
   const b = e.currentTarget; b.disabled = true; b.textContent = 'Generating manifest…';
@@ -932,6 +962,7 @@ function initGame() {
               banner = { txt: 'LEVEL UP!', c: '#A855F7', t: Date.now() };
               boom(120, W/2, H/2);
               AudioFX.level();
+              jxTrack('play.level_up', { level });
             } else {
               msg = `Round over — ${goals}/5. Tap to retry Level ${level}`;
               AudioFX.lose();
