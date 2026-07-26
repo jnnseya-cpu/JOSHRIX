@@ -9,6 +9,55 @@
 - Every response includes: `status`, `data`, `meta` (pagination), `error` (if applicable), `request_id`
 - Webhooks signed with HMAC-SHA256 using a per-webhook secret; signature delivered in the `X-Joshrix-Signature` header
 
+## Core Endpoints
+
+### Forge
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/forge/initiate` | JWT/Key | Initiate a new forge cycle; returns `forge_id` and estimated ACU cost |
+| GET | `/forge/{forge_id}` | JWT/Key | Forge cycle status, agent progress, and current output |
+| POST | `/forge/{forge_id}/approve` | JWT | Operator approval at configured gate (concept, blueprint, pre-deploy) |
+| POST | `/forge/{forge_id}/cancel` | JWT | Cancel active forge cycle; partial ACU refund applied |
+| GET | `/forge/{forge_id}/report` | JWT/Key | Full forge report: blueprint, QA report, economy design, deployment URLs |
+| GET | `/forge` | JWT | Paginated list of operator forge cycles with filters |
+
+### IP Vault & Marketplace
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/ip` | JWT/Key | Operator IP vault: all registered IP records |
+| GET | `/ip/{ip_id}` | JWT/Key | Full IP record with certificate, QA report, licence status |
+| POST | `/ip/{ip_id}/list` | JWT | Create marketplace listing from IP record |
+| GET | `/marketplace` | Public | Browse listings with search, filter, pagination |
+| GET | `/marketplace/{listing_id}` | Public | Listing detail page data |
+| POST | `/marketplace/{listing_id}/purchase` | JWT | Initiate purchase; returns BitriPay checkout session |
+
+### Operators, Billing & Analytics
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| GET | `/operators/me` | JWT | Profile, tier, ACU balance, KYC status |
+| PATCH | `/operators/me` | JWT | Update operator profile |
+| GET | `/operators/me/acu` | JWT | ACU balance and ledger history |
+| POST | `/operators/me/acu/topup` | JWT | Initiate ACU top-up; returns BitriPay checkout session |
+| GET | `/subscriptions/me` | JWT | Current subscription details |
+| POST | `/subscriptions/upgrade` | JWT | Initiate plan upgrade; returns BitriPay checkout session |
+| GET | `/analytics/forge` | JWT | Forge performance analytics for operator |
+| GET | `/analytics/revenue` | JWT | Revenue analytics: sales, royalties, ACU spend |
+
+### Webhooks & Admin
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/webhooks` | Key | Register webhook endpoint |
+| GET | `/webhooks` | Key | List registered webhooks |
+| DELETE | `/webhooks/{webhook_id}` | Key | Delete webhook |
+| POST | `/admin/users/{id}/suspend` | Admin JWT | Suspend operator account |
+| POST | `/admin/forge/{id}/terminate` | Admin JWT | Force-terminate forge cycle |
+| GET | `/admin/audit-log` | Admin JWT | Paginated audit log with filters |
+| GET | `/admin/compliance/flags` | Admin JWT | Active compliance flags with severity filter |
+
 ## Webhook Events (BitriPay + Forge Pipeline)
 
 | Event | Trigger | Platform Action |

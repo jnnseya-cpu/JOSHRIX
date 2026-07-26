@@ -26,7 +26,8 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── PLATFORM.md        Platform architecture: agent fleets, modules, payments, stack
 │   ├── SECURITY.md        Zero Trust security architecture
 │   ├── DATA-MODEL.md      Database schema and index strategy
-│   └── API.md             API design principles and webhook events
+│   ├── API.md             API endpoints, auth, rate limits, webhooks
+│   └── MONETISATION.md    ACU economy, subscription plans, revenue streams
 └── site/
     └── index.html         Landing page (self-contained premium gaming experience)
 ```
