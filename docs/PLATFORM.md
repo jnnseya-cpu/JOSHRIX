@@ -99,6 +99,25 @@ Cloud-native, event-driven microservices on Google Cloud Platform — horizontal
 
 Deeper specifications: [Zero Trust security & compliance](SECURITY.md) · [database schema](DATA-MODEL.md) · [API specification](API.md) · [monetisation model](MONETISATION.md) · [Super Admin centre](ADMIN.md) · [build roadmap](ROADMAP.md).
 
+## The Forge Protocol — Five-Stage Neural Workflow
+
+| Stage | Agent | Input | Output | Gate |
+|---|---|---|---|---|
+| 01 — Neural Synthesis | Idea Agent | Operator prompt; genre; market data | Validated concept brief; viability score; 3 variants | Operator approval (optional) |
+| 02 — Blueprint Architecture | Strategic Agent | Concept brief; budget tier | Technical blueprint; economy model; ACU estimate | Operator approval (optional) |
+| 03 — Parallel Production | Code Agent + Asset Agent (parallel) | Blueprint; tech spec; asset descriptors | Source code; asset pack; audio landscape | Automatic — merge to Economy Agent |
+| 03b — Economy Design | Economy Agent | Code+Asset output; genre benchmarks | Full economy design; LTV projection; price architecture | Automatic — to QA |
+| 04 — Rigorous Validation | QA Agent | Full forge output; compliance targets | QA certificate; bug catalogue; deployment token (or rejection) | Mandatory gate — token required for deployment |
+| 05 — Global Deployment | Deployment Agent | Deployment token; build package; pricing config | Live CDN deployment; marketplace listing; IP registration | BitriPay checkout for listing fee (if applicable) |
+
+## Platform Philosophy — The Sovereignty of Creation
+
+JOSHRIX Studio was conceived from a single provocation: the distance between an idea and a commercial product has been effectively erased. The platform exists not merely to accelerate game production, but to democratise the infrastructure of IP creation and commercialisation. Every operator — whether a solo creator in Kinshasa, a micro-studio in Birmingham, or an enterprise publisher in London — deploys the same enterprise-grade intelligence fleet, the same IP sovereignty architecture, and the same global distribution infrastructure that was previously accessible only to organisations with millions in capital and dozens of specialists.
+
+This is not a productivity tool. It is a transfer of commercial power to creators. The Autonomous Fleet does not merely generate — it protects, validates, commercialises, and deploys.
+
+**JOSHRIX Studio. Own your code. Secure your assets. Forge your legacy.**
+
 ## Revenue Model
 
 Value is captured at every layer of the stack: operator subscriptions, marketplace transaction fees, forge credit (ACU) consumption, IP licensing fees, white-label enterprise licensing, and API revenue. Every game forged strengthens the market intelligence layer — making every subsequent forge smarter, faster, and more commercially viable.
