@@ -50,7 +50,9 @@ The system never guarantees success. It exposes: predicted opportunity, confiden
 | Advanced Creator | Understands mechanics, may not code | Visual logic editor; deeper agent control; economy designer; analytics; marketplace selling |
 | Professional Developer | Codes, wants acceleration | Source-code access; Git integration; API access; agent review; custom runtime modules; local export |
 | Indie Studio | Produces and operates multiple games | Team workspaces; permissions; version control; build pipelines; QA automation; revenue analytics; asset libraries |
-| Brand / Agency | Promotional and branded games | White-label player experience; brand asset controls; campaign analytics; compliance sign-off; fixed-scope pricing |
-| Educator | Classroom and cohort creation | Supervised forge; IP assignment controls; instructor dashboard; institution billing (Education tier) |
+| Brand / Agency | Promotional and branded games | Brand-kit ingestion; campaign game templates; lead capture; white-label hosting; campaign analytics |
+| Educator | Educational games and simulations | Curriculum mapping; question banks; learning analytics; accessibility; classroom controls; student safety |
+| Asset Seller | Creates and sells creative components | Marketplace listings for characters, environments, animations, music, scripts, templates, and mechanics; provenance certification; royalty tracking |
+| Investor / Publisher | Discovers promising games | Verified analytics; creator due diligence; commercial metrics; licensing opportunities; portfolio dashboards |
 
-Segments map onto the commercial tiers in [MONETISATION.md](MONETISATION.md): Instant Creator → Spark/packages; Advanced Creator → Explorer/Operator; Professional Developer → Operator + API; Indie Studio → Studio; Brand/Agency → Enterprise white-label; Educator → Education.
+Segments map onto the commercial tiers in [MONETISATION.md](MONETISATION.md): Instant Creator → Spark/packages; Advanced Creator → Explorer/Operator; Professional Developer → Operator + API; Indie Studio → Studio; Brand/Agency → Enterprise white-label; Educator → Education; Asset Seller → marketplace seller rails; Investor/Publisher → data intelligence subscriptions.

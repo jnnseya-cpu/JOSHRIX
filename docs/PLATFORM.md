@@ -99,14 +99,26 @@ Cloud-native, event-driven microservices on Google Cloud Platform — horizontal
 
 Deeper specifications: [Zero Trust security & compliance](SECURITY.md) · [database schema](DATA-MODEL.md) · [API specification](API.md) · [monetisation model](MONETISATION.md) · [Super Admin centre](ADMIN.md) · [build roadmap](ROADMAP.md) · [competitive framework](COMPETITIVE.md) · [master developer guide](DEVELOPER-GUIDE.md) · [forensic gap analysis](GAP-ANALYSIS.md).
 
-## The Operator Journey
+## The Operator Journey — Ten Stages
 
-1. **Choose a game type.** The Forge Initiator offers a curated catalogue: mobile, web, 2D platformer, puzzle, fighting, racing, quiz, kids education, football/sports, card, zombie survival, tycoon, simulation, story adventure, and casino-style (excluding real-money gambling unless legally licensed and jurisdictionally cleared by the Compliance Agent).
-2. **Describe the idea.** A single prompt is enough — e.g. *"a football penalty game where players compete online, unlock boots, buy stadiums, and sell player cards."*
-3. **Receive the blueprint.** The Idea and Strategic agents return the title, category, core gameplay loop, target audience, levels, characters, monetisation model, asset list, technical complexity, estimated build cost, suggested selling price, and a commercial score — with three ranked variants.
-4. **Select a package.** Fixed-price forge packages sit alongside ACU consumption (see [MONETISATION.md](MONETISATION.md)): Starter Game £19 · Playable Web Game £49 · Mobile-Ready Game £99 · Advanced Game with Marketplace £249 · Commercial Game Package £499+.
-5. **The fleet builds.** Game files, assets, animations, menus, scoring, payment hooks, admin dashboard, player database, and marketplace page — per the Forge Protocol below.
-6. **Publish or sell.** Play privately, publish on the JOSHRIX Marketplace, sell the template, licence the game, sell assets, offer paid access, export to web/mobile builds, embed as an iframe or PWA, invite players, or run tournaments.
+1. **Idea capture.** Input can be a text prompt, voice note, game-design document, drawing, screenshot, reference image, brand website, product photo, existing source code, or an existing game build. *Example: "Create a mobile football penalty game set in African stadiums. Players unlock boots, compete in weekly leagues and build their own club."*
+2. **Intent and rights screening.** Before any generation: requested genre, target age, intended countries, copyrighted brands or characters, restricted mechanics, real-money elements, technical complexity, and estimated generation cost are checked (the policy layer in [SECURITY.md](SECURITY.md)).
+3. **Game Blueprint.** The Idea and Strategic agents return a structured blueprint: title options, player fantasy, core loop, session length, win/fail conditions, progression, controls, level structure, art direction, audio direction, target platform, monetisation options, accessibility plan, required assets, build complexity, estimated ACUs, and a commercial risk score — with ranked variants.
+4. **Scope selection.** Prototype · Minimum viable game · Commercial starter game · Advanced commercial game · Studio production project — each stating clearly what is and is not included. Fixed-price packages map onto these scopes (see [MONETISATION.md](MONETISATION.md)): Starter £19 · Playable Web £49 · Mobile-Ready £99 · Advanced with Marketplace £249 · Commercial £499+.
+5. **Generation plan.** The Orchestrator compiles an execution graph: blueprint → mechanics specification → technical architecture → asset manifest → scene generation → gameplay code → UI implementation → audio implementation → automated tests → playtesting agents → repair loop → human preview → publishable build.
+6. **Interactive production.** The operator watches live: active agents, tasks in progress, ACUs consumed, provider cost, errors, decisions requiring approval, current build maturity, and quality score.
+7. **Play and modify.** Natural-language iteration: *"Make the character jump higher." "Replace the jungle with Kinshasa at night." "Add a boss every five levels." "Reduce advertisement frequency." "Make level three easier." "Add French and Lingala." "Make it suitable for children aged seven and above."*
+8. **Quality gate.** No public commercial release until the QA Agent's mandatory checks pass ([Forge Protocol](#the-forge-protocol--five-stage-neural-workflow) stage 04).
+9. **Publishing decision.** Publish on JOSHRIX, host privately, embed on a website, export a web build, generate an Android package, prepare an iOS project, export source code, export to supported external engines, sell the project, sell a licence, or list a template.
+10. **Live operation.** Post-publish monitoring: acquisition, activation, retention, session quality, difficulty, crashes, purchases, churn, player complaints, exploits, and content safety — feeding the Growth layer and the LiveOps loop.
+
+## Supported Game Categories
+
+| Tier | Categories |
+|---|---|
+| Initial release (genres AI can build and test reliably) | 2D platformer · endless runner · puzzle · quiz · word game · match-three · card game · tower defence · top-down action · visual novel · interactive story · educational simulation · simple management/tycoon · branded promotional mini-game |
+| Expansion release | 3D platformer · racing · sports mini-games · survival · multiplayer arena · social world · RPG · strategy · sandbox · co-operative adventure |
+| Restricted / controlled (additional legal, safety, and geographic controls) | Real-money gambling · paid prize competitions · simulated gambling aimed at children · financial trading simulations · explicit adult content · political persuasion · medical diagnosis · highly realistic violence involving minors |
 
 ### Creative Agent Structure → Production Fleet Mapping
 
