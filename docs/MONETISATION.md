@@ -78,6 +78,86 @@ For development teams and professionals. **Adds:** fifty projects; ten team seat
 ### Business — £399/month · 7,980 ACUs (£79.80 retail, ≤£19.95 provider cost)
 For brands, agencies, publishers, and game businesses. **Adds:** unlimited draft projects (fair-use); fifty seats; multiple brands and workspaces; white-label games; branded portals; lead-capture games; campaign analytics; customer-data integration; API access; advanced revenue intelligence; portfolio management; commercial licence management; custom domains; advanced segmentation; churn prediction; A/B testing; multilingual generation; regional personalisation; premium support; service-level targets; ten brand identities. **Commission: 10%.** Best for marketing agencies, global brands, publishers, educational institutions, franchise operators, large creator businesses, promotional-game producers.
 
+### Enterprise — from £1,200/month · 24,000 base ACUs (£240 retail, ≤£60 provider cost)
+For major publishers, governments, universities, and global businesses. **Adds:** 250+ seats; private enterprise workspace; private agent configurations; custom AI model routing; SSO; RBAC; data residency options; dedicated security policies; custom data-retention rules; private marketplace; internal asset library; white-label creator platform; enterprise API limits; advanced audit logs; dedicated onboarding; account manager; custom SLA; procurement support; private cloud or hybrid deployment; custom commercial terms. **Commission: negotiated 5–10%.** Additional enterprise services charged separately.
+
+### Subscription Comparison
+
+| Plan | Monthly price | Monthly ACUs | Active projects | Seats | Marketplace commission |
+|---|---|---|---|---|---|
+| Explorer | £0 | 100 one-time | 1 | 1 | Cannot sell |
+| Creator | £19 | 380 | 3 | 1 | 25% |
+| Creator Pro | £49 | 980 | 10 | 3 | 20% |
+| Studio | £149 | 2,980 | 50 | 10 | 15% |
+| Business | £399 | 7,980 | Fair-use unlimited | 50 | 10% |
+| Enterprise | From £1,200 | From 24,000 | Custom | 250+ | 5–10% |
+
+### Annual Subscription Model
+
+**Pay annually, receive 15% off.** The ACU allocation must remain exactly 20% of the amount actually paid — never allocate the full monthly ACU quota after discounting (that would push the ACU percentage above 20%). Example, Creator Pro: £588 standard annual → £499.80 discounted → £41.65 monthly recognised value → **833 ACUs/month** (or presented as 9,996 ACUs annually). ACUs may be released monthly to control provider spending and reduce refund risk.
+
+## ACU Top-Up Packages
+
+| Price | ACUs | Retail value |
+|---|---|---|
+| £5 | 500 | £5 |
+| £10 | 1,000 | £10 |
+| £25 | 2,500 | £25 |
+| £50 | 5,000 | £50 |
+| £100 | 10,000 | £100 |
+| £250 | 25,000 | £250 |
+| £500 | 50,000 | £500 |
+| £1,000 | 100,000 | £1,000 |
+
+Maximum provider exposure per package: **25% of package price** (e.g. £100 package → ≤£25 provider cost → ≥£75 gross difference). **Bonus ACUs** are permitted only where the effective markup stays ≥4× (a £100/11,000-ACU package has £110 effective retail; provider cost still capped at £25), and should be steered toward low-cost internal actions rather than expensive external generation.
+
+## ACU Wallet Rules
+
+**Wallet categories:** subscription · purchased · promotional · referral · refund · enterprise contract ACUs.
+
+**Consumption order:** promotional → subscription → purchased → contract.
+
+**Expiry:** promotional 30–90 days · subscription ACUs expire at cycle end or roll over up to one month · purchased valid 12 months · enterprise per contract.
+
+**Hard-stop policy at zero balance:** stop chargeable AI operations; preserve the project; allow manual editing; allow previewing previous builds; display cost before requesting top-up; **never create unexpected negative balances**.
+
+**Auto top-up:** £5 / £10 / £25 tiers plus custom thresholds for business users — explicit consent and clear notification required.
+
+## AI Action Pricing (indicative retail)
+
+| Concept & planning | ACUs | | Visual generation | ACUs |
+|---|---|---|---|---|
+| Game-name generation | 10 | | Basic icon | 20–50 |
+| Concept improvement | 25 | | Character concept | 100–250 |
+| Commercial opportunity analysis | 75 | | Character variation | 50–150 |
+| Full Game Blueprint | 100–300 | | Environment image | 100–300 |
+| Full Game Design Document | 300–800 | | UI kit | 300–800 |
+| Monetisation strategy | 150 | | Animation set | 500–2,000 |
+| Game-economy design | 200–500 | | 3D asset generation | 500–5,000 |
+
+| Game production | ACUs | | Testing | ACUs |
+|---|---|---|---|---|
+| Simple game mechanic | 100–500 | | Basic QA scan | 100 |
+| Level generation | 150–1,000 | | Performance test | 200 |
+| Full prototype | 1,000–5,000 | | Accessibility review | 150 |
+| Commercial starter build | 5,000–25,000 | | Security review | 300 |
+| Advanced game build | Dynamic | | 100 AI playtests | 500 |
+| Multiplayer infrastructure | Custom quote | | 1,000 AI playtests | 3,000 |
+| | | | Economy simulation | 500–2,000 |
+
+Every action must show: estimated ACUs · maximum ACUs · expected output · provider dependency · refund rule · user approval.
+
+## Outcome-Based Game-Creation Packages
+
+For users who do not want a subscription:
+
+| Package | Price | Includes |
+|---|---|---|
+| Prototype Launch Pack | £49 | Game blueprint; one basic playable web prototype; basic assets; one level; basic QA; private preview |
+| Creator Launch Pack | £199 | Commercial blueprint; up to five levels; basic monetisation; web publishing; marketplace listing; standard QA; basic analytics |
+| Commercial Game Pack | From £499 | Full production plan; advanced AI agents; custom art direction; ten+ levels; game economy; automated testing; commercial publishing; marketplace licence setup |
+| Studio Production Pack | From £2,500 | Dedicated production workflow; full agent fleet; extended scope by agreement |
+
 ## ACU (AI Compute Units) — The Core Currency
 
 ACU is the primary consumption metric of the platform. Every forge cycle consumes ACU proportional to compute intensity, agent usage, model API costs, asset generation volume, and QA depth — aligning platform revenue directly with value delivered: operators pay more when they produce more.
