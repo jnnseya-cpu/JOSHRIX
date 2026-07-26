@@ -36,7 +36,8 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── GAP-ANALYSIS.md    Forensic review: gaps + proven-pattern solutions
 │   ├── INTELLIGENCE.md    AI data intelligence layer + self-managing fleet
 │   ├── CONNECTORS.md      Third-party connector ecosystem catalogue
-│   └── PRODUCT-PRINCIPLES.md  Positioning, five layers, principles, user segments
+│   ├── PRODUCT-PRINCIPLES.md  Positioning, five layers, principles, user segments
+│   └── AGENT-ARCHITECTURE.md  Hierarchical agent operating model and specialists
 └── site/
     └── index.html         Landing page (self-contained premium gaming experience)
 ```
