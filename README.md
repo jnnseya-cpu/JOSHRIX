@@ -35,7 +35,8 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── DEVELOPER-GUIDE.md Master build document: services, events, CI/CD, SLOs
 │   ├── GAP-ANALYSIS.md    Forensic review: gaps + proven-pattern solutions
 │   ├── INTELLIGENCE.md    AI data intelligence layer + self-managing fleet
-│   └── CONNECTORS.md      Third-party connector ecosystem catalogue
+│   ├── CONNECTORS.md      Third-party connector ecosystem catalogue
+│   └── PRODUCT-PRINCIPLES.md  Positioning, five layers, principles, user segments
 └── site/
     └── index.html         Landing page (self-contained premium gaming experience)
 ```

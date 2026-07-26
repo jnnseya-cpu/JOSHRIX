@@ -7,7 +7,7 @@ This index binds the documentation set into one complete, developer-ready produc
 
 | # | Required Section | Authoritative Location |
 |---|---|---|
-| 1 | Executive Product Vision | [PLATFORM.md](PLATFORM.md) — opening + Platform Philosophy |
+| 1 | Executive Product Vision | [PLATFORM.md](PLATFORM.md) — opening + Platform Philosophy; [PRODUCT-PRINCIPLES.md](PRODUCT-PRINCIPLES.md) — positioning, five layers, principles, segments |
 | 2 | Market Gap Deep Review | [COMPETITIVE.md](COMPETITIVE.md) — landscape + unserved gaps; [GAP-ANALYSIS.md](GAP-ANALYSIS.md) §C |
 | 3 | Complete User Ecosystem | [PLATFORM.md](PLATFORM.md) — User Ecosystem (9 user types) |
 | 4 | AI-Agent Command Centres (every user type) | [PLATFORM.md](PLATFORM.md) — Operator Command Centre; [ADMIN.md](ADMIN.md) — Super Admin; [GAP-ANALYSIS.md](GAP-ANALYSIS.md) §E2 — unified assistant runtime with per-tier capability packs (Chief of Staff, Analyst, Research, Automation, Growth, Security, Knowledge) |
