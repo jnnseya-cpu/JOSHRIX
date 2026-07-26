@@ -89,8 +89,78 @@ Generates levels; defines pacing; introduces mechanics gradually; places enemies
 World-building; plot architecture; character arcs; missions; dialogue; branching choices; lore consistency; tone control; localisation readiness.
 
 ### Economy Designer Agent
-Designs soft and premium currencies, rewards, sinks, sources, upgrade costs, progression pacing, inventory, crafting, and battle pass systems. (Feeds the Economy Agent stage of the Forge Protocol.)
+Designs soft and premium currencies, rewards, sinks, sources, upgrade costs, progression pacing, inventory, crafting, battle pass systems, subscription benefits, and offers. (Feeds the Economy Agent stage of the Forge Protocol.)
+
+**Guardrails:** no deceptive pricing · no forced purchases disguised as gameplay · age-sensitive restrictions · probability disclosure for random rewards · spending controls for minors · geographic compliance rules.
+
+### Accessibility Agent
+Checks and proposes: remappable controls, subtitles, text scaling, colour-blind modes, reduced motion, contrast, one-handed play, difficulty assists, screen-reader compatibility, audio cues, cognitive accessibility.
+
+## Engineering Agents (Engineering Division)
+
+### Architecture Agent
+Selects the correct execution path from engine profiles:
+
+| Profile | Stack |
+|---|---|
+| Web 2D | Phaser · PixiJS · TypeScript · WebGL/WebGPU where supported |
+| Lightweight Web 3D | Three.js · React Three Fiber · Rapier physics |
+| Open-source export | Godot · GDScript or C# · native and web export |
+| Professional expansion | Unity · Unreal integration · UEFN pipeline |
+
+The platform begins with deterministic web-first formats (fast preview, low deployment friction, direct hosting); Unity, Roblox, and UEFN become controlled integration targets later — the independent project model preserves creator portability rather than depending on a single external ecosystem.
+
+### Gameplay Code Agent
+Generates strongly typed code, modular game systems, state machines, input handling, physics integration, scoring, save systems, inventory, dialogue, progression, and multiplayer logic.
+
+**Requirements (hard gates):** no direct production merge · static analysis required · tests required · sandbox execution · dependency allow-list · secret scanning · licence scanning. (Enforced by the supply-chain controls in [GAP-ANALYSIS.md](GAP-ANALYSIS.md) §D1.)
+
+### Scene Construction Agent
+Scene hierarchy, object placement, prefabs, collision boundaries, camera setup, lighting, spawn points, navigation meshes, trigger zones.
+
+### UI Engineering Agent
+Main menu, pause menu, settings, HUD, inventory, shop, leaderboard, onboarding, accessibility surfaces, consent screens, payment confirmation.
+
+### Backend Agent
+Authentication, player profiles, cloud saves, leaderboards, inventory, entitlements, purchases, matchmaking, notifications, moderation, analytics ingestion.
+
+### Multiplayer Agent
+Chooses the networking model; creates lobbies; matches players; defines server authority; handles latency, reconnection, and state reconciliation; anti-cheat hooks; spectator support.
+
+**Constraint:** multiplayer is a premium, constrained feature — never presented as one-click capability without infrastructure, load, and security testing.
+
+### Build and Deployment Agent
+Development, preview, staging, and production builds; build manifest; checksums; rollback package; release notes.
+
+### Debugging Agent
+Runs a closed repair loop:
+
+```
+Build → capture compile/runtime errors → classify root cause → propose patch
+→ generate tests → apply in isolated branch → rebuild → compare behaviour
+→ merge only when gates pass
+```
+
+### Performance Agent
+Frames per second, memory, CPU, GPU, asset size, loading time, network usage, battery consumption, device compatibility.
+
+## Art, Animation and Audio Agents (Art & Audio Division)
+
+### Art Director Agent
+Maintains consistent style, palette, shapes, character proportions, lighting, materials, UI language, and brand identity across every generated asset.
+
+### Character Agent
+Character specifications, turnarounds, expressions, equipment, animation requirements, collision dimensions, variants.
+
+### Environment Agent
+Backgrounds, tilesets, props, buildings, terrain, weather, lighting profiles.
+
+### Animation Agent
+Idle, walk, run, jump, attack, damage, death, celebration, UI transitions.
+
+### Audio Director Agent
+Music briefs, adaptive soundtrack direction, SFX palettes, UI sound language, mix and loudness standards, and licensing-safe sourcing for every audio asset.
 
 ---
 
-*Divisions to be detailed as the specification continues: Engineering, Art and Audio, Quality and Simulation, Safety and Rights, Commerce and Publishing, Growth and Live Operations.*
+*Divisions to be detailed as the specification continues: Quality and Simulation, Safety and Rights, Commerce and Publishing, Growth and Live Operations.*
