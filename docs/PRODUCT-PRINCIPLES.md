@@ -56,3 +56,14 @@ The system never guarantees success. It exposes: predicted opportunity, confiden
 | Investor / Publisher | Discovers promising games | Verified analytics; creator due diligence; commercial metrics; licensing opportunities; portfolio dashboards |
 
 Segments map onto the commercial tiers in [MONETISATION.md](MONETISATION.md): Instant Creator → Spark/packages; Advanced Creator → Explorer/Operator; Professional Developer → Operator + API; Indie Studio → Studio; Brand/Agency → Enterprise white-label; Educator → Education; Asset Seller → marketplace seller rails; Investor/Publisher → data intelligence subscriptions.
+
+## Worldwide Gap-Closing Features
+
+### Low-Bandwidth Creator Mode
+For emerging markets: compressed previews, deferred asset downloads, offline project notes, low-resolution build mode, resumable uploads, mobile-first creation.
+
+### Multilingual Creation
+Creators describe games in major global languages. The platform translates prompts, game text, store listings, dialogue, tutorials, and support material — preserving original intent, with human review always available.
+
+### Culturalisation
+The AI supports region-specific content adaptation: local settings, characters, music, holidays, and visual references (e.g. "Replace the jungle with Kinshasa at night"); region-appropriate monetisation norms and payment methods (mobile money via BitriPay); and jurisdiction-aware content standards — so a game forged for one market can be respectfully and legally adapted for another.

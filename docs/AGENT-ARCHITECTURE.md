@@ -220,6 +220,62 @@ Produces the release score that feeds the Forge Protocol's mandatory QA gate:
 }
 ```
 
+## The Shared Game Specification — JXSL
+
+The "shared game specification" the Orchestrator maintains is a declarative internal format: **JXSL — the JOSHRIX Specification Language** (GFSL in the source concept). The JXSL compiler translates structured game intent into engine-specific code and assets.
+
+```yaml
+game:
+  id: penalty-king
+  genre: [sports, arcade]
+  target: [web, android]
+
+player:
+  controls:
+    shot: { type: swipe, direction: true, velocity: true }
+
+loop:
+  primary: [aim, shoot, resolve, reward, progress]
+
+round:
+  shots: 5
+  win_condition: { type: score_greater_than_opponent }
+
+progression:
+  leagues: { count: 10 }
+  unlocks: [boots, balls, stadiums]
+
+economy:
+  soft_currency: coins
+  premium_currency: gems
+  random_paid_rewards: false
+
+telemetry:
+  events: [shot_started, shot_result, round_completed]
+```
+
+**Benefits:** deterministic generation · cross-engine portability · easier testing · safer agent changes · version comparison · visual editing · marketplace reuse.
+
+## Agent Permission System
+
+Every agent receives a role and tool policy (enforced by the egress-proxy tool registry, not by prompts):
+
+```json
+{
+  "agent": "economy_designer",
+  "permissions": {
+    "read_project": true,
+    "modify_jxsl": true,
+    "modify_source_code": false,
+    "publish_build": false,
+    "spend_acus_without_approval": 100,
+    "access_player_pii": false
+  }
+}
+```
+
+**High-risk actions always require human approval:** public publishing · spending over threshold · deleting assets · changing payment logic · changing licences · deploying multiplayer backend · accessing personal data · selling exclusive rights.
+
 ## Commerce and Publishing Division
 
 ### Store Submission Agent

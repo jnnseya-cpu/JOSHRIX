@@ -96,6 +96,40 @@ Content-Type: application/json
 | GET | `/analytics/forge` | JWT | Forge performance analytics for operator |
 | GET | `/analytics/revenue` | JWT | Revenue analytics: sales, royalties, ACU spend |
 
+### Creator Platform Surface (projects, agent runs, builds, releases)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/v1/projects` | Create project |
+| GET | `/v1/projects/{projectId}` | Project detail |
+| PATCH | `/v1/projects/{projectId}` | Update project |
+| POST | `/v1/projects/{projectId}/versions` | Create version |
+| POST | `/v1/projects/{projectId}/duplicate` | Duplicate project |
+| DELETE | `/v1/projects/{projectId}` | Delete project |
+| POST | `/v1/projects/{projectId}/blueprints` | Generate blueprint |
+| POST | `/v1/projects/{projectId}/agent-runs` | Start agent run |
+| GET | `/v1/agent-runs/{runId}` | Agent run status |
+| POST | `/v1/agent-runs/{runId}/approve` | Approve gated run |
+| POST | `/v1/agent-runs/{runId}/reject` | Reject gated run |
+| POST | `/v1/agent-runs/{runId}/cancel` | Cancel run |
+| POST | `/v1/projects/{projectId}/builds` | Start build |
+| GET | `/v1/builds/{buildId}` | Build status |
+| POST | `/v1/builds/{buildId}/promote` | Promote build |
+| POST | `/v1/builds/{buildId}/rollback` | Roll back build |
+| POST | `/v1/projects/{projectId}/releases` | Create release |
+| GET | `/v1/releases/{releaseId}` | Release detail |
+| POST | `/v1/releases/{releaseId}/publish` | Publish release |
+| POST | `/v1/releases/{releaseId}/unpublish` | Unpublish release |
+| POST | `/v1/marketplace/listings` | Create listing |
+| GET | `/v1/marketplace/listings` | Browse listings |
+| GET | `/v1/marketplace/listings/{listingId}` | Listing detail |
+| POST | `/v1/marketplace/listings/{listingId}/purchase` | Purchase |
+| POST | `/v1/marketplace/listings/{listingId}/licences` | Issue licence |
+| POST | `/v1/runtime/events` | Ingest telemetry |
+| GET | `/v1/projects/{projectId}/analytics` | Project analytics |
+| GET | `/v1/projects/{projectId}/segments` | Player segments |
+| GET | `/v1/projects/{projectId}/recommendations` | Growth recommendations |
+
 ### Webhooks & Admin
 
 | Method | Endpoint | Auth | Description |

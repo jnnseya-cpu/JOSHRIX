@@ -73,6 +73,17 @@ Every Solo Operator receives a dedicated AI Command Centre with seven continuous
 
 **Studio Operators** add: Team Forge Queue, Collaboration Layer (shared IP vault with attribution and revenue splits), Studio Analytics, and RBAC Administration. **Enterprise Licensees** receive a white-label admin OS. **Platform Super Admins** get omniscient governance across users, pipeline health, revenue, agents, security, compliance, API health, and BitriPay settlement operations.
 
+### Premium Creator Interface — Six Surfaces
+
+| Surface | Contents |
+|---|---|
+| Creator Command Centre | Widgets: project health, current build, quality score, agent activity, ACU balance, provider cost, commercial score, player metrics, marketplace revenue, recommended actions |
+| Creation Studio | Prompt panel, live game preview, scene hierarchy, properties, asset library, logic graph, AI conversation, version timeline |
+| Agent War Room | Agents as an accountable production team: name, role, current task, confidence, cost, status, issues, decisions required |
+| Economy Lab | Currency sources and sinks, progression curve, revenue scenarios, reward frequency, purchase conversion, fairness alerts |
+| Behaviour Intelligence Centre | Retention cohorts, level funnels, heat maps, failure points, player segments, churn risk, experiment results |
+| Rights and Safety Centre | Asset provenance, similarity warnings, age rating, moderation status, licence compliance, publication restrictions |
+
 ## Platform Modules
 
 Forge Studio (the primary command console: forge initiator, agent fleet status panel, concept brief reviewer, blueprint viewer, progress timeline, forge history, ACU consumption meter, and configurable approval gates) · IP Vault · Marketplace · Economy Lab · Analytics Command Centre · BitriPay Merchant Portal · API Developer Centre · Compliance Hub · Team Management · Enterprise Admin OS · Super Admin Centre · Subscription & Billing · Notification Centre · Audit Log · Security Settings.
