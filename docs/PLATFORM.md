@@ -97,6 +97,8 @@ Cloud-native, event-driven microservices on Google Cloud Platform — horizontal
 
 **Key external dependencies (primary / fallback):** text-code AI (OpenAI GPT-4o & Claude / Gemini Pro), image AI (DALL-E 3 & SDXL / Midjourney), audio AI (ElevenLabs & Suno / Mubert), payments (BitriPay / Stripe), KYC (Sumsub / Veriff), AML (ComplyAdvantage / World-Check), CDN (Cloudflare / CloudFront), IP registry (IPwe or custom on-chain / Bernstein), trademark search (USPTO & EUIPO / Markify), email (SendGrid / Brevo), SMS (Twilio / MessageBird), auth (Firebase Auth or Auth0 / Cognito), vectors (Pinecone / Weaviate), monitoring (Datadog / New Relic), analytics (Mixpanel / Amplitude), search (Algolia / Elasticsearch), documents (DocuSeal / PDFMonkey), e-signature (DocuSign / HelloSign), CRM (HubSpot / Salesforce), tax (TaxJar / Avalara), billing (Stripe Billing / Chargebee), age ratings (IARC / custom classifier), platform SDKs (Apple, Google, Valve / Expo, Capacitor).
 
+Deeper specifications: [Zero Trust security](SECURITY.md) · [database schema](DATA-MODEL.md) · [API specification](API.md).
+
 ## Revenue Model
 
 Value is captured at every layer of the stack: operator subscriptions, marketplace transaction fees, forge credit (ACU) consumption, IP licensing fees, white-label enterprise licensing, and API revenue. Every game forged strengthens the market intelligence layer — making every subsequent forge smarter, faster, and more commercially viable.

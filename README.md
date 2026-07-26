@@ -22,6 +22,11 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 ├── branding/
 │   ├── BRANDING.md        Brand guidelines: name, tagline, colors, typography
 │   └── logo.svg           JOSHRIX Studio wordmark logo
+├── docs/
+│   ├── PLATFORM.md        Platform architecture: agent fleets, modules, payments, stack
+│   ├── SECURITY.md        Zero Trust security architecture
+│   ├── DATA-MODEL.md      Database schema and index strategy
+│   └── API.md             API design principles and webhook events
 └── site/
-    └── index.html         Landing page
+    └── index.html         Landing page (self-contained premium gaming experience)
 ```
