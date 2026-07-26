@@ -43,6 +43,8 @@ export const LicenceTypes = [
 export type LicenceType = (typeof LicenceTypes)[number];
 
 export const GameBlueprintSchema = z.object({
+  /** BCP-47 code of the language all player-facing text is written in (creator's language). */
+  language: z.string().optional(),
   title: z.string(),
   summary: z.string(),
   genre: z.array(z.string()),

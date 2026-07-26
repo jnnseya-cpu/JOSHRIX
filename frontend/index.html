@@ -431,6 +431,24 @@ footer{
   html{scroll-behavior:auto}
   .reveal{opacity:1;transform:none}
 }
+/* why the world switches */
+.why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.2rem;margin-top:3rem}
+.why-card{position:relative;border:1px solid var(--stroke);border-radius:16px;padding:1.7rem 1.5rem;background:rgba(22,22,42,.5);
+  backdrop-filter:blur(12px);transition:transform .35s,border-color .35s,box-shadow .35s;overflow:hidden}
+.why-card::before{content:"";position:absolute;inset:0 0 auto;height:2px;background:linear-gradient(90deg,var(--violet),var(--cyan));opacity:.7}
+.why-card:hover{transform:translateY(-5px);border-color:var(--stroke-bright);box-shadow:0 22px 50px rgba(0,0,0,.5),0 0 30px rgba(124,58,237,.22)}
+.why-card .wnum{font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.3em;color:var(--cyan)}
+.why-card h3{font-family:var(--mono);font-weight:700;font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase;margin:.7rem 0 .6rem}
+.why-card p{color:var(--muted);font-weight:500;line-height:1.65;font-size:1rem}
+.why-card p b{color:var(--text)}
+.lang-strip{margin-top:2.6rem;border:1px solid var(--stroke-bright);border-radius:18px;padding:1.8rem clamp(1.2rem,3vw,2.4rem);
+  background:linear-gradient(120deg,rgba(124,58,237,.14),rgba(34,211,238,.07));text-align:center}
+.lang-strip b{font-family:var(--mono);font-size:.66rem;font-weight:700;letter-spacing:.3em;text-transform:uppercase;
+  background:linear-gradient(90deg,var(--violet-hot),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lang-strip .langs{display:flex;flex-wrap:wrap;gap:.55rem;justify-content:center;margin:1.1rem 0}
+.lang-strip .langs span{font-weight:600;font-size:.95rem;color:var(--text);border:1px solid var(--stroke);border-radius:999px;
+  padding:.4rem 1rem;background:rgba(5,5,8,.45)}
+.lang-strip p{color:var(--muted);font-weight:500;max-width:64ch;margin:0 auto;line-height:1.6}
 </style>
 </head>
 <body>
@@ -682,6 +700,39 @@ footer{
         <span class="enter">Enter World <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
       </div>
     </article>
+  </div>
+</section>
+
+<section id="why">
+  <div class="sec-tag reveal">Why The World Switches</div>
+  <h2 class="reveal">They Have Players. <span class="grad">We Have Owners.</span></h2>
+  <p class="sec-sub reveal">Nobody leaves a $300M game for prettier graphics — so we don't fight that war. Roblox, YouTube and Minecraft won on creation, ownership and identity. That is the war JOSHRIX is built to win.</p>
+  <div class="why-grid">
+    <article class="why-card reveal">
+      <span class="wnum">REASON 01</span>
+      <h3>It's YOUR game</h3>
+      <p>They offer 500 hours of someone else's world. We offer <b>authorship</b> — forge a game, see your name on the IP certificate, send the link to your group chat. No AAA title competes with that feeling.</p>
+    </article>
+    <article class="why-card reveal">
+      <span class="wnum">REASON 02</span>
+      <h3>It pays YOU</h3>
+      <p>Elsewhere you spend £50 on skins and own nothing. Here your first £4.99 sale is <b>yours</b> — source, IP, resale rights, revenue. The first payout notification beats any graphics engine ever built.</p>
+    </article>
+    <article class="why-card reveal">
+      <span class="wnum">REASON 03</span>
+      <h3>It's ABOUT you</h3>
+      <p>No giant will make a game about your street league, your folktale, your city — the economics forbid it. The fleet forges it in an hour, <b>in your language</b>, voiced and culturally yours. The long tail is the moat.</p>
+    </article>
+    <article class="why-card reveal">
+      <span class="wnum">REASON 04</span>
+      <h3>It takes 10 seconds</h3>
+      <p>One shareable link — no install, no account, no 90GB download. We don't take their 500 hours; we win the queue, the group chat, the fanbase drop: <b>millions of tiny moments</b> they never owned.</p>
+    </article>
+  </div>
+  <div class="lang-strip reveal">
+    <b>Create In Any Language</b>
+    <div class="langs"><span>English</span><span>Français</span><span>Kiswahili</span><span>Yorùbá</span><span>Hausa</span><span>العربية</span><span>Português</span><span>Español</span><span>हिन्दी</span><span>中文</span><span>Twi</span><span>isiZulu</span><span>አማርኛ</span><span>日本語</span><span>+ every other</span></div>
+    <p>Describe your game in your own words, in your own language — the agent fleet designs it, writes it and voices the commentary in that language, then localises it for the world when you're ready.</p>
   </div>
 </section>
 

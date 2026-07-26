@@ -8,8 +8,11 @@ import Anthropic from "@anthropic-ai/sdk";
 import { GameBlueprintSchema, type GameBlueprint, ACU } from "./shared/contracts";
 
 const SYSTEM = `You are the JOSHRIX Idea Agent. From the creator's game description, produce a commercial game blueprint.
+The creator may write in ANY language. Detect their language (or honour an explicitly requested one) and write ALL
+player-facing text — title, summary, characters, levels, marketplaceCategory — in that language. Games are created
+in the creator's language first and localised later.
 Respond with ONLY a JSON object (no markdown, no prose) with exactly these keys:
-title (string), summary (string), genre (string[]), coreLoop (string[] of 4-6 short steps),
+language (BCP-47 code of the language used), title (string), summary (string), genre (string[]), coreLoop (string[] of 4-6 short steps),
 targetAudience (string), mechanics (string[]), characters ({name,role}[]), levels ({name,objective}[]),
 monetisationModel (string), assetList (string[]), technicalComplexity ("low"|"medium"|"high"),
 estimatedCredits (integer, 600-5000), suggestedPriceGBP (number), commercialScore (integer 0-100),
@@ -21,7 +24,7 @@ export const BLUEPRINT_ACU_CHARGE = 8;
 
 export async function generateBlueprint(
   prompt: string,
-  opts: { type?: string; platform?: string; scope?: string } = {},
+  opts: { type?: string; platform?: string; scope?: string; language?: string } = {},
 ): Promise<{ blueprint: GameBlueprint; provider: string }> {
   if (process.env.ANTHROPIC_API_KEY) {
     const anthropic = new Anthropic();
@@ -32,7 +35,7 @@ export async function generateBlueprint(
       messages: [
         {
           role: "user",
-          content: `Game description: ${prompt}\nGame type: ${opts.type ?? "any"}\nTarget platform: ${opts.platform ?? "all"}\nScope package: ${opts.scope ?? "commercial starter"}`,
+          content: `Game description: ${prompt}\nGame type: ${opts.type ?? "any"}\nTarget platform: ${opts.platform ?? "all"}\nScope package: ${opts.scope ?? "commercial starter"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the description"}`,
         },
       ],
     });
@@ -46,17 +49,18 @@ export async function generateBlueprint(
     const blueprint = GameBlueprintSchema.parse(JSON.parse(text.slice(start, end + 1)));
     return { blueprint, provider: "claude" };
   }
-  return { blueprint: demoBlueprint(prompt), provider: "demo" };
+  return { blueprint: demoBlueprint(prompt, opts.language), provider: "demo" };
 }
 
 /** Deterministic blueprint used until AI provider keys are configured. */
-export function demoBlueprint(prompt: string): GameBlueprint {
+export function demoBlueprint(prompt: string, language?: string): GameBlueprint {
   const p = prompt.toLowerCase();
   const football = p.includes("penalty") || p.includes("football") || p.includes("soccer");
   const words = prompt.split(/\s+/).filter((w) => w.length > 4);
-  const stem = (words[0] || "Neon").replace(/[^a-zA-Z]/g, "") || "Neon";
+  const stem = (words[0] || "Neon").replace(/[^\p{L}]/gu, "") || "Neon";
   const title = football ? "Penalty King" : stem.charAt(0).toUpperCase() + stem.slice(1) + " Quest";
   return GameBlueprintSchema.parse({
+    language: language && language !== "auto" ? language : "en",
     title,
     summary: football
       ? "Five shots, one keeper, weekly leagues in packed African stadiums. Unlock boots, buy stadiums, trade player cards."

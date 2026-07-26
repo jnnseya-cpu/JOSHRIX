@@ -38,7 +38,7 @@ export const api = onRequest(
         res.status(405).json({ error: "POST only" });
         return;
       }
-      const { prompt, type, platform, scope } = (req.body ?? {}) as Record<string, string>;
+      const { prompt, type, platform, scope, language } = (req.body ?? {}) as Record<string, string>;
       if (!prompt || typeof prompt !== "string" || prompt.length < 4) {
         res.status(400).json({ error: "Body must include a game description in `prompt`." });
         return;
@@ -48,7 +48,7 @@ export const api = onRequest(
         return;
       }
       try {
-        const { blueprint, provider } = await generateBlueprint(prompt, { type, platform, scope });
+        const { blueprint, provider } = await generateBlueprint(prompt, { type, platform, scope, language });
         res.status(200).json({ blueprint, provider, acuCharge: BLUEPRINT_ACU_CHARGE });
       } catch (err: unknown) {
         res.status(502).json({ error: "Blueprint generation failed", detail: String((err as Error)?.message ?? err) });

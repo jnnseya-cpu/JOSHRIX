@@ -160,6 +160,9 @@ canvas#game{display:block;width:100%;cursor:crosshair;touch-action:none}
 .chan-sel{margin-top:.6rem;font-size:.92rem;font-weight:600;padding:.5rem .8rem;border-radius:8px}
 .chan-go{margin-top:.7rem;width:100%;white-space:normal}
 .gf-bar .gmute{background:none;border:1px solid var(--stroke-bright);border-radius:6px;color:var(--text);cursor:pointer;padding:.1rem .45rem;font-size:.85rem}
+.sharelink{display:flex;gap:.5rem;margin-top:.65rem}
+.sharelink input{flex:1;min-width:0;background:rgba(5,5,8,.55);border:1px solid var(--stroke);border-radius:8px;color:var(--cyan);
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.05em;padding:.5rem .7rem;outline:none}
 .incl-t{display:block;margin-top:1rem;font-family:var(--mono);font-size:.56rem;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:var(--cyan)}
 .incl{list-style:none;margin:.55rem 0 0;display:flex;flex-direction:column;gap:.4rem}
 .incl li{font-size:.95rem;font-weight:600;line-height:1.4;padding-left:1.3rem;position:relative}
@@ -209,7 +212,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
   <section class="panel show" id="p1">
     <div class="panel-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t">Stage 01 — Neural Synthesis · Idea Agent</span></div>
     <div class="panel-body">
-      <label for="prompt">Describe your game</label>
+      <label for="prompt">Describe your game — in any language</label>
       <textarea id="prompt">A football penalty game where players compete online, unlock boots, buy stadiums, and sell player cards. Set in African stadiums with weekly leagues.</textarea>
       <div class="row">
         <div><label>Game type</label>
@@ -218,6 +221,15 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
           <select id="selPlat"><option>All platforms — Web · PWA · Android · iOS</option><option>Web + PWA</option><option>Mobile-first — iOS + Android</option><option>Web only</option></select></div>
         <div><label>Scope package</label>
           <select id="selScope"><option>Commercial starter — 2,000 ACUs</option><option>Prototype — 600 ACUs</option><option>Advanced commercial — 5,000 ACUs</option></select></div>
+        <div><label>Creation language</label>
+          <select id="selLang">
+            <option value="auto">Auto-detect from my prompt</option>
+            <option value="en">English</option><option value="fr">Français</option><option value="es">Español</option>
+            <option value="pt">Português</option><option value="sw">Kiswahili</option><option value="ar">العربية</option>
+            <option value="yo">Yorùbá</option><option value="ha">Hausa</option><option value="ig">Igbo</option>
+            <option value="zu">isiZulu</option><option value="tw">Twi</option><option value="am">አማርኛ</option>
+            <option value="hi">हिन्दी</option><option value="zh">中文</option><option value="ja">日本語</option>
+          </select></div>
       </div>
       <div class="actions">
         <button class="btn btn-primary" id="btnBlueprint">⚡ Generate Blueprint</button>
@@ -315,7 +327,8 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
             <span class="ic">🌐</span>
             <div>
               <h5>JOSHRIX Web <span class="pill live">◉ LIVE</span></h5>
-              <p>Hosted instantly on the JOSHRIX CDN with a shareable play link. Zero setup, zero extra cost.</p>
+              <p>Hosted instantly on the JOSHRIX CDN. One link — no install, no account, no download. This link is the product.</p>
+              <span class="sharelink"><input id="shareUrl" readonly value="https://joshrix.com/play/penalty-king"><button class="btn btn-ghost chan-btn" id="btnCopy">⧉ Copy</button></span>
             </div>
             <div class="act"><button class="btn btn-ghost chan-btn" id="btnReplay">▶ Play Live Build</button></div>
           </div>
@@ -402,7 +415,7 @@ $('btnBlueprint').addEventListener('click', async () => {
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
     const r = await fetch(base + '/api/blueprint', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: $('prompt').value, type: $('selType').value, platform: $('selPlat').value, scope: $('selScope').value }),
+      body: JSON.stringify({ prompt: $('prompt').value, type: $('selType').value, platform: $('selPlat').value, scope: $('selScope').value, language: $('selLang').value }),
       signal: AbortSignal.timeout(9000)
     });
     if (r.ok) remote = await r.json();
@@ -420,7 +433,7 @@ $('btnBlueprint').addEventListener('click', async () => {
     let title = 'Penalty King';
     if (!p.includes('penalty') && !p.includes('football')) {
       const words = $('prompt').value.split(/\s+/).filter(w => w.length > 4);
-      title = (words[0] || 'Neon').replace(/[^a-zA-Z]/g,'');
+      title = (words[0] || 'Neon').replace(/[^\p{L}]/gu,'') || 'Neon';
       title = title.charAt(0).toUpperCase() + title.slice(1) + ' Quest';
     }
     $('bpTitle').textContent = title;
@@ -467,6 +480,7 @@ $('btnForge').addEventListener('click', () => {
   setStep(2);
   show('p2');
   forgeAcu0 = acu;
+  AudioFX.setLang($('selLang').value === 'auto' ? 'en' : $('selLang').value);
   $('qaRow').style.display = 'none';
   AGENTS.forEach((a, i) => {
     const el = $('ag' + i);
@@ -527,6 +541,12 @@ $('btnRefine').addEventListener('click', () => {
 /* ---------- Stage 5: publish + multi-platform distribution ---------- */
 $('btnPub').addEventListener('click', () => { setStep(5); show('p5'); });
 $('btnReplay').addEventListener('click', () => { setStep(4); show('p4'); });
+$('btnCopy').addEventListener('click', () => {
+  $('btnCopy').textContent = '✓ Copied';
+  setTimeout(() => { $('btnCopy').textContent = '⧉ Copy'; }, 1600);
+  try { navigator.clipboard.writeText($('shareUrl').value); }
+  catch (e) { $('shareUrl').select(); document.execCommand('copy'); }
+});
 $('btnPwa').addEventListener('click', e => {
   const b = e.currentTarget; b.disabled = true; b.textContent = 'Generating manifest…';
   setTimeout(() => { b.textContent = '✓ Install banner live'; $('plPwa').textContent = 'ENABLED'; $('plPwa').classList.add('live'); }, 1400);
@@ -604,25 +624,48 @@ const AudioFX = (() => {
     g.gain.exponentialRampToValueAtTime(.001, t0 + dur);
     o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + .05);
   };
+  // commentary line banks — production replaces these with generated voice packs (REALISM-PIPELINE)
+  const LINES = {
+    en: { bcp: 'en-GB', goal: ['GOAL! What a strike!', 'GOAL! Top corner, unstoppable!', 'GOAL! The keeper had no chance!'],
+          save: ['Oh, great save!', 'Denied by the keeper!', 'The keeper says no!'], wide: ['Wide! Into row Z.', 'Off target!'],
+          level: 'Level up! The keeper is getting faster.', lose: 'Round over. Tap to try again.' },
+    fr: { bcp: 'fr-FR', goal: ['BUT ! Quelle frappe !', 'BUT ! En pleine lucarne, imparable !', "BUT ! Le gardien n'a rien pu faire !"],
+          save: ['Quel arrêt !', 'Repoussé par le gardien !'], wide: ['À côté !', 'Non cadré !'],
+          level: 'Niveau supérieur ! Le gardien est plus rapide.', lose: 'Manche terminée. Touchez pour réessayer.' },
+    es: { bcp: 'es-ES', goal: ['¡GOL! ¡Qué disparo!', '¡GOL! ¡A la escuadra, imparable!', '¡GOL! El portero no pudo hacer nada.'],
+          save: ['¡Qué parada!', '¡Atajada del portero!'], wide: ['¡Fuera!', '¡Desviado!'],
+          level: '¡Subes de nivel! El portero es más rápido.', lose: 'Ronda terminada. Toca para reintentar.' },
+    pt: { bcp: 'pt-PT', goal: ['GOLO! Que remate!', 'GOLO! Ao ângulo, imparável!', 'GOLO! O guarda-redes nada pôde fazer!'],
+          save: ['Grande defesa!', 'O guarda-redes diz não!'], wide: ['Para fora!', 'Ao lado!'],
+          level: 'Subiu de nível! O guarda-redes está mais rápido.', lose: 'Ronda terminada. Toque para tentar de novo.' },
+    sw: { bcp: 'sw-KE', goal: ['GOLI! Shuti kali!', 'GOLI! Pembeni ya juu, haizuiliki!', 'GOLI! Kipa hakuwa na nafasi!'],
+          save: ['Uokoaji mzuri!', 'Kipa amezuia!'], wide: ['Nje ya lango!', 'Haikulenga!'],
+          level: 'Umepanda ngazi! Kipa anakuwa mwepesi zaidi.', lose: 'Raundi imeisha. Gusa kujaribu tena.' },
+    ar: { bcp: 'ar-SA', goal: ['هدف! تسديدة رائعة!', 'هدف! في الزاوية، لا يُصد!', 'هدف! الحارس لم يملك فرصة!'],
+          save: ['تصدٍ رائع!', 'الحارس يتصدى!'], wide: ['خارج المرمى!', 'بعيدة عن الهدف!'],
+          level: 'مستوى جديد! الحارس أصبح أسرع.', lose: 'انتهت الجولة. المس للمحاولة مجددًا.' },
+  };
+  let lang = 'en';
+  const L = () => LINES[lang] || LINES.en;
   const say = txt => {
     if (muted || !('speechSynthesis' in window)) return;
     try {
       const u = new SpeechSynthesisUtterance(txt);
-      u.rate = 1.06; u.pitch = 1.05; u.volume = .9;
+      u.lang = L().bcp; u.rate = 1.06; u.pitch = 1.05; u.volume = .9;
       speechSynthesis.cancel(); speechSynthesis.speak(u);
     } catch (e) { /* speech unavailable */ }
   };
   const pick = a => a[Math.floor(Math.random() * a.length)];
   return {
     start: () => ensure(),
+    setLang: c => { lang = LINES[c] ? c : 'en'; },
     kick: () => { burst(.09, 900, 1.2, .5); tone(70, .12, 'sine', .6); },
-    goal: () => { burst(1.4, 750, .5, .9); tone(1650, .12, 'square', .1); tone(1650, .12, 'square', .1, .18);
-      say(pick(['GOAL! What a strike!', 'GOAL! Top corner, unstoppable!', 'GOAL! The keeper had no chance!'])); },
-    save: () => { burst(.5, 500, .8, .45); say(pick(['Oh, great save!', 'Denied by the keeper!', 'The keeper says no!'])); },
-    wide: () => { burst(.35, 420, .8, .3); say(pick(['Wide! Into row Z.', 'Off target!'])); },
+    goal: () => { burst(1.4, 750, .5, .9); tone(1650, .12, 'square', .1); tone(1650, .12, 'square', .1, .18); say(pick(L().goal)); },
+    save: () => { burst(.5, 500, .8, .45); say(pick(L().save)); },
+    wide: () => { burst(.35, 420, .8, .3); say(pick(L().wide)); },
     level: () => { tone(523, .12, 'triangle', .3); tone(659, .12, 'triangle', .3, .12); tone(784, .22, 'triangle', .35, .24);
-      burst(1.6, 800, .5, .8); say('Level up! The keeper is getting faster.'); },
-    lose: () => say('Round over. Tap to try again.'),
+      burst(1.6, 800, .5, .8); say(L().level); },
+    lose: () => say(L().lose),
     setMute: m => { muted = m; if (crowdGain) crowdGain.gain.value = m ? 0 : .05; if (m && 'speechSynthesis' in window) speechSynthesis.cancel(); }
   };
 })();
