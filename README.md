@@ -50,6 +50,10 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── about / careers / press / contact .html
 │   ├── signup / login / dashboard / profile / admin .html
 │   └── assets/            joshrix.css design system, site.js, woff2 fonts
+├── api/                   Deployed backend: Vercel serverless functions
+│   ├── health.ts          GET /api/health — deployment + provider readiness
+│   ├── blueprint.ts       POST /api/blueprint — Idea Agent (Claude primary, demo fallback)
+│   └── _gateway.ts        Serverless AI gateway (imports shared/contracts.ts)
 ├── backend/
 │   ├── README.md          Backend map (spec lives in docs/)
 │   └── ai-gateway/        Claude-primary AI gateway reference (fixes Genkit error)

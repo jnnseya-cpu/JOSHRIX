@@ -1,0 +1,15 @@
+/**
+ * GET /api/health — deployment + provider readiness (booleans only, never key material).
+ */
+import { providerStatus } from "./_gateway";
+
+export default function handler(_req: any, res: any) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.status(200).json({
+    ok: true,
+    service: "joshrix-studio",
+    layers: { frontend: "static /frontend", backend: "serverless /api", shared: "shared/contracts.ts" },
+    providers: providerStatus(),
+    mode: process.env.ANTHROPIC_API_KEY ? "live" : "demo (add ANTHROPIC_API_KEY to go live)",
+  });
+}

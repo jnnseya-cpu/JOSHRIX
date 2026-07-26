@@ -37,6 +37,14 @@ The chosen stack, with each service doing only what it is best at.
                     └───────────────────────┘  └──────────────────────┘
 ```
 
+## Deploying What Exists Today — Chosen Split
+
+**Backend → Vercel · Frontend (+ shared) → Firebase Hosting.** Both configs are in the repo; each deploy is one command/click.
+
+1. **Backend on Vercel**: vercel.com → Add New Project → import `jnnseya-cpu/JOSHRIX` → Deploy. The `api/` directory ships as serverless functions (`/api/health`, `/api/blueprint` — the Idea Agent with Claude primary). With no keys set it runs in **demo mode** (deterministic blueprint, clearly labelled); add `ANTHROPIC_API_KEY` in Project → Settings → Environment Variables to go live. `shared/contracts.ts` compiles into the function bundle — the schema and ACU rules deploy with the backend. (Vercel also serves `frontend/` on the same URL as a bonus preview.)
+2. **Frontend on Firebase Hosting**: `npm i -g firebase-tools && firebase login && firebase use --add <your-project> && firebase deploy --only hosting`. `firebase.json` serves `frontend/` with clean URLs and security headers — all 21 pages including `/play3d`.
+3. **Connect them**: in `frontend/assets/config.js`, set `window.JOSHRIX_API_BASE = 'https://<your-vercel-app>.vercel.app'` and redeploy hosting. The Firebase-hosted pages then call the Vercel API cross-origin (CORS is already enabled on the API). Verify with `https://<vercel-app>.vercel.app/api/health`.
+
 ## Setup Steps
 
 1. **Hostinger**: buy the domain. In DNS, add `A @ → 76.76.21.21` and `CNAME www → cname.vercel-dns.com` (Vercel shows the exact records when you add the domain). Turn OFF Hostinger's own hosting/parking for the domain. Optionally keep Hostinger email or add MX for your mail provider.

@@ -226,12 +226,12 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
       <div class="bp" id="bp">
         <div class="bp-head">
           <h3 id="bpTitle">Penalty King</h3>
-          <span class="score">Commercial Score 86 / 100</span>
+          <span class="score" id="bpScore">Commercial Score 86 / 100</span>
         </div>
         <div class="bp-grid">
-          <div class="bp-cell"><b>Core Loop</b><span>Aim → Shoot → Resolve → Reward → Progress</span></div>
-          <div class="bp-cell"><b>Audience</b><span>Casual sports gamers 13+ · mobile-first markets</span></div>
-          <div class="bp-cell"><b>Monetisation</b><span>Freemium · cosmetic boots &amp; stadiums · tournament entry · no paid random rewards</span></div>
+          <div class="bp-cell"><b>Core Loop</b><span id="bpLoop">Aim → Shoot → Resolve → Reward → Progress</span></div>
+          <div class="bp-cell"><b>Audience</b><span id="bpAud">Casual sports gamers 13+ · mobile-first markets</span></div>
+          <div class="bp-cell"><b>Monetisation</b><span id="bpMon">Freemium · cosmetic boots &amp; stadiums · tournament entry · no paid random rewards</span></div>
           <div class="bp-cell"><b>Session · Rounds</b><span>3-min sessions · 5 shots per round · weekly leagues</span></div>
           <div class="bp-cell"><b>Rights Screening</b><span style="color:var(--green)">CLEAR — no real club names, no licensed marks</span></div>
           <div class="bp-cell"><b>Stand-Out Hooks</b><span>Weekly leagues · tradeable player cards · African stadium identity — retention hooks free clones don't ship</span></div>
@@ -381,6 +381,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
 
 <footer>© 2026 JOSHRIX Studio — Forge Studio prototype. Create Worlds. Build Games. Own the Future.</footer>
 
+<script src="assets/config.js"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
@@ -390,19 +391,44 @@ const spend = n => { acu = Math.max(0, acu - n); $('acuBal').textContent = acu.t
 /* ---------- Stage 1: blueprint ---------- */
 let refining = false;   // refine passes are delta-priced, never a full re-charge
 let forgeAcu0 = 2000;   // ACU balance when the current forge run started
-$('btnBlueprint').addEventListener('click', () => {
-  const p = $('prompt').value.toLowerCase();
-  let title = 'Penalty King';
-  if (!p.includes('penalty') && !p.includes('football')) {
-    const words = $('prompt').value.split(/\s+/).filter(w => w.length > 4);
-    title = (words[0] || 'Neon') .replace(/[^a-zA-Z]/g,'');
-    title = title.charAt(0).toUpperCase() + title.slice(1) + ' Quest';
+$('btnBlueprint').addEventListener('click', async () => {
+  const btn = $('btnBlueprint');
+  btn.disabled = true;
+  btn.textContent = '⚡ Forging blueprint…';
+  // live Idea Agent via the deployed API (Claude when keys are set, demo otherwise);
+  // silent local fallback when offline or in the self-contained preview
+  let remote = null;
+  try {
+    const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
+    const r = await fetch(base + '/api/blueprint', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt: $('prompt').value, type: $('selType').value, platform: $('selPlat').value, scope: $('selScope').value }),
+      signal: AbortSignal.timeout(9000)
+    });
+    if (r.ok) remote = await r.json();
+  } catch (e) { /* offline — local Idea Agent below */ }
+  if (remote && remote.blueprint) {
+    const b = remote.blueprint;
+    $('bpTitle').textContent = b.title;
+    $('bpScore').textContent = `Commercial Score ${b.commercialScore} / 100`;
+    $('bpLoop').textContent = b.coreLoop.join(' → ');
+    $('bpAud').textContent = b.targetAudience;
+    $('bpMon').textContent = b.monetisationModel;
+    $('bpEst').textContent = `~${b.estimatedCredits.toLocaleString()} ACUs · maturity target: Commercial starter`;
+  } else {
+    const p = $('prompt').value.toLowerCase();
+    let title = 'Penalty King';
+    if (!p.includes('penalty') && !p.includes('football')) {
+      const words = $('prompt').value.split(/\s+/).filter(w => w.length > 4);
+      title = (words[0] || 'Neon').replace(/[^a-zA-Z]/g,'');
+      title = title.charAt(0).toUpperCase() + title.slice(1) + ' Quest';
+    }
+    $('bpTitle').textContent = title;
   }
-  $('bpTitle').textContent = title;
+  btn.textContent = refining ? '⚡ Refine Blueprint' : '⚡ Generate Blueprint';
   spend(refining ? 2 : 8);
   $('bp').classList.add('show');
   $('approveRow').style.display = 'flex';
-  $('btnBlueprint').disabled = true;
 });
 
 /* ---------- Stage 2: agent fleet ---------- */
