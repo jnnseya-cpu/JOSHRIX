@@ -48,7 +48,37 @@ Features: declining session frequency, tutorial abandonment, repeated failure, r
 ### Reinforcement-Learning Experimentation
 **Constrained contextual bandits initially — not uncontrolled reinforcement learning.**
 Approved use cases: tutorial sequence, home-screen arrangement, non-monetary reward timing, recommended game content, difficulty assistance.
-Restricted use cases: **price discrimination and child monetisation are prohibited.**
+Restricted use cases — **prohibited**: price discrimination · child monetisation · creating compulsive loops · hiding exit controls · escalating spending pressure.
+
+## Creator Behaviour Intelligence
+
+The platform also learns how creators work.
+
+**Signals:** features frequently accepted, features repeatedly rejected, preferred art style, preferred genres, budget tolerance, typical project completion rate, publishing behaviour, marketplace performance.
+
+**Benefits:** more accurate agent recommendations, better default templates, faster project generation, personalised workspace, reduced generation cost, creator-specific quality controls.
+
+**Creator memory must be: visible · editable · exportable · deletable · workspace-specific.**
+
+## The Knowledge Graph (detailed)
+
+**Entities:** game, genre, mechanic, level, character, asset, script, component, creator, player segment, store listing, licence, build, test, telemetry event, AI decision.
+
+**Relationships:**
+
+```
+Game USES Mechanic
+Mechanic IMPLEMENTED_BY Component
+Game CONTAINS Level
+Level CONTAINS Asset
+Asset OWNED_BY Creator
+Game SOLD_UNDER Licence
+Build PASSED Test
+PlayerSegment PREFERS Mechanic
+AIAction MODIFIED Component
+```
+
+**Benefits:** reusable mechanics, cross-project reasoning, dependency detection, better recommendations, faster debugging, rights traceability, marketplace search.
 
 ## Commercial Engines (Revenue Layer Consumers)
 

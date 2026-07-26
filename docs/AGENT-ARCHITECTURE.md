@@ -220,6 +220,13 @@ Produces the release score that feeds the Forge Protocol's mandatory QA gate:
 }
 ```
 
+## Commerce and Publishing Division
+
+### Store Submission Agent
+Prepares external store submissions: app icon, screenshots, description, keywords, privacy disclosures, age-rating questionnaire, data-use statement, review notes, build package.
+
+**Constraint:** must never guarantee acceptance by an external store (evidence-over-promises principle).
+
 ---
 
-*Divisions to be detailed as the specification continues: Safety and Rights, Commerce and Publishing, Growth and Live Operations.*
+*Divisions to be detailed as the specification continues: Safety and Rights, remainder of Commerce and Publishing, Growth and Live Operations.*

@@ -149,6 +149,42 @@ The marketplace trades five listing classes (the Epic Fab model proves the deman
 | Game Mechanics | Leaderboard module, daily rewards, loot box*, inventory, multiplayer lobby, AI enemy system | Component licence; drops into any forge as a blueprint module (*loot boxes gated by jurisdiction compliance) |
 | Game Services | Custom level design, reskinning, game improvement, trailer creation, publishing support | Service listings from advanced creators; escrowed via marketplace trust rails |
 
+### Marketplace Licence Models
+
+| Licence | Rights |
+|---|---|
+| Personal | One person, non-commercial use |
+| Single Commercial Project | Use in one commercial game |
+| Multi-Project Commercial | Use in multiple projects |
+| Marketplace Distribution | Buyer may include the asset in games sold to end users; cannot resell the raw asset |
+| White Label | Buyer may rebrand and commercialise the completed game |
+| Exclusive Acquisition | Ownership or defined commercial rights transfer to one buyer |
+| Subscription Licence | Rights continue while the subscription remains active |
+
+Extended category list: full games, game templates, mechanics, source-code modules, characters, environments, animations, audio, UI kits, level packs, educational content, developer services, white-label games.
+
+**Smart licence enforcement** — every marketplace item carries: licence ID, buyer, seller, permitted uses, prohibited uses, project associations, geography, term, modification rights, resale rights, attribution requirements.
+
+**Marketplace quality score** — inputs: build success, documentation, test coverage, performance, seller history, refund rate, support response, rights verification, buyer reviews, update frequency.
+
+**Marketplace fraud controls** — detect: stolen assets, near-duplicate listings, fake sales, review manipulation, malware, misleading screenshots, copyrighted content, seller collusion, payment fraud.
+
+**Escrow for high-value sales:** buyer pays → funds enter escrow → seller provides build and source → automated verification runs → buyer inspection period → funds release when conditions pass → platform retains commission.
+
+## Publishing & Distribution — JOSHRIX Play
+
+Every approved game receives a hosted game page: play button, trailer, screenshots, ratings, age guidance, creator profile, purchase options, updates, and a community section.
+
+**Distribution modes:** public free · public paid · private link · password protected · organisation-only · embeddable · subscription access · licence sale · tournament access.
+
+**Export targets by phase:**
+
+| Phase | Targets |
+|---|---|
+| 1 | Web · Progressive Web App · embeddable web game · source package |
+| 2 | Android · desktop · Godot project · Unity-compatible package where technically appropriate |
+| 3 | iOS preparation · console partner pipeline · UEFN-supported workflows · Roblox-compatible components where contractually and technically permitted |
+
 ## Game Runtime Layer
 
 Web-first runtimes are the Code Agent's primary build targets: **Phaser.js** for 2D titles and **Three.js** for lightweight 3D, compiled to web play, PWA, embeddable iframe, and mobile wrappers. Unity export integration and external-engine publishing are Phase 3+ paths (Unity's AI-workflow positioning makes it the natural first bridge). Creator payouts run on the BitriPay settlement engine with Stripe Connect as the fallback rail.
