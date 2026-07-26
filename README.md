@@ -27,7 +27,9 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── SECURITY.md        Zero Trust security architecture
 │   ├── DATA-MODEL.md      Database schema and index strategy
 │   ├── API.md             API endpoints, auth, rate limits, webhooks
-│   └── MONETISATION.md    ACU economy, subscription plans, revenue streams
+│   ├── MONETISATION.md    ACU economy, subscription plans, revenue streams
+│   ├── ADMIN.md           Super Admin control centre modules
+│   └── ROADMAP.md         Three-phase developer build roadmap
 └── site/
     └── index.html         Landing page (self-contained premium gaming experience)
 ```
