@@ -29,7 +29,10 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── API.md             API endpoints, auth, rate limits, webhooks
 │   ├── MONETISATION.md    ACU economy, subscription plans, revenue streams
 │   ├── ADMIN.md           Super Admin control centre modules
-│   └── ROADMAP.md         Three-phase developer build roadmap
+│   ├── ROADMAP.md         Four-phase developer build roadmap
+│   ├── COMPETITIVE.md     Moats, landscape, commercial dominance model
+│   ├── DEVELOPER-GUIDE.md Master build document: services, events, CI/CD, SLOs
+│   └── GAP-ANALYSIS.md    Forensic review: gaps + proven-pattern solutions
 └── site/
     └── index.html         Landing page (self-contained premium gaming experience)
 ```
