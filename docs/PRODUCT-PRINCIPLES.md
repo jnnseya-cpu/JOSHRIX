@@ -66,4 +66,13 @@ For emerging markets: compressed previews, deferred asset downloads, offline pro
 Creators describe games in major global languages. The platform translates prompts, game text, store listings, dialogue, tutorials, and support material — preserving original intent, with human review always available.
 
 ### Culturalisation
-The AI supports region-specific content adaptation: local settings, characters, music, holidays, and visual references (e.g. "Replace the jungle with Kinshasa at night"); region-appropriate monetisation norms and payment methods (mobile money via BitriPay); and jurisdiction-aware content standards — so a game forged for one market can be respectfully and legally adapted for another.
+The AI supports region-specific: characters, clothing, architecture, music direction, sports, stories, languages, and payment options. **Avoid stereotyping.**
+
+### Device-Aware Generation
+Before building, creators select target device tiers: low-end Android, standard mobile, high-end mobile, browser, desktop, console-ready architecture. The system adjusts texture size, polygon count, effects, physics, audio, and download size accordingly.
+
+### Human Professional Marketplace
+Where AI cannot complete work, creators hire developers, artists, animators, writers, musicians, QA testers, and publishers — closing the gap between automated generation and professional production. (Runs on the marketplace service-listing rails.)
+
+### Verified Production Maturity
+Low-quality generated projects must not flood the marketplace. Badge system: **Playable Verified · Code Reviewed · Rights Verified · Mobile Optimised · Multiplayer Tested · Commercial Ready · Studio Grade.** (Badges are earned through the Release Certification Agent's scores and human review — never self-declared.)

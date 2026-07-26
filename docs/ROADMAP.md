@@ -1,5 +1,34 @@
 # JOSHRIX Studio — Developer Build Roadmap
 
+## Execution Roadmap v2 (creator-platform phases)
+
+The refined phase structure for the creator platform (the month-based phases below remain as the platform-infrastructure view; both describe the same build):
+
+| Phase | Target | Delivers |
+|---|---|---|
+| 0 — Foundation | 6–8 weeks | Product design system; identity; workspace; subscription; ACU ledger; project data model; AI gateway; agent-run framework; audit logging |
+| 1 — Prompt-to-Playable MVP | 12–16 weeks | 2D web games; five controlled genres; JXSL v1; Blueprint, Code, Asset, Build, and QA agents; hosted preview; manual publishing |
+| 2 — Creator Marketplace | — | Listings; licences; seller profiles; purchases; payouts; reviews; rights provenance; marketplace moderation; transaction ledger |
+| 3 — Behaviour Intelligence | — | Runtime SDK; analytics; funnels; cohorts; synthetic player agents; difficulty analysis; churn prediction; recommendation engine |
+| 4 — Mobile & Advanced Games | — | Android pipeline; 3D starter games; multiplayer framework; advanced mechanics; device performance profiles |
+| 5 — Studio & Enterprise | — | Git integration; SSO; private agents; approval workflows; API; private deployment; data residency; white-label creator portals |
+
+**Phase 1 exit criteria (hard gates):**
+- At least 80% of supported generation requests produce a runnable prototype
+- All builds run in isolated containers
+- Every AI action is costed and logged
+- Users can modify and rebuild projects
+
+## Minimum Launch Team
+
+| Function | Roles |
+|---|---|
+| Product | Product director · game design lead · creator-economy product manager · UX/UI designer |
+| Engineering | Technical architect · 2× full-stack engineers · game-engine engineer · AI/agent engineer · backend/platform engineer · DevOps engineer · QA automation engineer |
+| Intelligence | Machine-learning engineer · data engineer · analytics engineer |
+| Trust | Safety engineer · rights and licensing specialist · marketplace operations lead |
+| Commercial | Creator partnerships · publisher partnerships · growth lead · customer success |
+
 ## Phase 1 — MVP (Months 1–4)
 
 **Objective:** functional forge pipeline with the core six agents, operator onboarding, ACU billing, and the JOSHRIX Marketplace.

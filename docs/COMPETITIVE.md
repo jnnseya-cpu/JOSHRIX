@@ -12,6 +12,22 @@
 | Full-Stack Autonomy | The only platform that takes a concept from idea to deployed, revenue-generating product without human specialists. The distance between vision and commercial product is effectively zero. | 3–5 years to assemble the full pipeline |
 | Marketplace Liquidity | Network effects between creators and buyers create compounding liquidity that early platforms dominate. Every listing improves discovery for every buyer. | Market-dependent; first-mover advantage critical |
 
+## The Nine Defensible Moats (refined framework)
+
+No platform can truthfully guarantee it will remain "unbeatable." The defensible objective is advantages competitors cannot easily reproduce:
+
+| # | Moat | Mechanism |
+|---|---|---|
+| 1 | Game Behaviour Dataset | A consented dataset connecting design decisions, gameplay changes, player behaviour, revenue, retention, and quality outcomes |
+| 2 | JXSL | A proprietary, engine-independent game specification layer |
+| 3 | Multi-Agent Production Graph | A tested system of specialised agents with measurable quality and cost |
+| 4 | Creator-Commerce Integration | Creation, licensing, hosting, selling, and payouts in one product |
+| 5 | Verified Asset Provenance | Rights records embedded from generation to sale |
+| 6 | Autonomous Playtesting | Synthetic players testing mechanics, balance, and progression before launch |
+| 7 | Cross-Engine Portability | Creators are not trapped inside one ecosystem |
+| 8 | Reusable Component Intelligence | Every approved mechanic becomes a tested, reusable building block |
+| 9 | Creator Success Graph | Learns which templates, mechanics, and monetisation structures work for different audiences — without exposing private project data |
+
 ## Competitive Landscape
 
 | Platform | Strengths | Critical Failure Points |
