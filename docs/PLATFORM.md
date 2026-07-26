@@ -73,6 +73,10 @@ Every Solo Operator receives a dedicated AI Command Centre with seven continuous
 
 **Studio Operators** add: Team Forge Queue, Collaboration Layer (shared IP vault with attribution and revenue splits), Studio Analytics, and RBAC Administration. **Enterprise Licensees** receive a white-label admin OS. **Platform Super Admins** get omniscient governance across users, pipeline health, revenue, agents, security, compliance, API health, and BitriPay settlement operations.
 
+### The Creator Dashboard Contract
+
+The dashboard's modules (Create New Game, My Games, AI Credits, Listings, Sales, Revenue, Payouts, Analytics, Templates, Assets, Licences, Notifications, AI Recommendations, Settings) exist to answer six questions at a glance: **What am I building? What is making money? What is costing credits? What needs action? What can be improved? What should I sell next?**
+
 ### Premium Creator Interface — Six Surfaces
 
 | Surface | Contents |

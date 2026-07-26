@@ -39,5 +39,6 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── PRODUCT-PRINCIPLES.md  Positioning, five layers, principles, user segments
 │   └── AGENT-ARCHITECTURE.md  Hierarchical agent operating model and specialists
 └── site/
-    └── index.html         Landing page (self-contained premium gaming experience)
+    ├── index.html         Landing page (self-contained premium gaming experience)
+    └── studio.html        Forge Studio prototype: Create → Play → Sell flow with a playable game
 ```

@@ -44,6 +44,14 @@ erDiagram
     compliance_flags }o..o{ forge_cycles : flags
 ```
 
+## Roles & User Profile
+
+**RBAC roles:** `guest` · `creator` · `buyer` · `studio_owner` · `studio_member` · `admin` · `super_admin`.
+
+**User profile fields:** userId, displayName, email, photoURL, role, country, currency, walletBalance, creditBalance, paymentCustomerId (BitriPay/Stripe), payoutAccountId (Connect-style), kycStatus, createdAt, lastLoginAt, status.
+
+Capability boundaries: guests browse the marketplace, play demos, and view profiles but cannot create, sell, export, or earn; creators forge, publish, sell, and receive payouts; buyers purchase games/templates/assets/licences, download entitlements, request customisation, and review; studio users add team seats, roles, brand assets, bulk publishing, and white-label builds; admins moderate, control commissions, manage disputes and payouts, and see full platform intelligence.
+
 ## Application-Layer Data Model (TypeScript)
 
 The creator-platform interfaces over the relational schema (contracts live in `packages/contracts`):
