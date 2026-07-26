@@ -159,6 +159,7 @@ canvas#game{display:block;width:100%;cursor:crosshair;touch-action:none}
 .chan-btn{padding:.55rem 1rem;font-size:.72rem;white-space:nowrap}
 .chan-sel{margin-top:.6rem;font-size:.92rem;font-weight:600;padding:.5rem .8rem;border-radius:8px}
 .chan-go{margin-top:.7rem;width:100%;white-space:normal}
+.gf-bar .gmute{background:none;border:1px solid var(--stroke-bright);border-radius:6px;color:var(--text);cursor:pointer;padding:.1rem .45rem;font-size:.85rem}
 .incl-t{display:block;margin-top:1rem;font-family:var(--mono);font-size:.56rem;font-weight:700;letter-spacing:.26em;text-transform:uppercase;color:var(--cyan)}
 .incl{list-style:none;margin:.55rem 0 0;display:flex;flex-direction:column;gap:.4rem}
 .incl li{font-size:.95rem;font-weight:600;line-height:1.4;padding-left:1.3rem;position:relative}
@@ -281,7 +282,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
     <div class="panel-body">
       <div class="pub-grid">
         <div class="game-frame">
-          <div class="gf-bar"><span>PENALTY KING — PLAYABLE BUILD</span><span class="live">◉ PRIVATE — ONLY YOU</span></div>
+          <div class="gf-bar"><span>PENALTY KING — PLAYABLE BUILD</span><span style="display:flex;align-items:center;gap:.7rem"><button class="gmute" id="muteBtn" title="Toggle sound">🔊</button><span class="live">◉ PRIVATE — ONLY YOU</span></span></div>
           <canvas id="game" width="560" height="420"></canvas>
         </div>
         <div>
@@ -296,6 +297,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
           <div class="actions">
             <button class="btn btn-primary" id="btnPub">🚀 Approve &amp; Publish</button>
             <button class="btn btn-ghost" id="btnRefine">✎ Refine Concept</button>
+            <a class="btn btn-ghost" id="btn3d" href="play3d.html" target="_blank" rel="noopener">🧊 3D Engine Preview</a>
           </div>
           <p class="hint" style="margin-top:.8rem">Approval gate 3 of 3 · IP registered on-chain at deploy</p>
         </div>
@@ -540,6 +542,70 @@ function setStep(n) {
 for (let i = 1; i <= 5; i++) $('st' + i).addEventListener('click', () => { if (i <= reached) { setStep(i); show('p' + i); } });
 function show(id) { ['p1','p2','p3','p4','p5'].forEach(p => $(p).classList.toggle('show', p === id)); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
+/* ---------- audio: procedural crowd + SFX + spoken commentary ---------- */
+const AudioFX = (() => {
+  let ac, muted = false, crowdGain;
+  const ensure = () => {
+    if (ac) return ac;
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    const len = ac.sampleRate * 2, buf = ac.createBuffer(1, len, ac.sampleRate);
+    const d = buf.getChannelData(0); let last = 0;
+    for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; last = (last + .02 * w) / 1.02; d[i] = last * 3.5; }
+    const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 700; bp.Q.value = .6;
+    crowdGain = ac.createGain(); crowdGain.gain.value = muted ? 0 : .05;
+    const lfo = ac.createOscillator(), lg = ac.createGain();
+    lfo.frequency.value = .13; lg.gain.value = .02; lfo.connect(lg); lg.connect(crowdGain.gain); lfo.start();
+    src.connect(bp); bp.connect(crowdGain); crowdGain.connect(ac.destination); src.start();
+    return ac;
+  };
+  const burst = (dur, freq, q, peak) => {
+    if (muted) return; const a = ensure();
+    const len = a.sampleRate * dur, b = a.createBuffer(1, len, a.sampleRate);
+    const d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const s = a.createBufferSource(); s.buffer = b;
+    const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+    const g = a.createGain(); g.gain.setValueAtTime(peak, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, a.currentTime + dur);
+    s.connect(f); f.connect(g); g.connect(a.destination); s.start();
+  };
+  const tone = (freq, dur, type, peak, when = 0) => {
+    if (muted) return; const a = ensure();
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type; o.frequency.value = freq;
+    const t0 = a.currentTime + when;
+    g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(peak, t0 + .02);
+    g.gain.exponentialRampToValueAtTime(.001, t0 + dur);
+    o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + .05);
+  };
+  const say = txt => {
+    if (muted || !('speechSynthesis' in window)) return;
+    try {
+      const u = new SpeechSynthesisUtterance(txt);
+      u.rate = 1.06; u.pitch = 1.05; u.volume = .9;
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+    } catch (e) { /* speech unavailable */ }
+  };
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  return {
+    start: () => ensure(),
+    kick: () => { burst(.09, 900, 1.2, .5); tone(70, .12, 'sine', .6); },
+    goal: () => { burst(1.4, 750, .5, .9); tone(1650, .12, 'square', .1); tone(1650, .12, 'square', .1, .18);
+      say(pick(['GOAL! What a strike!', 'GOAL! Top corner, unstoppable!', 'GOAL! The keeper had no chance!'])); },
+    save: () => { burst(.5, 500, .8, .45); say(pick(['Oh, great save!', 'Denied by the keeper!', 'The keeper says no!'])); },
+    wide: () => { burst(.35, 420, .8, .3); say(pick(['Wide! Into row Z.', 'Off target!'])); },
+    level: () => { tone(523, .12, 'triangle', .3); tone(659, .12, 'triangle', .3, .12); tone(784, .22, 'triangle', .35, .24);
+      burst(1.6, 800, .5, .8); say('Level up! The keeper is getting faster.'); },
+    lose: () => say('Round over. Tap to try again.'),
+    setMute: m => { muted = m; if (crowdGain) crowdGain.gain.value = m ? 0 : .05; if (m && 'speechSynthesis' in window) speechSynthesis.cancel(); }
+  };
+})();
+let gameMuted = false;
+$('muteBtn').addEventListener('click', () => {
+  gameMuted = !gameMuted; AudioFX.setMute(gameMuted);
+  $('muteBtn').textContent = gameMuted ? '🔇' : '🔊';
+});
+
 /* ---------- Penalty King — the actual playable game ---------- */
 function initGame() {
   const cv = $('game'), cx = cv.getContext('2d');
@@ -783,9 +849,10 @@ function initGame() {
           const g = 10 + (level - 1) * 5;
           goals++; coins += g; msg = `GOAL! +${g} coins`;
           banner = { txt: 'GOAL!', c: '#4ADE80', t: Date.now() }; boom(70, ball.x, ball.y);
+          AudioFX.goal();
         }
-        else if (saved) { msg = 'SAVED by the keeper!'; banner = { txt: 'SAVED!', c: '#FBBF24', t: Date.now() }; }
-        else { msg = 'Off target!'; banner = { txt: 'WIDE!', c: '#9CA3B8', t: Date.now() }; }
+        else if (saved) { msg = 'SAVED by the keeper!'; banner = { txt: 'SAVED!', c: '#FBBF24', t: Date.now() }; AudioFX.save(); }
+        else { msg = 'Off target!'; banner = { txt: 'WIDE!', c: '#9CA3B8', t: Date.now() }; AudioFX.wide(); }
         shot = null; state = 'resolve';
         setTimeout(() => {
           if (shots >= 5) {
@@ -794,8 +861,10 @@ function initGame() {
               msg = `+50 bonus — LVL ${level} unlocked!`;
               banner = { txt: 'LEVEL UP!', c: '#A855F7', t: Date.now() };
               boom(120, W/2, H/2);
+              AudioFX.level();
             } else {
               msg = `Round over — ${goals}/5. Tap to retry Level ${level}`;
+              AudioFX.lose();
             }
             state = 'over';
           } else { reset(); msg = 'Drag from the ball to aim & power'; }
@@ -817,6 +886,7 @@ function initGame() {
     return { x: (t.clientX - r.left) * (W / r.width), y: (t.clientY - r.top) * (H / r.height) };
   };
   const down = e => {
+    AudioFX.start();
     if (state === 'over') { shots = 0; goals = 0; reset(); msg = `Level ${level} — drag from the ball to aim & power`; return; }
     if (state !== 'aim') return;
     drag = pos(e); e.preventDefault();
@@ -830,7 +900,7 @@ function initGame() {
       shot = { vx: dx * 0.055 * (0.5 + power), vy: dy * 0.055 * (0.5 + power) };
       keeper.dive = [ -1, 0, 1 ][Math.floor(Math.random() * 3)];
       keeper.t = -0.35 + Math.min(.28, (level - 1) * .05); // reaction delay shrinks each level
-      state = 'shot'; msg = ''; helped = true;
+      state = 'shot'; msg = ''; helped = true; AudioFX.kick();
     }
     drag = null;
   };

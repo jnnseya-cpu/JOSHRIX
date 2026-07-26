@@ -13,6 +13,7 @@ Every game the fleet forges at "Commercial starter" maturity or above must ship 
 | **Post-processing** | Bloom, SSAO (ambient occlusion), depth of field where appropriate, colour grading LUT per game's art direction. |
 | **Materials** | Full PBR texture sets per asset: albedo, normal, roughness, metalness, AO — 2K standard, 4K hero assets. |
 | **Performance** | 60fps on mid-tier mobile via automatic quality scaling (device-aware tiers per the worldwide-features spec): LOD chains on every mesh, texture down-resolution ladder, poly budgets per tier. |
+| **Audio** | Every certified game ships with sound: music bed, SFX bank, and **voice** (announcer/commentary or character dialogue) mixed to a loudness standard. Procedural WebAudio + browser speech synthesis is the placeholder tier (as in the prototypes); generated audio replaces it when media keys land. |
 | **Certification** | The QA Agent's gate gains a **Visual Fidelity score** (see §4). No marketplace listing below threshold. |
 
 ## 2. Generation Chain by Asset Class
@@ -27,6 +28,7 @@ The Asset Agent orchestrates specialised providers through the AI Gateway (`back
 | **Skyboxes & environments** | Panoramic/HDRI generation (Blockade-class skybox APIs) + procedural terrain from the Code Agent | HDR environment maps for IBL |
 | **Character animation** | Auto-rigging (Mixamo-class) + motion synthesis for locomotion/action sets; blend trees assembled by the Code Agent | Rigged, animated glTF |
 | **Audio** | Music generation (licensed-model providers) + SFX synthesis (ElevenLabs SFX class) mixed to a loudness standard | Adaptive music stems + SFX bank |
+| **Voice & commentary** | TTS voice generation (ElevenLabs class): announcer packs, character dialogue, narration — localised through the culturalisation engine | Voiced line banks + subtitle tracks |
 | **VFX** | Particle system presets (GPU instancing) parameterised by the Asset Agent | Confetti, smoke, magic, weather |
 
 Every generated asset flows through the existing **rights-provenance pipeline** (IP similarity scan, provenance record, licence metadata) before it enters a build — realism never bypasses the Rights agents.

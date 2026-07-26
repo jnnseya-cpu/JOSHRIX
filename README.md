@@ -43,7 +43,8 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   └── DEPLOYMENT.md          Hostinger + Vercel + Firebase + Cloud Run architecture
 ├── frontend/              The web app: 20 pages sharing one design system
 │   ├── index.html         Landing page
-│   ├── studio.html        Forge Studio prototype (Create → Play → Sell, playable game)
+│   ├── studio.html        Forge Studio prototype (Create → Test → Sell, playable game)
+│   ├── play3d.html        Web 3D engine profile — real-time 3D Penalty King (Three.js)
 │   ├── agent-fleet / worlds / marketplace / ip-registry .html
 │   ├── how-it-works / pricing / docs / showcase / enterprise .html
 │   ├── about / careers / press / contact .html

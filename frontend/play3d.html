@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Penalty King 3D — JOSHRIX Studio</title>
+<meta name="description" content="JOSHRIX Web 3D engine profile — real-time 3D Penalty King with PBR lighting, shadows, crowd audio and live commentary.">
+<link rel="stylesheet" href="assets/joshrix.css">
+<style>
+#stage{position:relative;border:1px solid var(--stroke-bright);border-radius:16px;overflow:hidden;background:#06040f;
+  box-shadow:0 30px 70px rgba(0,0,0,.6),0 0 50px rgba(124,58,237,.2),inset 0 1px 0 rgba(255,255,255,.08)}
+#stage canvas{display:block;width:100%;touch-action:none;cursor:crosshair}
+.hud3{position:absolute;top:.8rem;left:.9rem;display:flex;gap:.5rem;flex-wrap:wrap;pointer-events:none}
+.hud3 span{font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.18em;color:var(--text);
+  background:rgba(5,5,8,.62);border:1px solid var(--stroke-bright);border-radius:999px;padding:.35rem .8rem;backdrop-filter:blur(6px)}
+.hud3 .lv{color:#A855F7}.hud3 .cn{color:#FBBF24}
+#msg3{position:absolute;bottom:.9rem;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.66rem;
+  font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);background:rgba(5,5,8,.62);
+  border:1px solid rgba(34,211,238,.35);border-radius:999px;padding:.45rem 1.1rem;pointer-events:none;white-space:nowrap;backdrop-filter:blur(6px)}
+#pow3{position:absolute;bottom:3.4rem;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.72rem;
+  font-weight:700;letter-spacing:.2em;color:var(--cyan);pointer-events:none;display:none;text-shadow:0 0 12px rgba(34,211,238,.8)}
+#tut3{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7rem;
+  background:rgba(5,4,12,.4);pointer-events:none;text-align:center;padding:1rem}
+#tut3 b{font-family:var(--mono);font-weight:900;font-size:clamp(1rem,3vw,1.5rem);letter-spacing:.12em;color:var(--cyan);
+  text-shadow:0 0 22px rgba(34,211,238,.8);animation:tpulse 1.6s ease-in-out infinite}
+#tut3 i{font-style:normal;font-weight:600;font-size:1.02rem;color:var(--text)}
+@keyframes tpulse{50%{opacity:.55}}
+@media(prefers-reduced-motion:reduce){#tut3 b{animation:none}}
+#mute3{position:absolute;top:.8rem;right:.9rem;background:rgba(5,5,8,.62);border:1px solid var(--stroke-bright);
+  border-radius:8px;color:var(--text);cursor:pointer;padding:.35rem .65rem;font-size:.95rem;backdrop-filter:blur(6px)}
+.spec-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1.1rem}
+.spec-row .pill{font-size:.6rem}
+</style>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js"}}</script>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="noise" aria-hidden="true"></div>
+<nav class="jx">
+  <a class="brand" href="index.html">
+    <svg viewBox="-50 -50 100 100"><defs><linearGradient id="jxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#22D3EE"/></linearGradient></defs><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#jxG)" stroke-width="7" stroke-linejoin="round"/><polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#jxG)"/></svg>
+    <span class="word">JOSHRIX<em>STUDIO</em></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="agent-fleet.html">Fleet</a></li>
+    <li><a href="worlds.html">Worlds</a></li>
+    <li><a href="marketplace.html">Marketplace</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+    <li><a href="docs.html">Docs</a></li>
+  </ul>
+  <div class="nav-right">
+    <a class="btn btn-ghost btn-sm" href="studio.html">← Forge Studio</a>
+  </div>
+</nav>
+<main class="jx">
+  <div class="page-hero reveal">
+    <div class="sec-tag">Web 3D Engine Profile</div>
+    <h1 class="jx">Penalty King <span class="grad">3D</span></h1>
+    <p class="lede">The real-time 3D build target every forged game ships with — true perspective camera, PBR-lit night stadium, dynamic shadows, ACES tone mapping, crowd audio and live commentary. This is the engine profile from <a href="docs.html">REALISM-PIPELINE</a>, running live.</p>
+  </div>
+  <div id="stage" class="reveal">
+    <div class="hud3">
+      <span class="lv" id="hLvl">LVL 1</span><span id="hShot">SHOT 1/5</span>
+      <span id="hGoal">GOALS 0</span><span class="cn" id="hCoin">ⓒ 0</span>
+    </div>
+    <button id="mute3" title="Toggle sound">🔊</button>
+    <div id="pow3">POWER 0%</div>
+    <div id="msg3">Drag from the ball to aim &amp; power</div>
+    <div id="tut3"><b>▶ PLAY YOUR GAME IN 3D</b><i>Press &amp; hold near the ball · drag to aim &amp; power · release to shoot</i></div>
+  </div>
+  <div class="spec-row reveal">
+    <span class="pill">WebGL2 · Three.js</span><span class="pill">ACES Filmic Tone Mapping</span>
+    <span class="pill">PBR Materials</span><span class="pill">Dynamic Shadows</span>
+    <span class="pill">Crowd Audio + Commentary</span><span class="pill">Rising Difficulty</span>
+  </div>
+</main>
+<footer class="jx"><p>© 2026 JOSHRIX Studio — Web 3D engine profile preview. Create Worlds. Build Games. Own the Future.</p></footer>
+<script src="assets/site.js"></script>
+<script type="module">
+import * as THREE from 'three';
+
+/* ============ audio: procedural crowd + SFX + spoken commentary ============ */
+const AudioFX = (() => {
+  let ac, muted = false, crowdGain;
+  const ensure = () => {
+    if (ac) return ac;
+    ac = new (window.AudioContext || window.webkitAudioContext)();
+    const len = ac.sampleRate * 2, buf = ac.createBuffer(1, len, ac.sampleRate);
+    const d = buf.getChannelData(0); let last = 0;
+    for (let i = 0; i < len; i++) { const w = Math.random() * 2 - 1; last = (last + .02 * w) / 1.02; d[i] = last * 3.5; }
+    const src = ac.createBufferSource(); src.buffer = buf; src.loop = true;
+    const bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 700; bp.Q.value = .6;
+    crowdGain = ac.createGain(); crowdGain.gain.value = muted ? 0 : .05;
+    const lfo = ac.createOscillator(), lg = ac.createGain();
+    lfo.frequency.value = .13; lg.gain.value = .02; lfo.connect(lg); lg.connect(crowdGain.gain); lfo.start();
+    src.connect(bp); bp.connect(crowdGain); crowdGain.connect(ac.destination); src.start();
+    return ac;
+  };
+  const burst = (dur, freq, q, peak) => {
+    if (muted) return; const a = ensure();
+    const len = a.sampleRate * dur, b = a.createBuffer(1, len, a.sampleRate);
+    const d = b.getChannelData(0); for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+    const s = a.createBufferSource(); s.buffer = b;
+    const f = a.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = q;
+    const g = a.createGain(); g.gain.setValueAtTime(peak, a.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, a.currentTime + dur);
+    s.connect(f); f.connect(g); g.connect(a.destination); s.start();
+  };
+  const tone = (freq, dur, type, peak, when = 0) => {
+    if (muted) return; const a = ensure();
+    const o = a.createOscillator(), g = a.createGain();
+    o.type = type; o.frequency.value = freq;
+    const t0 = a.currentTime + when;
+    g.gain.setValueAtTime(.0001, t0); g.gain.exponentialRampToValueAtTime(peak, t0 + .02);
+    g.gain.exponentialRampToValueAtTime(.001, t0 + dur);
+    o.connect(g); g.connect(a.destination); o.start(t0); o.stop(t0 + dur + .05);
+  };
+  const say = txt => {
+    if (muted || !('speechSynthesis' in window)) return;
+    try {
+      const u = new SpeechSynthesisUtterance(txt);
+      u.rate = 1.06; u.pitch = 1.05; u.volume = .9;
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+    } catch (e) { /* speech unavailable */ }
+  };
+  const pick = a => a[Math.floor(Math.random() * a.length)];
+  return {
+    start: () => ensure(),
+    kick: () => { burst(.09, 900, 1.2, .5); tone(70, .12, 'sine', .6); },
+    goal: () => { burst(1.4, 750, .5, .9); tone(1650, .12, 'square', .1); tone(1650, .12, 'square', .1, .18);
+      say(pick(['GOAL! What a strike!', 'GOAL! Top corner, unstoppable!', 'GOAL! The keeper had no chance!'])); },
+    save: () => { burst(.5, 500, .8, .45); say(pick(['Oh, great save!', 'Denied by the keeper!', 'The keeper says no!'])); },
+    wide: () => { burst(.35, 420, .8, .3); say(pick(['Wide! Into row Z.', 'Off target!'])); },
+    level: () => { tone(523, .12, 'triangle', .3); tone(659, .12, 'triangle', .3, .12); tone(784, .22, 'triangle', .35, .24);
+      burst(1.6, 800, .5, .8); say('Level up! The keeper is getting faster.'); },
+    lose: () => say('Round over. Tap to try again.'),
+    setMute: m => { muted = m; if (crowdGain) crowdGain.gain.value = m ? 0 : .05; if (m && 'speechSynthesis' in window) speechSynthesis.cancel(); }
+  };
+})();
+let mutedUI = false;
+document.getElementById('mute3').addEventListener('click', e => {
+  mutedUI = !mutedUI; AudioFX.setMute(mutedUI);
+  e.currentTarget.textContent = mutedUI ? '🔇' : '🔊';
+});
+
+/* ============ scene ============ */
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.02;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+stage.insertBefore(renderer.domElement, stage.firstChild);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x06040f);
+scene.fog = new THREE.Fog(0x06040f, 34, 95);
+const camera = new THREE.PerspectiveCamera(55, 16/9, .1, 220);
+camera.position.set(0, 2.1, 5.4);
+camera.lookAt(0, 1.3, -11);
+
+function fit() {
+  const w = stage.clientWidth, h = Math.max(400, Math.round(w * .56));
+  renderer.setSize(w, h); camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+addEventListener('resize', fit); fit();
+
+/* lights */
+scene.add(new THREE.HemisphereLight(0x8878ff, 0x0a2a12, .5));
+scene.add(new THREE.AmbientLight(0x404060, .5));
+const flood = (x, z, shadows) => {
+  const s = new THREE.SpotLight(0xf2eeff, 560, 80, .5, .45, 1.6);
+  s.position.set(x, 15, z); s.target.position.set(0, 0, -6); scene.add(s.target);
+  if (shadows) { s.castShadow = true; s.shadow.mapSize.set(1024, 1024); s.shadow.bias = -0.0004; }
+  scene.add(s);
+  const pole = new THREE.Mesh(new THREE.CylinderGeometry(.12, .16, 15, 8),
+    new THREE.MeshStandardMaterial({ color: 0x232338, roughness: .7 }));
+  pole.position.set(x, 7.5, z); scene.add(pole);
+  const lamp = new THREE.Mesh(new THREE.SphereGeometry(.45, 12, 12),
+    new THREE.MeshBasicMaterial({ color: 0xfff6e8 }));
+  lamp.position.set(x, 15, z); scene.add(lamp);
+};
+flood(-15, -14, true); flood(15, -14, true); flood(-15, 5, false); flood(15, 5, false);
+
+/* pitch with painted lines */
+const pitchCv = document.createElement('canvas'); pitchCv.width = pitchCv.height = 1024;
+{
+  const c = pitchCv.getContext('2d');
+  const PW = 40, PH = 34; // pitch plane spans x -20..20, z -20..14 (centre z=-3)
+  const px = x => (x + PW/2) / PW * 1024;
+  const pz = z => (z + 20) / PH * 1024;
+  c.fillStyle = '#0a2c13'; c.fillRect(0, 0, 1024, 1024);
+  for (let i = 0; i < 10; i++) { if (i % 2) { c.fillStyle = 'rgba(255,255,255,.045)'; c.fillRect(0, i * 102.4, 1024, 102.4); } }
+  c.strokeStyle = 'rgba(255,255,255,.85)'; c.lineWidth = 4; c.lineJoin = 'round';
+  // goal line
+  c.beginPath(); c.moveTo(px(-14), pz(-11)); c.lineTo(px(14), pz(-11)); c.stroke();
+  // penalty box (goal line z=-11 to z=-3)
+  c.strokeRect(px(-8), pz(-11), px(8) - px(-8), pz(-3) - pz(-11));
+  // six-yard box
+  c.strokeRect(px(-4.5), pz(-11), px(4.5) - px(-4.5), pz(-7.5) - pz(-11));
+  // penalty spot + arc
+  c.fillStyle = 'rgba(255,255,255,.9)';
+  c.beginPath(); c.arc(px(0), pz(0), 6, 0, 7); c.fill();
+  c.beginPath(); c.ellipse(px(0), pz(-1.2), (px(3) - px(0)), (pz(1.8) - pz(0)), 0, -.4, Math.PI + .4, true); c.stroke();
+}
+const pitchTex = new THREE.CanvasTexture(pitchCv);
+pitchTex.colorSpace = THREE.SRGBColorSpace;
+const pitch = new THREE.Mesh(new THREE.PlaneGeometry(40, 34),
+  new THREE.MeshStandardMaterial({ map: pitchTex, roughness: .92, metalness: 0 }));
+pitch.rotation.x = -Math.PI / 2; pitch.position.set(0, 0, -3); pitch.receiveShadow = true;
+scene.add(pitch);
+
+/* stands + crowd */
+const standMat = new THREE.MeshStandardMaterial({ color: 0x14102b, roughness: .95 });
+const mkStand = (w, d, x, z, ry) => {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, 7, d), standMat);
+  m.position.set(x, 3.5, z); m.rotation.y = ry; scene.add(m);
+};
+mkStand(46, 5, 0, -19.5, 0); mkStand(40, 5, -21, -4, Math.PI / 2); mkStand(40, 5, 21, -4, Math.PI / 2);
+const crowdGeo = new THREE.BufferGeometry();
+{
+  const N = 2600, pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
+  const c = new THREE.Color();
+  for (let i = 0; i < N; i++) {
+    const side = i % 3;
+    if (side === 0) { pos[i*3] = -22 + Math.random() * 44; pos[i*3+1] = .8 + Math.random() * 5.6; pos[i*3+2] = -16.8 - Math.random() * 1.6; }
+    else if (side === 1) { pos[i*3] = -18.4 - Math.random() * 1.6; pos[i*3+1] = .8 + Math.random() * 5.6; pos[i*3+2] = -19 + Math.random() * 30; }
+    else { pos[i*3] = 18.4 + Math.random() * 1.6; pos[i*3+1] = .8 + Math.random() * 5.6; pos[i*3+2] = -19 + Math.random() * 30; }
+    c.setHSL([.72, .52, .82, .12, .58, 0][i % 6], .7, .55 + Math.random() * .25);
+    col[i*3] = c.r; col[i*3+1] = c.g; col[i*3+2] = c.b;
+  }
+  crowdGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  crowdGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+}
+const crowdMat = new THREE.PointsMaterial({ size: .14, vertexColors: true, transparent: true, opacity: .85 });
+scene.add(new THREE.Points(crowdGeo, crowdMat));
+
+/* goal frame + net */
+const postMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .25, metalness: .55 });
+const mkPost = (x) => {
+  const p = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, 2.44, 12), postMat);
+  p.position.set(x, 1.22, -11); p.castShadow = true; scene.add(p);
+};
+mkPost(-3.66); mkPost(3.66);
+const bar = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, 7.46, 12), postMat);
+bar.rotation.z = Math.PI / 2; bar.position.set(0, 2.44, -11); bar.castShadow = true; scene.add(bar);
+const netCv = document.createElement('canvas'); netCv.width = netCv.height = 256;
+{
+  const c = netCv.getContext('2d');
+  c.strokeStyle = 'rgba(240,240,255,.75)'; c.lineWidth = 2;
+  for (let i = 0; i <= 16; i++) {
+    c.beginPath(); c.moveTo(i * 16, 0); c.lineTo(i * 16, 256); c.stroke();
+    c.beginPath(); c.moveTo(0, i * 16); c.lineTo(256, i * 16); c.stroke();
+  }
+}
+const netTex = new THREE.CanvasTexture(netCv);
+netTex.wrapS = netTex.wrapT = THREE.RepeatWrapping; netTex.repeat.set(3, 1);
+const netMat = new THREE.MeshBasicMaterial({ map: netTex, transparent: true, opacity: .28, side: THREE.DoubleSide, depthWrite: false });
+const netBack = new THREE.Mesh(new THREE.PlaneGeometry(7.32, 2.3), netMat);
+netBack.position.set(0, 1.15, -11.85); scene.add(netBack);
+const netTop = new THREE.Mesh(new THREE.PlaneGeometry(7.32, .95), netMat);
+netTop.rotation.x = -Math.PI / 2.25; netTop.position.set(0, 2.4, -11.42); scene.add(netTop);
+const netSideGeo = new THREE.PlaneGeometry(.9, 2.3);
+[-3.66, 3.66].forEach(x => {
+  const n = new THREE.Mesh(netSideGeo, netMat);
+  n.rotation.y = Math.PI / 2; n.position.set(x, 1.15, -11.42); scene.add(n);
+});
+
+/* keeper — articulated */
+const keeper = new THREE.Group();
+const jersMat = new THREE.MeshStandardMaterial({ color: 0xf5a623, roughness: .6 });
+const darkMat = new THREE.MeshStandardMaterial({ color: 0x14172a, roughness: .8 });
+const skinMat = new THREE.MeshStandardMaterial({ color: 0xc68958, roughness: .7 });
+const gloveMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: .4 });
+const kAdd = (geo, mat, x, y, z, cast = true) => {
+  const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); m.castShadow = cast; keeper.add(m); return m;
+};
+kAdd(new THREE.BoxGeometry(.16, .5, .16), darkMat, -.12, .25, 0);
+kAdd(new THREE.BoxGeometry(.16, .5, .16), darkMat, .12, .25, 0);
+kAdd(new THREE.BoxGeometry(.44, .22, .24), darkMat, 0, .6, 0);
+kAdd(new THREE.BoxGeometry(.52, .62, .28), jersMat, 0, 1.0, 0);
+const armL = kAdd(new THREE.BoxGeometry(.13, .55, .13), jersMat, -.36, 1.18, 0);
+const armR = kAdd(new THREE.BoxGeometry(.13, .55, .13), jersMat, .36, 1.18, 0);
+armL.rotation.z = .9; armR.rotation.z = -.9;
+kAdd(new THREE.SphereGeometry(.09, 10, 10), gloveMat, -.58, 1.42, 0);
+kAdd(new THREE.SphereGeometry(.09, 10, 10), gloveMat, .58, 1.42, 0);
+kAdd(new THREE.SphereGeometry(.15, 14, 14), skinMat, 0, 1.5, 0);
+keeper.position.set(0, 0, -10.7);
+scene.add(keeper);
+
+/* ball */
+const ballCv = document.createElement('canvas'); ballCv.width = ballCv.height = 256;
+{
+  const c = ballCv.getContext('2d');
+  c.fillStyle = '#f4f4fa'; c.fillRect(0, 0, 256, 256);
+  c.fillStyle = '#181c2c';
+  for (let i = 0; i < 14; i++) {
+    const x = (i * 73) % 256, y = (i * 47 + 30) % 256;
+    c.beginPath(); c.arc(x, y, 17, 0, 7); c.fill();
+  }
+}
+const ballTex = new THREE.CanvasTexture(ballCv); ballTex.colorSpace = THREE.SRGBColorSpace;
+const ball = new THREE.Mesh(new THREE.SphereGeometry(.32, 24, 24),
+  new THREE.MeshStandardMaterial({ map: ballTex, roughness: .35, metalness: .05 }));
+ball.castShadow = true; scene.add(ball);
+
+/* aim line */
+const aimGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3()]);
+const aimLine = new THREE.Line(aimGeo, new THREE.LineDashedMaterial({ color: 0x22d3ee, dashSize: .25, gapSize: .18, transparent: true, opacity: .9 }));
+aimLine.visible = false; scene.add(aimLine);
+
+/* confetti */
+const CONF_N = 220;
+const confGeo = new THREE.BufferGeometry();
+const confPos = new Float32Array(CONF_N * 3), confVel = new Float32Array(CONF_N * 3), confCol = new Float32Array(CONF_N * 3);
+confGeo.setAttribute('position', new THREE.BufferAttribute(confPos, 3));
+confGeo.setAttribute('color', new THREE.BufferAttribute(confCol, 3));
+const confetti = new THREE.Points(confGeo, new THREE.PointsMaterial({ size: .13, vertexColors: true, transparent: true, opacity: .95 }));
+confetti.visible = false; scene.add(confetti);
+let confLife = 0;
+function boom(at) {
+  const c = new THREE.Color();
+  for (let i = 0; i < CONF_N; i++) {
+    confPos[i*3] = at.x; confPos[i*3+1] = at.y; confPos[i*3+2] = at.z;
+    confVel[i*3] = (Math.random() - .5) * 7; confVel[i*3+1] = Math.random() * 6 + 1; confVel[i*3+2] = (Math.random() - .5) * 5;
+    c.setHSL(Math.random(), .85, .6); confCol[i*3] = c.r; confCol[i*3+1] = c.g; confCol[i*3+2] = c.b;
+  }
+  confGeo.attributes.position.needsUpdate = true; confGeo.attributes.color.needsUpdate = true;
+  confetti.visible = true; confLife = 2.2;
+}
+
+/* ============ game state ============ */
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+let shots = 0, goals = 0, coins = 0, level = 1, state = 'aim', helped = false;
+let vel = new THREE.Vector3(), dive = 0, diveT = 0, resolved = false;
+const G = 22;
+const hud = id => document.getElementById(id);
+const setHud = () => {
+  hud('hLvl').textContent = 'LVL ' + level;
+  hud('hShot').textContent = `SHOT ${Math.min(shots + 1, 5)}/5`;
+  hud('hGoal').textContent = 'GOALS ' + goals;
+  hud('hCoin').textContent = 'ⓒ ' + coins;
+};
+const say = t => { hud('msg3').textContent = t; };
+function resetShot() {
+  ball.position.set(0, .32, 0); ball.rotation.set(0, 0, 0);
+  vel.set(0, 0, 0); dive = 0; diveT = 0; resolved = false;
+  keeper.position.set(0, 0, -10.7); keeper.rotation.set(0, 0, 0);
+  armL.rotation.z = .9; armR.rotation.z = -.9;
+  state = 'aim'; setHud();
+}
+
+/* input — drag to shoot */
+let p0 = null, p1 = null;
+const el = renderer.domElement;
+const pt = e => { const t = e.touches ? e.touches[0] : e; return { x: t.clientX, y: t.clientY }; };
+el.addEventListener('pointerdown', e => {
+  AudioFX.start();
+  if (state === 'over') {
+    shots = 0; goals = 0; resetShot(); say(`Level ${level} — drag from the ball to aim & power`);
+    return;
+  }
+  if (state !== 'aim') return;
+  p0 = pt(e); p1 = p0; e.preventDefault();
+});
+el.addEventListener('pointermove', e => {
+  if (!p0 || state !== 'aim') return;
+  p1 = pt(e); e.preventDefault();
+  const dx = p1.x - p0.x, dy = p0.y - p1.y;
+  if (dy > 8) {
+    const power = Math.min(1, Math.hypot(dx, dy) / 240);
+    const tx = THREE.MathUtils.clamp(dx / 130 * 3.9, -4.6, 4.6);
+    const ty = THREE.MathUtils.clamp(.25 + dy / 115, .25, 3.2);
+    aimLine.geometry.setFromPoints([ball.position.clone(),
+      new THREE.Vector3(tx * .35, .32 + (ty - .32) * .35 + .35, -11 * .35)]);
+    aimLine.computeLineDistances();
+    aimLine.visible = true;
+    hud('pow3').style.display = 'block';
+    hud('pow3').textContent = `POWER ${Math.round(power * 100)}%`;
+  }
+});
+addEventListener('pointerup', () => {
+  aimLine.visible = false; hud('pow3').style.display = 'none';
+  if (!p0 || state !== 'aim') { p0 = null; return; }
+  const dx = p1.x - p0.x, dy = p0.y - p1.y; p0 = null;
+  if (dy < 18) return;
+  const power = Math.min(1, Math.hypot(dx, dy) / 240);
+  const tx = THREE.MathUtils.clamp(dx / 130 * 3.9, -4.6, 4.6);
+  const ty = THREE.MathUtils.clamp(.25 + dy / 115, .25, 3.2);
+  const T = .62 - .2 * power;
+  vel.set(tx / T, (ty - .32) / T + .5 * G * T, -11 / T);
+  dive = [-1, 0, 1][Math.floor(Math.random() * 3)];
+  diveT = -(.3 - Math.min(.24, (level - 1) * .045));   // reaction delay shrinks per level
+  state = 'shot'; helped = true;
+  hud('tut3').style.display = 'none';
+  say(''); AudioFX.kick();
+});
+
+/* round resolution */
+function endShot(kind) {
+  shots++;
+  if (kind === 'goal') {
+    const g = 10 + (level - 1) * 5;
+    goals++; coins += g; say(`GOAL! +${g} coins`); AudioFX.goal(); boom(ball.position.clone());
+  } else if (kind === 'save') { say('SAVED by the keeper!'); AudioFX.save(); }
+  else { say('Off target!'); AudioFX.wide(); }
+  setHud(); resolved = true; state = 'resolve';
+  setTimeout(() => {
+    if (shots >= 5) {
+      if (goals >= 3) {
+        coins += 50; level++;
+        say(`+50 bonus — LVL ${level} unlocked! Tap to continue`);
+        AudioFX.level(); boom(new THREE.Vector3(0, 1.5, -8));
+      } else { say(`Round over — ${goals}/5. Tap to retry Level ${level}`); AudioFX.lose(); }
+      state = 'over'; setHud();
+    } else { resetShot(); say('Drag from the ball to aim & power'); }
+  }, 1100);
+}
+
+/* ============ main loop ============ */
+const clock = new THREE.Clock();
+function tick() {
+  const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
+  // keeper prowls his line while you aim (level 2+)
+  if (state === 'aim' && level >= 2) {
+    keeper.position.x = Math.sin(t * (0.9 + level * .28)) * Math.min(2.4, (level - 1) * .6);
+  }
+  if (state === 'shot') {
+    ball.position.addScaledVector(vel, dt);
+    vel.y -= G * dt;
+    ball.rotation.x -= vel.z * dt * 2.6;
+    diveT += dt * (1 + (level - 1) * .16);
+    if (diveT > 0 && dive !== 0) {
+      const k = Math.min(1, diveT * (2.6 + (level - 1) * .35));
+      keeper.position.x += (dive * 2.6 * k - keeper.position.x) * .35;
+      keeper.rotation.z = -dive * 1.15 * k;
+      armL.rotation.z = .9 + k * 1.2; armR.rotation.z = -.9 - k * 1.2;
+    }
+    if (!resolved && ball.position.z <= -10.6) {
+      const bx = ball.position.x, by = ball.position.y;
+      const inGoal = Math.abs(bx) < 3.55 && by < 2.36 && by > 0;
+      const reach = .95 + Math.min(.7, (level - 1) * .14);
+      const saved = inGoal && Math.abs(bx - keeper.position.x) < reach && by < 2.15;
+      if (saved) { vel.z = Math.abs(vel.z) * .22; vel.x *= .35; vel.y = Math.max(1.6, vel.y * -.2); endShot('save'); }
+      else if (inGoal) { endShot('goal'); }
+      else { endShot('wide'); }
+    }
+    if (ball.position.z < -11.55 && state !== 'aim') { vel.multiplyScalar(.72); }  // net drag
+    if (ball.position.y < .32 && ball.position.z < -10) { ball.position.y = .32; vel.y = Math.abs(vel.y) * .3; }
+  }
+  if (state === 'resolve' || state === 'over') {
+    // let the ball settle
+    if (ball.position.y > .32 || Math.abs(vel.z) > .01) {
+      ball.position.addScaledVector(vel, dt); vel.y -= G * dt;
+      if (ball.position.y < .32) { ball.position.y = .32; vel.y = Math.abs(vel.y) * .3; vel.x *= .9; vel.z *= .9; }
+    }
+  }
+  // confetti physics
+  if (confetti.visible) {
+    confLife -= dt;
+    for (let i = 0; i < CONF_N; i++) {
+      confPos[i*3] += confVel[i*3] * dt;
+      confPos[i*3+1] += confVel[i*3+1] * dt;
+      confPos[i*3+2] += confVel[i*3+2] * dt;
+      confVel[i*3+1] -= 9 * dt;
+    }
+    confGeo.attributes.position.needsUpdate = true;
+    confetti.material.opacity = Math.max(0, Math.min(1, confLife));
+    if (confLife <= 0) confetti.visible = false;
+  }
+  // ambience
+  if (!reduceMotion) {
+    crowdMat.opacity = .75 + .15 * Math.sin(t * 2.1);
+    camera.position.x = Math.sin(t * .3) * .22;
+    camera.lookAt(0, 1.3, -11);
+  }
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+resetShot(); setHud(); tick();
+</script>
+</body>
+</html>
