@@ -215,6 +215,28 @@ The user enters an idea. The AI builds the game. The user tests it. The AI creat
 | 04 — Rigorous Validation | QA Agent | Full forge output; compliance targets | QA certificate; bug catalogue; deployment token (or rejection) | Mandatory gate — token required for deployment |
 | 05 — Global Deployment | Deployment Agent | Deployment token; build package; pricing config | Live CDN deployment; marketplace listing; IP registration | BitriPay checkout for listing fee (if applicable) |
 
+## The World-Premiere Feature Set
+
+The launch message centres on five capabilities:
+
+| Capability | Promise |
+|---|---|
+| **JOSHRIX OnePrompt™** | Describe a game and receive a playable, editable vertical slice |
+| **JOSHRIX Agent Studio™** | A full virtual production team working under user control |
+| **JOSHRIX AutoPlay Lab™** | AI players test the game, discover defects, and recommend improvements |
+| **JOSHRIX Commerce Engine™** | Publish, host, licence, and sell games from the same workspace |
+| **JOSHRIX Evolution AI™** | Learns from real gameplay and recommends controlled improvements after launch |
+
+## Final Platform Statement
+
+JOSHRIX Studio is an autonomous game-production and creator-commerce operating system. It enables people and businesses to move from an idea to a playable, tested, published, and monetised game through a governed team of specialised AI agents.
+
+Its strongest advantage is not a single AI model. It comes from combining: structured game specifications · specialised agent orchestration · safe code execution · multimodal asset generation · automated playtesting · behaviour-learning intelligence · creator ownership · multi-platform publishing · licensing · marketplace commerce · financial governance · rights provenance · continuous live-game optimisation.
+
+**The strategic target: one idea. One intelligent production system. One marketplace. Unlimited game businesses.**
+
+The first production priority is web-first 2D prompt-to-playable generation, followed by the marketplace and behaviour-intelligence system — creating a commercially usable product before moving into expensive 3D and multiplayer generation.
+
 ## Platform Philosophy — The Sovereignty of Creation
 
 JOSHRIX Studio was conceived from a single provocation: the distance between an idea and a commercial product has been effectively erased. The platform exists not merely to accelerate game production, but to democratise the infrastructure of IP creation and commercialisation. Every operator — whether a solo creator in Kinshasa, a micro-studio in Birmingham, or an enterprise publisher in London — deploys the same enterprise-grade intelligence fleet, the same IP sovereignty architecture, and the same global distribution infrastructure that was previously accessible only to organisations with millions in capital and dozens of specialists.

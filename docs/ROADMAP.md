@@ -19,6 +19,33 @@ The refined phase structure for the creator platform (the month-based phases bel
 - Every AI action is costed and logged
 - Users can modify and rebuild projects
 
+## Launch KPIs
+
+| Category | Metrics |
+|---|---|
+| Creation | Time to first playable build · build success rate · cost per successful build · agent retry rate · user modification rate · project completion rate |
+| Quality | Crash-free sessions · test pass rate · average quality score · marketplace rejection rate · refund rate |
+| Creator economy | Active creators · published games · sellers earning revenue · creator GMV · marketplace conversion · repeat buyers · creator payout time |
+| Player engagement | Day-one retention · day-seven retention · session completion · tutorial completion · level abandonment · player reports |
+| Platform economics | Revenue per workspace · gross margin · AI cost as % of revenue · hosting cost per active game · marketplace take rate · payout liability · ACU breakage · refund reserve |
+
+## Critical Acceptance Criteria
+
+The platform is **not ready for commercial launch** unless:
+
+1. Every generated build has a reproducible source version.
+2. Provider costs and ACU charges are recorded per agent run.
+3. Generated code runs inside isolated infrastructure.
+4. Users can undo AI changes.
+5. Every marketplace asset has provenance and licence data.
+6. Payment and creator revenue are recorded in a financial ledger.
+7. Public games pass minimum safety and quality gates.
+8. Users can export their eligible project data.
+9. The platform can suspend malicious games immediately.
+10. Player analytics use consent-aware, privacy-respecting identifiers.
+11. AI-generated recommendations state confidence and evidence.
+12. No automated agent can publish, transfer rights, or spend beyond limits without authorisation.
+
 ## Minimum Launch Team
 
 | Function | Roles |

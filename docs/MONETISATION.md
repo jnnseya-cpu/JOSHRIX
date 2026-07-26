@@ -1,8 +1,56 @@
 # JOSHRIX Studio — Monetisation Model
 
+## Commercial Objective
+
+Revenue is generated every time users: create a game · generate an asset · use an AI agent · build or test a game · publish a game · host a game · sell a game · sell an asset · licence a template · receive an in-game payment · promote a marketplace listing · export a commercial build. Predictable subscription revenue combines with high-margin consumption revenue and recurring marketplace commissions through **six principal revenue engines**: subscriptions, ACU consumption, marketplace commissions, publishing and hosting fees, in-game transaction fees, and enterprise/white-label licensing.
+
 ## Platform Revenue Channels
 
 Sixteen channels: subscriptions · ACU consumption · build charges · hosting · marketplace commission · in-game payment commission · creator payout processing · premium analytics · publishing services · white-label licensing · asset generation · team seats · enterprise deployment · promotion and featured placement · transaction escrow · API usage.
+
+## The Fixed Commercial Rule — 4× Provider-Cost Markup
+
+For every £1 charged by an external AI, cloud, image, audio, video, game-build, or infrastructure provider, the platform charges the user **at least £4**. The platform must never price an AI operation below this floor.
+
+| Provider cost | User charge | Gross difference |
+|---|---|---|
+| £0.25 | £1.00 | £0.75 |
+| £1.00 | £4.00 | £3.00 |
+| £5.00 | £20.00 | £15.00 |
+| £10.00 | £40.00 | £30.00 |
+| £100.00 | £400.00 | £300.00 |
+
+This is a 4× revenue multiple on provider cost — a 75% gross margin before internal infrastructure, payment processing, support, tax, and operational costs.
+
+```
+Minimum user price = attributable provider cost × 4
+Full price = provider cost × 4 + platform execution fee + IP value
+           + hosting cost + commercial licence fee + risk reserve
+```
+
+## ACU Commercial Structure
+
+**ACU = Artificial Creation Unit** (the operative definition; "AI Compute Unit" was the working name). Retail conversion:
+
+- **100 ACUs = £1** of user spending value; 1 ACU = £0.01 retail
+- Under the 4× rule: maximum provider cost behind 100 ACUs = £0.25; behind 1 ACU = £0.0025
+
+**Dynamic pricing per action:** `Base ACUs = provider cost in GBP × 400`
+
+| AI action | Provider cost | Minimum user charge | Minimum ACUs |
+|---|---|---|---|
+| Generate game title | £0.02 | £0.08 | 8 |
+| Generate game blueprint | £0.25 | £1.00 | 100 |
+| Generate character image | £0.50 | £2.00 | 200 |
+| Generate level package | £1.50 | £6.00 | 600 |
+| Generate playable prototype | £5.00 | £20.00 | 2,000 |
+| Run advanced AI testing | £10.00 | £40.00 | 4,000 |
+
+The final charge may exceed the minimum when the action includes premium platform value.
+
+## The Subscription ACU Rule — 20/80
+
+**Exactly 20% of every subscription payment converts into user ACUs.** The remaining 80% pays for platform access: workspace access, project management, standard storage, marketplace access, security, version history, collaboration, game hosting allowance, dashboard access, platform maintenance, support, and product development.
 
 ## ACU (AI Compute Units) — The Core Currency
 
