@@ -225,7 +225,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
       <div class="fleet" id="fleet"></div>
       <div class="meter">
         <div><b>ACUs Consumed</b><span id="mAcu">0</span></div>
-        <div><b>Provider Cost</b><span id="mCost">£0.00</span></div>
+        <div><b>Total Cost</b><span id="mCost">£0.00</span></div>
         <div><b>Build Maturity</b><span id="mMat">Concept</span></div>
         <div><b>Quality Signal</b><span id="mQ">—</span></div>
       </div>
@@ -330,7 +330,7 @@ function runAgent(i, done) {
     bar.style.width = Math.min(100, prog) + '%';
     spend(Math.round(12 + Math.random() * 24));
     $('mAcu').textContent = (2000 - acu - 8).toLocaleString();
-    $('mCost').textContent = '£' + ((2000 - acu) * 0.0025).toFixed(2);
+    $('mCost').textContent = '£' + ((2000 - acu) * 0.01).toFixed(2);
     if (prog >= 100) { clearInterval(t); el.classList.remove('run'); el.classList.add('done'); log.textContent = lines[lines.length - 1]; done(); }
   }, 260);
 }
