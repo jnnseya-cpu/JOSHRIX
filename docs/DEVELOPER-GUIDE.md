@@ -112,6 +112,10 @@ infra/
 
 Conventions: TypeScript strict everywhere; contracts package is the only place DTOs/event types are defined (services import, never redeclare); DB access only through the owning service; migrations reviewed like code and always backward-compatible for one release (expand-migrate-contract).
 
+## 5b. Creator-Surface Toolkit
+
+The operator portal's creation surfaces use: **React Flow** for agent and logic graphs, **Monaco Editor** for source editing, **PixiJS/Phaser** in-browser 2D preview and **Three.js** 3D preview, and **WebSockets** for live build updates. Reliable job execution uses **Cloud Tasks** alongside Pub/Sub where at-least-once with per-task retry policy is needed. Firestore holds collaboration and project metadata only — **complex financial ledgers must never live solely in Firestore**; all money records are PostgreSQL double-entry postings (§10, GAP-ANALYSIS §A1).
+
 ## 6. Environments & Configuration
 
 | Env | Purpose | Data | Payments |

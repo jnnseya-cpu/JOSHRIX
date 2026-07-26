@@ -1,5 +1,9 @@
 # JOSHRIX Studio — Monetisation Model
 
+## Platform Revenue Channels
+
+Sixteen channels: subscriptions · ACU consumption · build charges · hosting · marketplace commission · in-game payment commission · creator payout processing · premium analytics · publishing services · white-label licensing · asset generation · team seats · enterprise deployment · promotion and featured placement · transaction escrow · API usage.
+
 ## ACU (AI Compute Units) — The Core Currency
 
 ACU is the primary consumption metric of the platform. Every forge cycle consumes ACU proportional to compute intensity, agent usage, model API costs, asset generation volume, and QA depth — aligning platform revenue directly with value delivered: operators pay more when they produce more.
@@ -56,6 +60,53 @@ Fixed-price forge packages for one-shot creators: **Starter £19 · Creator £49
 | Studio | £299/month | 8,000 ACU | 10 concurrent cycles | All Operator + team RBAC; studio analytics; white-label marketplace store; priority support |
 | Enterprise | Custom | Custom ACU | Unlimited | All Studio + white-label OS; dedicated agent fleet; SLA; custom integrations; account manager |
 | Education | £79/seat/year | 200 ACU/student/term | Supervised | Supervised forge; IP assignment controls; instructor dashboard; institution billing |
+
+## Subscription Framework v2 (launch structure)
+
+The refined six-tier framework (supersedes the table above for launch; the original tiers are preserved as the intermediate model):
+
+| Tier | Price | Includes |
+|---|---|---|
+| Explorer | Free | Limited projects and generations; watermark; public templates; non-commercial publishing; 100 introductory ACUs |
+| Creator | £19/month | More projects; commercial rights subject to asset licences; basic marketplace listing; web publishing; standard analytics |
+| Creator Pro | £49/month | Advanced agents; more storage; source export; behaviour analytics; multiplayer prototype access; reduced marketplace commission |
+| Studio | £149/month | Team workspace; approval workflows; advanced QA; build pipelines; shared assets; commercial templates; priority execution |
+| Business | £399/month | Multiple brands; white-label games; campaign analytics; lead capture; advanced permissions; API access |
+| Enterprise | Custom | Private environment; SSO; private model gateway; dedicated support; custom compliance; data residency; custom agent policies |
+
+### ACU Pricing Rule
+
+**Retail ACU charge ≥ 4 × attributable provider cost.** The cost engine must include: model inference, image generation, audio generation, 3D generation, build compute, storage, bandwidth, testing compute, payment fees, support reserve, refund reserve.
+
+### Subscription ACU Allocation
+
+Twenty per cent of subscription value converts into monthly ACUs (e.g. Creator Pro £49 → £9.80 of ACUs; the remainder supports platform access, storage, and margin). Unused promotional ACUs may expire or roll over subject to plan rules.
+
+### Tiered Marketplace Commission
+
+| Seller tier | Commission |
+|---|---|
+| Free seller | 30% |
+| Creator | 25% |
+| Creator Pro | 20% |
+| Studio | 15% |
+| Enterprise | Negotiated |
+
+### Revenue Ledger
+
+Every transaction produces double-entry records (the schema-level ledger of [GAP-ANALYSIS.md](GAP-ANALYSIS.md) §A1):
+
+```json
+{
+  "transaction_id": "txn_123",
+  "gross_amount_gbp": 100,
+  "processor_fee_gbp": 3.20,
+  "platform_fee_gbp": 20,
+  "tax_withheld_gbp": 0,
+  "creator_net_gbp": 76.80,
+  "ledger_entries": []
+}
+```
 
 ## Revenue Stream Architecture
 

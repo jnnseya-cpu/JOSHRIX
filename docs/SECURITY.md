@@ -57,6 +57,24 @@ The policy enforcement layer (see GAP-ANALYSIS §D3) must block, at prompt intak
 - Adult content reachable by minors; hate content; scam games; misleading revenue promises
 - Malware or unsafe exports (enforced structurally by the supply-chain controls in GAP-ANALYSIS §D1)
 
+**Prompt screening** detects: copyrighted characters, trademark misuse, sexual content, child exploitation, hate content, extremist content, graphic violence, illegal activities, malware requests, gambling, deceptive monetisation.
+
+**Content moderation pipeline:**
+
+```
+User input → prompt moderation → generation policy → asset moderation
+→ build scanning → human review where required → marketplace review
+→ post-publication monitoring
+```
+
+**Child safety** — for users under the applicable digital age: guardian controls; restricted publishing; no direct marketplace payouts without a verified adult structure; no behavioural advertising; no open direct messaging by default; restricted user-generated uploads; spending limits; strong reporting; age-appropriate content filters.
+
+**Copyright similarity detection** — multimodal embeddings and perceptual hashing against famous characters, game logos, branded environments, uploaded marketplace assets, and previously rejected assets. Similarity detection **flags risk for review** — it never automatically declares infringement.
+
+**AI transparency** — every marketplace game discloses: whether AI was used, which asset categories involved AI, whether human modification occurred, known licence restrictions, whether source code is included.
+
+**Auditability** — immutable logs (hash-chained per the audit architecture) for: generation requests, model and provider, agent decisions, user approvals, asset provenance, code modifications, publication, sales, licence changes, moderation actions.
+
 Every generated game must carry a complete provenance record before marketplace approval:
 
 | Record | Source |
