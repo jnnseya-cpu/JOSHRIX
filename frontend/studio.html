@@ -209,7 +209,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
       </div>
       <div class="actions">
         <button class="btn btn-primary" id="btnBlueprint">⚡ Generate Blueprint</button>
-        <span class="hint">Idea Agent · market radar · rights screening — ~8 ACUs</span>
+        <span class="hint" id="bpHint">Idea Agent · market radar · rights screening — ~8 ACUs</span>
       </div>
       <div class="bp" id="bp">
         <div class="bp-head">
@@ -222,7 +222,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
           <div class="bp-cell"><b>Monetisation</b><span>Freemium · cosmetic boots &amp; stadiums · tournament entry · no paid random rewards</span></div>
           <div class="bp-cell"><b>Session · Rounds</b><span>3-min sessions · 5 shots per round · weekly leagues</span></div>
           <div class="bp-cell"><b>Rights Screening</b><span style="color:var(--green)">CLEAR — no real club names, no licensed marks</span></div>
-          <div class="bp-cell"><b>Estimated Forge</b><span>~1,840 ACUs · maturity target: Commercial starter</span></div>
+          <div class="bp-cell"><b>Estimated Forge</b><span id="bpEst">~1,840 ACUs · maturity target: Commercial starter</span></div>
         </div>
       </div>
       <div class="actions" id="approveRow" style="display:none">
@@ -269,16 +269,16 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
     <div class="panel-body">
       <div class="pub-grid">
         <div class="game-frame">
-          <div class="gf-bar"><span>PENALTY KING — SANDBOX BUILD</span><span class="live">◉ PRIVATE — ONLY YOU</span></div>
+          <div class="gf-bar"><span>PENALTY KING — PLAYABLE BUILD</span><span class="live">◉ PRIVATE — ONLY YOU</span></div>
           <canvas id="game" width="560" height="420"></canvas>
         </div>
         <div>
           <div class="listing">
             <div class="body">
-              <h4>Test Before You Ship</h4>
-              <p>This build is visible only to you. Play as many rounds as you like — nothing is listed, indexed or charged while you playtest.</p>
+              <h4>🎮 Play Your Build — Live Now</h4>
+              <p>The game on the left is your real build, running right now and visible only to you. <b>Press &amp; hold the ball, drag to aim and set power, release to shoot.</b> Five shots per round — beat the keeper.</p>
               <div class="tags"><i>Unlimited runs</i><i>No ACU charge</i><i>Not public</i></div>
-              <p class="split">Check before approving: controls feel right · difficulty is fair · rewards fire correctly · text reads clean. Not happy? Send it back.</p>
+              <p class="split">Happy? Approve below. Not happy? <b>Refine Concept</b> is economical — blueprint tweak <b>2 ACUs</b>, and the re-forge only rebuilds what changed (~15% of the original run). Never a full charge again.</p>
             </div>
           </div>
           <div class="actions">
@@ -367,6 +367,8 @@ let acu = 2000;
 const spend = n => { acu = Math.max(0, acu - n); $('acuBal').textContent = acu.toLocaleString(); };
 
 /* ---------- Stage 1: blueprint ---------- */
+let refining = false;   // refine passes are delta-priced, never a full re-charge
+let forgeAcu0 = 2000;   // ACU balance when the current forge run started
 $('btnBlueprint').addEventListener('click', () => {
   const p = $('prompt').value.toLowerCase();
   let title = 'Penalty King';
@@ -376,7 +378,7 @@ $('btnBlueprint').addEventListener('click', () => {
     title = title.charAt(0).toUpperCase() + title.slice(1) + ' Quest';
   }
   $('bpTitle').textContent = title;
-  spend(8);
+  spend(refining ? 2 : 8);
   $('bp').classList.add('show');
   $('approveRow').style.display = 'flex';
   $('btnBlueprint').disabled = true;
@@ -405,11 +407,11 @@ function runAgent(i, done) {
   const lines = AGENTS[i][1];
   let li = 0, prog = 0;
   const t = setInterval(() => {
-    prog += 8 + Math.random() * 14;
+    prog += (refining ? 16 : 8) + Math.random() * 14;
     if (li < lines.length && prog > (li + 1) * (100 / lines.length)) log.textContent = lines[li++];
     bar.style.width = Math.min(100, prog) + '%';
-    spend(Math.round(12 + Math.random() * 24));
-    $('mAcu').textContent = (2000 - acu - 8).toLocaleString();
+    spend(Math.round((12 + Math.random() * 24) * (refining ? 0.15 : 1)));
+    $('mAcu').textContent = (forgeAcu0 - acu).toLocaleString();
     $('mCost').textContent = '£' + ((2000 - acu) * 0.01).toFixed(2);
     if (prog >= 100) { clearInterval(t); el.classList.remove('run'); el.classList.add('done'); log.textContent = lines[lines.length - 1]; done(); }
   }, 260);
@@ -417,6 +419,14 @@ function runAgent(i, done) {
 $('btnForge').addEventListener('click', () => {
   setStep(2);
   show('p2');
+  forgeAcu0 = acu;
+  $('qaRow').style.display = 'none';
+  AGENTS.forEach((a, i) => {
+    const el = $('ag' + i);
+    el.classList.remove('run', 'done');
+    el.querySelector('.log').textContent = refining ? 'Queued — delta pass…' : 'Queued…';
+    el.querySelector('.bar i').style.width = '0';
+  });
   const order = [[0], [1], [2, 3], [4], [5], [6]];  // code+asset parallel
   const mats = ['Concept','Prototype','Prototype','Playable alpha','Playable alpha','Closed beta','Commercial starter'];
   let gi = 0;
@@ -458,7 +468,14 @@ $('btnQA').addEventListener('click', () => {
 /* ---------- Stage 4: private playtest ---------- */
 let gameOn = false;
 $('btnPlaytest').addEventListener('click', () => { setStep(4); show('p4'); if (!gameOn) { gameOn = true; initGame(); } });
-$('btnRefine').addEventListener('click', () => { setStep(1); show('p1'); $('btnBlueprint').disabled = false; });
+$('btnRefine').addEventListener('click', () => {
+  refining = true;
+  setStep(1); show('p1');
+  $('btnBlueprint').disabled = false;
+  $('btnBlueprint').textContent = '⚡ Refine Blueprint';
+  $('bpHint').textContent = 'Refine pass — Idea Agent reuses your blueprint · 2 ACUs';
+  $('bpEst').textContent = '~275 ACUs · delta re-forge — unchanged systems reused, not rebuilt';
+});
 
 /* ---------- Stage 5: publish + multi-platform distribution ---------- */
 $('btnPub').addEventListener('click', () => { setStep(5); show('p5'); });
@@ -511,7 +528,7 @@ function initGame() {
   const GOAL = { x: W/2 - 170, y: 58, w: 340, h: 96 };
   let shots = 0, goals = 0, coins = 0, state = 'aim', msg = 'Drag from the ball to aim & power';
   let ball = { x: W/2, y: H - 70, r: 9 }, shot = null, keeper = { x: W/2, dive: 0, t: 0 };
-  let drag = null, doneRound = false;
+  let drag = null, doneRound = false, helped = false; // helped: first shot taken, hide tutorial
 
   function reset() { ball = { x: W/2, y: H - 70, r: 9 }; shot = null; keeper = { x: W/2, dive: 0, t: 0 }; state = 'aim'; }
 
@@ -555,6 +572,22 @@ function initGame() {
     if (drag && state === 'aim') {
       cx.strokeStyle = 'rgba(34,211,238,.9)'; cx.lineWidth = 3; cx.setLineDash([7, 6]);
       cx.beginPath(); cx.moveTo(ball.x, ball.y); cx.lineTo(drag.x, drag.y); cx.stroke(); cx.setLineDash([]);
+    }
+    // tutorial overlay — until the first shot is taken
+    if (!helped && state === 'aim' && !drag) {
+      const pulse = .55 + .45 * Math.sin(Date.now() / 380);
+      cx.setLineDash([7, 7]); cx.lineWidth = 3;
+      cx.strokeStyle = `rgba(34,211,238,${.35 + pulse * .55})`;
+      cx.beginPath(); cx.moveTo(ball.x, ball.y - 14); cx.lineTo(ball.x + 32, ball.y - 92); cx.stroke(); cx.setLineDash([]);
+      cx.beginPath(); cx.moveTo(ball.x + 32, ball.y - 92); cx.lineTo(ball.x + 19, ball.y - 82); cx.moveTo(ball.x + 32, ball.y - 92); cx.lineTo(ball.x + 34, ball.y - 74); cx.stroke();
+      cx.textAlign = 'center';
+      cx.fillStyle = `rgba(34,211,238,${.65 + pulse * .35})`;
+      cx.font = '900 21px Orbitron, sans-serif';
+      cx.fillText('▶ PLAY YOUR GAME NOW', W/2, H/2 - 8);
+      cx.fillStyle = 'rgba(244,244,250,.95)';
+      cx.font = '600 15px Rajdhani, sans-serif';
+      cx.fillText('Press & hold the ball · drag to aim & power · release to shoot', W/2, H/2 + 20);
+      cx.textAlign = 'left';
     }
     // HUD
     cx.fillStyle = 'rgba(5,5,8,.65)'; cx.fillRect(0, H-34, W, 34);
@@ -613,7 +646,7 @@ function initGame() {
       shot = { vx: dx * 0.055 * (0.5 + power), vy: dy * 0.055 * (0.5 + power) };
       keeper.dive = [ -1, 0, 1 ][Math.floor(Math.random() * 3)];
       keeper.t = -0.35; // reaction delay
-      state = 'shot'; msg = '';
+      state = 'shot'; msg = ''; helped = true;
     }
     drag = null;
   };
