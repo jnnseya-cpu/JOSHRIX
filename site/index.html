@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JOSHRIX Studio — Create Worlds. Build Games. Own the Future.</title>
+  <meta name="description" content="JOSHRIX Studio — Create Worlds. Build Games. Own the Future.">
+  <style>
+    :root {
+      --violet: #7C3AED;
+      --cyan: #22D3EE;
+      --void: #0B0B14;
+      --surface: #16162A;
+      --text: #F4F4FA;
+      --muted: #9CA3B8;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+      background: var(--void);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      background-image: radial-gradient(ellipse at 50% -20%, rgba(124, 58, 237, 0.25), transparent 60%);
+    }
+    .mark {
+      width: 88px;
+      height: 88px;
+      margin-bottom: 2rem;
+    }
+    h1 {
+      font-size: clamp(2.5rem, 8vw, 4.5rem);
+      font-weight: 800;
+      letter-spacing: 0.12em;
+    }
+    .studio {
+      display: block;
+      font-size: clamp(1rem, 3vw, 1.5rem);
+      font-weight: 600;
+      letter-spacing: 0.6em;
+      margin-top: 0.5rem;
+      background: linear-gradient(90deg, var(--violet), var(--cyan));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .tagline {
+      margin-top: 2rem;
+      font-size: clamp(1.1rem, 3vw, 1.5rem);
+      color: var(--muted);
+      max-width: 32ch;
+      line-height: 1.6;
+    }
+    .tagline strong { color: var(--text); font-weight: 600; }
+    .cta {
+      margin-top: 3rem;
+      display: inline-block;
+      padding: 0.9rem 2.5rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+      color: var(--text);
+      text-decoration: none;
+      background: linear-gradient(90deg, var(--violet), var(--cyan));
+    }
+  </style>
+</head>
+<body>
+  <svg class="mark" viewBox="-50 -50 100 100" aria-hidden="true">
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#7C3AED"/>
+        <stop offset="100%" stop-color="#22D3EE"/>
+      </linearGradient>
+    </defs>
+    <polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#g)" stroke-width="6" stroke-linejoin="round"/>
+    <polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#g)"/>
+  </svg>
+  <h1>JOSHRIX<span class="studio">STUDIO</span></h1>
+  <p class="tagline"><strong>Create Worlds.</strong> <strong>Build Games.</strong> <strong>Own the Future.</strong></p>
+  <a class="cta" href="#">Start Creating</a>
+</body>
+</html>
