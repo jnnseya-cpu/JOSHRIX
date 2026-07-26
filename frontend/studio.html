@@ -156,6 +156,8 @@ canvas#game{display:block;width:100%;cursor:crosshair;touch-action:none}
 .pill{font-family:var(--mono);font-size:.54rem;font-weight:500;letter-spacing:.2em;color:var(--muted);border:1px solid var(--stroke-bright);border-radius:999px;padding:.25rem .7rem;background:rgba(255,255,255,.03)}
 .pill.live{color:var(--green);border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.07)}
 .chan-btn{padding:.55rem 1rem;font-size:.72rem;white-space:nowrap}
+.chan-sel{margin-top:.6rem;font-size:.92rem;font-weight:600;padding:.5rem .8rem;border-radius:8px}
+.chan-go{margin-top:.7rem;width:100%;white-space:normal}
 @media(max-width:680px){.chan{grid-template-columns:46px 1fr}.chan .act{grid-column:1/-1}.chan .act .btn{width:100%}}
 .step.done,.step.active{cursor:pointer}
 footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.6rem;text-align:center;color:rgba(156,163,184,.55);
@@ -315,17 +317,25 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
             <span class="ic">🤖</span>
             <div>
               <h5>Android — Google Play <span class="pill" id="plAab">EXPORT</span></h5>
-              <p>Wraps your build as a Trusted Web Activity and signs a Play-ready .aab. Upload it to your Google Play Console (one-time $25 registration).</p>
+              <p>No Google account needed — ship under the JOSHRIX Studios publisher account and we submit for you. Or export a signed .aab for your own Play Console.</p>
+              <select class="chan-sel" id="selAab">
+                <option value="joshrix">JOSHRIX publisher account — no developer fee, we submit</option>
+                <option value="own">My own Google Play Console ($25 one-time)</option>
+              </select>
+              <button class="btn btn-ghost chan-btn chan-go" id="btnAab">🚀 Submit via JOSHRIX</button>
             </div>
-            <div class="act"><button class="btn btn-ghost chan-btn" id="btnAab">⚙ Build signed .AAB</button></div>
           </div>
           <div class="chan">
             <span class="ic">🍎</span>
             <div>
               <h5>iOS — App Store <span class="pill" id="plIos">EXPORT</span></h5>
-              <p>Capacitor shell + cloud build produce an .ipa for TestFlight and App Store review. Requires an Apple Developer account ($99/yr).</p>
+              <p>No Apple account needed — ship under the JOSHRIX Studios Apple Developer account; we handle TestFlight and review. Or export an .ipa for your own account.</p>
+              <select class="chan-sel" id="selIos">
+                <option value="joshrix">JOSHRIX publisher account — no developer fee, we submit</option>
+                <option value="own">My own Apple Developer account ($99/yr)</option>
+              </select>
+              <button class="btn btn-ghost chan-btn chan-go" id="btnIos">🚀 Submit via JOSHRIX</button>
             </div>
-            <div class="act"><button class="btn btn-ghost chan-btn" id="btnIos">⚙ Build iOS .IPA</button></div>
           </div>
         </div>
         <div>
@@ -457,17 +467,30 @@ $('btnPwa').addEventListener('click', e => {
   const b = e.currentTarget; b.disabled = true; b.textContent = 'Generating manifest…';
   setTimeout(() => { b.textContent = '✓ Install banner live'; $('plPwa').textContent = 'ENABLED'; $('plPwa').classList.add('live'); }, 1400);
 });
-function buildFor(btn, pill, steps, doneBtn, donePill) {
-  btn.disabled = true; let i = 0;
-  (function tick() {
-    if (i < steps.length) { btn.textContent = steps[i++]; setTimeout(tick, 1300); }
-    else { btn.textContent = doneBtn; pill.textContent = donePill; pill.classList.add('live'); }
-  })();
+function wireStore(btnId, selId, pillId, modes, labels) {
+  const btn = $(btnId), sel = $(selId), pill = $(pillId);
+  sel.addEventListener('change', () => { btn.textContent = labels[sel.value]; });
+  btn.addEventListener('click', () => {
+    const m = modes[sel.value];
+    btn.disabled = true; sel.disabled = true; let i = 0;
+    (function tick() {
+      if (i < m.steps.length) { btn.textContent = m.steps[i++]; setTimeout(tick, 1300); }
+      else { btn.textContent = m.doneBtn; pill.textContent = m.donePill; pill.classList.add('live'); }
+    })();
+  });
 }
-$('btnAab').addEventListener('click', e => buildFor(e.currentTarget, $('plAab'),
-  ['Wrapping (Trusted Web Activity)…', 'Signing release build…'], '⬇ penalty-king.aab — upload to Play Console', 'AAB READY'));
-$('btnIos').addEventListener('click', e => buildFor(e.currentTarget, $('plIos'),
-  ['Building Capacitor shell…', 'Cloud build + notarising…'], '⬇ .ipa — submit via App Store Connect', 'IPA READY'));
+wireStore('btnAab', 'selAab', 'plAab', {
+  joshrix: { steps: ['Wrapping (Trusted Web Activity)…', 'Signing with JOSHRIX release key…', 'Submitting to Google Play…'],
+             doneBtn: '✓ Submitted — publisher: JOSHRIX Studios', donePill: 'SUBMITTED' },
+  own:     { steps: ['Wrapping (Trusted Web Activity)…', 'Signing release build…'],
+             doneBtn: '⬇ penalty-king.aab — upload to Play Console', donePill: 'AAB READY' }
+}, { joshrix: '🚀 Submit via JOSHRIX', own: '⚙ Build signed .AAB' });
+wireStore('btnIos', 'selIos', 'plIos', {
+  joshrix: { steps: ['Building Capacitor shell…', 'Cloud build + signing (JOSHRIX team)…', 'Uploading to App Store Connect…'],
+             doneBtn: '✓ Submitted — TestFlight live under JOSHRIX Studios', donePill: 'SUBMITTED' },
+  own:     { steps: ['Building Capacitor shell…', 'Cloud build + notarising…'],
+             doneBtn: '⬇ .ipa — submit via App Store Connect', donePill: 'IPA READY' }
+}, { joshrix: '🚀 Submit via JOSHRIX', own: '⚙ Build iOS .IPA' });
 
 let reached = 1;
 function setStep(n) {
