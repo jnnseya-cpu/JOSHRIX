@@ -217,7 +217,65 @@ External payment-processing fees are charged separately. **No commission is take
 
 ## Margin Protection Controls
 
-Profitability is calculated **before every chargeable AI operation**. Required cost components: AI model cost + image-generation cost + audio-generation cost + video-generation cost + 3D-generation cost + build compute + storage + bandwidth + testing compute + payment fees + support reserve + refund reserve (per the ACU pricing-rule cost engine above). An operation whose projected margin falls below the 4× floor is repriced or blocked by the Cost Governor Agent before execution.
+Profitability is calculated **before every chargeable AI operation**. Required cost components: AI model cost + image-generation cost + audio-generation cost + video-generation cost + 3D-generation cost + build-compute cost + testing cost + bandwidth + storage + payment fees + refund reserve + support reserve.
+
+**Pricing guardrail** — the user charge is the *greater* of:
+
+```
+Provider cost × 4    OR    Minimum platform action price
+```
+
+Example: provider cost £2 → 4× minimum £8; minimum commercial action price £12 → **user charge £12**. The higher amount always applies.
+
+**Margin alerts** — the system stops or reviews an action when: provider cost changes unexpectedly · a generation loop repeats · user charge falls below 4× cost · free-tier usage becomes commercially unsustainable · storage or bandwidth exceeds plan allowances · refund rates rise · a provider increases pricing. (Enforced by the Cost Governor Agent.)
+
+## Refund and Failure Policy
+
+| Outcome | When |
+|---|---|
+| **Full ACU refund** | Provider fails before producing output · build does not start · double charge · platform error corrupts the operation |
+| **Partial refund** | Some assets generated successfully · build completed but an optional component failed · user cancels after chargeable execution started |
+| **No automatic refund** | User simply dislikes a valid output · user deletes the output · input violated policy · user exceeded a clearly displayed technical limitation |
+
+One-click regeneration or quality credits may be offered as a customer-experience measure.
+
+## Commercial Targets
+
+| Stream | Target |
+|---|---|
+| Subscription gross margin | >85% before sales and administrative costs |
+| ACU gross margin | ≥75% before internal operating costs; preferred 80–90% for internal/cached actions |
+| Marketplace commission | 15–30% depending on plan |
+| Hosting margin | ≥65%; preferred 75%+ |
+| In-game payments | 8–15% platform fee |
+| Enterprise contracts | Annual recurring; ≥60% gross margin; paid implementation and onboarding |
+
+## Final Subscription Positioning
+
+| Tier | Message |
+|---|---|
+| Explorer | *Start creating. No technical skills required.* |
+| Creator | *Turn your first game idea into something playable.* |
+| Creator Pro | *Create, publish and earn from commercial games.* |
+| Studio | *Operate an AI-powered game-development team.* |
+| Business | *Create branded games, campaigns and revenue-generating game portfolios.* |
+| Enterprise | *Deploy a private AI game-creation and publishing ecosystem.* |
+
+## The Final Commercial Flywheel
+
+```
+User subscribes → 20% becomes ACUs → user creates a game
+→ additional ACUs purchased → game is hosted → game listed on marketplace
+→ game is sold → platform receives commission → players make in-game purchases
+→ platform receives transaction fee → creator reinvests earnings into more ACUs
+→ more games are created and sold
+```
+
+The platform earns at the beginning, during production, at publication, at sale, and throughout the game's commercial life.
+
+## The Final Commercial Rule
+
+**Every provider cost must produce at least four times that amount in user revenue, while exactly 20% of every subscription payment is returned to the user as ACUs.** This gives users visible creation value while protecting the platform with predictable subscription income, controlled AI consumption, and multiple recurring revenue streams.
 
 ## ACU (AI Compute Units) — The Core Currency
 
