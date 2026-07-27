@@ -41,6 +41,7 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── REALISM-PIPELINE.md    Ultra-realism & 3D output contract for the live forge
 │   ├── DEEP-DIVE.md           The King Doctrine: competitive autopsy + leapfrog moves
 │   ├── PAYMENTS.md            Implemented pay-in/pay-out structure + referral programme
+│   ├── UNIT-ECONOMICS.md      Fully-loaded cost stack, price floors, margin alerts
 │   ├── APP-BUILD-SPEC.md      MVP build spec: collections, routes, dashboards
 │   └── DEPLOYMENT.md          Hostinger + Vercel + Firebase + Cloud Run architecture
 ├── frontend/              The web app: 20 pages sharing one design system
@@ -65,5 +66,8 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   └── ai-gateway/        Claude-primary AI gateway reference (fixes Genkit error)
 └── shared/
     ├── contracts.ts       Shared types: roles, statuses, blueprint schema, ACU constants
-    └── telemetry.ts       Forge Graph event contract + Remix Graph lineage schema
+    ├── telemetry.ts       Forge Graph event contract + Remix Graph lineage schema
+    ├── payments.ts        Money contract: packages, plans, rails, ledger, split math
+    ├── referrals.ts       Influencer tiers + referral earnings math
+    └── economics.ts       Fully-loaded cost model: price floors + margin alerts
 ```

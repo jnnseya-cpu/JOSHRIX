@@ -29,6 +29,7 @@ This index binds the documentation set into one complete, developer-ready produc
 | — | Ultra-Realism & 3D Output Pipeline | [REALISM-PIPELINE.md](REALISM-PIPELINE.md) — 3D-by-default output contract, asset generation chains, engine profiles, Visual Fidelity QA gate, media-provider keys |
 | — | The King Doctrine (competitive deep dive) | [DEEP-DIVE.md](DEEP-DIVE.md) — landscape autopsy, power scorecard, existential-gap closures, king moves (Forge Graph, Remix Graph, Fun Score, No-Ceiling Covenant), priority order |
 | — | Payment Structure (implemented) | [PAYMENTS.md](PAYMENTS.md) — pay-in (top-ups, checkout with lineage splits), pay-out rails, double-entry ledger accounts, influencer/referral tiers, go-live checklist |
+| — | Unit Economics (fully-loaded) | [UNIT-ECONOMICS.md](UNIT-ECONOMICS.md) — complete cost stack (AI + Stripe + GCP + Vercel + VAT + refunds + overheads), two-rule price floor, margin alerts, worked SKU examples, break-even |
 | — | Deployment Architecture | [DEPLOYMENT.md](DEPLOYMENT.md) — Hostinger DNS + Vercel + Firebase + Cloud Run |
 | — | Brand | [../branding/BRANDING.md](../branding/BRANDING.md) + [logo](../branding/logo.svg) + [landing page](../frontend/index.html) |
 
