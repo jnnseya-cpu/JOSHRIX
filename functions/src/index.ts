@@ -15,6 +15,7 @@ import {
   payoutFeeMinor, payoutPostings,
 } from "./shared/payments";
 import { REFERRAL, INFLUENCER_TIERS, CreateReferralCodeSchema, referralEarningsMinor } from "./shared/referrals";
+import { SKU_CATALOGUE, CostObservationBatchSchema, evaluateSku, fixedMonthlyOverheadMinor, ECON } from "./shared/economics";
 
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
 
@@ -157,9 +158,39 @@ export const api = onRequest(
       return;
     }
 
+    if (path === "/economy") {
+      const summarise = (rows: ReturnType<typeof evaluateSku>[]) => {
+        const order = { ok: 0, warn: 1, act: 2, panic: 3 } as const;
+        const worst = rows.reduce((w, r) => (order[r.alert] > order[w] ? r.alert : w), "ok" as keyof typeof order);
+        return { worstAlert: worst, floorsHolding: rows.every((r) => r.floorHolding),
+          repricesNeeded: rows.filter((r) => r.action.type === "reprice").map((r) => r.sku),
+          marginFloor: ECON.targets.grossMarginFloor, fixedMonthlyOverheadMinor: fixedMonthlyOverheadMinor() };
+      };
+      if (req.method === "GET") {
+        const rows = SKU_CATALOGUE.map((s) => evaluateSku(s));
+        res.status(200).json({ mode: "expected_costs", skus: rows, summary: summarise(rows) });
+        return;
+      }
+      if (req.method === "POST") {
+        const parsed = CostObservationBatchSchema.safeParse(req.body);
+        if (!parsed.success) { res.status(400).json({ error: "Invalid observations", issues: parsed.error.issues.slice(0, 3) }); return; }
+        const rows = parsed.data.observations.map((o) => {
+          const base = SKU_CATALOGUE.find((s) => s.sku === o.sku);
+          return evaluateSku({ sku: o.sku, label: base?.label, retailMinor: o.retailMinor ?? base?.retailMinor ?? 0,
+            providerMinor: o.providerMinor, infraMinor: o.infraMinor ?? base?.infraMinor ?? 0 });
+        });
+        const unknown = rows.filter((r) => r.retailMinor === 0).map((r) => r.sku);
+        if (unknown.length) { res.status(400).json({ error: "Unknown sku(s) without retailMinor", skus: unknown }); return; }
+        res.status(200).json({ mode: "observed_costs", skus: rows, summary: summarise(rows) });
+        return;
+      }
+      res.status(405).json({ error: "GET or POST" });
+      return;
+    }
+
     res.status(404).json({
       error: "Not found",
-      routes: ["GET /health", "POST /blueprint", "POST /telemetry", "GET /wallet", "POST /payments/topup", "POST /payments/checkout", "POST /payouts", "GET|POST /referrals"],
+      routes: ["GET /health", "POST /blueprint", "POST /telemetry", "GET /wallet", "POST /payments/topup", "POST /payments/checkout", "POST /payouts", "GET|POST /referrals", "GET|POST /economy"],
     });
   },
 );

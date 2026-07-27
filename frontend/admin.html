@@ -40,7 +40,7 @@
 <div class="module"><h3><span class="st"></span>MRR</h3><span class="num">£612K</span><div class="bar ok"><i style="width:81%"></i></div><span class="readout">CHURN 2.1% · ARPU £13.40</span></div>
 <div class="module"><h3><span class="st"></span>Marketplace GMV (30d)</h3><span class="num">£1.84M</span><div class="bar ok"><i style="width:66%"></i></div><span class="readout">TAKE RATE 19.2% · REFUNDS 1.4%</span></div>
 <div class="module"><h3><span class="st"></span>AI Provider Cost</h3><span class="num">£96K</span><div class="bar"><i style="width:24%"></i></div><span class="readout">ACU MARGIN 76.4% · 4× FLOOR HOLDING</span></div>
-<div class="module"><h3><span class="st"></span>Fully-Loaded Margin</h3><span class="num">71.3%</span><div class="bar ok"><i style="width:71%"></i></div><span class="readout">VAT 16.7% · STRIPE 2.3% · GCP 0.9% · REFUNDS 1.5% — FLOOR 60% · ALERT: OK</span></div>
+<div class="module"><h3><span class="st"></span>Fully-Loaded Margin</h3><span class="num" id="floadNum">71.3%</span><div class="bar ok" id="floadBar"><i style="width:71%"></i></div><span class="readout" id="floadRead">VAT 16.7% · STRIPE 2.3% · GCP 0.9% · REFUNDS 1.5% — FLOOR 60% · ALERT: OK</span></div>
 <div class="module"><h3><span class="st"></span>Active Forges</h3><span class="num">1,318</span><div class="bar"><i style="width:55%"></i></div><span class="readout">SUCCESS 97.6% · P95 3.2H</span></div>
 <div class="module"><h3><span class="st"></span>Moderation Queue</h3><span class="num">23</span><div class="bar warn"><i style="width:23%"></i></div><span class="readout">4 COPYRIGHT · 2 AGE-RATING · 17 ROUTINE</span></div>
 <div class="module"><h3><span class="st"></span>Security</h3><span class="num">0</span><div class="bar ok"><i style="width:100%"></i></div><span class="readout">SEV1 INCIDENTS · FRAUD HOLDS: 12</span></div>
@@ -89,6 +89,23 @@
     <span class="sys">◉ ALL SYSTEMS OPERATIONAL</span>
   </div>
 </footer>
+<script src="assets/config.js"></script>
 <script src="assets/site.js"></script>
+<script>
+/* Economy Agent live feed — the margin control loop rendered in the admin module */
+fetch(((window.JOSHRIX_API_BASE || '') + '/api/economy'), { signal: AbortSignal.timeout(6000) })
+  .then(r => r.json()).then(d => {
+    const worst = d.summary.worstAlert.toUpperCase();
+    const margins = d.skus.map(s => s.marginOnExVat);
+    const avg = margins.reduce((a, b) => a + b, 0) / margins.length;
+    document.getElementById('floadNum').textContent = (avg * 100).toFixed(1) + '%';
+    document.getElementById('floadBar').className = 'bar ' + (worst === 'OK' ? 'ok' : 'warn');
+    document.getElementById('floadBar').firstElementChild.style.width = Math.round(avg * 100) + '%';
+    document.getElementById('floadRead').textContent =
+      d.skus.map(s => s.sku.toUpperCase() + ' ' + Math.round(s.marginOnExVat * 100) + '%').join(' · ') +
+      ' — FLOOR ' + Math.round(d.summary.marginFloor * 100) + '% · ALERT: ' + worst +
+      (d.summary.repricesNeeded.length ? ' · REPRICE: ' + d.summary.repricesNeeded.join(',') : '');
+  }).catch(() => {});
+</script>
 </body>
 </html>

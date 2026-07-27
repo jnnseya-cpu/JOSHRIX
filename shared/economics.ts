@@ -8,6 +8,7 @@
  * fractional minor units and round only at the final aggregation.
  * Rates are indicative (July 2026) and admin-tunable in production.
  */
+import { z } from "zod";
 
 export const ECON = {
   /** UK VAT — consumer prices are VAT-inclusive; net revenue = gross / 1.2 once registered. */
@@ -102,19 +103,26 @@ export function contribution(opts: {
  *  Rule A (existing): retail ≥ 4× AI provider cost.
  *  Rule B (new): retail must keep fully-loaded margin ≥ grossMarginFloor after
  *  VAT, payments, refunds, provider and infra. */
-export function priceFloorMinor(providerMinor: number, infraMinor = 0, region: Region = "domestic"): number {
+export function priceFloorMinor(
+  providerMinor: number,
+  infraMinor = 0,
+  region: Region = "domestic",
+  opts: { standaloneCharge?: boolean } = {},
+): number {
+  const standalone = opts.standaloneCharge !== false;
   const ruleA = providerMinor * 4;
   // solve gross s.t. contribution/exVat >= floor  (linear in gross)
   const f = ECON.targets.grossMarginFloor;
   const vat = ECON.vatRate;
   const r = ECON.stripe[region].rate;
-  const fixed = ECON.stripe[region].fixedMinor;
+  // commissions/fee-slices ride an existing payment: no fixed card fee, no min-charge floor
+  const fixed = standalone ? ECON.stripe[region].fixedMinor : 0;
   const ra = ECON.refundAllowanceRate;
   // exVat = g/(1+vat); costs = g*r + fixed + g*ra + provider + infra
   // (exVat - costs) / exVat >= f  →  g * (1/(1+vat) * (1-f) - r - ra) >= fixed + provider + infra
   const slope = (1 - f) / (1 + vat) - r - ra;
   const ruleB = slope > 0 ? (fixed + providerMinor + infraMinor) / slope : Infinity;
-  return Math.max(Math.ceil(ruleA), Math.ceil(ruleB), ECON.minChargeMinor);
+  return Math.max(Math.ceil(ruleA), Math.ceil(ruleB), standalone ? ECON.minChargeMinor : 1);
 }
 
 export function fixedMonthlyOverheadMinor(): number {
@@ -128,4 +136,50 @@ export function marginAlert(marginOnExVat: number): "ok" | "warn" | "act" | "pan
   if (marginOnExVat < t.actAt) return "act";
   if (marginOnExVat < t.warnAt) return "warn";
   return "ok";
+}
+
+/* ---------------- Economy Agent control loop ------------------------------- */
+
+/** The SKU catalogue the margin engine watches (expected costs; the Forge
+ *  Graph replaces `providerMinor`/`infraMinor` with observed reality). */
+export const SKU_CATALOGUE = [
+  { sku: "topup_25", label: "£25 ACU top-up", retailMinor: 2_500, providerMinor: 500, infraMinor: 1 },
+  { sku: "sub_creator_pro", label: "Creator Pro month", retailMinor: 4_900, providerMinor: 245, infraMinor: 60 },
+  { sku: "commission_sale", label: "£1 commission on £4.99 sale", retailMinor: 100, providerMinor: 0, infraMinor: 1, standalone: false },
+  { sku: "level_pack", label: "Level package", retailMinor: 600, providerMinor: 150, infraMinor: 2 },
+  { sku: "forge_3d_hero", label: "Heavy 3D forge action", retailMinor: 2_400, providerMinor: 600, infraMinor: 20 },
+] as const;
+
+export const CostObservationSchema = z.object({
+  sku: z.string().min(1),
+  providerMinor: z.number().nonnegative(),
+  infraMinor: z.number().nonnegative().optional(),
+  retailMinor: z.number().int().positive().optional(),
+});
+export const CostObservationBatchSchema = z.object({
+  observations: z.array(CostObservationSchema).min(1).max(100),
+});
+export type CostObservation = z.infer<typeof CostObservationSchema>;
+
+/** Evaluate one SKU: contribution, alert level, both price floors, and — when
+ *  margin has slipped below floor — the repricing order that restores it. */
+export function evaluateSku(s: { sku: string; label?: string; retailMinor: number; providerMinor: number; infraMinor?: number; standalone?: boolean }) {
+  const infra = s.infraMinor ?? 0;
+  const c = contribution({ grossMinor: s.retailMinor, providerMinor: s.providerMinor, infraMinor: infra });
+  const alert = marginAlert(c.marginOnExVat);
+  const floorMinor = priceFloorMinor(s.providerMinor, infra, "domestic", { standaloneCharge: s.standalone });
+  const floorHolding = s.retailMinor >= floorMinor;
+  return {
+    sku: s.sku,
+    label: s.label ?? s.sku,
+    retailMinor: s.retailMinor,
+    contributionMinor: c.contributionMinor,
+    marginOnExVat: Math.round(c.marginOnExVat * 1000) / 1000,
+    alert,
+    floorMinor,
+    floorHolding,
+    action: !floorHolding || alert === "act" || alert === "panic"
+      ? { type: "reprice" as const, recommendedRetailMinor: Math.max(floorMinor, s.retailMinor), note: alert === "panic" ? "suspend SKU until repriced" : "raise price or re-route provider" }
+      : { type: "none" as const },
+  };
 }
