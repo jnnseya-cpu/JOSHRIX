@@ -118,7 +118,7 @@ export function priceFloorMinor(providerMinor: number, infraMinor = 0, region: R
 }
 
 export function fixedMonthlyOverheadMinor(): number {
-  return Object.values(ECON.fixedMonthly).reduce((s, v) => s + v, 0);
+  return (Object.values(ECON.fixedMonthly) as number[]).reduce((s, v) => s + v, 0);
 }
 
 /** Margin alert level for an observed fully-loaded margin. */
