@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-29.16";
+export const BUILD_ID = "2026-07-29.17";
 export const BLUEPRINT_ACU_CHARGE = 8;
 
 export async function generateBlueprint(

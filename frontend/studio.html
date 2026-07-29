@@ -332,8 +332,8 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
         <div>
           <div class="listing">
             <div class="body">
-              <h4>🎮 Play Your Build — Live Now</h4>
-              <p>The game on the left is your real build, running right now and visible only to you. <b>Press &amp; hold the ball, drag to aim and set power, release to shoot.</b> Five shots per round — beat the keeper.</p>
+              <h4 id="playCopyTitle">🎮 Play Your Build — Live Now</h4>
+              <p id="playCopyBody">The game on the left is your real build, running right now and visible only to you. Controls are explained on the game's own title screen.</p>
               <div class="tags"><i>Unlimited runs</i><i>No ACU charge</i><i>Not public</i></div>
               <p class="split">Happy? Approve below. Not happy? <b>Refine Concept</b> is economical — blueprint tweak <b>2 ACUs</b>, and the re-forge only rebuilds what changed (~15% of the original run). Never a full charge again.</p>
             </div>
@@ -724,6 +724,8 @@ async function renderPlaytest() {
     }
     fr.srcdoc = realBuild.html;
     $('gfTitle').textContent = (lastBp.title || 'YOUR GAME').toUpperCase() + ' — REAL BUILD';
+    $('playCopyTitle').textContent = '🎮 Play Your Build — Live Now';
+    $('playCopyBody').textContent = 'The game on the left is your real build, running right now and visible only to you. Controls are explained on the game\'s own title screen.';
     $('protoNote4').style.display = 'block';
     $('protoNote4').innerHTML = realBuild.provider === 'claude'
       ? '✦ <b>Real build:</b> this playable game was written by the Code Agent from your concept, live. Not happy? Refine Concept regenerates it.'
@@ -736,6 +738,12 @@ async function renderPlaytest() {
     applyBlueprintIdentity();
   } else {
     applyBlueprintIdentity();
+    // NEVER let the demo wear the creator's title as if it were their build
+    $('gfTitle').textContent = 'PLATFORM DEMO GAME — NOT YOUR BUILD';
+    $('playCopyTitle').textContent = '⚠ This is NOT your game';
+    $('playCopyBody').innerHTML = 'Your build did not come back' + (realBuildErr ? ' (<b>' + realBuildErr + '</b>)' : '') +
+      ' — the game on the left is the platform\'s demo so the flow stays testable. <b>Do not publish this.</b> Go back and press Forge again' +
+      (realBuildErr && realBuildErr.indexOf('offline') === -1 ? ' — rich concepts can need a second attempt.' : '.');
     if (realBuildErr) {
       $('protoNote4').style.display = 'block';
       $('protoNote4').innerHTML = '⚠ Code Agent: ' + realBuildErr + ' — showing the platform demo build instead. Forge again to retry.';

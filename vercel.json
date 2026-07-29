@@ -13,9 +13,9 @@
     { "path": "/api/blog-agent", "schedule": "0 9 * * *" }
   ],
   "functions": {
-    "api/forge-game.ts": { "maxDuration": 60 },
-    "api/blueprint.ts": { "maxDuration": 60 },
-    "api/blog-agent.ts": { "maxDuration": 60 }
+    "api/forge-game.ts": { "maxDuration": 300 },
+    "api/blueprint.ts": { "maxDuration": 120 },
+    "api/blog-agent.ts": { "maxDuration": 120 }
   },
   "headers": [
     {
