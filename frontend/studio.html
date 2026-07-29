@@ -225,7 +225,29 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
       <textarea id="prompt" maxlength="20000">A football penalty game where players compete online, unlock boots, buy stadiums, and sell player cards. Set in African stadiums with weekly leagues.</textarea>
       <div class="row">
         <div><label>Game type</label>
-          <select id="selType"><option>Sports · Arcade</option><option>2D Platformer</option><option>Puzzle</option><option>Quiz</option><option>Tower Defence</option></select></div>
+          <select id="selType">
+            <option value="auto" selected>Auto — detect from my concept</option>
+            <option>Adventure · Exploration</option>
+            <option>Action · Arcade</option>
+            <option>2D Platformer</option>
+            <option>Puzzle · Logic</option>
+            <option>Simulation · Tycoon</option>
+            <option>Strategy · Tower Defence</option>
+            <option>RPG · Story</option>
+            <option>Sports</option>
+            <option>Racing · Runner</option>
+            <option>Shooter (top-down / space)</option>
+            <option>Card · Board</option>
+            <option>Quiz · Trivia</option>
+            <option>Word · Educational</option>
+            <option>Rhythm · Music</option>
+            <option>Idle · Clicker</option>
+            <option>Horror · Mystery</option>
+            <option>Kids · Family</option>
+            <option>Pet · Creature Collector</option>
+            <option>Builder · Sandbox</option>
+            <option>Survival · Roguelike</option>
+          </select></div>
         <div><label>Target platform</label>
           <select id="selPlat"><option>All platforms — Web · PWA · Android · iOS</option><option>Web + PWA</option><option>Mobile-first — iOS + Android</option><option>Web only</option></select></div>
         <div><label>Scope package</label>

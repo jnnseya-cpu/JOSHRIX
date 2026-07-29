@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-29.14";
+export const BUILD_ID = "2026-07-29.15";
 export const BLUEPRINT_ACU_CHARGE = 8;
 
 export async function generateBlueprint(
@@ -36,7 +36,7 @@ export async function generateBlueprint(
       messages: [
         {
           role: "user",
-          content: `Game description: ${prompt}\nGame type: ${opts.type ?? "any"}\nTarget platform: ${opts.platform ?? "all"}\nScope package: ${opts.scope ?? "commercial starter"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the description"}`,
+          content: `Game description: ${prompt}\nGame type: ${!opts.type || opts.type === "auto" ? "infer the best-fit genre from the description" : opts.type}\nTarget platform: ${opts.platform ?? "all"}\nScope package: ${opts.scope ?? "commercial starter"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the description"}`,
         },
       ],
     });
