@@ -341,9 +341,9 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
           <div class="actions">
             <button class="btn btn-primary" id="btnPub">🚀 Approve &amp; Publish</button>
             <button class="btn btn-ghost" id="btnRefine">✎ Refine Concept</button>
-            <a class="btn btn-ghost" id="btn3d" href="play3d.html" target="_blank" rel="noopener">🧊 3D Engine Preview</a>
+            <button class="btn btn-ghost" id="btnViewSrc" type="button">⤓ View Build Source</button>
           </div>
-          <p class="hint" style="margin-top:.8rem">Approval gate 3 of 3 · IP registered on-chain at deploy</p>
+          <p class="hint" style="margin-top:.8rem">Approval gate 3 of 3 · <a href="play3d.html" target="_blank" rel="noopener" style="color:var(--cyan)">See the 3D engine tech demo</a> (a sample, not your game — games currently ship as 2D)</p>
         </div>
       </div>
     </div>
@@ -645,6 +645,7 @@ $('btnForge').addEventListener('click', () => {
   realBuild = null; realBuildErr = null;
   realBuildCharged = false;          // every forge is charged (and synced) once
   publishedGame = null;              // a re-forge is a NEW game — old share URL no longer applies
+  forgeStart = Date.now();           // for the playtest progress counter
   realBuildPromise = (async () => {
     try {
       const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
@@ -719,20 +720,20 @@ function applyBlueprintIdentity() {
       + '<i>Rights Verified</i>';
   }
 }
-// self-contained games get a CSP that denies all network (no beaconing/mining);
-// inline game script/style still runs, data: images/audio still work
-function lockGameCsp(html){
-  var meta = '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\'; style-src \'unsafe-inline\'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src \'none\'">';
-  if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, function(m){ return m + meta; });
-  if (/<html[^>]*>/i.test(html)) return html.replace(/<html[^>]*>/i, function(m){ return m + '<head>' + meta + '</head>'; });
-  return meta + html;
-}
+// The game runs in a sandboxed, opaque-origin iframe (no same-origin, no
+// localStorage, no parent access) — that is the real isolation. A strict
+// injected CSP was tried and reverted: it blanked rich real-world games.
 let realBuildCharged = false;
+let forgeStart = 0;
 async function renderPlaytest() {
   if (realBuildPromise && !realBuild && !realBuildErr) {
     $('protoNote4').style.display = 'block';
-    $('protoNote4').innerHTML = '⚒ <b>Code Agent is finishing your build…</b> writing your playable game from the concept — this can take a minute for rich concepts.';
-    await realBuildPromise;
+    // live elapsed counter so a 1–3 min forge on a rich concept never looks frozen
+    const tick = setInterval(() => {
+      const s = Math.round((Date.now() - (forgeStart || Date.now())) / 1000);
+      $('protoNote4').innerHTML = '⚒ <b>Code Agent is writing your playable game…</b> ' + s + 's — rich concepts take a minute or two. Keep this tab open; you\'ll drop straight into your real build when it\'s ready.';
+    }, 1000);
+    try { await realBuildPromise; } finally { clearInterval(tick); }
   }
   if (realBuild && realBuild.html) {
     const frame = document.querySelector('#p4 .game-frame');
@@ -746,7 +747,7 @@ async function renderPlaytest() {
       $('game').style.display = 'none';
       frame.appendChild(fr);
     }
-    fr.srcdoc = lockGameCsp(realBuild.html);
+    fr.srcdoc = realBuild.html;
     $('gfTitle').textContent = (lastBp.title || 'YOUR GAME').toUpperCase() + ' — REAL BUILD';
     $('playCopyTitle').textContent = '🎮 Play Your Build — Live Now';
     $('playCopyBody').textContent = 'The game on the left is your real build, running right now and visible only to you. Controls are explained on the game\'s own title screen.';
@@ -799,6 +800,18 @@ $('btnRefine').addEventListener('click', () => {
   $('btnBlueprint').textContent = '⚡ Refine Blueprint';
   $('bpHint').textContent = 'Refine pass — Idea Agent reuses your blueprint · 2 ACUs';
   $('bpEst').textContent = '~275 ACUs · delta re-forge — unchanged systems reused, not rebuilt';
+});
+// View Build Source — opens the exact generated game HTML in a new tab, so a
+// blank playtest can always be diagnosed (and the creator can see they own real code)
+$('btnViewSrc').addEventListener('click', () => {
+  if (!(realBuild && realBuild.html)) { alert('No real build yet — forge a game first.'); return; }
+  try {
+    const blob = new Blob([realBuild.html], { type: 'text/html' });
+    window.open(URL.createObjectURL(blob), '_blank', 'noopener');
+  } catch (e) {
+    const w = window.open('', '_blank');
+    if (w) { w.document.open(); w.document.write(realBuild.html); w.document.close(); }
+  }
 });
 
 /* ---------- Stage 5: publish + multi-platform distribution ---------- */

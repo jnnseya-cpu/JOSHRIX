@@ -91,15 +91,6 @@
   var $ = function(x){ return document.getElementById(x); };
   var sid = 'ps-' + Math.random().toString(36).slice(2, 12);
 
-  // forged games are self-contained by contract — inject a CSP that denies ALL
-  // network so an approved game can never beacon a player's IP or mine; inline
-  // script/style (the game itself) still runs, data: images/audio still work
-  function lockGameCsp(html){
-    var meta = '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; script-src \'unsafe-inline\'; style-src \'unsafe-inline\'; img-src data: blob:; media-src data: blob:; font-src data:; connect-src \'none\'">';
-    if (/<head[^>]*>/i.test(html)) return html.replace(/<head[^>]*>/i, function(m){ return m + meta; });
-    if (/<html[^>]*>/i.test(html)) return html.replace(/<html[^>]*>/i, function(m){ return m + '<head>' + meta + '</head>'; });
-    return meta + html;
-  }
   function track(event, props){
     try {
       fetch(API + '/api/telemetry', { method:'POST', headers:{'Content-Type':'application/json'},
@@ -138,7 +129,7 @@
         f.setAttribute('sandbox', 'allow-scripts allow-pointer-lock');
         f.setAttribute('title', g.title || 'JOSHRIX game');
         f.setAttribute('allow', 'autoplay; fullscreen');
-        f.srcdoc = lockGameCsp(g.html);
+        f.srcdoc = g.html;
         $('frameCard').innerHTML = '';
         $('frameCard').appendChild(f);
         var fsBtn = $('btnFull');
