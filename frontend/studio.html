@@ -530,24 +530,32 @@ $('btnBlueprint').addEventListener('click', async () => {
   if (!needAcu(refining ? 2 : 8, $('bpHint'))) return;
   btn.disabled = true;
   btn.textContent = '⚡ Forging blueprint…';
+  // reassure during longer waits so a rich concept doesn't feel frozen
+  const bpStart = Date.now();
+  const bpTick = setInterval(() => {
+    const s = Math.round((Date.now() - bpStart) / 1000);
+    $('bpHint').textContent = '⚡ The Idea Agent is designing your blueprint… ' + s + 's' + (s > 25 ? ' (rich concepts take a little longer — keep the tab open)' : '');
+  }, 1000);
   // live Idea Agent via the deployed API (Claude when keys are set, demo otherwise);
   // API errors are SHOWN, never silently swallowed; offline falls back locally
   let remote = null, apiError = null;
   try {
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
-    // 55s window: rich concepts take the Idea Agent (Claude Opus) well past 30s
+    // 115s window: rich concepts take the Idea Agent (Claude Opus) well past a
+    // minute; the server function allows 120s (Vercel Pro) — stay just under it
     const r = await fetch(base + '/api/blueprint', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: $('prompt').value, type: $('selType').value, platform: $('selPlat').value, scope: $('selScope').value, language: $('selLang').value, walletId: serverWalletId || undefined }),
-      signal: AbortSignal.timeout(55000)
+      signal: AbortSignal.timeout(115000)
     });
     if (r.ok) remote = await r.json();
     else { const e = await r.json().catch(() => null); apiError = (e && (e.error + (e.detail ? ' — ' + e.detail : ''))) || ('HTTP ' + r.status); }
   } catch (e) {
     apiError = (e && e.name === 'TimeoutError')
-      ? 'the Idea Agent is taking longer than 55s on this rich concept — press Generate again'
+      ? 'the Idea Agent is taking unusually long on this concept — press Generate again'
       : 'could not reach the Idea Agent (connection dropped) — check your network and press Generate again';
   }
+  clearInterval(bpTick);
   if (remote && typeof remote.balanceAfter === 'number') syncBalance(remote.balanceAfter);
   if (remote && remote.blueprint) {
     const b = remote.blueprint;
