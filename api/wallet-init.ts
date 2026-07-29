@@ -43,13 +43,13 @@ export default async function handler(req: any, res: any) {
 
     if (walletId) {
       const w = await getWallet(sql, walletId);
-      if (w) return res.status(200).json({ mode: "live", walletId: w.id, balance: Number(w.balance), category: w.category });
+      if (w) return res.status(200).json({ mode: "live", walletId: w.id, balance: Number(w.balance), category: w.category, plan: (w as any).plan ?? "explorer" });
       // Unknown id (e.g. DB was reset) — fall through and mint a fresh one.
     }
 
     const id = "w-" + randomUUID().replace(/-/g, "").slice(0, 20);
     await createWallet(sql, id, TESTER_GRANT_ACU, "tester", email ?? null);
-    return res.status(200).json({ mode: "live", walletId: id, balance: TESTER_GRANT_ACU, category: "tester", created: true });
+    return res.status(200).json({ mode: "live", walletId: id, balance: TESTER_GRANT_ACU, category: "tester", plan: "explorer", created: true });
   } catch (err: any) {
     return res.status(502).json({ error: "Wallet init failed", detail: String(err?.message ?? err) });
   }

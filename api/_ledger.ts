@@ -148,6 +148,7 @@ export async function ensureGameSchema(sql: Sql) {
     email text,
     created_at timestamptz NOT NULL DEFAULT now()
   )`;
+  await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT 'explorer'`;
   await sql`CREATE TABLE IF NOT EXISTS dist_requests (
     id bigserial PRIMARY KEY,
     game_id text,
@@ -183,8 +184,14 @@ export async function creditWallet(sql: Sql, id: string, amount: number): Promis
 }
 
 export async function getWallet(sql: Sql, id: string) {
-  const rows = (await sql`SELECT id, balance, category, email FROM wallets WHERE id = ${id}`) as Array<{ id: string; balance: number; category: string; email: string | null }>;
+  const rows = (await sql`SELECT id, balance, category, email, plan FROM wallets WHERE id = ${id}`) as Array<{ id: string; balance: number; category: string; email: string | null; plan: string }>;
   return rows[0] ?? null;
+}
+
+/** Admin-only: put a wallet on a subscription plan (validated at the endpoint). */
+export async function setWalletPlan(sql: Sql, id: string, plan: string): Promise<boolean> {
+  const rows = (await sql`UPDATE wallets SET plan = ${plan} WHERE id = ${id} RETURNING id`) as any[];
+  return rows.length > 0;
 }
 
 export async function saveGame(sql: Sql, g: { id: string; title: string; summary?: string | null; language?: string | null; html: string; creatorWallet?: string | null; creatorEmail?: string | null }) {
@@ -286,7 +293,7 @@ export async function countBlogPosts(sql: Sql): Promise<number> {
 
 /** All wallets, newest first — for the admin grants panel (key-gated at the endpoint). */
 export async function listWallets(sql: Sql, limit = 100) {
-  return (await sql`SELECT id, balance, category, email, created_at FROM wallets ORDER BY created_at DESC LIMIT ${limit}`) as any[];
+  return (await sql`SELECT id, balance, category, email, plan, created_at FROM wallets ORDER BY created_at DESC LIMIT ${limit}`) as any[];
 }
 
 /** Real platform counters for the admin bridge (key-gated at the endpoint). */

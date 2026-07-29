@@ -50,7 +50,33 @@
   </div>
   <p class="lede" style="font-size:.92rem;margin-top:1.2rem;color:var(--muted)">Payments are processed by Stripe. Passes convert to live subscriptions at launch; refundable in full any time before your access activates.</p>
 </div>
-<div class="grid c3"><div class="card tier reveal"><h3>Explorer</h3><div class="price">£0</div><div class="per">play &amp; browse only</div><ul><li>Play any published game</li><li>Browse the marketplace</li><li><b>No AI included — ever</b></li><li>Creation unlocks from a £5 ACU pack</li><li>Community support</li></ul><a class="btn btn-ghost btn-sm" href="signup.html">Start Playing</a></div><div class="card tier reveal"><h3>Creator</h3><div class="price">£19</div><div class="per">/month · 380 ACUs</div><ul><li>3 active projects</li><li>Prompt-to-game + core agents</li><li>Commercial-use eligibility</li><li>Basic marketplace selling (25%)</li><li>Web publishing & analytics</li></ul><a class="btn btn-ghost btn-sm" href="signup.html">Choose Creator</a></div><div class="card tier reveal featured"><span class="flag">MOST POPULAR</span><h3>Creator Pro</h3><div class="price">£49</div><div class="per">/month · 980 ACUs</div><ul><li>10 projects · 3 identities</li><li>Design-specialist agents</li><li>Source export · custom domain</li><li>20% commission · seller verification</li><li>Automated QA · priority queue</li></ul><a class="btn btn-ghost btn-sm" href="signup.html">Choose Creator Pro</a></div><div class="card tier reveal"><h3>Studio</h3><div class="price">£149</div><div class="per">/month · 2,980 ACUs</div><ul><li>50 projects · 10 seats</li><li>Executive agents + AutoPlay Lab</li><li>Git integration · approval workflows</li><li>15% commission · staging/production</li><li>Team RBAC & shared assets</li></ul><a class="btn btn-ghost btn-sm" href="signup.html">Choose Studio</a></div><div class="card tier reveal"><h3>Business</h3><div class="price">£399</div><div class="per">/month · 7,980 ACUs</div><ul><li>Fair-use unlimited drafts · 50 seats</li><li>White-label games & branded portals</li><li>Campaign analytics · lead capture</li><li>10% commission · API access</li><li>A/B testing · churn prediction</li></ul><a class="btn btn-ghost btn-sm" href="signup.html">Choose Business</a></div><div class="card tier reveal"><h3>Enterprise</h3><div class="price">Custom</div><div class="per">from £1,200/month · 24,000 ACUs</div><ul><li>250+ seats · private workspace</li><li>Private agents & model routing</li><li>SSO · residency · custom SLA</li><li>5–10% negotiated commission</li><li>Private cloud / hybrid deployment</li></ul><a class="btn btn-ghost btn-sm" href="enterprise.html">Contact Sales</a></div></div><h2 class="jx reveal">One-Shot <span class="grad">Game Packages</span></h2>
+<div class="grid c3"><div class="card tier reveal"><h3>Explorer</h3><div class="price">£0</div><div class="per">play &amp; browse only</div><ul><li>Play any published game</li><li>Browse the marketplace</li><li><b>No AI included — ever</b></li><li>Creation unlocks from a £5 ACU pack</li><li>Community support</li></ul><a class="btn btn-ghost btn-sm" href="signup.html">Start Playing</a></div><div class="card tier reveal"><h3>Creator</h3><div class="price">£19</div><div class="per">/month · 380 ACUs</div><ul><li>3 active projects</li><li>Prompt-to-game + core agents</li><li>Commercial-use eligibility</li><li>Basic marketplace selling (25%)</li><li>Web publishing & analytics</li></ul><a class="btn btn-ghost btn-sm" href="signup.html">Choose Creator</a></div><div class="card tier reveal featured"><span class="flag">MOST POPULAR</span><h3>Creator Pro</h3><div class="price">£49</div><div class="per">/month · 980 ACUs</div><ul><li>10 projects · 3 identities</li><li>Design-specialist agents</li><li>Source export · custom domain</li><li>20% commission · seller verification</li><li>Automated QA · priority queue</li></ul><a class="btn btn-ghost btn-sm" href="signup.html">Choose Creator Pro</a></div><div class="card tier reveal"><h3>Studio</h3><div class="price">£149</div><div class="per">/month · 2,980 ACUs</div><ul><li>50 projects · 10 seats</li><li>Executive agents + AutoPlay Lab</li><li>Git integration · approval workflows</li><li>15% commission · staging/production</li><li>Team RBAC & shared assets</li></ul><a class="btn btn-ghost btn-sm" href="signup.html">Choose Studio</a></div><div class="card tier reveal"><h3>Business</h3><div class="price">£399</div><div class="per">/month · 7,980 ACUs</div><ul><li>Fair-use unlimited drafts · 50 seats</li><li>White-label games & branded portals</li><li>Campaign analytics · lead capture</li><li>10% commission · API access</li><li>A/B testing · churn prediction</li></ul><a class="btn btn-ghost btn-sm" href="signup.html">Choose Business</a></div><div class="card tier reveal"><h3>Enterprise</h3><div class="price">Custom</div><div class="per">from £1,200/month · 24,000 ACUs</div><ul><li>250+ seats · private workspace</li><li>Private agents & model routing</li><li>SSO · residency · custom SLA</li><li>5–10% negotiated commission</li><li>Private cloud / hybrid deployment</li></ul><a class="btn btn-ghost btn-sm" href="enterprise.html">Contact Sales</a></div></div>
+<script>
+/* plan buttons: signed-in accounts go straight to live subscription checkout;
+   signed-out visitors go to signup first */
+(function(){
+  var MAP = { 'Choose Creator': 'creator', 'Choose Creator Pro': 'creator_pro', 'Choose Studio': 'studio', 'Choose Business': 'business' };
+  document.querySelectorAll('.tier a.btn').forEach(function(a){
+    var plan = MAP[a.textContent.trim()];
+    if (!plan) return;
+    a.addEventListener('click', function(e){
+      var prof = {};
+      try { prof = JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (err) {}
+      if (!prof.serverWalletId) return;   // no wallet yet → signup flow as linked
+      e.preventDefault();
+      a.textContent = 'Opening checkout…';
+      fetch((window.JOSHRIX_API_BASE || '') + '/api/subscribe', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId: plan, walletId: prof.serverWalletId })
+      }).then(function(r){ return r.json(); }).then(function(j){
+        if (j.checkoutUrl) { location.href = j.checkoutUrl; }
+        else { a.textContent = j.mode === 'demo' ? 'Demo — Stripe key pending' : (j.error || 'Try again'); }
+      }).catch(function(){ a.textContent = 'Try again'; });
+    });
+  });
+})();
+</script>
+<h2 class="jx reveal">One-Shot <span class="grad">Game Packages</span></h2>
 <table class="jx reveal"><thead><tr><th>Package</th><th>Price</th><th>Includes</th></tr></thead><tbody>
 <tr><td><b>Prototype Launch</b></td><td>£49</td><td>Blueprint · playable web prototype · basic assets · one level · basic QA</td></tr>
 <tr><td><b>Creator Launch</b></td><td>£199</td><td>Commercial blueprint · up to five levels · monetisation · publishing · listing</td></tr>

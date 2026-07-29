@@ -8,8 +8,8 @@
  *   Then copy the signing secret into the STRIPE_WEBHOOK_SECRET env var.
  */
 import Stripe from "stripe";
-import { TOPUP_PACKAGES, topupPostings } from "../shared/payments";
-import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet } from "./_ledger";
+import { TOPUP_PACKAGES, topupPostings, PLANS } from "../shared/payments";
+import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet, setWalletPlan } from "./_ledger";
 import { notify } from "./_notify";
 
 // Vercel: disable body parsing so the raw payload is available for verification
@@ -43,6 +43,9 @@ export function handleStripeEvent(event: Stripe.Event) {
           amountMinor: pkg.priceMinor,
           ledger: { kind: "acu_topup", postings: topupPostings(pkg.priceMinor) },
         };
+      }
+      if (kind === "plan_subscription") {
+        return { ok: true as const, action: "plan_activated", eventId: event.id, planId: session.metadata?.planId ?? "", walletId: session.metadata?.walletId ?? "" };
       }
       if (kind === "founder_pass" || session.metadata?.pass) {
         // PRODUCTION: record in Founders Registry, grant bonus ACUs at launch
@@ -99,6 +102,17 @@ export default async function handler(req: any, res: any) {
             await creditWallet(sql, walletId, r.acu);
           }
           await notify("acu.topup.successful", email, { amount: r.acu.toLocaleString() });
+        } else if (result.ok && (result as any).action === "plan_activated") {
+          // subscription settled: set the wallet's plan + credit the month's ACUs
+          const planId = (result as any).planId as string;
+          const wid = (result as any).walletId as string;
+          const plan = PLANS.find((p) => p.id === planId);
+          if (plan && wid) {
+            await ensureGameSchema(sql);
+            await setWalletPlan(sql, wid, plan.id);
+            if (plan.monthlyAcu > 0) await creditWallet(sql, wid, plan.monthlyAcu);
+          }
+          await notify("subscription.activated", email, { plan: plan?.name ?? planId });
         } else if (result.ok && (result as any).action === "founder_pass") {
           await recordFounder(sql, { stripeSession: session.id ?? event.id, pass: (result as any).pass, email, amountMinor: (session.amount_total as number) ?? null });
         }

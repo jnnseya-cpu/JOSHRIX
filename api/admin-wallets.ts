@@ -6,8 +6,9 @@
  * Grants are admin-only top-ups for testers/goodwill — purchased balances still
  * only ever grow through verified Stripe settlement.
  */
-import { getDb, ensureGameSchema, listWallets, creditWallet, getWallet } from "./_ledger";
+import { getDb, ensureGameSchema, listWallets, creditWallet, getWallet, setWalletPlan } from "./_ledger";
 import { notify } from "./_notify";
+import { PLANS } from "../shared/payments";
 
 const MAX_GRANT = 100_000;
 
@@ -29,15 +30,30 @@ export default async function handler(req: any, res: any) {
 
     if (req.method === "GET") {
       const wallets = (await listWallets(sql)).map((w) => ({
-        id: w.id, balance: Number(w.balance), category: w.category, email: w.email, createdAt: w.created_at,
+        id: w.id, balance: Number(w.balance), category: w.category, email: w.email, plan: w.plan ?? "explorer", createdAt: w.created_at,
       }));
       return res.status(200).json({ wallets, count: wallets.length });
     }
 
     if (req.method === "POST") {
-      const { walletId, amount } = (req.body ?? {}) as { walletId?: string; amount?: number };
-      const amt = Number(amount);
+      const { walletId, amount, plan, grantMonthlyAcu } = (req.body ?? {}) as { walletId?: string; amount?: number; plan?: string; grantMonthlyAcu?: boolean };
       if (!walletId || typeof walletId !== "string") return res.status(400).json({ error: "walletId required" });
+
+      // plan change: put the account on a subscription tier, optionally granting
+      // that plan's monthly ACUs immediately (admin decision, e.g. comped accounts)
+      if (plan) {
+        const p = PLANS.find((x) => x.id === plan);
+        if (!p) return res.status(400).json({ error: `plan must be one of: ${PLANS.map((x) => x.id).join(", ")}` });
+        const w = await getWallet(sql, walletId);
+        if (!w) return res.status(404).json({ error: "Wallet not found" });
+        await setWalletPlan(sql, walletId, p.id);
+        let balance = Number(w.balance);
+        if (grantMonthlyAcu && p.monthlyAcu > 0) balance = (await creditWallet(sql, walletId, p.monthlyAcu)) ?? balance;
+        await notify("subscription.activated", w.email ?? null, { plan: p.name });
+        return res.status(200).json({ ok: true, walletId, plan: p.id, planName: p.name, monthlyAcuGranted: grantMonthlyAcu ? p.monthlyAcu : 0, balance });
+      }
+
+      const amt = Number(amount);
       if (!Number.isInteger(amt) || amt < 1 || amt > MAX_GRANT) {
         return res.status(400).json({ error: `amount must be a whole number of ACUs between 1 and ${MAX_GRANT.toLocaleString()}` });
       }

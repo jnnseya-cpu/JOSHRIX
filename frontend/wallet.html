@@ -203,6 +203,11 @@ const applyLocalAcu = (skipBalance) => {
         if (j && j.mode === 'live') {
           $('wAcu').textContent = Number(j.balance).toLocaleString();
           if (j.category !== 'tester') $('wAcuCat').textContent = 'purchased · server-verified';
+          if (j.plan && j.plan !== 'explorer') {
+            $('wAcuCat').innerHTML += ' · plan: <b style="color:var(--cyan)">' + String(j.plan).replace('_', ' ') + '</b>';
+          } else {
+            $('wAcuCat').innerHTML += ' · <a href="pricing.html" style="color:var(--cyan)">choose a plan</a>';
+          }
           applyLocalAcu(true); // server balance wins; this just adds the tester refill link
         } else applyLocalAcu();
       }).catch(() => applyLocalAcu());

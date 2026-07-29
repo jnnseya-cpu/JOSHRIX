@@ -209,8 +209,12 @@
         ws.forEach(function(w){
           var row = document.createElement('div');
           row.style.cssText = 'display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.6rem .9rem';
+          var PLAN_IDS = ['explorer','creator','creator_pro','studio','business','enterprise'];
           row.innerHTML = '<code style="font-size:.8rem;color:var(--cyan,#22D3EE)">' + esc(w.id) + '</code>'
             + '<span style="font-size:.78rem;color:var(--muted,#9d9db3)">' + esc(w.category) + (w.email ? ' · ' + esc(w.email) : '') + '</span>'
+            + '<select class="wplan" style="background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.35rem .5rem;color:inherit;font-size:.78rem">'
+            + PLAN_IDS.map(function(p){ return '<option value="' + p + '"' + ((w.plan || 'explorer') === p ? ' selected' : '') + '>' + p.replace('_', ' ') + '</option>'; }).join('') + '</select>'
+            + '<button class="btn btn-ghost btn-sm wsetplan">Set plan</button>'
             + '<b style="margin-left:auto">' + Number(w.balance).toLocaleString() + ' ACU</b>'
             + '<button class="btn btn-ghost btn-sm wgrant">＋2,000</button>';
           row.querySelector('.wgrant').addEventListener('click', function(){
@@ -220,6 +224,22 @@
               row.querySelector('b').textContent = Number(j.balance).toLocaleString() + ' ACU';
               b.textContent = '✓ granted'; setTimeout(function(){ b.textContent = '＋2,000'; b.disabled = false; }, 1500);
             });
+          });
+          row.querySelector('.wsetplan').addEventListener('click', function(){
+            var b = row.querySelector('.wsetplan');
+            var p = row.querySelector('.wplan').value;
+            var give = confirm('Set plan "' + p + '"' + (p !== 'explorer' ? '\n\nOK = also grant this plan’s monthly ACUs now\nCancel-then-OK path not needed — choosing Cancel sets the plan WITHOUT granting ACUs.' : ''));
+            b.disabled = true;
+            fetch(API + '/api/admin-wallets', { method:'POST', headers: Object.assign({ 'Content-Type':'application/json' }, keyHdr()),
+              body: JSON.stringify({ walletId: w.id, plan: p, grantMonthlyAcu: give }) })
+              .then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+              .then(function(res2){
+                b.disabled = false;
+                if (!res2.ok) { alert(res2.j.error || 'failed'); return; }
+                b.textContent = '✓ ' + res2.j.planName;
+                row.querySelector('b').textContent = Number(res2.j.balance).toLocaleString() + ' ACU';
+                setTimeout(function(){ b.textContent = 'Set plan'; }, 2000);
+              }).catch(function(){ b.disabled = false; alert('Could not reach the server'); });
           });
           list.appendChild(row);
         });
