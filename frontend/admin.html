@@ -16,6 +16,59 @@
 <script src="assets/store.js"></script>
 </head>
 <body>
+<!-- ADMIN LOCK — the page unlocks ONLY when the entered key verifies against the
+     server (/api/moderation, which requires the real MODERATION_KEY). The overlay
+     is UI; the actual protection is that every admin API call re-checks the key. -->
+<div id="adminLock" style="position:fixed;inset:0;z-index:10000;background:#050508;display:flex;align-items:center;justify-content:center;padding:1rem">
+  <div style="max-width:380px;width:100%;border:1px solid rgba(124,58,237,.5);border-radius:16px;padding:2rem 1.8rem;background:rgba(10,10,18,.95);box-shadow:0 20px 70px rgba(0,0,0,.6);text-align:center">
+    <div style="font-size:2rem;margin-bottom:.4rem">🔐</div>
+    <h2 style="margin:.2rem 0 .4rem;font-size:1.2rem">Admin Access</h2>
+    <p style="color:#9d9db3;font-size:.9rem;line-height:1.55;margin:0 0 1.1rem">This is the JOSHRIX command bridge. Enter the moderation key to unlock — the key is verified against the server.</p>
+    <input id="lockKey" type="password" placeholder="Moderation key" autocomplete="current-password"
+      style="width:100%;background:rgba(255,255,255,.05);border:1px solid #26263a;border-radius:10px;padding:.7rem .9rem;color:#ececf4;font-size:.95rem">
+    <button class="btn btn-primary" id="lockGo" style="width:100%;margin-top:.8rem">Unlock</button>
+    <p id="lockMsg" style="color:#f87171;font-size:.85rem;min-height:1.2em;margin:.7rem 0 0"></p>
+    <p style="color:#6b6b80;font-size:.78rem;margin:.9rem 0 0">Not an admin? <a href="index.html" style="color:#22D3EE">Back to JOSHRIX</a></p>
+  </div>
+</div>
+<script>
+(function(){
+  var API = '';
+  function verify(key, cb){
+    fetch(API + '/api/moderation', { headers: { 'x-admin-key': key } })
+      .then(function(r){ cb(r.status === 200, r.status); })
+      .catch(function(){ cb(false, 0); });
+  }
+  function unlock(){
+    document.getElementById('adminLock').remove();
+    document.body.style.overflow = '';
+    var mk = document.getElementById('modKey');
+    if (mk) mk.value = sessionStorage.getItem('jx.modKey') || '';
+  }
+  function attempt(){
+    var key = document.getElementById('lockKey').value.trim();
+    var msg = document.getElementById('lockMsg');
+    if (!key) { msg.textContent = 'Enter the moderation key.'; return; }
+    msg.style.color = '#9d9db3'; msg.textContent = 'Verifying…';
+    verify(key, function(ok, status){
+      if (ok) { try { sessionStorage.setItem('jx.modKey', key); } catch(e){} unlock(); }
+      else {
+        msg.style.color = '#f87171';
+        msg.textContent = status === 401 ? 'Wrong key.' :
+          status === 503 ? 'Server not fully configured (MODERATION_KEY or database missing).' :
+          'Could not reach the server — check your connection.';
+      }
+    });
+  }
+  document.body.style.overflow = 'hidden';
+  document.getElementById('lockGo').addEventListener('click', attempt);
+  document.getElementById('lockKey').addEventListener('keydown', function(e){ if (e.key === 'Enter') attempt(); });
+  // already unlocked this session? re-verify silently and skip the prompt
+  var saved = '';
+  try { saved = sessionStorage.getItem('jx.modKey') || ''; } catch(e){}
+  if (saved) verify(saved, function(ok){ if (ok) unlock(); });
+})();
+</script>
 <canvas id="stars" aria-hidden="true"></canvas>
 <div class="noise" aria-hidden="true"></div>
 <nav class="jx">
@@ -32,9 +85,13 @@
     <li><a href="docs.html">Docs</a></li>
   </ul>
   <div class="nav-right">
-    <a class="btn btn-ghost btn-sm" href="login.html">Sign In</a>
+    <button class="btn btn-ghost btn-sm" id="btnAdminLock" title="Lock the admin bridge">🔒 Lock</button>
     <a class="btn btn-primary btn-sm" href="studio.html">Launch Studio</a>
   </div>
+  <script>document.getElementById('btnAdminLock').addEventListener('click', function(){
+    try { sessionStorage.removeItem('jx.modKey'); } catch(e){}
+    location.reload();
+  });</script>
 </nav>
 <main class="jx">
 <div class="page-hero reveal">
