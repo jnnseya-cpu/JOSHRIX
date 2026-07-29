@@ -70,8 +70,24 @@
     email: document.getElementById('su-email').value,
     country: document.getElementById('su-country').value,
   });
+  const offerTestMode = () => {
+    if (document.getElementById('btnTestMode')) return;
+    const b = document.createElement('button');
+    b.type = 'button'; b.id = 'btnTestMode'; b.className = 'btn btn-ghost';
+    b.textContent = '🧪 Continue as tester on this device';
+    b.style.marginTop = '.8rem';
+    b.addEventListener('click', () => {
+      try { sessionStorage.setItem('jx.testMode', '1'); } catch (e) {}
+      saveProfile();
+      note.textContent = '✓ Tester account created on this device — opening your dashboard…';
+      setTimeout(() => location.href = 'dashboard.html', 600);
+    });
+    note.after(b);
+  };
   if (!window.jxAuth || !window.jxAuth.enabled) {
-    note.textContent = 'Local mode — your account lives on this device until launch.';
+    note.textContent = window.jxAuth && window.jxAuth.testMode
+      ? '🧪 Tester mode — this account lives on this device only.'
+      : 'Local mode — your account lives on this device until launch.';
     form.removeAttribute('data-demo');
     form.addEventListener('submit', (e) => {
       e.preventDefault();
@@ -96,7 +112,10 @@
       saveProfile();
       note.textContent = '✓ Account created — entering your dashboard…';
       location.href = 'dashboard.html';
-    } catch (err) { note.textContent = '✕ ' + (err && err.message || 'Sign-up failed'); }
+    } catch (err) {
+      note.textContent = '✕ ' + (err && err.message || 'Sign-up failed');
+      offerTestMode(); // real auth not ready yet? testing stays one tap away
+    }
   });
   document.getElementById('btnGoogle').addEventListener('click', async () => {
     note.textContent = 'Opening Google sign-in…';

@@ -5,6 +5,12 @@
  * Until configured, signup/login stay in demo mode with a clear notice.
  */
 (function () {
+  // ?test=1 → tester mode: skip Firebase entirely, accounts live on this device.
+  // The flag persists for the session so navigation keeps you in test mode.
+  try {
+    if (new URLSearchParams(location.search).has('test')) sessionStorage.setItem('jx.testMode', '1');
+    if (sessionStorage.getItem('jx.testMode') === '1') { window.jxAuth = { enabled: false, testMode: true, ready: null }; return; }
+  } catch (e) { /* private browsing */ }
   const cfg = window.JOSHRIX_FIREBASE_CONFIG;
   window.jxAuth = { enabled: !!(cfg && cfg.apiKey), ready: null };
   if (!window.jxAuth.enabled) return;
