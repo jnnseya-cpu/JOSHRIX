@@ -123,3 +123,81 @@ export async function settledSummary(sql: Sql) {
   `) as Array<Record<string, string | number>>;
   return row;
 }
+
+/* ---------------- games + server-side wallets (Builds 1 & 2) ---------------- */
+
+export async function ensureGameSchema(sql: Sql) {
+  await sql`CREATE TABLE IF NOT EXISTS games (
+    id text PRIMARY KEY,
+    title text NOT NULL,
+    summary text,
+    language text,
+    html text NOT NULL,
+    status text NOT NULL DEFAULT 'pending_review',
+    creator_wallet text,
+    creator_email text,
+    plays bigint NOT NULL DEFAULT 0,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    reviewed_at timestamptz,
+    review_note text
+  )`;
+  await sql`CREATE TABLE IF NOT EXISTS wallets (
+    id text PRIMARY KEY,
+    balance bigint NOT NULL DEFAULT 0,
+    category text NOT NULL DEFAULT 'tester',
+    email text,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`;
+}
+
+export async function createWallet(sql: Sql, id: string, balance: number, category: string, email?: string | null) {
+  await sql`INSERT INTO wallets (id, balance, category, email) VALUES (${id}, ${balance}, ${category}, ${email ?? null}) ON CONFLICT (id) DO NOTHING`;
+}
+
+/** Refill is TESTER wallets only — real balances only move via Stripe settlement. */
+export async function refillTesterWallet(sql: Sql, id: string, to = 2000): Promise<number | null> {
+  const rows = (await sql`UPDATE wallets SET balance = ${to} WHERE id = ${id} AND category = 'tester' RETURNING balance`) as Array<{ balance: number }>;
+  return rows.length ? Number(rows[0].balance) : null;
+}
+
+/** Atomic check-and-debit: returns the new balance, or null if missing/insufficient. */
+export async function debitWallet(sql: Sql, id: string, cost: number): Promise<number | null> {
+  const rows = (await sql`UPDATE wallets SET balance = balance - ${cost} WHERE id = ${id} AND balance >= ${cost} RETURNING balance`) as Array<{ balance: number }>;
+  return rows.length ? Number(rows[0].balance) : null;
+}
+
+export async function creditWallet(sql: Sql, id: string, amount: number): Promise<number | null> {
+  const rows = (await sql`UPDATE wallets SET balance = balance + ${amount} WHERE id = ${id} RETURNING balance`) as Array<{ balance: number }>;
+  return rows.length ? Number(rows[0].balance) : null;
+}
+
+export async function getWallet(sql: Sql, id: string) {
+  const rows = (await sql`SELECT id, balance, category FROM wallets WHERE id = ${id}`) as Array<{ id: string; balance: number; category: string }>;
+  return rows[0] ?? null;
+}
+
+export async function saveGame(sql: Sql, g: { id: string; title: string; summary?: string | null; language?: string | null; html: string; creatorWallet?: string | null; creatorEmail?: string | null }) {
+  await sql`INSERT INTO games (id, title, summary, language, html, creator_wallet, creator_email)
+    VALUES (${g.id}, ${g.title}, ${g.summary ?? null}, ${g.language ?? null}, ${g.html}, ${g.creatorWallet ?? null}, ${g.creatorEmail ?? null})
+    ON CONFLICT (id) DO NOTHING`;
+}
+
+export async function getGame(sql: Sql, id: string, withHtml = false) {
+  const rows = withHtml
+    ? ((await sql`SELECT id, title, summary, language, status, plays, created_at, html FROM games WHERE id = ${id}`) as any[])
+    : ((await sql`SELECT id, title, summary, language, status, plays, created_at FROM games WHERE id = ${id}`) as any[]);
+  return rows[0] ?? null;
+}
+
+export async function bumpPlays(sql: Sql, id: string) {
+  await sql`UPDATE games SET plays = plays + 1 WHERE id = ${id}`;
+}
+
+export async function listPendingGames(sql: Sql) {
+  return (await sql`SELECT id, title, summary, language, created_at, creator_email FROM games WHERE status = 'pending_review' ORDER BY created_at ASC LIMIT 50`) as any[];
+}
+
+export async function setGameStatus(sql: Sql, id: string, status: "approved" | "rejected", note?: string | null): Promise<boolean> {
+  const rows = (await sql`UPDATE games SET status = ${status}, reviewed_at = now(), review_note = ${note ?? null} WHERE id = ${id} RETURNING id`) as any[];
+  return rows.length > 0;
+}

@@ -1,12 +1,13 @@
 /**
  * POST /api/forge-game — the Code Agent forges a REAL playable game.
- * Body: { prompt, title?, summary?, language? }
- * Returns: { html, provider, acuCharge } — a complete self-contained HTML5 game
- * implementing the creator's concept (Claude when keys are live; a small real
- * demo game offline so the flow stays testable). Long-running: see vercel.json
- * maxDuration for this route.
+ * Body: { prompt, title?, summary?, language?, walletId? }
+ * Returns: { html, provider, acuCharge, balanceAfter? } — a complete self-contained
+ * HTML5 game implementing the creator's concept. Long-running: see vercel.json.
+ * Build 2 (server-side ACU enforcement): with DATABASE_URL configured the 300-ACU
+ * forge charge is debited server-side BEFORE generation and refunded on failure.
  */
 import { generateGameHtml, FORGE_GAME_ACU_CHARGE } from "./_gateway";
+import { getDb, ensureGameSchema, debitWallet, creditWallet } from "./_ledger";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -15,20 +16,45 @@ export default async function handler(req: any, res: any) {
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
-  const { prompt, title, summary, language } = (req.body ?? {}) as Record<string, string>;
+  const { prompt, title, summary, language, walletId } = (req.body ?? {}) as Record<string, string>;
   if (!prompt || typeof prompt !== "string" || prompt.length < 4) {
     return res.status(400).json({ error: "Body must include the game concept in `prompt`." });
   }
   if (prompt.length > 20000) {
     return res.status(400).json({ error: "Prompt too long (max 20,000 chars)." });
   }
+
+  // Server-side wallet enforcement (active once DATABASE_URL is set)
+  const sql = getDb();
+  let balanceAfter: number | null = null;
+  if (sql) {
+    if (!walletId) return res.status(402).json({ error: "No wallet — open the Studio to initialise your ACU wallet, or top up at /wallet.html." });
+    try {
+      await ensureGameSchema(sql);
+      balanceAfter = await debitWallet(sql, walletId, FORGE_GAME_ACU_CHARGE);
+    } catch (err: any) {
+      return res.status(502).json({ error: "Wallet check failed", detail: String(err?.message ?? err) });
+    }
+    if (balanceAfter === null) {
+      return res.status(402).json({ error: `Not enough ACUs (forging costs ${FORGE_GAME_ACU_CHARGE}). Top up at /wallet.html.`, acuCharge: FORGE_GAME_ACU_CHARGE });
+    }
+  }
+
+  const refund = async () => {
+    if (sql && walletId && balanceAfter !== null) {
+      try { await creditWallet(sql, walletId, FORGE_GAME_ACU_CHARGE); } catch { /* best-effort; reconciliation catches strays */ }
+    }
+  };
+
   try {
     const { html, provider } = await generateGameHtml(prompt, { title, summary, language });
     if (!html.includes("<canvas")) {
-      return res.status(502).json({ error: "Code Agent produced no playable canvas — please forge again." });
+      await refund();
+      return res.status(502).json({ error: "Code Agent produced no playable canvas — please forge again (no ACUs were kept)." });
     }
-    return res.status(200).json({ html, provider, acuCharge: FORGE_GAME_ACU_CHARGE });
+    return res.status(200).json({ html, provider, acuCharge: FORGE_GAME_ACU_CHARGE, ...(balanceAfter !== null ? { balanceAfter } : {}) });
   } catch (err: any) {
+    await refund();
     return res.status(502).json({ error: "Game generation failed", detail: String(err?.message ?? err) });
   }
 }

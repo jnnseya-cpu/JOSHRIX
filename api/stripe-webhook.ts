@@ -9,7 +9,7 @@
  */
 import Stripe from "stripe";
 import { TOPUP_PACKAGES, topupPostings } from "../shared/payments";
-import { getDb, ensureSchema, claimEvent, postTx, creditAcu, recordFounder } from "./_ledger";
+import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet } from "./_ledger";
 
 // Vercel: disable body parsing so the raw payload is available for verification
 export const config = { api: { bodyParser: false } };
@@ -88,9 +88,15 @@ export default async function handler(req: any, res: any) {
         const session = (event.data?.object ?? {}) as Stripe.Checkout.Session;
         const email = (session as any)?.customer_details?.email ?? null;
         if (result.ok && (result as any).action === "credit_acu") {
-          const r = result as Extract<ReturnType<typeof handleStripeEvent>, { action: "credit_acu" }>;
+          const r = result as { packageId: string; acu: number; ledger: { postings: Array<{ account: string; deltaMinor: number }> } };
           await postTx(sql, "acu_topup", r.ledger.postings, { eventId: event.id, session: session.id ?? "", packageId: r.packageId });
           await creditAcu(sql, { stripeSession: session.id ?? event.id, email, packageId: r.packageId, acu: r.acu });
+          // Build 2: land the purchased ACUs on the buyer's server wallet (id rode Checkout metadata)
+          const walletId = session.metadata?.walletId;
+          if (walletId) {
+            await ensureGameSchema(sql);
+            await creditWallet(sql, walletId, r.acu);
+          }
         } else if (result.ok && (result as any).action === "founder_pass") {
           await recordFounder(sql, { stripeSession: session.id ?? event.id, pass: (result as any).pass, email, amountMinor: (session.amount_total as number) ?? null });
         }

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#050508">
+<link rel="apple-touch-icon" href="/assets/icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Play — JOSHRIX Studio</title>
+<meta name="description" content="Play a world forged on JOSHRIX Studio.">
+<link rel="stylesheet" href="/assets/joshrix.css">
+<script src="/assets/config.js"></script>
+<style>
+  .play-shell{max-width:1080px;margin:0 auto;padding:0 1rem}
+  .play-head{display:flex;flex-wrap:wrap;align-items:center;gap:.7rem 1rem;margin:1.2rem 0 .9rem}
+  .play-head h1{font-size:clamp(1.2rem,3.4vw,1.8rem);margin:0;flex:1 1 auto;min-width:200px}
+  .pill{display:inline-flex;align-items:center;gap:.35rem;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:.28rem .7rem;border-radius:999px;border:1px solid var(--stroke-bright,#3b3b52);white-space:nowrap}
+  .pill.live{color:#4ade80;border-color:rgba(74,222,128,.45);background:rgba(74,222,128,.08)}
+  .pill.review{color:#fbbf24;border-color:rgba(251,191,36,.45);background:rgba(251,191,36,.08)}
+  .pill.rejected{color:#f87171;border-color:rgba(248,113,113,.45);background:rgba(248,113,113,.08)}
+  .frame-card{position:relative;border:1px solid var(--stroke,#26263a);border-radius:16px;overflow:hidden;background:#07070c;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .frame-card iframe{display:block;width:100%;height:min(72vh,640px);border:0;background:#000}
+  .frame-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;min-height:320px;text-align:center;padding:2rem}
+  .frame-msg p{max-width:52ch;color:var(--muted,#9d9db3)}
+  .play-meta{display:flex;flex-wrap:wrap;gap:.6rem 1.4rem;align-items:center;margin:.9rem 0 2.2rem;color:var(--muted,#9d9db3);font-size:.92rem}
+  .spin{width:38px;height:38px;border-radius:50%;border:3px solid rgba(124,58,237,.25);border-top-color:#7C3AED;animation:jxspin 1s linear infinite}
+  @keyframes jxspin{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion: reduce){.spin{animation:none}}
+  .foot-legal{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;padding:1.4rem 1rem 2rem;color:var(--muted,#9d9db3);font-size:.85rem}
+  .foot-legal a{color:inherit}
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="noise" aria-hidden="true"></div>
+<nav class="jx">
+  <a class="brand" href="/index.html">
+    <svg viewBox="-50 -50 100 100"><defs><linearGradient id="jxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#22D3EE"/></linearGradient></defs><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#jxG)" stroke-width="7" stroke-linejoin="round"/><polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#jxG)"/></svg>
+    <span class="word">JOSHRIX<em>STUDIO</em></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="/marketplace.html">Marketplace</a></li>
+    <li><a href="/pricing.html">Pricing</a></li>
+  </ul>
+  <div class="nav-right">
+    <a class="btn btn-primary btn-sm" href="/studio.html">⚒ Forge Your Own</a>
+  </div>
+</nav>
+<main class="jx play-shell">
+  <div class="play-head">
+    <h1 id="gTitle">Loading world…</h1>
+    <span class="pill" id="gPill" hidden></span>
+    <button class="btn btn-ghost btn-sm" id="btnShare" hidden>⤴ Share</button>
+  </div>
+  <div class="frame-card" id="frameCard">
+    <div class="frame-msg" id="frameMsg"><div class="spin" aria-hidden="true"></div><p id="msgText">Summoning the game from the forge…</p></div>
+  </div>
+  <div class="play-meta">
+    <span id="gSummary"></span>
+    <span id="gPlays"></span>
+    <span>Forged with AI on <a href="/index.html">JOSHRIX Studio</a> — <a href="/studio.html">create your own world</a></span>
+  </div>
+</main>
+<div class="foot-legal">
+  <span>© 2026 JOSHRIX Studio</span>
+  <a href="/terms.html">Terms</a>
+  <a href="/privacy.html">Privacy</a>
+  <a href="/refunds.html">Refunds</a>
+</div>
+<script>
+(function(){
+  var API = (window.JOSHRIX_API_BASE || '');
+  var qs = new URLSearchParams(location.search);
+  // id arrives via the /play/:id rewrite (?id=) or a direct /play/<id> path
+  var id = qs.get('id') || (location.pathname.match(/\/play\/([A-Za-z0-9-]+)/) || [])[1] || '';
+  var preview = qs.get('preview') === '1';
+  var $ = function(x){ return document.getElementById(x); };
+  var sid = 'ps-' + Math.random().toString(36).slice(2, 12);
+
+  function track(event, props){
+    try {
+      fetch(API + '/api/telemetry', { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ events: [{ event: event, ts: Date.now(), sessionId: sid, gameId: id || undefined, props: props || {} }] }) });
+    } catch(e){}
+  }
+  function showMsg(text, spinning){
+    $('frameMsg').innerHTML = (spinning ? '<div class="spin" aria-hidden="true"></div>' : '') + '<p>' + text + '</p>' +
+      '<a class="btn btn-primary btn-sm" href="/studio.html">⚒ Forge your own world</a>';
+  }
+  function pill(cls, label){ var p = $('gPill'); p.hidden = false; p.className = 'pill ' + cls; p.textContent = label; }
+
+  if (!id) { $('gTitle').textContent = 'No game selected'; showMsg('This link is missing a game id. Head to the Studio and forge one!', false); return; }
+
+  fetch(API + '/api/game-html?id=' + encodeURIComponent(id) + (preview ? '&preview=1' : ''))
+    .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, status: r.status, j: j }; }); })
+    .then(function(res){
+      var g = res.j || {};
+      if (!res.ok) {
+        $('gTitle').textContent = res.status === 404 ? 'World not found' : 'World unavailable';
+        showMsg(g.error || 'This game could not be loaded right now.', false);
+        return;
+      }
+      document.title = (g.title || 'Play') + ' — JOSHRIX Studio';
+      $('gTitle').textContent = g.title || 'Untitled world';
+      if (g.summary) $('gSummary').textContent = g.summary;
+      if (typeof g.plays === 'number' && g.status === 'approved') $('gPlays').textContent = '▶ ' + g.plays.toLocaleString() + ' plays';
+
+      if (g.status === 'approved') pill('live', '● Live');
+      else if (g.status === 'pending_review') pill('review', preview ? '◐ Preview — in review' : '◐ In review');
+      else pill('rejected', '✕ Not approved');
+
+      if (g.html) {
+        var f = document.createElement('iframe');
+        f.setAttribute('sandbox', 'allow-scripts allow-pointer-lock');
+        f.setAttribute('title', g.title || 'JOSHRIX game');
+        f.setAttribute('allow', 'autoplay; fullscreen');
+        f.srcdoc = g.html;
+        $('frameCard').innerHTML = '';
+        $('frameCard').appendChild(f);
+        track('play.session_start', { status: g.status, preview: preview });
+      } else if (g.status === 'pending_review') {
+        showMsg('This world is in moderation review. It goes live at this link the moment it\'s approved — check back soon.', false);
+      } else {
+        showMsg('This world was not approved for public play.', false);
+      }
+
+      var share = $('btnShare');
+      share.hidden = false;
+      share.addEventListener('click', function(){
+        var url = location.origin + '/play/' + id;
+        (navigator.share ? navigator.share({ title: g.title || 'JOSHRIX game', url: url }).catch(function(){}) :
+          navigator.clipboard.writeText(url).then(function(){ share.textContent = '✓ Link copied'; setTimeout(function(){ share.textContent = '⤴ Share'; }, 1600); }));
+        track('share.link_copied', {});
+      });
+    })
+    .catch(function(){
+      $('gTitle').textContent = 'Connection problem';
+      showMsg('Could not reach the JOSHRIX servers. Check your connection and refresh.', false);
+    });
+})();
+</script>
+<script src="/assets/site.js"></script>
+</body>
+</html>

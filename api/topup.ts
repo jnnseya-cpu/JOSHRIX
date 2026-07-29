@@ -32,7 +32,7 @@ export default async function handler(req: any, res: any) {
             product_data: { name: `JOSHRIX ACU top-up — ${pkg.acu.toLocaleString()} ACUs` },
           },
         }],
-        metadata: { kind: "acu_topup", packageId: pkg.id },
+        metadata: { kind: "acu_topup", packageId: pkg.id, ...(parsed.data.walletId ? { walletId: parsed.data.walletId } : {}) },
         success_url: `${origin}/wallet.html?topup=success`,
         cancel_url: `${origin}/wallet.html?topup=cancelled`,
       });

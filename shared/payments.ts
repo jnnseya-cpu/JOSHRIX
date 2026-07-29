@@ -86,6 +86,8 @@ export type LedgerTx = z.infer<typeof LedgerTxSchema>;
 export const TopupRequestSchema = z.object({
   packageId: z.enum(TOPUP_PACKAGES.map((p) => p.id) as [TopupPackageId, ...TopupPackageId[]]),
   method: z.enum(PaymentMethods),
+  /** server-side wallet to credit on webhook settlement (rides Stripe metadata) */
+  walletId: z.string().max(80).optional(),
 });
 export const CheckoutRequestSchema = z.object({
   listingId: z.string().min(1),

@@ -122,8 +122,9 @@ PKGS.forEach(([p, id], i) => {
     const r = $('topupResult'); r.style.display = 'block';
     r.textContent = 'Creating payment intent…';
     try {
+      let wid; try { wid = JSON.parse(localStorage.getItem('jx.profile') || '{}').serverWalletId; } catch (e) {}
       const resp = await fetch(API + '/api/topup', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ packageId: id, method: 'card' }), signal: AbortSignal.timeout(7000) });
+        body: JSON.stringify({ packageId: id, method: 'card', walletId: wid || undefined }), signal: AbortSignal.timeout(7000) });
       const j = await resp.json();
       if (resp.ok && j.checkoutUrl) { r.textContent = '→ Opening secure Stripe checkout…'; window.location.href = j.checkoutUrl; return; }
       r.textContent = resp.ok
@@ -162,9 +163,22 @@ const applyLocalAcu = () => {
       const rf = document.getElementById('btnRefill');
       if (rf && !rf.dataset.wired) {
         rf.dataset.wired = '1';
-        rf.addEventListener('click', (e) => {
+        rf.addEventListener('click', async (e) => {
           e.preventDefault();
           const prof = JSON.parse(localStorage.getItem('jx.profile') || '{}');
+          // server wallet live? refill THERE (tester-only, enforced server-side)
+          if (prof.serverWalletId) {
+            try {
+              const rr = await fetch(API + '/api/wallet-init', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ walletId: prof.serverWalletId, action: 'refill' }), signal: AbortSignal.timeout(8000) });
+              const jj = await rr.json().catch(() => null);
+              if (rr.ok && jj && typeof jj.balance === 'number') {
+                prof.acu = jj.balance; localStorage.setItem('jx.profile', JSON.stringify(prof));
+                $('wAcu').textContent = jj.balance.toLocaleString();
+                return;
+              }
+            } catch (err) { /* fall back to local refill below */ }
+          }
           prof.acu = 2000; localStorage.setItem('jx.profile', JSON.stringify(prof));
           $('wAcu').textContent = '2,000';
         });

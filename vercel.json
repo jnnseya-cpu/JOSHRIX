@@ -2,6 +2,9 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
   "outputDirectory": "frontend",
+  "rewrites": [
+    { "source": "/play/:id", "destination": "/play.html?id=:id" }
+  ],
   "functions": {
     "api/forge-game.ts": { "maxDuration": 60 },
     "api/blueprint.ts": { "maxDuration": 60 }

@@ -54,7 +54,67 @@
 <div class="module"><h3><span class="st"></span>Security</h3><span class="num">0</span><div class="bar ok"><i style="width:100%"></i></div><span class="readout">SEV1 INCIDENTS · FRAUD HOLDS: 12</span></div>
 <div class="module"><h3><span class="st"></span>Payout Liability</h3><span class="num">£214K</span><div class="bar"><i style="width:48%"></i></div><span class="readout">NEXT SETTLEMENT RUN: 04:00 UTC</span></div>
 </div></div>
-<h2 class="jx reveal">Moderation Queue</h2>
+<h2 class="jx reveal">Live Review Queue <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— REAL GAMES AWAITING APPROVAL</span></h2>
+<div class="reveal" id="liveQueue" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
+  <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">
+    <input id="modKey" type="password" placeholder="Moderation key" autocomplete="off"
+      style="flex:1 1 220px;max-width:320px;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.55rem .8rem;color:inherit">
+    <button class="btn btn-primary btn-sm" id="btnLoadQueue">⟳ Load Pending Games</button>
+    <span id="queueHint" style="font-size:.85rem;color:var(--muted,#9d9db3)"></span>
+  </div>
+  <div id="queueList" style="display:grid;gap:.7rem;margin-top:1rem"></div>
+</div>
+<script>
+(function(){
+  var API = (window.JOSHRIX_API_BASE || '');
+  var $q = function(x){ return document.getElementById(x); };
+  try { $q('modKey').value = sessionStorage.getItem('jx.modKey') || ''; } catch(e){}
+  function esc(s){ return String(s == null ? '' : s).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); }
+  function decide(id, action, note, row){
+    fetch(API + '/api/moderation', { method:'POST', headers:{'Content-Type':'application/json','x-admin-key':$q('modKey').value},
+      body: JSON.stringify({ id: id, action: action, note: note || undefined }) })
+      .then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+      .then(function(res){
+        if (res.ok) { row.style.opacity = '.45'; row.querySelector('.qact').innerHTML = action === 'approve' ? '<span style="color:#4ade80">✓ APPROVED — link is now public</span>' : '<span style="color:#f87171">✕ REJECTED</span>'; }
+        else alert(res.j.error || 'Action failed');
+      }).catch(function(){ alert('Could not reach the moderation API'); });
+  }
+  $q('btnLoadQueue').addEventListener('click', function(){
+    var key = $q('modKey').value.trim();
+    if (!key) { $q('queueHint').textContent = 'Enter the MODERATION_KEY set in your Vercel env.'; return; }
+    try { sessionStorage.setItem('jx.modKey', key); } catch(e){}
+    $q('queueHint').textContent = 'Loading…';
+    fetch(API + '/api/moderation', { headers: { 'x-admin-key': key } })
+      .then(function(r){ return r.json().then(function(j){ return { ok:r.ok, status:r.status, j:j }; }); })
+      .then(function(res){
+        var list = $q('queueList'); list.innerHTML = '';
+        if (!res.ok) { $q('queueHint').textContent = '⚠ ' + (res.j.error || ('HTTP ' + res.status)); return; }
+        var pending = res.j.pending || [];
+        $q('queueHint').textContent = pending.length + ' game' + (pending.length === 1 ? '' : 's') + ' awaiting review';
+        if (!pending.length) { list.innerHTML = '<span style="color:var(--muted,#9d9db3);font-size:.9rem">Queue clear — nothing pending.</span>'; return; }
+        pending.forEach(function(g){
+          var row = document.createElement('div');
+          row.style.cssText = 'display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.7rem .9rem';
+          row.innerHTML = '<div style="flex:1 1 260px;min-width:200px"><b>' + esc(g.title) + '</b>'
+            + (g.language ? ' <span style="font-size:.75rem;color:var(--muted,#9d9db3)">[' + esc(g.language) + ']</span>' : '')
+            + '<div style="font-size:.85rem;color:var(--muted,#9d9db3)">' + esc(g.summary || '') + '</div>'
+            + '<div style="font-size:.78rem;color:var(--muted,#9d9db3)">' + esc(g.id) + (g.creator_email ? ' · ' + esc(g.creator_email) : '') + '</div></div>'
+            + '<div class="qact" style="display:flex;gap:.5rem;flex-wrap:wrap">'
+            + '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="/play/' + encodeURIComponent(g.id) + '?preview=1">▶ Play</a>'
+            + '<button class="btn btn-primary btn-sm qa-approve">✓ Approve</button>'
+            + '<button class="btn btn-ghost btn-sm qa-reject" style="color:#f87171">✕ Reject</button></div>';
+          row.querySelector('.qa-approve').addEventListener('click', function(){ decide(g.id, 'approve', null, row); });
+          row.querySelector('.qa-reject').addEventListener('click', function(){
+            var note = prompt('Rejection reason (shown to the creator):') || '';
+            decide(g.id, 'reject', note, row);
+          });
+          list.appendChild(row);
+        });
+      }).catch(function(){ $q('queueHint').textContent = '⚠ Could not reach the moderation API'; });
+  });
+})();
+</script>
+<h2 class="jx reveal">Moderation Queue <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— DEMO PREVIEW</span></h2>
 <table class="jx reveal"><thead><tr><th>ID</th><th>Game</th><th>Issue</th><th>Risk</th><th>AI Notes</th><th>Decision</th></tr></thead><tbody>
 <tr><td>MOD-4412</td><td><b>Super Plumber World</b></td><td>Copyright similarity</td><td><span class="pill amber">HIGH 87</span></td><td>Character 92% similar to protected mark</td><td>Reject · Notify · Ban keyword</td></tr>
 <tr><td>MOD-4413</td><td><b>Lucky Spin Palace</b></td><td>Gambling mechanics</td><td><span class="pill amber">HIGH 78</span></td><td>Paid random rewards + cash-out loop</td><td>Reject · Jurisdiction review</td></tr>
@@ -93,7 +153,7 @@
       <li><a href="wallet.html">Wallet</a></li></ul></div>
   </div>
   <div class="foot-base">
-    <span>© 2026 JOSHRIX Studio. All worlds belong to their creators.</span>
+    <span>© 2026 JOSHRIX Studio. All worlds belong to their creators. · <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="refunds.html">Refunds</a></span>
     <span class="sys">◉ ALL SYSTEMS OPERATIONAL</span>
   </div>
 </footer>

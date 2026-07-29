@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#050508">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<title>Refund Policy — JOSHRIX Studio</title>
+<meta name="description" content="How refunds work for ACUs, subscriptions, Founder Passes, and marketplace purchases.">
+<link rel="stylesheet" href="assets/joshrix.css">
+<style>
+  .legal{max-width:820px;margin:0 auto;padding:0 1rem 3rem}
+  .legal h2{font-size:1.15rem;margin:2.2rem 0 .6rem}
+  .legal p, .legal li, .legal td, .legal th{color:var(--muted,#9d9db3);line-height:1.7;font-size:.97rem}
+  .legal ul{padding-left:1.2rem;display:grid;gap:.4rem}
+  .legal .updated{font-size:.85rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#9d9db3)}
+  .legal b{color:var(--ink,#ececf4)}
+  .legal .tbl{overflow-x:auto}
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="noise" aria-hidden="true"></div>
+<nav class="jx">
+  <a class="brand" href="index.html">
+    <svg viewBox="-50 -50 100 100"><defs><linearGradient id="jxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#22D3EE"/></linearGradient></defs><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#jxG)" stroke-width="7" stroke-linejoin="round"/><polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#jxG)"/></svg>
+    <span class="word">JOSHRIX<em>STUDIO</em></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="terms.html">Terms</a></li>
+    <li><a href="privacy.html">Privacy</a></li>
+  </ul>
+  <div class="nav-right"><a class="btn btn-primary btn-sm" href="wallet.html">Wallet</a></div>
+</nav>
+<main class="jx legal">
+  <div class="page-hero reveal">
+    <div class="sec-tag">Legal</div>
+    <h1 class="jx">Refund <span class="grad">Policy</span></h1>
+    <p class="updated">Last updated 29 July 2026 · Your UK statutory rights are never reduced</p>
+  </div>
+
+  <p>The short version: <b>unused money is refundable, consumed AI work is not.</b> Every ACU you spend triggers real, irreversible AI computation that we pay for the moment it runs — that's also why there is no free AI tier. Here is exactly how that plays out:</p>
+
+  <div class="tbl"><table class="jx"><thead><tr><th>What you bought</th><th>Refund rule</th></tr></thead><tbody>
+    <tr><td><b>ACU top-up — unspent</b></td><td>Full refund of the <b>unconsumed</b> ACUs from that purchase within 14 days of purchase, on request.</td></tr>
+    <tr><td><b>ACU top-up — spent</b></td><td>Consumed ACUs are not refundable. By forging, you expressly request immediate performance of digital services and acknowledge the 14-day cooling-off right is lost for the consumed portion (Consumer Contracts Regulations 2013, reg. 37).</td></tr>
+    <tr><td><b>Failed AI runs</b></td><td>Automatic — if generation fails or produces no playable game, the charge is refunded to your wallet by the system. You never pay for a failed forge.</td></tr>
+    <tr><td><b>Subscriptions</b></td><td>Cancel any time; access runs to the end of the paid period. First-time subscribers can request a full refund within 14 days <b>if</b> no subscription ACUs were consumed; otherwise the consumed portion is deducted pro-rata.</td></tr>
+    <tr><td><b>Founder Passes</b></td><td>Fully refundable, no questions asked, any time <b>before your access activates</b>. After activation, treated as a subscription month plus its bonus ACUs.</td></tr>
+    <tr><td><b>Marketplace game purchases</b></td><td>14-day refund if the game is broken or materially not as described and you've played under 2 hours. Creator earnings and royalties on refunded sales are reversed.</td></tr>
+    <tr><td><b>Test ACUs</b></td><td>No monetary value — never refundable or payable.</td></tr>
+  </tbody></table></div>
+
+  <h2>How to request a refund</h2>
+  <ul>
+    <li>Use the <a href="contact.html">contact page</a> with the email on your account and (for top-ups) the Stripe receipt reference.</li>
+    <li>Refunds go back to the original payment method via Stripe, normally within 5–10 business days of approval.</li>
+    <li>When a refund is settled, the corresponding ACUs are removed from your wallet and the platform ledger; if you already spent them, the refundable amount is reduced by what was consumed.</li>
+  </ul>
+
+  <h2>Moderation rejections</h2>
+  <p>If moderation rejects your game, the AI work was still performed, so the forge charge stands — but the game can be revised and resubmitted without re-paying for stages that don't need re-running. If we reject content for a failure on our side (e.g. a generation defect), we re-run or refund the affected charge.</p>
+
+  <h2>Chargebacks</h2>
+  <p>Please contact us before disputing a charge with your bank — most issues resolve faster through us. Accounts with fraudulent chargebacks may be suspended and unspent balances held pending investigation.</p>
+
+  <h2>Statutory rights</h2>
+  <p>Nothing here limits your rights under the Consumer Rights Act 2015 — digital content must be as described, fit for purpose, and of satisfactory quality. Where it isn't, you're entitled to repair, replacement, or the appropriate refund regardless of the table above.</p>
+</main>
+<div class="foot-base" style="justify-content:center;gap:1.4rem;display:flex;flex-wrap:wrap;padding:1.5rem">
+  <span>© 2026 JOSHRIX Studio</span>
+  <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a>
+</div>
+<script src="assets/site.js"></script>
+</body>
+</html>

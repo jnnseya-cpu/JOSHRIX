@@ -336,9 +336,10 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
           <div class="chan">
             <span class="ic">🌐</span>
             <div>
-              <h5>JOSHRIX Web <span class="pill live">◉ LIVE</span></h5>
+              <h5>JOSHRIX Web <span class="pill live" id="pubPill">◉ LIVE</span></h5>
               <p>Hosted instantly on the JOSHRIX CDN. One link — no install, no account, no download. This link is the product.</p>
               <span class="sharelink"><input id="shareUrl" readonly value="https://joshrix.com/play/penalty-king"><button class="btn btn-ghost chan-btn" id="btnCopy">⧉ Copy</button></span>
+              <p class="hint" id="pubStatus" style="margin-top:.45rem"></p>
             </div>
             <div class="act"><button class="btn btn-ghost chan-btn" id="btnReplay">▶ Play Live Build</button></div>
           </div>
@@ -431,7 +432,30 @@ const WALLET = (() => {
 })();
 let acu = WALLET ? (WALLET.acu || 0) : 2000;
 $('acuBal').textContent = acu.toLocaleString();
+/* server wallet (Build 2): once DATABASE_URL is live, the REAL balance lives on the
+   server — every AI call is debited there and returns balanceAfter. The local sim
+   ticks then become cosmetic (they show work happening, never move real money). */
+let serverMode = false, serverWalletId = null, simSpend = 0;
+const syncBalance = b => {
+  acu = Math.max(0, Number(b) || 0);
+  $('acuBal').textContent = acu.toLocaleString();
+  if (window.jxStore) jxStore.save({ acu, serverWalletId });
+};
+(async () => {
+  try {
+    let prof = {}; try { prof = JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (e) {}
+    const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
+    const r = await fetch(base + '/api/wallet-init', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ walletId: prof.serverWalletId || undefined, email: prof.email || undefined }),
+      signal: AbortSignal.timeout(10000)
+    });
+    const j = await r.json().catch(() => null);
+    if (r.ok && j && j.mode === 'live') { serverMode = true; serverWalletId = j.walletId; syncBalance(j.balance); }
+  } catch (e) { /* offline or no DB yet — local sim wallet stays authoritative */ }
+})();
 const spend = n => {
+  if (serverMode) { simSpend += n; return; }  // real charges arrive via balanceAfter
   acu = Math.max(0, acu - n);
   $('acuBal').textContent = acu.toLocaleString();
   if (WALLET && window.jxStore) jxStore.save({ acu });
@@ -469,12 +493,13 @@ $('btnBlueprint').addEventListener('click', async () => {
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
     const r = await fetch(base + '/api/blueprint', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt: $('prompt').value, type: $('selType').value, platform: $('selPlat').value, scope: $('selScope').value, language: $('selLang').value }),
+      body: JSON.stringify({ prompt: $('prompt').value, type: $('selType').value, platform: $('selPlat').value, scope: $('selScope').value, language: $('selLang').value, walletId: serverWalletId || undefined }),
       signal: AbortSignal.timeout(30000)
     });
     if (r.ok) remote = await r.json();
     else { const e = await r.json().catch(() => null); apiError = (e && (e.error + (e.detail ? ' — ' + e.detail : ''))) || ('HTTP ' + r.status); }
   } catch (e) { /* offline — local Idea Agent below */ }
+  if (remote && typeof remote.balanceAfter === 'number') syncBalance(remote.balanceAfter);
   if (remote && remote.blueprint) {
     const b = remote.blueprint;
     lastBp = { title: b.title, summary: b.summary, genre: b.genre || [] };
@@ -533,8 +558,9 @@ function runAgent(i, done) {
     if (li < lines.length && prog > (li + 1) * (100 / lines.length)) log.textContent = lines[li++];
     bar.style.width = Math.min(100, prog) + '%';
     spend(Math.round((12 + Math.random() * 24) * (refining ? 0.15 : 1)));
-    $('mAcu').textContent = (forgeAcu0 - acu).toLocaleString();
-    $('mCost').textContent = '£' + ((2000 - acu) * 0.01).toFixed(2);
+    const spent = serverMode ? simSpend : (forgeAcu0 - acu);
+    $('mAcu').textContent = spent.toLocaleString();
+    $('mCost').textContent = '£' + (spent * 0.01).toFixed(2);
     if (prog >= 100) { clearInterval(t); el.classList.remove('run'); el.classList.add('done'); log.textContent = lines[lines.length - 1]; done(); }
   }, 260);
 }
@@ -542,7 +568,7 @@ $('btnForge').addEventListener('click', () => {
   if (!needAcu(refining ? 60 : 300, $('btnForge').nextElementSibling)) return;
   setStep(2);
   show('p2');
-  forgeAcu0 = acu;
+  forgeAcu0 = acu; simSpend = 0;
   AudioFX.setLang($('selLang').value === 'auto' ? 'en' : $('selLang').value);
   jxTrack('forge.blueprint_approved', { scope: $('selScope').value });
   // the REAL build: the Code Agent writes the actual game while the fleet animates
@@ -552,7 +578,7 @@ $('btnForge').addEventListener('click', () => {
       const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
       const r = await fetch(base + '/api/forge-game', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: $('prompt').value, title: lastBp.title, summary: lastBp.summary, language: $('selLang').value }),
+        body: JSON.stringify({ prompt: $('prompt').value, title: lastBp.title, summary: lastBp.summary, language: $('selLang').value, walletId: serverWalletId || undefined }),
         signal: AbortSignal.timeout(280000)
       });
       const j = await r.json().catch(() => null);
@@ -646,7 +672,11 @@ async function renderPlaytest() {
     $('protoNote4').innerHTML = realBuild.provider === 'claude'
       ? '✦ <b>Real build:</b> this playable game was written by the Code Agent from your concept, live. Not happy? Refine Concept regenerates it.'
       : '◌ <b>Offline build:</b> generated by the demo agent — with AI keys live this is written by Claude from your concept.';
-    if (!realBuildCharged) { realBuildCharged = true; spend(realBuild.acuCharge || 300); }
+    if (!realBuildCharged) {
+      realBuildCharged = true;
+      if (typeof realBuild.balanceAfter === 'number') syncBalance(realBuild.balanceAfter);
+      else spend(realBuild.acuCharge || 300);
+    }
     applyBlueprintIdentity();
   } else {
     applyBlueprintIdentity();
@@ -668,7 +698,42 @@ $('btnRefine').addEventListener('click', () => {
 });
 
 /* ---------- Stage 5: publish + multi-platform distribution ---------- */
-$('btnPub').addEventListener('click', () => { setStep(5); show('p5'); jxTrack('forge.published'); });
+/* Build 1+3: publishing SAVES the real game server-side, mints its public /play/<id>
+   URL, and drops it into the moderation queue — the link goes public on approval. */
+let publishedGame = null;
+$('btnPub').addEventListener('click', async () => {
+  setStep(5); show('p5'); jxTrack('forge.published');
+  const su = $('shareUrl'), pill = $('pubPill'), st = $('pubStatus');
+  if (publishedGame) return;  // already saved — keep the minted URL
+  if (!(realBuild && realBuild.html)) {
+    if (st) st.textContent = 'Demo preview link — forge a real build to mint your own public play URL.';
+    return;
+  }
+  if (st) st.textContent = 'Saving your game to JOSHRIX hosting…';
+  try {
+    const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
+    let prof = {}; try { prof = JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (e) {}
+    const r = await fetch(base + '/api/games', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: lastBp.title || 'Untitled World', summary: lastBp.summary, language: $('selLang').value,
+        html: realBuild.html, walletId: serverWalletId || undefined, email: prof.email || undefined
+      }),
+      signal: AbortSignal.timeout(30000)
+    });
+    const j = await r.json().catch(() => null);
+    if (r.ok && j && j.playUrl) {
+      publishedGame = j;
+      su.value = location.origin + j.playUrl;
+      if (pill) { pill.textContent = '◐ IN REVIEW'; pill.classList.remove('live'); pill.style.color = 'var(--amber)'; }
+      if (st) st.innerHTML = '✓ Saved. Your link goes <b>public the moment moderation approves it</b> — until then only you can play it: <a href="' + j.previewUrl + '" target="_blank" rel="noopener" style="color:var(--cyan)">open creator preview</a>.';
+    } else {
+      if (st) st.innerHTML = '⚠ ' + ((j && j.error) || 'Could not save the game') + (j && j.mode === 'no_db' ? ' — hosting activates when the database is connected.' : ' — your build is still playable in Stage 05.');
+    }
+  } catch (e) {
+    if (st) st.textContent = '⚠ Could not reach JOSHRIX hosting — check your connection and press Approve & Publish again.';
+  }
+});
 $('btnReplay').addEventListener('click', () => { setStep(4); show('p4'); });
 $('btnCopy').addEventListener('click', () => {
   $('btnCopy').textContent = '✓ Copied';
