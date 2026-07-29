@@ -406,6 +406,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
 <footer>© 2026 JOSHRIX Studio — Forge Studio prototype. Create Worlds. Build Games. Own the Future.</footer>
 
 <script src="assets/config.js"></script>
+<script src="assets/store.js"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
@@ -421,14 +422,31 @@ const jxTrack = (event, props) => {
     }).catch(() => {});
   } catch (e) { /* telemetry must never break the studio */ }
 };
-let acu = 2000;
-const spend = n => { acu = Math.max(0, acu - n); $('acuBal').textContent = acu.toLocaleString(); };
+/* account wallet: tester accounts forge with their REAL balance — spends persist
+   to the wallet and hard-stop at zero (never a negative balance) */
+const WALLET = (() => {
+  try { const p = JSON.parse(localStorage.getItem('jx.profile') || '{}'); return p.testerAcuGranted ? p : null; }
+  catch (e) { return null; }
+})();
+let acu = WALLET ? (WALLET.acu || 0) : 2000;
+$('acuBal').textContent = acu.toLocaleString();
+const spend = n => {
+  acu = Math.max(0, acu - n);
+  $('acuBal').textContent = acu.toLocaleString();
+  if (WALLET && window.jxStore) jxStore.save({ acu });
+};
+const needAcu = (cost, hintEl) => {
+  if (acu >= cost) return true;
+  if (hintEl) hintEl.innerHTML = '⛔ Not enough ACUs (' + acu.toLocaleString() + ' left, ' + cost + ' needed) — <a href="wallet.html" style="color:var(--cyan)">top up in your wallet</a>';
+  return false;
+};
 
 /* ---------- Stage 1: blueprint ---------- */
 let refining = false;   // refine passes are delta-priced, never a full re-charge
 let forgeAcu0 = 2000;   // ACU balance when the current forge run started
 $('btnBlueprint').addEventListener('click', async () => {
   const btn = $('btnBlueprint');
+  if (!needAcu(refining ? 2 : 8, $('bpHint'))) return;
   btn.disabled = true;
   btn.textContent = '⚡ Forging blueprint…';
   // live Idea Agent via the deployed API (Claude when keys are set, demo otherwise);
@@ -501,6 +519,7 @@ function runAgent(i, done) {
   }, 260);
 }
 $('btnForge').addEventListener('click', () => {
+  if (!needAcu(refining ? 60 : 300, $('btnForge').nextElementSibling)) return;
   setStep(2);
   show('p2');
   forgeAcu0 = acu;
@@ -534,6 +553,7 @@ $('btnForge').addEventListener('click', () => {
 /* ---------- Stage 3: QA ---------- */
 const QA = [['Functional', 96], ['Performance', 89], ['Security', 94], ['Accessibility', 83], ['Content Safety', 98], ['Commercial Readiness', 86], ['Fun Score · AutoPlay Lab', 92]];
 $('btnQA').addEventListener('click', () => {
+  if (!needAcu(120, $('btnQA').nextElementSibling)) return;
   setStep(3); show('p3');
   const g = $('qaGrid'); g.innerHTML = '';
   QA.forEach(([nm, v], i) => {
