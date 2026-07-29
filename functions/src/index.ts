@@ -7,6 +7,7 @@
  */
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
+import Stripe from "stripe";
 import { generateBlueprint, providerStatus, BLUEPRINT_ACU_CHARGE } from "./gateway";
 import { TelemetryBatchSchema } from "./shared/telemetry";
 import {
@@ -18,6 +19,8 @@ import { REFERRAL, INFLUENCER_TIERS, CreateReferralCodeSchema, referralEarningsM
 import { SKU_CATALOGUE, CostObservationBatchSchema, evaluateSku, fixedMonthlyOverheadMinor, ECON } from "./shared/economics";
 
 const ANTHROPIC_API_KEY = defineSecret("ANTHROPIC_API_KEY");
+const STRIPE_SECRET_KEY = defineSecret("STRIPE_SECRET_KEY");
+const STRIPE_WEBHOOK_SECRET = defineSecret("STRIPE_WEBHOOK_SECRET");
 
 export const api = onRequest(
   {
@@ -25,7 +28,7 @@ export const api = onRequest(
     cors: true,
     timeoutSeconds: 60,
     memory: "512MiB",
-    secrets: [ANTHROPIC_API_KEY],
+    secrets: [ANTHROPIC_API_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET],
   },
   async (req, res) => {
     const path = req.path.replace(/^\/api(?=\/|$)/, "") || "/";
@@ -101,11 +104,69 @@ export const api = onRequest(
       const parsed = TopupRequestSchema.safeParse(req.body);
       if (!parsed.success) { res.status(400).json({ error: "Invalid top-up request", issues: parsed.error.issues.slice(0, 3) }); return; }
       const pkg = TOPUP_PACKAGES.find((p) => p.id === parsed.data.packageId)!;
+      if (process.env.STRIPE_SECRET_KEY) {
+        try {
+          const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+          const origin = (req.headers.origin as string) || "https://joshrix.com";
+          const session = await stripe.checkout.sessions.create({
+            mode: "payment",
+            line_items: [{
+              quantity: 1,
+              price_data: { currency: "gbp", unit_amount: pkg.priceMinor,
+                product_data: { name: `JOSHRIX ACU top-up — ${pkg.acu.toLocaleString()} ACUs` } },
+            }],
+            metadata: { kind: "acu_topup", packageId: pkg.id },
+            success_url: `${origin}/wallet.html?topup=success`,
+            cancel_url: `${origin}/wallet.html?topup=cancelled`,
+          });
+          res.status(200).json({
+            mode: "live", checkoutUrl: session.url,
+            intent: { id: session.id, status: "requires_payment", packageId: pkg.id, amountMinor: pkg.priceMinor, acuOnSettlement: pkg.acu },
+          });
+        } catch (err: unknown) {
+          res.status(502).json({ error: "Stripe session creation failed", detail: String((err as Error)?.message ?? err) });
+        }
+        return;
+      }
       res.status(200).json({
         mode: "demo",
         intent: { id: "pi_demo_" + pkg.id, status: "settled_demo", packageId: pkg.id, amountMinor: pkg.priceMinor, acuCredited: pkg.acu, method: parsed.data.method },
         ledger: { kind: "acu_topup", postings: topupPostings(pkg.priceMinor) },
       });
+      return;
+    }
+
+    if (path === "/stripe-webhook" && req.method === "POST") {
+      const secret = process.env.STRIPE_WEBHOOK_SECRET;
+      if (!secret) { res.status(503).json({ error: "STRIPE_WEBHOOK_SECRET not configured" }); return; }
+      let event: Stripe.Event;
+      try {
+        const sig = req.headers["stripe-signature"] as string;
+        event = Stripe.webhooks.constructEvent(req.rawBody, sig, secret);
+      } catch (err: unknown) {
+        res.status(400).json({ error: `Webhook signature verification failed: ${(err as Error).message}` });
+        return;
+      }
+      let result: Record<string, unknown> = { ok: true, action: "ignored", eventId: event.id, type: event.type };
+      if (event.type === "checkout.session.completed") {
+        const session = event.data.object as Stripe.Checkout.Session;
+        if (session.metadata?.kind === "acu_topup") {
+          const pkg = TOPUP_PACKAGES.find((p) => p.id === session.metadata?.packageId);
+          result = pkg
+            ? { ok: true, action: "credit_acu", eventId: event.id, packageId: pkg.id, acu: pkg.acu,
+                amountMinor: pkg.priceMinor, ledger: { kind: "acu_topup", postings: topupPostings(pkg.priceMinor) } }
+            : { ok: false, note: `unknown package ${session.metadata?.packageId}` };
+        } else if (session.metadata?.pass) {
+          result = { ok: true, action: "founder_pass", eventId: event.id, pass: session.metadata.pass };
+        } else {
+          result = { ok: true, action: "checkout_completed_untyped", eventId: event.id };
+        }
+      } else if (event.type === "charge.refunded") {
+        result = { ok: true, action: "refund_recorded", eventId: event.id };
+      }
+      // structured settlement log until the Postgres ledger is attached
+      console.log(JSON.stringify({ stripeWebhook: result }));
+      res.status(200).json({ received: true, ...result });
       return;
     }
 

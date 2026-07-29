@@ -41,9 +41,11 @@ Base rule (MONETISATION): referrer earns a share of each referral's **first 12 m
 
 The marketplace-fee share always comes out of the **platform's** commission — never a creator's earnings. Referral income credits `creator_earnings` and withdraws through the same payout rails. Endpoint: `GET/POST /api/referrals`.
 
-## Going live checklist (when keys arrive)
+## Going live checklist
 
-1. Stripe: account + `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET`; Connect for payouts. BitriPay: `BITRIPAY_API_KEY`/`BITRIPAY_WEBHOOK_SECRET`.
-2. Stand up Postgres (Neon) and replace demo responses with ledger reads/writes; webhooks are the only settlement authority.
-3. Wire KYC provider at the £100 threshold; enable the weekly payout run + instant rail.
-4. Keep every split function unchanged — they are the tested source of truth.
+1. ✅ **Checkout is live-capable**: with `STRIPE_SECRET_KEY` set, `POST /api/topup` creates a real Stripe Checkout Session (the wallet page redirects to it automatically). Without keys it stays in demo mode.
+2. ✅ **The webhook endpoint exists**: `POST /api/stripe-webhook` (Vercel) and `/stripe-webhook` on the Firebase function — raw-body signature verification, handles `checkout.session.completed` (ACU top-ups by `metadata.kind`, Founder Passes by `metadata.pass`), `charge.refunded`, `payment_intent.payment_failed`. **Settlement happens only here, never on client redirects.**
+3. **Register the webhook** (one-time, Stripe Dashboard): Developers → Webhooks → Add endpoint → URL `https://<your-app>.vercel.app/api/stripe-webhook` → select the three events above → copy the signing secret → add `STRIPE_WEBHOOK_SECRET` to Vercel env → redeploy. For Founder Pass Payment Links, add `pass=<founder|founder_pro|first_studio>` in each link's metadata so the webhook records them.
+4. Stand up Postgres (Neon) and replace the webhook's structured settlement log with ledger writes + ACU credits keyed by `event.id` (idempotency).
+5. Stripe Connect for creator payouts; KYC at the £100 threshold; weekly payout run + instant rail.
+6. Keep every split function unchanged — they are the tested source of truth.

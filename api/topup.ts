@@ -1,11 +1,13 @@
 /**
  * POST /api/topup — pay-in: buy an ACU package.
- * Demo mode simulates instant settlement; production creates a Stripe/BitriPay
- * checkout session and settles on the verified webhook, posting the same ledger tx.
+ * With STRIPE_SECRET_KEY set this creates a REAL Stripe Checkout Session
+ * (settlement happens only on the verified webhook — /api/stripe-webhook).
+ * Without keys it returns the demo settlement so the flow works pre-launch.
  */
+import Stripe from "stripe";
 import { TopupRequestSchema, TOPUP_PACKAGES, topupPostings } from "../shared/payments";
 
-export default function handler(req: any, res: any) {
+export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
@@ -14,20 +16,40 @@ export default function handler(req: any, res: any) {
 
   const parsed = TopupRequestSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid top-up request", issues: parsed.error.issues.slice(0, 3) });
-
   const pkg = TOPUP_PACKAGES.find((p) => p.id === parsed.data.packageId)!;
-  const live = !!process.env.STRIPE_SECRET_KEY || !!process.env.BITRIPAY_API_KEY;
+
+  if (process.env.STRIPE_SECRET_KEY) {
+    try {
+      const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+      const origin = req.headers?.origin || req.headers?.referer?.replace(/\/[^/]*$/, "") || "https://joshrix.com";
+      const session = await stripe.checkout.sessions.create({
+        mode: "payment",
+        line_items: [{
+          quantity: 1,
+          price_data: {
+            currency: "gbp",
+            unit_amount: pkg.priceMinor,
+            product_data: { name: `JOSHRIX ACU top-up — ${pkg.acu.toLocaleString()} ACUs` },
+          },
+        }],
+        metadata: { kind: "acu_topup", packageId: pkg.id },
+        success_url: `${origin}/wallet.html?topup=success`,
+        cancel_url: `${origin}/wallet.html?topup=cancelled`,
+      });
+      return res.status(200).json({
+        mode: "live",
+        checkoutUrl: session.url,
+        intent: { id: session.id, status: "requires_payment", packageId: pkg.id, amountMinor: pkg.priceMinor, acuOnSettlement: pkg.acu },
+        note: "ACUs credit ONLY when the verified webhook receives checkout.session.completed.",
+      });
+    } catch (err: any) {
+      return res.status(502).json({ error: "Stripe session creation failed", detail: String(err?.message ?? err) });
+    }
+  }
+
   return res.status(200).json({
-    mode: live ? "live_keys_present_but_flow_not_wired" : "demo",
-    intent: {
-      id: "pi_demo_" + pkg.id,
-      status: "settled_demo",
-      packageId: pkg.id,
-      amountMinor: pkg.priceMinor,
-      acuCredited: pkg.acu,
-      method: parsed.data.method,
-    },
+    mode: "demo",
+    intent: { id: "pi_demo_" + pkg.id, status: "settled_demo", packageId: pkg.id, amountMinor: pkg.priceMinor, acuCredited: pkg.acu, method: parsed.data.method },
     ledger: { kind: "acu_topup", postings: topupPostings(pkg.priceMinor) },
-    note: "Production: create gateway checkout session → verified webhook → post this exact ledger tx, then credit ACUs (purchased category, 12-month validity).",
   });
 }

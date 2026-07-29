@@ -120,6 +120,7 @@ PKGS.forEach(([p, id], i) => {
       const resp = await fetch(API + '/api/topup', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ packageId: id, method: 'card' }), signal: AbortSignal.timeout(7000) });
       const j = await resp.json();
+      if (resp.ok && j.checkoutUrl) { r.textContent = '→ Opening secure Stripe checkout…'; window.location.href = j.checkoutUrl; return; }
       r.textContent = resp.ok
         ? `✓ ${j.intent.status} — ${j.intent.acuCredited.toLocaleString()} ACUs credited for £${(j.intent.amountMinor/100).toFixed(2)}\nledger: ${j.ledger.postings.map(x => x.account + ' ' + (x.deltaMinor>0?'+':'') + '£' + (x.deltaMinor/100).toFixed(2)).join(' · ')}`
         : '✕ ' + (j.error || 'failed');

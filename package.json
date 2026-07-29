@@ -2,9 +2,12 @@
   "name": "joshrix-studio",
   "private": true,
   "description": "JOSHRIX Studio — Create Worlds. Build Games. Own the Future.",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
+    "stripe": "^22.3.2",
     "zod": "^3.25.76"
   }
 }
