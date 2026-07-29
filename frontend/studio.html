@@ -501,8 +501,21 @@ walletReady = (async () => {
 let refundedForge = null;
 window.addEventListener('message', async (e) => {
   const d = e && e.data;
-  if (!d || d.__jx !== 'renderfail') return;
-  if (!(realBuild && realBuild.forgeId) || refundedForge === realBuild.forgeId) return;
+  if (!d || d.__jx !== 'renderfail' || !realBuild) return;
+  // 1. never leave a broken frame on screen: swap to the guaranteed engine build
+  if (realBuild.fallbackHtml && !realBuild.__swapped) {
+    realBuild.__swapped = true;
+    realBuild.html = realBuild.fallbackHtml;   // playtest/publish/source all follow
+    const fr = document.getElementById('realGame');
+    if (fr) fr.srcdoc = prepGameHtml(realBuild.fallbackHtml);
+    const note = $('protoNote4');
+    if (note) {
+      note.style.display = 'block';
+      note.innerHTML = '⚠ <b>The bespoke AI build hit an error</b>, so the JOSHRIX engine build of your concept is playing instead — and your forge charge is being refunded. Refine Concept re-runs the bespoke build.';
+    }
+  }
+  // 2. money back for the failed bespoke build (single-use, server-verified)
+  if (!realBuild.forgeId || refundedForge === realBuild.forgeId) return;
   refundedForge = realBuild.forgeId;
   try {
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
@@ -515,7 +528,9 @@ window.addEventListener('message', async (e) => {
     const note = $('protoNote4');
     if (note && j && j.refunded) {
       note.style.display = 'block';
-      note.innerHTML = '✓ <b>Refunded ' + (j.amount || 300) + ' ACUs</b> — this build failed to render, so you were not charged for it. Press <b>Refine Concept</b> to forge again.';
+      note.innerHTML = realBuild.__swapped
+        ? '✓ <b>Refunded ' + (j.amount || 300) + ' ACUs.</b> The bespoke AI build failed, so the engine build of your concept is playing instead — free. Refine Concept re-runs the bespoke build.'
+        : '✓ <b>Refunded ' + (j.amount || 300) + ' ACUs</b> — this build failed to render, so you were not charged for it. Press <b>Refine Concept</b> to forge again.';
     }
   } catch (_) { /* refund is best-effort; the charge id stays claimable */ }
 });
@@ -792,7 +807,9 @@ async function renderPlaytest() {
     $('playCopyTitle').textContent = '🎮 Play Your Build — Live Now';
     $('playCopyBody').textContent = 'The game on the left is your real build, running right now and visible only to you. Controls are explained on the game\'s own title screen.';
     $('protoNote4').style.display = 'block';
-    $('protoNote4').innerHTML = '✦ <b>Real build:</b> AI designed this game from your concept and the JOSHRIX engine built it into a playable game — running right now. Not happy? Refine Concept re-designs it.';
+    $('protoNote4').innerHTML = realBuild.provider === 'claude'
+      ? '✦ <b>Bespoke build:</b> the Code Agent wrote this game from your concept, live. Not happy? Refine Concept regenerates it.'
+      : '✦ <b>Engine build:</b> AI designed this game from your concept and the JOSHRIX engine built it. The bespoke AI build was unavailable this run — Refine Concept retries it.';
     if (!realBuildCharged) {
       realBuildCharged = true;
       if (typeof realBuild.balanceAfter === 'number') syncBalance(realBuild.balanceAfter);

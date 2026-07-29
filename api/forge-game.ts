@@ -78,29 +78,42 @@ export default async function handler(req: any, res: any) {
   };
 
   try {
-    // The AI DESIGNS the game (blueprint); the deterministic JOSHRIX engine RENDERS
-    // it. This is the reliability fix: a one-shot AI HTML file can silently draw a
-    // background and stop, but the engine is fixed, tested code that always renders.
+    // Hybrid build — fidelity AND reliability:
+    //   1. The Code Agent writes the BESPOKE game from the creator's concept (the
+    //      game they actually described). This is what ships when it works.
+    //   2. The deterministic engine builds a guaranteed-playable fallback from the
+    //      blueprint. If the bespoke build fails to render client-side, the Studio
+    //      swaps to this fallback and auto-refunds — a blank screen is impossible.
     const bp = coerceBlueprint(blueprint, prompt, title, summary, language);
-    const html = buildPlayableGame(bp);
-    const provider = "engine";
-    if (!html.includes("<canvas")) {
-      await refund(false);
-      return res.status(502).json({ error: "Engine build failed to produce a canvas — charge refunded." });
-    }
-    // Single-use forge id so a build that somehow fails to RENDER on the client can
+    const engineHtml = buildPlayableGame(bp);
+    let html = engineHtml;
+    let provider = "engine";
+    let fallbackHtml: string | undefined;
+    try {
+      const ai = await generateGameHtml(prompt, { title, summary, language });
+      // only trust a REAL Claude build as the bespoke path (the keyless demo build
+      // is weaker than the engine, so the engine wins in that case)
+      if (ai.provider === "claude" && ai.html.includes("<canvas")) {
+        html = ai.html;
+        provider = "claude";
+        fallbackHtml = engineHtml;
+      }
+    } catch { /* Code Agent failed or timed out — the engine build ships instead */ }
+    // Single-use forge id so a build that fails to RENDER on the client can
     // auto-refund. Recorded only after a real charge, so a refund can't exceed the pay.
     let forgeId: string | undefined;
     if (sql && walletId && balanceAfter !== null) {
       forgeId = randomUUID();
       try { await recordForgeCharge(sql, forgeId, walletId, FORGE_GAME_ACU_CHARGE); } catch { forgeId = undefined; }
     }
-    return res.status(200).json({ html, provider, acuCharge: FORGE_GAME_ACU_CHARGE, ...(forgeId ? { forgeId } : {}), ...(balanceAfter !== null ? { balanceAfter } : {}) });
+    return res.status(200).json({
+      html, provider, acuCharge: FORGE_GAME_ACU_CHARGE,
+      ...(fallbackHtml ? { fallbackHtml } : {}),
+      ...(forgeId ? { forgeId } : {}),
+      ...(balanceAfter !== null ? { balanceAfter } : {}),
+    });
   } catch (err: any) {
     await refund(false);
     return res.status(502).json({ error: "Game build failed", detail: String(err?.message ?? err) });
   }
 }
-// generateGameHtml is retained for a future validated AI-code path; the engine is
-// the current reliable renderer. Reference it so the import is not flagged unused.
-void generateGameHtml;
