@@ -26,8 +26,12 @@ window.JOSHRIX_FOUNDER_LINKS = window.JOSHRIX_FOUNDER_LINKS || {
  * client keys are public by design — security lives in Firebase rules.
  * Until set, signup/login run in demo mode.
  */
-window.JOSHRIX_FIREBASE_CONFIG = window.JOSHRIX_FIREBASE_CONFIG || null;
-// window.JOSHRIX_FIREBASE_CONFIG = {
-//   apiKey: "...", authDomain: "your-project.firebaseapp.com",
-//   projectId: "your-project", appId: "1:...:web:..."
-// };
+window.JOSHRIX_FIREBASE_CONFIG = window.JOSHRIX_FIREBASE_CONFIG || {
+  apiKey: "AIzaSyBe64K4LZXGSJFuPQ7muXhHFXAAvWnacfo",
+  authDomain: "tradeconnect-tzm9l.firebaseapp.com",
+  projectId: "tradeconnect-tzm9l",
+  storageBucket: "tradeconnect-tzm9l.firebasestorage.app",
+  messagingSenderId: "867833032711",
+  appId: "1:867833032711:web:18aa35cd58fca5f0bbfaa2",
+  measurementId: "G-N64P209G6Y"
+};
