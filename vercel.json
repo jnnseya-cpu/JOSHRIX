@@ -3,11 +3,19 @@
   "cleanUrls": true,
   "outputDirectory": "frontend",
   "rewrites": [
-    { "source": "/play/:id", "destination": "/play.html?id=:id" }
+    { "source": "/play/:id", "destination": "/play.html?id=:id" },
+    { "source": "/blog/:slug", "destination": "/api/blog-html?slug=:slug" },
+    { "source": "/blog", "destination": "/blog.html" },
+    { "source": "/sitemap.xml", "destination": "/api/sitemap" },
+    { "source": "/feed.xml", "destination": "/api/rss" }
+  ],
+  "crons": [
+    { "path": "/api/blog-agent", "schedule": "0 9 * * *" }
   ],
   "functions": {
     "api/forge-game.ts": { "maxDuration": 60 },
-    "api/blueprint.ts": { "maxDuration": 60 }
+    "api/blueprint.ts": { "maxDuration": 60 },
+    "api/blog-agent.ts": { "maxDuration": 60 }
   },
   "headers": [
     {

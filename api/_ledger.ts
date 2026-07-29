@@ -224,6 +224,66 @@ export async function deleteWallet(sql: Sql, id: string): Promise<boolean> {
   return rows.length > 0;
 }
 
+/* ---------------- Communication engine: delivery log ---------------- */
+
+export async function ensureCommsSchema(sql: Sql) {
+  await sql`CREATE TABLE IF NOT EXISTS comms_deliveries (
+    id bigserial PRIMARY KEY,
+    event text NOT NULL,
+    channel text NOT NULL,
+    recipient text,
+    status text NOT NULL,
+    provider text,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`;
+}
+
+export async function saveDelivery(sql: Sql, d: { event: string; channel: string; recipient?: string | null; status: string; provider?: string | null }) {
+  await sql`INSERT INTO comms_deliveries (event, channel, recipient, status, provider)
+    VALUES (${d.event}, ${d.channel}, ${d.recipient ?? null}, ${d.status}, ${d.provider ?? null})`;
+}
+
+export async function listDeliveries(sql: Sql, limit = 40) {
+  return (await sql`SELECT event, channel, recipient, status, provider, created_at FROM comms_deliveries ORDER BY created_at DESC LIMIT ${limit}`) as any[];
+}
+
+/* ---------------- Content Agent: SEO blog on autopilot ---------------- */
+
+export async function ensureBlogSchema(sql: Sql) {
+  await sql`CREATE TABLE IF NOT EXISTS blog_posts (
+    slug text PRIMARY KEY,
+    title text NOT NULL,
+    description text NOT NULL,
+    keywords text,
+    excerpt text,
+    html text NOT NULL,
+    social jsonb,
+    topic text,
+    provider text,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`;
+}
+
+export async function saveBlogPost(sql: Sql, p: { slug: string; title: string; description: string; keywords?: string | null; excerpt?: string | null; html: string; social?: unknown; topic?: string | null; provider?: string | null }) {
+  await sql`INSERT INTO blog_posts (slug, title, description, keywords, excerpt, html, social, topic, provider)
+    VALUES (${p.slug}, ${p.title}, ${p.description}, ${p.keywords ?? null}, ${p.excerpt ?? null}, ${p.html}, ${JSON.stringify(p.social ?? null)}::jsonb, ${p.topic ?? null}, ${p.provider ?? null})
+    ON CONFLICT (slug) DO NOTHING`;
+}
+
+export async function getBlogPost(sql: Sql, slug: string) {
+  const rows = (await sql`SELECT slug, title, description, keywords, excerpt, html, social, topic, provider, created_at FROM blog_posts WHERE slug = ${slug}`) as any[];
+  return rows[0] ?? null;
+}
+
+export async function listBlogPosts(sql: Sql, limit = 100) {
+  return (await sql`SELECT slug, title, description, excerpt, created_at FROM blog_posts ORDER BY created_at DESC LIMIT ${limit}`) as any[];
+}
+
+export async function countBlogPosts(sql: Sql): Promise<number> {
+  const rows = (await sql`SELECT count(*) AS n FROM blog_posts`) as Array<{ n: string | number }>;
+  return Number(rows[0]?.n ?? 0);
+}
+
 /** All wallets, newest first — for the admin grants panel (key-gated at the endpoint). */
 export async function listWallets(sql: Sql, limit = 100) {
   return (await sql`SELECT id, balance, category, email, created_at FROM wallets ORDER BY created_at DESC LIMIT ${limit}`) as any[];

@@ -235,6 +235,113 @@
   });
 })();
 </script>
+<h2 class="jx reveal">Communication Engine <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— ONE EVENT ENGINE, EVERY MESSAGE</span></h2>
+<div class="reveal" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
+  <div id="commStats" style="display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1rem"></div>
+  <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;border-top:1px solid var(--stroke,#26263a);padding-top:1rem">
+    <b style="font-size:.8rem;letter-spacing:.08em">TEMPLATE QA</b>
+    <select id="commEvent" style="flex:1 1 260px;max-width:380px;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.55rem .8rem;color:inherit"></select>
+    <input id="commTo" type="email" placeholder="your@email.com" style="flex:1 1 180px;max-width:240px;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.55rem .8rem;color:inherit">
+    <button class="btn btn-ghost btn-sm" id="btnCommPreview">👁 Preview email</button>
+    <button class="btn btn-primary btn-sm" id="btnCommSend">✉ Send test to me</button>
+    <span id="commMsg" style="font-size:.85rem;color:var(--muted,#9d9db3)"></span>
+  </div>
+  <p style="font-size:.82rem;color:var(--muted,#9d9db3);margin:.7rem 0 0">Preview renders the branded email exactly as recipients receive it. Send test fires it live when RESEND_API_KEY is set; otherwise it's recorded in sandbox so the flow is always testable. Mandatory notices bypass user opt-outs.</p>
+  <div id="commCats" style="margin-top:1rem;display:grid;gap:.5rem"></div>
+  <div style="border-top:1px solid var(--stroke,#26263a);margin-top:1rem;padding-top:1rem">
+    <button class="btn btn-ghost btn-sm" id="btnCommLog">⟳ Recent deliveries</button>
+    <div id="commLog" style="display:grid;gap:.4rem;margin-top:.7rem;font-size:.82rem"></div>
+  </div>
+</div>
+<script>
+(function(){
+  var API = (window.JOSHRIX_API_BASE || '');
+  var $c = function(x){ return document.getElementById(x); };
+  function key(){ try { return sessionStorage.getItem('jx.modKey') || ''; } catch(e){ return ''; } }
+  function esc(s){ return String(s == null ? '' : s).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); }
+  var SEV = { info:'#9d9db3', success:'#4ade80', warning:'#fbbf24', critical:'#f87171' };
+  fetch(API + '/api/comms').then(function(r){ return r.json(); }).then(function(j){
+    var s = j.stats, chip = function(n, l){ return '<span style="border:1px solid var(--stroke,#26263a);border-radius:999px;padding:.35rem .8rem;font-size:.8rem"><b>' + n + '</b> ' + l + '</span>'; };
+    $c('commStats').innerHTML = chip(s.events, 'catalogue events') + chip(s.categories, 'categories') + chip(s.mandatory, 'mandatory notices')
+      + chip(s.channels.email, 'email') + chip(s.channels.inapp, 'in-app') + chip(s.channels.sms, 'sms') + chip(s.channels.push, 'push')
+      + chip(j.emailProvider, 'email provider');
+    var sel = $c('commEvent');
+    j.catalogue.forEach(function(c){
+      var og = document.createElement('optgroup'); og.label = c.name;
+      c.events.forEach(function(e){ var o = document.createElement('option'); o.value = e.id; o.textContent = e.name + ' — ' + e.id; og.appendChild(o); });
+      sel.appendChild(og);
+    });
+    $c('commCats').innerHTML = j.catalogue.map(function(c){
+      return '<details style="border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.6rem .9rem"><summary style="cursor:pointer;font-weight:600;font-size:.9rem">' + esc(c.name) + ' <span style="color:var(--muted,#9d9db3);font-weight:400">· ' + c.events.length + ' events</span></summary>'
+        + '<div style="display:grid;gap:.45rem;margin-top:.6rem">' + c.events.map(function(e){
+          return '<div style="display:flex;flex-wrap:wrap;gap:.4rem .8rem;align-items:center;font-size:.82rem">'
+            + '<span style="color:' + SEV[e.severity] + '">●</span><b>' + esc(e.name) + '</b>'
+            + (e.mandatory ? '<span style="border:1px solid rgba(248,113,113,.5);color:#f87171;border-radius:999px;padding:.05rem .5rem;font-size:.68rem">mandatory</span>' : '')
+            + '<code style="color:var(--muted,#9d9db3)">' + esc(e.id) + '</code>'
+            + '<span style="color:var(--muted,#9d9db3)">' + esc(e.subject) + '</span>'
+            + '<span style="margin-left:auto;color:var(--cyan,#22D3EE);font-size:.72rem">' + e.channels.join(' · ') + '</span></div>';
+        }).join('') + '</div></details>';
+    }).join('');
+  }).catch(function(){ $c('commStats').textContent = '⚠ Could not load the catalogue'; });
+  $c('btnCommPreview').addEventListener('click', function(){
+    window.open(API + '/api/comms?preview=' + encodeURIComponent($c('commEvent').value), '_blank', 'noopener');
+  });
+  $c('btnCommSend').addEventListener('click', function(){
+    var to = $c('commTo').value.trim();
+    if (!to) { $c('commMsg').textContent = 'Enter your email first.'; return; }
+    $c('commMsg').textContent = 'Firing…';
+    fetch(API + '/api/comms', { method:'POST', headers:{ 'Content-Type':'application/json', 'x-admin-key': key() },
+      body: JSON.stringify({ event: $c('commEvent').value, to: to }) })
+      .then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+      .then(function(res){
+        $c('commMsg').textContent = res.ok
+          ? '✓ ' + res.j.deliveries.map(function(d){ return d.channel + ':' + d.status; }).join(' · ')
+          : '⚠ ' + (res.j.error || 'failed');
+      }).catch(function(){ $c('commMsg').textContent = '⚠ Could not reach the engine'; });
+  });
+  $c('btnCommLog').addEventListener('click', function(){
+    fetch(API + '/api/comms?deliveries=1', { headers: { 'x-admin-key': key() } })
+      .then(function(r){ return r.json(); }).then(function(j){
+        var ds = j.deliveries || [];
+        $c('commLog').innerHTML = ds.length ? ds.map(function(d){
+          return '<div style="display:flex;gap:.8rem;flex-wrap:wrap;color:var(--muted,#9d9db3)"><code style="color:var(--cyan,#22D3EE)">' + esc(d.channel) + '</code><span>' + esc(d.event) + '</span><b style="color:' + (d.status === 'sent' ? '#4ade80' : '#9d9db3') + '">' + esc(d.status) + '</b><span>' + esc(d.provider || '') + ' · ' + new Date(d.created_at).toLocaleTimeString() + '</span></div>';
+        }).join('') : '<span style="color:var(--muted,#9d9db3)">No deliveries yet — fire a test above.</span>';
+      }).catch(function(){ $c('commLog').textContent = '⚠ Could not load deliveries'; });
+  });
+})();
+</script>
+<h2 class="jx reveal">Content Agent <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— SEO BLOG ON AUTOPILOT</span></h2>
+<div class="reveal" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
+  <p style="font-size:.88rem;color:var(--muted,#9d9db3);margin:0 0 .8rem">Publishes one SEO article a day automatically (Vercel Cron, 09:00 UTC) rotating a 14-topic editorial calendar, with dynamic internal links to live games. Every post is server-rendered with OpenGraph + JSON-LD, listed in <a href="/sitemap.xml" style="color:var(--cyan)">sitemap.xml</a> and <a href="/feed.xml" style="color:var(--cyan)">the RSS feed</a> — point Buffer/Zapier/IFTTT at the feed to auto-share each post to your social accounts.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">
+    <input id="blogTopic" placeholder="Optional custom topic (blank = next calendar topic)" style="flex:1 1 300px;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.55rem .8rem;color:inherit">
+    <button class="btn btn-primary btn-sm" id="btnWritePost">✍ Write &amp; Publish Now</button>
+    <a class="btn btn-ghost btn-sm" href="blog.html" target="_blank" rel="noopener">📰 View Blog</a>
+    <span id="blogMsg" style="font-size:.85rem;color:var(--muted,#9d9db3)"></span>
+  </div>
+</div>
+<script>
+(function(){
+  var API = (window.JOSHRIX_API_BASE || '');
+  document.getElementById('btnWritePost').addEventListener('click', function(){
+    var k = ''; try { k = sessionStorage.getItem('jx.modKey') || ''; } catch(e){}
+    var msg = document.getElementById('blogMsg');
+    var btn = document.getElementById('btnWritePost');
+    btn.disabled = true;
+    msg.textContent = 'The Content Agent is writing… (up to a minute)';
+    fetch(API + '/api/blog-agent', { method:'POST', headers:{ 'Content-Type':'application/json', 'x-admin-key': k },
+      body: JSON.stringify({ topic: document.getElementById('blogTopic').value.trim() || undefined }) })
+      .then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+      .then(function(res){
+        btn.disabled = false;
+        msg.innerHTML = res.ok
+          ? '✓ Published: <a href="' + res.j.url + '" target="_blank" rel="noopener" style="color:var(--cyan)">' + res.j.title + '</a> (' + res.j.provider + ')'
+          : '⚠ ' + (res.j.error || 'failed') + (res.j.detail ? ' — ' + res.j.detail : '');
+      })
+      .catch(function(){ btn.disabled = false; msg.textContent = '⚠ Could not reach the Content Agent'; });
+  });
+})();
+</script>
 <script>
 /* Real platform stats — loaded with the admin key once the bridge is unlocked. */
 (function(){
@@ -279,7 +386,7 @@
       <li><a href="arcade.html">Arcade</a></li><li><a href="marketplace.html">Marketplace</a></li><li><a href="ip-registry.html">IP Registry</a></li></ul></div>
     <div class="foot-col"><h4>Operators</h4><ul>
       <li><a href="studio.html">Start Forging</a></li><li><a href="docs.html">Docs</a></li>
-      <li><a href="showcase.html">Showcase</a></li><li><a href="enterprise.html">Enterprise</a></li>
+      <li><a href="blog.html">Blog</a></li><li><a href="showcase.html">Showcase</a></li><li><a href="enterprise.html">Enterprise</a></li>
       <li><a href="referrals.html">Partners</a></li><li><a href="embed-demo.html">Embed SDK</a></li></ul></div>
     <div class="foot-col"><h4>Studio</h4><ul>
       <li><a href="about.html">About</a></li><li><a href="careers.html">Careers</a></li>

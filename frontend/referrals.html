@@ -8,34 +8,28 @@
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Partner Programme — JOSHRIX Studio</title>
-<meta name="description" content="The JOSHRIX influencer and referral programme: bring your audience, earn up to 10% of first-year subscriptions plus a share of platform commission on referred sales.">
+<title>Growth Partner Programme — JOSHRIX Studio</title>
+<meta name="description" content="Grow JOSHRIX. Unlock rewards. Refer paying users, collect ACUs and privileges, then unlock 1% lifetime commission after 20 paid referrals — paid only on verified net revenue.">
 <link rel="stylesheet" href="assets/joshrix.css">
 <style>
 .tier-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.2rem;margin-top:2rem}
-.tier-card{border:1px solid var(--stroke);border-radius:16px;padding:1.6rem;background:rgba(22,22,42,.5);position:relative;transition:transform .3s,border-color .3s}
+.tier-card{border:1px solid var(--stroke);border-radius:16px;padding:1.6rem;background:rgba(22,22,42,.5);transition:transform .3s,border-color .3s}
 .tier-card:hover{transform:translateY(-4px);border-color:var(--stroke-bright)}
 .tier-card.hot{border-color:var(--stroke-bright);box-shadow:0 0 30px rgba(124,58,237,.25)}
 .tier-card h3{font-family:var(--mono);font-size:1rem;letter-spacing:.12em;text-transform:uppercase}
-.tier-card .share{font-family:var(--mono);font-weight:700;font-size:1.9rem;margin:.7rem 0 .2rem;
-  background:linear-gradient(90deg,var(--violet-hot),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
+.tier-card .share{font-family:var(--mono);font-weight:700;font-size:1.9rem;margin:.7rem 0 .2rem;background:linear-gradient(90deg,var(--violet-hot),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
 .tier-card .cond{font-family:var(--mono);font-size:.58rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
-.tier-card ul{list-style:none;margin-top:1rem;display:flex;flex-direction:column;gap:.45rem}
-.tier-card li{font-weight:500;color:var(--muted);padding-left:1.2rem;position:relative}
-.tier-card li::before{content:"✔";position:absolute;left:0;color:var(--green)}
-.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:1rem;margin-top:2rem}
-.step-c{border:1px solid var(--stroke);border-radius:12px;padding:1.2rem;background:rgba(255,255,255,.02)}
-.step-c b{font-family:var(--mono);font-size:.6rem;letter-spacing:.24em;color:var(--cyan)}
-.step-c p{margin-top:.5rem;font-weight:500;color:var(--muted);line-height:1.55}
-.dash{border:1px solid var(--stroke-bright);border-radius:16px;padding:1.6rem;background:rgba(8,8,16,.65);margin-top:2.4rem}
-.dash h3{font-family:var(--mono);font-size:.9rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:1rem}
-.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem}
-.dash-grid div b{display:block;font-family:var(--mono);font-size:.56rem;letter-spacing:.24em;color:var(--muted);text-transform:uppercase}
-.dash-grid div span{font-family:var(--mono);font-weight:700;font-size:1.35rem;background:linear-gradient(180deg,#fff,#B9A7F5);-webkit-background-clip:text;background-clip:text;color:transparent}
+.tier-card p{margin-top:1rem;color:var(--muted);font-weight:500;line-height:1.6;font-size:.95rem}
+.rulebox{border:1px solid var(--stroke);border-radius:14px;padding:1.4rem 1.5rem;background:rgba(255,255,255,.02);margin-top:1.4rem}
+.rulebox h3{font-family:var(--mono);font-size:.85rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:.7rem}
+.rulebox p,.rulebox li{color:var(--muted);font-weight:500;line-height:1.65;font-size:.95rem}
+.rulebox ul{padding-left:1.2rem;display:grid;gap:.35rem}
+.chips{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.6rem}
+.chips span{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;border:1px solid var(--stroke);border-radius:999px;padding:.35rem .8rem;color:var(--muted);text-transform:uppercase}
+.chips span.bad{border-color:rgba(248,113,113,.4);color:#f87171}
+.chips span.ok{border-color:rgba(74,222,128,.4);color:#4ade80}
 .codebox{display:flex;gap:.6rem;margin-top:1.2rem;flex-wrap:wrap}
-.codebox input{flex:1;min-width:220px;background:rgba(5,5,8,.55);border:1px solid var(--stroke);border-radius:8px;color:var(--cyan);
-  font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;padding:.7rem .9rem;outline:none}
-.fine{margin-top:1.4rem;color:var(--muted);font-weight:500;font-size:.92rem;line-height:1.6}
+.codebox input{flex:1;min-width:220px;background:rgba(5,5,8,.55);border:1px solid var(--stroke);border-radius:8px;color:var(--cyan);font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;padding:.7rem .9rem;outline:none}
 </style>
 </head>
 <body>
@@ -47,88 +41,113 @@
     <span class="word">JOSHRIX<em>STUDIO</em></span>
   </a>
   <ul class="nav-links">
-    <li><a href="showcase.html">Showcase</a></li>
+    <li><a href="blog.html">Blog</a></li><li><a href="showcase.html">Showcase</a></li>
     <li><a href="arcade.html">Arcade</a></li><li><a href="marketplace.html">Marketplace</a></li>
     <li><a href="wallet.html">Wallet</a></li>
     <li><a href="pricing.html">Pricing</a></li>
   </ul>
   <div class="nav-right">
-    <a class="btn btn-primary btn-sm" href="signup.html">Become a Partner</a>
+    <a class="btn btn-primary btn-sm" href="signup.html">Join the Programme</a>
   </div>
 </nav>
 <main class="jx">
   <div class="page-hero reveal">
-    <div class="sec-tag">Influencer &amp; Referral Programme</div>
-    <h1 class="jx">Bring Your Audience. <span class="grad">Own The Upside.</span></h1>
-    <p class="lede">Players follow people, not polygons. Share your code — your audience gets bonus ACUs, and you earn a share of everything they spend in their first year, paid into the same wallet as your game earnings.</p>
+    <div class="sec-tag">Growth Partner Programme</div>
+    <h1 class="jx">Grow JOSHRIX. <span class="grad">Unlock Rewards.</span></h1>
+    <p class="lede">Earn for real growth. Refer paying users, collect ACUs and privileges, then unlock <b>1% lifetime commission</b> after 20 paid referrals. This is not a loose referral scheme — it is a controlled growth engine: cash commission unlocks only after real paid growth, and is paid solely on verified net revenue, with no monthly cap — up to £20,000 lifetime per customer.</p>
   </div>
 
-  <div class="steps reveal">
-    <div class="step-c"><b>STEP 01</b><p>Claim your code and link — <span style="color:var(--cyan)">joshrix.com/?ref=JX-YOU</span>. Drop it in a bio, a video, a stream, a group chat.</p></div>
-    <div class="step-c"><b>STEP 02</b><p>Everyone who joins through it gets <b style="color:var(--text)">+100 promotional ACUs</b> — a real head start, on us.</p></div>
-    <div class="step-c"><b>STEP 03</b><p>When they subscribe, you earn <b style="color:var(--text)">5–10% of their first year</b> — released after the 14-day refund window.</p></div>
-    <div class="step-c"><b>STEP 04</b><p>Withdraw through your wallet — same rails as game earnings: bank, BitriPay, mobile money.</p></div>
-  </div>
+  <h2 class="jx reveal">The Reward Ladder</h2>
+  <table class="jx reveal"><thead><tr><th>Paid referrals</th><th>Status</th><th>Reward</th></tr></thead><tbody>
+    <tr><td>1</td><td><b>Starter</b></td><td>ACU bonus</td></tr>
+    <tr><td>5</td><td><b>Connector</b></td><td>More ACUs + badge</td></tr>
+    <tr><td>10</td><td><b>Builder</b></td><td>Premium feature access</td></tr>
+    <tr><td>20</td><td><b>Verified Growth Referrer</b></td><td>🔓 Unlock 1% lifetime commission</td></tr>
+    <tr><td>50</td><td><b>Power Referrer</b></td><td>Higher privileges</td></tr>
+    <tr><td>100</td><td><b>Elite Referrer</b></td><td>Partner status</td></tr>
+  </tbody></table>
 
   <div class="tier-grid reveal">
     <div class="tier-card">
-      <h3>Partner</h3><span class="share">5%</span>
-      <div class="cond">From your first referral</div>
-      <ul><li>Personal code + link</li><li>+100 promo ACUs per activated referral</li><li>Partner badge on your profile</li></ul>
+      <h3>Normal Referrer</h3><span class="share">ACUs</span>
+      <div class="cond">From your first paid referral</div>
+      <p>ACUs, badges, feature privileges, priority support, early access and status upgrades. <b>No cash until 20 paid referrals</b> — rewards first, commission earned.</p>
     </div>
     <div class="tier-card hot">
-      <h3>Rising Icon</h3><span class="share">7.5%</span>
-      <div class="cond">25+ activated referrals</div>
-      <ul><li>1% of platform commission on referred sales</li><li>Showcase feature placement</li><li>Early access to new agents</li></ul>
+      <h3>Verified Growth Referrer</h3><span class="share">1%</span>
+      <div class="cond">Unlocked after 20 paid referrals</div>
+      <p><b>1% lifetime commission</b> on your referrals' verified net revenue — no monthly cap, £20,000 lifetime cap per customer. Fraud checks, refund deductions and KYC apply.</p>
     </div>
     <div class="tier-card">
-      <h3>JOSHRIX Icon</h3><span class="share">10%</span>
-      <div class="cond">100+ activated referrals</div>
-      <ul><li>2% of platform commission on referred sales</li><li>Co-marketing campaigns</li><li>Dedicated partner manager</li></ul>
+      <h3>Approved Influencer</h3><span class="share">1%</span>
+      <div class="cond">Immediately · by application</div>
+      <p><b>1% lifetime commission from day one</b> on verified net revenue — no monthly cap, £20,000/customer lifetime cap, strict fraud and quality checks. Apply via the <a href="contact.html" style="color:var(--cyan)">contact page</a>.</p>
     </div>
   </div>
 
-  <div class="dash reveal">
-    <h3>Your Partner Dashboard (live demo)</h3>
-    <div class="dash-grid">
-      <div><b>Clicks</b><span id="rClicks">1,240</span></div>
-      <div><b>Signups</b><span id="rSign">86</span></div>
-      <div><b>Activated</b><span id="rAct">31</span></div>
-      <div><b>Tier</b><span id="rTier">RISING</span></div>
-      <div><b>Earned</b><span id="rEarn">£195.90</span></div>
-      <div><b>On Hold</b><span id="rHold">£24.50</span></div>
+  <div class="rulebox reveal">
+    <h3>💷 Margin Protection — What Pays</h3>
+    <p>Commission is paid only on <b>Verified Net Revenue</b> = customer payment received − VAT/tax − payment fees − refunds − chargebacks − discounts − credits − free ACUs − promotional value − fraud deductions.</p>
+    <p style="margin-top:.6rem"><b>Never on:</b></p>
+    <div class="chips">
+      <span class="bad">free users</span><span class="bad">free trials</span><span class="bad">free ACUs</span><span class="bad">refunded payments</span><span class="bad">failed payments</span><span class="bad">chargebacks</span><span class="bad">self-referrals</span><span class="bad">existing customers</span><span class="bad">duplicate accounts</span><span class="bad">fake users</span><span class="bad">abusive users</span><span class="bad">internal accounts</span>
     </div>
+  </div>
+
+  <div class="rulebox reveal">
+    <h3>🛡 Anti-Fraud &amp; Payouts</h3>
+    <p>Every referral carries a <b>JOSHRIX Trust Score</b>; signals like same device, same IP, same payment card, same bank details and VPN abuse hold or block it.</p>
+    <p style="margin-top:.5rem">Reward path: <b style="color:var(--green)">Pending → Verified → Approved → Paid</b> · Risk path: <b style="color:#f87171">Held → Rejected → Reversed</b></p>
+    <ul style="margin-top:.7rem">
+      <li>£25 minimum payout · 30–45 day validation window · KYC required before any cash payout</li>
+      <li>Chargebacks are deducted from future earnings</li>
+      <li>Manual review above £1,000 · executive approval above £5,000</li>
+      <li>Account suspension for fraud — no exceptions</li>
+    </ul>
+  </div>
+
+  <div class="rulebox reveal" style="border-color:var(--stroke-bright)">
+    <h3>🔗 Claim Your Partner Link</h3>
+    <p>Your link attributes every signup and payment to you. Rewards begin at your first <b>paid</b> referral.</p>
     <div class="codebox">
-      <input id="refLink" readonly value="https://joshrix.com/?ref=JX-JUSTIN">
-      <button class="btn btn-primary" id="btnRefCopy">⧉ Copy My Link</button>
+      <input id="refHandle" maxlength="24" placeholder="your-handle" style="max-width:200px;color:var(--text)">
+      <input id="refLink" readonly placeholder="https://www.joshrix.com/?ref=JX-YOU">
+      <button class="btn btn-primary" id="btnRefMake">⚡ Create Link</button>
+      <button class="btn btn-ghost" id="btnRefCopy">⧉ Copy</button>
     </div>
+    <p class="hint" id="refMsg" style="margin-top:.6rem"></p>
   </div>
 
-  <p class="fine reveal">Fair-play rules: commission is paid only after the refund period · self-referral is blocked (account, payment method and device heuristics) · fraud detection runs on every activation · earnings share applies to the first 12 months of each referred subscription · marketplace fee share comes from the <b>platform's</b> commission, never from a creator's earnings. Full terms in the partner agreement.</p>
+  <p class="reveal" style="color:var(--muted);font-weight:500;font-size:.92rem;line-height:1.65;margin-top:1.6rem">Summary: normal users earn ACUs and privileges first. After 20 verified paid referrals, they unlock 1% lifetime commission. Approved influencers earn 1% immediately. There is no monthly cap; commissions are limited only by a £20,000 lifetime cap per customer and are paid solely on verified net revenue after strict fraud, refund and abuse checks. Full terms in the partner agreement.</p>
 </main>
-<footer class="jx"><p>© 2026 JOSHRIX Studio — Partner Programme. Create Worlds. Build Games. Own the Future.</p></footer>
+<div class="foot-base" style="justify-content:center;gap:1.4rem;display:flex;flex-wrap:wrap;padding:1.5rem">
+  <span>© 2026 JOSHRIX Studio</span>
+  <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a>
+</div>
 <script src="assets/config.js"></script>
 <script src="assets/site.js"></script>
 <script>
 (() => {
 const $ = id => document.getElementById(id);
+$('btnRefMake').addEventListener('click', async () => {
+  const handle = $('refHandle').value.trim();
+  if (!handle) { $('refMsg').textContent = 'Choose a handle first (letters, numbers, dashes).'; return; }
+  $('refMsg').textContent = 'Creating…';
+  try {
+    const r = await fetch((window.JOSHRIX_API_BASE || '') + '/api/referrals', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ handle }), signal: AbortSignal.timeout(8000)
+    });
+    const j = await r.json();
+    if (r.ok && j.link) { $('refLink').value = j.link; $('refMsg').textContent = '✓ Link ready — attribution activates as tracking goes live.'; }
+    else $('refMsg').textContent = '⚠ ' + (j.error || 'Could not create the link');
+  } catch (e) { $('refMsg').textContent = '⚠ Could not reach the server.'; }
+});
 $('btnRefCopy').addEventListener('click', () => {
-  $('btnRefCopy').textContent = '✓ Copied';
-  setTimeout(() => { $('btnRefCopy').textContent = '⧉ Copy My Link'; }, 1600);
-  try { navigator.clipboard.writeText($('refLink').value); }
+  if (!$('refLink').value) { $('refMsg').textContent = 'Create your link first.'; return; }
+  try { navigator.clipboard.writeText($('refLink').value); $('btnRefCopy').textContent = '✓ Copied'; setTimeout(() => { $('btnRefCopy').textContent = '⧉ Copy'; }, 1600); }
   catch (e) { $('refLink').select(); document.execCommand('copy'); }
 });
-fetch((window.JOSHRIX_API_BASE || '') + '/api/referrals', { signal: AbortSignal.timeout(6000) })
-  .then(r => r.json()).then(d => {
-    const b = d.dashboard;
-    $('rClicks').textContent = b.clicks.toLocaleString();
-    $('rSign').textContent = b.signups;
-    $('rAct').textContent = b.activated;
-    $('rTier').textContent = b.tier.toUpperCase();
-    $('rEarn').textContent = '£' + (b.earnedMinor / 100).toFixed(2);
-    $('rHold').textContent = '£' + (b.onHoldMinor / 100).toFixed(2);
-    $('refLink').value = b.link;
-  }).catch(() => {});
 })();
 </script>
 </body>
