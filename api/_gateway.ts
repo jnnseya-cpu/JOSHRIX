@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-29.33";
+export const BUILD_ID = "2026-07-29.34";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -152,26 +152,71 @@ POLISH BAR (all of these, not some):
 SIZE: 900-1500 lines. Use the space for gameplay depth and polish — more enemy behaviours, more levels, better feedback. Never pad; never truncate the file.
 ${RUNTIME_SAFETY}`;
 
-const GAME_SYSTEM_3D = `You are the JOSHRIX Code Agent. Generate a COMPLETE HTML5 **3D** game as ONE html file using three.js, implementing the creator's concept faithfully in real 3D. This is a PREMIUM COMMERCIAL product — it must look and feel like a real 3D game, never a tech demo.
+const GAME_SYSTEM_3D = `You are the JOSHRIX Code Agent. Generate a COMPLETE HTML5 **3D** game as ONE html file using three.js, implementing the creator's concept faithfully in real 3D. This is an ULTRA-PREMIUM COMMERCIAL product — it must look like a cinematic, high-production 3D game. Never a tech demo, never floating primitives on a flat plane.
 THREE.JS SETUP (the ONLY allowed external resource — include this exact tag first in <head>):
 <script src="https://www.joshrix.com/assets/vendor/three.min.js"><\/script>
-This is three.js r147 UMD: the global THREE. NO ES modules, NO import statements, NO addons (OrbitControls etc. are NOT available — write your own camera logic).
-HARD REQUIREMENTS:
-- Real 3D scene: THREE.PerspectiveCamera, lighting rig (ambient + directional minimum), THREE.Fog for depth, MeshStandardMaterial with sensible metalness/roughness, a ground/environment that builds the concept's WORLD from primitive geometry composition (cones+cylinders make trees, boxes make buildings — compose recognisable objects, not floating cubes).
-- Player-controlled entity with smooth eased movement; camera follows with lag/lookAt. Collisions via distance checks.
-- Works with BOTH touch (drag) and mouse + arrow/WASD keys. window resize handler; renderer.setPixelRatio(Math.min(devicePixelRatio,2)); antialias:true.
-- HUD as DOM overlay divs (position:fixed) over the WebGL canvas: score, lives/health, level name. Animated title overlay with START button -> gameplay -> win/lose overlay with restart. A pause button.
-- Rising difficulty. 3-8 minute session. Particle bursts (THREE.Points or small meshes) on important events. Subtle idle animations everywhere (bobbing, rotation, pulsing emissive).
-- Procedural WebAudio SFX + mute button; AudioContext only on first user gesture.
+This is three.js r147 UMD: the global THREE. NO ES modules, NO import statements, NO addons (OrbitControls/EffectComposer/GLTFLoader are NOT available — write your own camera logic; build all assets procedurally).
+VISUAL FIDELITY BAR (all of these — this is what the creator is paying premium for):
+- Full lighting rig: THREE.HemisphereLight (sky/ground colours) + directional key light WITH SHADOWS (renderer.shadowMap.enabled=true, type=THREE.PCFSoftShadowMap; castShadow/receiveShadow on meshes; tune shadow.camera bounds + mapSize 2048) + coloured accent point lights. THREE.Fog or FogExp2 matched to the sky for atmospheric depth.
+- A real SKY: large inverted sphere or scene.background gradient via procedural CanvasTexture — sun/moon disc, stars or clouds as fits the concept. Never a flat colour void.
+- PROCEDURAL TEXTURES: use CanvasTexture (draw noise, stripes, grain, windows, bark, rock mottling onto an offscreen canvas) on MeshStandardMaterial with tuned roughness/metalness — surfaces must look like material, not plastic. Emissive maps for glow (crystals, windows at night, lava).
+- A COMPOSED WORLD with density: build recognisable structures from grouped primitives (THREE.Group) — trees with layered canopies, buildings with window textures, rocks from distorted geometry (displace vertices with noise), terrain from a displaced PlaneGeometry. Scatter background detail with THREE.InstancedMesh (hundreds of grass tufts/trees/rubble instances) so the world feels FULL to the horizon.
+- MOTION EVERYWHERE: idle bobbing, foliage sway, water shimmer (animated vertex displacement), rotating/pulsing collectables, particle systems (THREE.Points with additive blending) for magic/dust/rain/sparks, squash-and-stretch or tilt on the player.
+- CINEMATIC CAMERA: slow orbit or dolly on the title screen; smooth lagged follow with lookAt during play; subtle screen shake on impacts; a brief victory orbit on win.
+- Colour grading feel: choose a cohesive palette, use fog + light colours together, add a subtle CSS vignette overlay div for depth.
+GAME REQUIREMENTS:
+- Player-controlled entity with smooth eased movement; collisions via distance checks. Works with BOTH touch (drag) and mouse + arrow/WASD keys. window resize handler; renderer.setPixelRatio(Math.min(devicePixelRatio,2)); antialias:true.
+- HUD as styled DOM overlay divs (position:fixed) over the WebGL canvas: score, lives/health, level name — styled to match the game's identity. Animated title overlay with START -> gameplay -> win/lose overlay with restart. A pause button.
+- Rising difficulty across the blueprint's levels. 3-8 minute session. Distinct enemy behaviours (patrol, chase, ambush — not one clone).
+- Procedural WebAudio sound design: distinct SFX per event + ambient bed + mute button; AudioContext only on first user gesture.
 - All player-facing text in the creator's language. Age-appropriate. No real brands or licensed characters.
 - If typeof THREE === "undefined" after the script tag, write a visible message into the page and stop cleanly (no throw loop).
-SIZE: 900-1600 lines. Spend it on world detail, enemy behaviour and polish.
+PERFORMANCE: target 60fps on mobile — InstancedMesh over many meshes, cap shadow casters, reuse geometries/materials, no per-frame allocations in the loop.
+SIZE: 1400-2200 lines. Spend every line on world density, material quality and polish. Never truncate the file.
+${RUNTIME_SAFETY}`;
+
+const ENHANCE_SYSTEM = `You are the JOSHRIX Polish Agent. You receive a COMPLETE working HTML game file (2D canvas or three.js 3D). Return an UPGRADED version of the SAME game as ONE html file: identical core gameplay and controls, dramatically higher production value.
+RAISE (as applicable): lighting & shadows, procedural-texture material quality, world density (more composed/instanced detail), particle richness, animation polish (easing, squash-stretch, idle motion), sky/atmosphere, HUD styling, sound design depth, camera cinematics, difficulty curve fairness, and any creator notes provided.
+PRESERVE: the game's title, language, mechanics, win/lose flow, mobile+desktop controls, and the three.js script tag if present (it is the only allowed external resource; for 2D files external resources stay forbidden).
+Fix any bugs you notice. Never remove features. Output must be the COMPLETE file — never a diff, never truncated.
 ${RUNTIME_SAFETY}`;
 
 export const FORGE_GAME_ACU_CHARGE = 300;       // HOLD (2D estimate) — settled to metered 4x actual
 export const FORGE_GAME_3D_ACU_CHARGE = 1200;   // HOLD (3D estimate) — settled to metered 4x actual
 export const FORGE_MIN_CHARGE = 40;             // metered floor when the Code Agent ran
 export const ENGINE_BUILD_CHARGE = 60;          // flat platform charge when only the engine built
+export const ENHANCE_HOLD = 500;                // HOLD per enhance pass — settled to metered 4x actual
+
+/** Polish Agent: take a working build and raise its production value. Each pass is
+ *  metered at 4x — creators stack passes without limit to push fidelity ever higher. */
+export async function enhanceGameHtml(
+  html: string,
+  opts: { notes?: string; language?: string } = {},
+): Promise<{ html: string; provider: string; usage?: TokenUsage }> {
+  if (!process.env.ANTHROPIC_API_KEY) return { html, provider: "demo" };
+  const anthropic = new Anthropic();
+  const stream = anthropic.messages.stream({
+    model: "claude-sonnet-5",
+    max_tokens: 26000,
+    system: ENHANCE_SYSTEM,
+    messages: [{
+      role: "user",
+      content: `Creator's enhancement notes: ${opts.notes?.slice(0, 2000) || "(none — apply your full fidelity bar)"}\nLanguage of player-facing text: ${opts.language && opts.language !== "auto" ? opts.language : "keep the file's current language"}\n\nCurrent game file:\n${html}`,
+    }],
+  });
+  const msg = await stream.finalMessage();
+  let text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
+  const start = text.indexOf("<!DOCTYPE");
+  const altStart = start === -1 ? text.indexOf("<html") : start;
+  if (altStart === -1) throw new Error("Polish Agent returned no HTML document");
+  text = text.slice(start === -1 ? altStart : start);
+  const end = text.lastIndexOf("</html>");
+  if (end !== -1) text = text.slice(0, end + 7);
+  return {
+    html: text, provider: "claude",
+    usage: { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens },
+  };
+}
 
 export async function generateGameHtml(
   prompt: string,
@@ -183,7 +228,7 @@ export async function generateGameHtml(
     // risk at large max_tokens) — the creator pays 4x the metered cost, whatever it is.
     const stream = anthropic.messages.stream({
       model: "claude-sonnet-5",   // Code Agent: fast frontier coder; Idea Agent stays on Opus
-      max_tokens: 20000,
+      max_tokens: opts.mode === "3d" ? 26000 : 20000,
       system: opts.mode === "3d" ? GAME_SYSTEM_3D : GAME_SYSTEM,
       messages: [{
         role: "user",

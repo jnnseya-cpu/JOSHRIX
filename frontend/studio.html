@@ -344,6 +344,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
           </div>
           <div class="actions">
             <button class="btn btn-primary" id="btnPub">🚀 Approve &amp; Publish</button>
+            <button class="btn btn-ghost" id="btnEnhance" type="button">✨ Enhance Build</button>
             <button class="btn btn-ghost" id="btnRefine">✎ Refine Concept</button>
             <button class="btn btn-ghost" id="btnViewSrc" type="button">⤓ View Build Source</button>
           </div>
@@ -697,7 +698,7 @@ $('btnForge').addEventListener('click', () => {
       const r = await fetch(base + '/api/forge-game', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ prompt: $('prompt').value, title: lastBp.title, summary: lastBp.summary, language: $('selLang').value, walletId: serverWalletId || undefined, blueprint: lastBp, mode: ($('chk3d') && $('chk3d').checked) ? '3d' : '2d' }),
-        signal: AbortSignal.timeout(280000)
+        signal: AbortSignal.timeout(295000)
       });
       const j = await r.json().catch(() => null);
       if (r.ok && j && j.html) { realBuild = j; }
@@ -860,6 +861,59 @@ $('btnRefine').addEventListener('click', () => {
   $('bpHint').textContent = 'Refine pass — Idea Agent reuses your blueprint · 2 ACUs';
   $('bpEst').textContent = '~275 ACUs · delta re-forge — unchanged systems reused, not rebuilt';
 });
+/* ✨ Enhance Build — the no-limits fidelity loop. Each pass sends the CURRENT
+   build to the Polish Agent and gets back the same game at higher production
+   value. Metered 4x per pass; stack as many passes as you like. The pre-enhance
+   build becomes the fallback, so a failed pass can never lose a working game. */
+let enhancing = false;
+$('btnEnhance').addEventListener('click', async () => {
+  if (!(realBuild && realBuild.html)) { alert('No real build yet — forge a game first.'); return; }
+  if (realBuild.provider !== 'claude') { alert('Enhance needs a bespoke AI build — press Refine Concept to forge one first.'); return; }
+  if (enhancing) return;
+  enhancing = true;
+  const btn = $('btnEnhance');
+  btn.disabled = true;
+  const note = $('protoNote4');
+  note.style.display = 'block';
+  const t0 = Date.now();
+  const etick = setInterval(() => {
+    note.innerHTML = '✨ <b>Polish Agent is raising your build\'s production value…</b> ' + Math.round((Date.now() - t0) / 1000) + 's — big passes take a few minutes. Metered: 4× the AI cost of the pass.';
+  }, 1000);
+  try {
+    const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
+    const r = await fetch(base + '/api/forge-enhance', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html: realBuild.html, walletId: serverWalletId || undefined, notes: $('prompt').value, language: $('selLang').value }),
+      signal: AbortSignal.timeout(295000)
+    });
+    const j = await r.json().catch(() => null);
+    clearInterval(etick);
+    if (r.ok && j && j.html) {
+      const prev = realBuild.html;
+      realBuild.fallbackHtml = prev;          // a broken enhance auto-swaps back to this
+      realBuild.__swapped = false;
+      realBuild.html = j.html;
+      realBuild.forgeId = j.forgeId || realBuild.forgeId;
+      refundedForge = null;
+      publishedGame = null;                    // enhanced build = new game to publish
+      const fr = document.getElementById('realGame');
+      if (fr) fr.srcdoc = prepGameHtml(j.html);
+      if (typeof j.balanceAfter === 'number') syncBalance(j.balanceAfter);
+      note.innerHTML = '✨ <b>Enhanced.</b> This pass cost <b>' + (j.acuCharge || '?') + ' ACUs</b> (4× its metered AI cost — unused hold refunded). Not enough? Press Enhance again to stack another pass — there is no limit.';
+      jxTrack('forge.enhanced', { charge: j.acuCharge });
+    } else {
+      note.innerHTML = '⚠ Enhance pass failed' + (j && j.error ? ': <b>' + j.error + '</b>' : '') + ' — your current build is untouched and the hold was refunded.';
+      if (j && typeof j.balanceAfter === 'number') syncBalance(j.balanceAfter);
+    }
+  } catch (e) {
+    clearInterval(etick);
+    note.innerHTML = '⚠ Enhance pass timed out or went offline — your current build is untouched.';
+  } finally {
+    enhancing = false;
+    btn.disabled = false;
+  }
+});
+
 // View Build Source — opens the exact generated game HTML in a new tab, so a
 // blank playtest can always be diagnosed (and the creator can see they own real code)
 $('btnViewSrc').addEventListener('click', () => {

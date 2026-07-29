@@ -14,6 +14,7 @@
   ],
   "functions": {
     "api/forge-game.ts": { "maxDuration": 300 },
+    "api/forge-enhance.ts": { "maxDuration": 300 },
     "api/blueprint.ts": { "maxDuration": 120 },
     "api/blog-agent.ts": { "maxDuration": 120 }
   },
