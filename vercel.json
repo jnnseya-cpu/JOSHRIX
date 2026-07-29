@@ -3,7 +3,7 @@
   "cleanUrls": true,
   "outputDirectory": "frontend",
   "functions": {
-    "api/forge-game.ts": { "maxDuration": 300 },
+    "api/forge-game.ts": { "maxDuration": 60 },
     "api/blueprint.ts": { "maxDuration": 60 }
   },
   "headers": [

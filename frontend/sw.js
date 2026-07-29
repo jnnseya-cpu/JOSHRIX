@@ -4,7 +4,7 @@
  * cache-first for versioned static assets; network-first with cache
  * fallback for pages, so the app opens instantly and survives offline.
  */
-const VERSION = 'jx-v1';
+const VERSION = 'jx-v2';
 const CORE = [
   '/index.html', '/studio.html', '/play3d.html', '/wallet.html', '/pricing.html',
   '/assets/joshrix.css', '/assets/site.js', '/assets/config.js', '/manifest.webmanifest',

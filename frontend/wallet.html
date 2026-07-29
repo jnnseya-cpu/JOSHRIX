@@ -158,7 +158,17 @@ const applyLocalAcu = () => {
     const p = JSON.parse(localStorage.getItem('jx.profile') || '{}');
     if (p.testerAcuGranted) {
       $('wAcu').textContent = (p.acu || 0).toLocaleString();
-      $('wAcuCat').textContent = '🧪 tester grant · ' + (p.acu || 0).toLocaleString() + ' ACUs on this device';
+      $('wAcuCat').innerHTML = '🧪 tester grant · <a href="#" id="btnRefill" style="color:var(--cyan)">refill to 2,000</a>';
+      const rf = document.getElementById('btnRefill');
+      if (rf && !rf.dataset.wired) {
+        rf.dataset.wired = '1';
+        rf.addEventListener('click', (e) => {
+          e.preventDefault();
+          const prof = JSON.parse(localStorage.getItem('jx.profile') || '{}');
+          prof.acu = 2000; localStorage.setItem('jx.profile', JSON.stringify(prof));
+          $('wAcu').textContent = '2,000';
+        });
+      }
     }
   } catch (e) { /* no local profile */ }
 };

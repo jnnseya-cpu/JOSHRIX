@@ -1,13 +1,14 @@
 /**
  * GET /api/health — deployment + provider readiness (booleans only, never key material).
  */
-import { providerStatus } from "./_gateway";
+import { providerStatus, BUILD_ID } from "./_gateway";
 
 export default function handler(_req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.status(200).json({
     ok: true,
     service: "joshrix-studio",
+    build: BUILD_ID,
     layers: { frontend: "static /frontend", backend: "serverless /api", shared: "shared/contracts.ts" },
     providers: providerStatus(),
     ledger: !!(process.env.DATABASE_URL || process.env.POSTGRES_URL),
