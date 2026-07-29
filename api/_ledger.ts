@@ -149,6 +149,7 @@ export async function ensureGameSchema(sql: Sql) {
     created_at timestamptz NOT NULL DEFAULT now()
   )`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT 'explorer'`;
+  await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS name text`;
   await sql`CREATE TABLE IF NOT EXISTS dist_requests (
     id bigserial PRIMARY KEY,
     game_id text,
@@ -162,8 +163,13 @@ export async function ensureGameSchema(sql: Sql) {
   )`;
 }
 
-export async function createWallet(sql: Sql, id: string, balance: number, category: string, email?: string | null) {
-  await sql`INSERT INTO wallets (id, balance, category, email) VALUES (${id}, ${balance}, ${category}, ${email ?? null}) ON CONFLICT (id) DO NOTHING`;
+export async function createWallet(sql: Sql, id: string, balance: number, category: string, email?: string | null, name?: string | null) {
+  await sql`INSERT INTO wallets (id, balance, category, email, name) VALUES (${id}, ${balance}, ${category}, ${email ?? null}, ${name ?? null}) ON CONFLICT (id) DO NOTHING`;
+}
+
+/** Keep the human identity fresh — set name/email whenever the client knows them. */
+export async function updateWalletIdentity(sql: Sql, id: string, opts: { name?: string | null; email?: string | null }) {
+  await sql`UPDATE wallets SET name = COALESCE(${opts.name ?? null}, name), email = COALESCE(${opts.email ?? null}, email) WHERE id = ${id}`;
 }
 
 /** Refill is TESTER wallets only — real balances only move via Stripe settlement. */
@@ -299,7 +305,7 @@ export async function countBlogPosts(sql: Sql): Promise<number> {
 
 /** All wallets, newest first — for the admin grants panel (key-gated at the endpoint). */
 export async function listWallets(sql: Sql, limit = 100) {
-  return (await sql`SELECT id, balance, category, email, plan, created_at FROM wallets ORDER BY created_at DESC LIMIT ${limit}`) as any[];
+  return (await sql`SELECT id, balance, category, email, name, plan, created_at FROM wallets ORDER BY created_at DESC LIMIT ${limit}`) as any[];
 }
 
 /** Real platform counters for the admin bridge (key-gated at the endpoint). */

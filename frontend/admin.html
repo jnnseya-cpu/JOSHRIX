@@ -210,8 +210,8 @@
           var row = document.createElement('div');
           row.style.cssText = 'display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.6rem .9rem';
           var PLAN_IDS = ['explorer','creator','creator_pro','studio','business','enterprise'];
-          row.innerHTML = '<code style="font-size:.8rem;color:var(--cyan,#22D3EE)">' + esc(w.id) + '</code>'
-            + '<span style="font-size:.78rem;color:var(--muted,#9d9db3)">' + esc(w.category) + (w.email ? ' · ' + esc(w.email) : '') + '</span>'
+          row.innerHTML = '<b style="min-width:110px">' + esc(w.name || (w.email ? w.email.split('@')[0] : 'Unnamed')) + '</b>'
+            + '<span style="font-size:.78rem;color:var(--muted,#9d9db3)">' + esc(w.category) + (w.email ? ' · ' + esc(w.email) : '') + ' · <code style="color:var(--cyan,#22D3EE)">' + esc(w.id) + '</code></span>'
             + '<select class="wplan" style="background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.35rem .5rem;color:inherit;font-size:.78rem">'
             + PLAN_IDS.map(function(p){ return '<option value="' + p + '"' + ((w.plan || 'explorer') === p ? ' selected' : '') + '>' + p.replace('_', ' ') + '</option>'; }).join('') + '</select>'
             + '<button class="btn btn-ghost btn-sm wsetplan">Set plan</button>'

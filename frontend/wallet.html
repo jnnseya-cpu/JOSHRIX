@@ -198,7 +198,7 @@ const applyLocalAcu = (skipBalance) => {
       try { navigator.clipboard.writeText(prof.serverWalletId); $('wWidCopy').textContent = '✓ copied'; setTimeout(() => { $('wWidCopy').textContent = 'copy'; }, 1500); } catch (err) {}
     });
     fetch(API + '/api/wallet-init', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ walletId: prof.serverWalletId }), signal: AbortSignal.timeout(8000) })
+      body: JSON.stringify({ walletId: prof.serverWalletId, email: prof.email || undefined, name: prof.displayName || prof.handle || undefined }), signal: AbortSignal.timeout(8000) })
       .then(r => r.json()).then(j => {
         if (j && j.mode === 'live') {
           $('wAcu').textContent = Number(j.balance).toLocaleString();

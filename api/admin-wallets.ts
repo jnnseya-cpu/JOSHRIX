@@ -30,7 +30,7 @@ export default async function handler(req: any, res: any) {
 
     if (req.method === "GET") {
       const wallets = (await listWallets(sql)).map((w) => ({
-        id: w.id, balance: Number(w.balance), category: w.category, email: w.email, plan: w.plan ?? "explorer", createdAt: w.created_at,
+        id: w.id, balance: Number(w.balance), category: w.category, email: w.email, name: w.name ?? null, plan: w.plan ?? "explorer", createdAt: w.created_at,
       }));
       return res.status(200).json({ wallets, count: wallets.length });
     }
