@@ -25,7 +25,7 @@ export type TopupPackageId = (typeof TOPUP_PACKAGES)[number]["id"];
 
 /* ---------------- pay-in: subscription plans (MONETISATION §Plans) ---------- */
 export const PLANS = [
-  { id: "explorer", name: "Explorer", monthlyMinor: 0, monthlyAcu: 100, commission: null }, // cannot sell
+  { id: "explorer", name: "Explorer", monthlyMinor: 0, monthlyAcu: 0, commission: null }, // browse & play only — NO free AI, cannot sell
   { id: "creator", name: "Creator", monthlyMinor: 1_900, monthlyAcu: 380, commission: 0.25 },
   { id: "creator_pro", name: "Creator Pro", monthlyMinor: 4_900, monthlyAcu: 980, commission: 0.2 },
   { id: "studio", name: "Studio", monthlyMinor: 14_900, monthlyAcu: 2_980, commission: 0.15 },

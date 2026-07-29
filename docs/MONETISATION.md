@@ -85,7 +85,7 @@ For major publishers, governments, universities, and global businesses. **Adds:*
 
 | Plan | Monthly price | Monthly ACUs | Active projects | Seats | Marketplace commission |
 |---|---|---|---|---|---|
-| Explorer | £0 | 100 one-time | 1 | 1 | Cannot sell |
+| Explorer | £0 | **0 — no free AI, ever** | 0 (play/browse only) | 1 | Cannot sell |
 | Creator | £19 | 380 | 3 | 1 | 25% |
 | Creator Pro | £49 | 980 | 10 | 3 | 20% |
 | Studio | £149 | 2,980 | 50 | 10 | 15% |
@@ -95,6 +95,10 @@ For major publishers, governments, universities, and global businesses. **Adds:*
 ### Annual Subscription Model
 
 **Pay annually, receive 15% off.** The ACU allocation must remain exactly 20% of the amount actually paid — never allocate the full monthly ACU quota after discounting (that would push the ACU percentage above 20%). Example, Creator Pro: £588 standard annual → £499.80 discounted → £41.65 monthly recognised value → **833 ACUs/month** (or presented as 9,996 ACUs annually). ACUs may be released monthly to control provider spending and reduce refund risk.
+
+## The No-Free-AI Rule
+
+**No AI action is ever free on JOSHRIX.** Every forge, refine, asset or agent action is paid in ACUs, because every one of them has a real provider cost — giving AI away is giving margin away, and farming free accounts would turn generosity into a loss engine. What IS free: playing published games and browsing the marketplace (marginal cost ≈ 0.06p/session — these users are demand, not cost). The Explorer tier therefore carries **zero ACUs**; creation begins with the £5 ACU pack or any subscription. Promotional ACUs may exist only as **deliberate, budgeted campaigns** (referral bonuses, education grants) — never as a default entitlement — and remain steered toward low-cost internal actions per the bonus-ACU rule below.
 
 ## ACU Top-Up Packages
 
