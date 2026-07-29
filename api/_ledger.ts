@@ -148,6 +148,17 @@ export async function ensureGameSchema(sql: Sql) {
     email text,
     created_at timestamptz NOT NULL DEFAULT now()
   )`;
+  await sql`CREATE TABLE IF NOT EXISTS dist_requests (
+    id bigserial PRIMARY KEY,
+    game_id text,
+    lane text NOT NULL,
+    store text NOT NULL,
+    mode text,
+    email text,
+    wallet_id text,
+    status text NOT NULL DEFAULT 'queued',
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`;
 }
 
 export async function createWallet(sql: Sql, id: string, balance: number, category: string, email?: string | null) {
@@ -200,4 +211,16 @@ export async function listPendingGames(sql: Sql) {
 export async function setGameStatus(sql: Sql, id: string, status: "approved" | "rejected", note?: string | null): Promise<boolean> {
   const rows = (await sql`UPDATE games SET status = ${status}, reviewed_at = now(), review_note = ${note ?? null} WHERE id = ${id} RETURNING id`) as any[];
   return rows.length > 0;
+}
+
+/** Lane 1 — the Arcade: every approved game, most-played first. */
+export async function listApprovedGames(sql: Sql, limit = 60) {
+  return (await sql`SELECT id, title, summary, language, plays, created_at FROM games WHERE status = 'approved' ORDER BY plays DESC, created_at DESC LIMIT ${limit}`) as any[];
+}
+
+/** Lanes 2 & 3 — store-distribution requests join a queue the team works through. */
+export async function saveDistRequest(sql: Sql, r: { gameId?: string | null; lane: string; store: string; mode?: string | null; email?: string | null; walletId?: string | null }): Promise<number> {
+  const rows = (await sql`INSERT INTO dist_requests (game_id, lane, store, mode, email, wallet_id)
+    VALUES (${r.gameId ?? null}, ${r.lane}, ${r.store}, ${r.mode ?? null}, ${r.email ?? null}, ${r.walletId ?? null}) RETURNING id`) as Array<{ id: number }>;
+  return Number(rows[0].id);
 }

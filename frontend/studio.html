@@ -352,27 +352,43 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
             <div class="act"><button class="btn btn-ghost chan-btn" id="btnPwa">⚙ Enable PWA</button></div>
           </div>
           <div class="chan">
-            <span class="ic">🤖</span>
+            <span class="ic">🕹️</span>
             <div>
-              <h5>Android — Google Play <span class="pill" id="plAab">EXPORT</span></h5>
-              <p>No Google account needed — ship under the JOSHRIX Studios publisher account and we submit for you. Or export a signed .aab for your own Play Console.</p>
-              <select class="chan-sel" id="selAab">
-                <option value="joshrix">JOSHRIX publisher account — no developer fee, we submit</option>
-                <option value="own">My own Google Play Console ($25 one-time)</option>
+              <h5>JOSHRIX Arcade <span class="pill live" id="plArc">INCLUDED · FREE</span></h5>
+              <p><b>Lane 1 — instant mobile distribution.</b> The moment moderation approves your game it appears in the <a href="arcade.html" target="_blank" rel="noopener" style="color:var(--cyan)">JOSHRIX Arcade</a> — playable on any phone, tablet, or PC with zero store review per game. The same shelf ships inside the JOSHRIX Arcade apps on Google Play and the App Store, so your game reaches both stores without you touching either.</p>
+            </div>
+            <div class="act"><a class="btn btn-ghost chan-btn" href="arcade.html" target="_blank" rel="noopener">🕹 View Arcade</a></div>
+          </div>
+          <div class="chan">
+            <span class="ic">🏪</span>
+            <div>
+              <h5>Your Own Store Listing — JOSHRIX Publisher <span class="pill" id="plDed">PAID SERVICE</span></h5>
+              <p><b>Lane 2 — your game as its own app,</b> published under the JOSHRIX publisher account: we package it, file the store paperwork (privacy policy, data safety, content rating), submit, and handle every store question and update. Android £49 + £9/mo · iOS £99 + £14/mo (iOS slots are curated for games with traction — store policy). Pipeline: QUEUED → PACKAGING → SUBMITTED → IN STORE REVIEW → LIVE.</p>
+              <select class="chan-sel" id="selDed">
+                <option value="android">Google Play — £49 one-time + £9/month</option>
+                <option value="ios">App Store — £99 one-time + £14/month (curated)</option>
+                <option value="both">Both stores</option>
               </select>
-              <button class="btn btn-ghost chan-btn chan-go" id="btnAab">🚀 Submit via JOSHRIX</button>
+              <button class="btn btn-ghost chan-btn chan-go" id="btnDed">🚀 Join Distribution Queue</button>
+              <p class="hint" id="dedStatus" style="margin-top:.4rem"></p>
             </div>
           </div>
           <div class="chan">
-            <span class="ic">🍎</span>
+            <span class="ic">🔑</span>
             <div>
-              <h5>iOS — App Store <span class="pill" id="plIos">EXPORT</span></h5>
-              <p>No Apple account needed — ship under the JOSHRIX Studios Apple Developer account; we handle TestFlight and review. Or export an .ipa for your own account.</p>
-              <select class="chan-sel" id="selIos">
-                <option value="joshrix">JOSHRIX publisher account — no developer fee, we submit</option>
-                <option value="own">My own Apple Developer account ($99/yr)</option>
+              <h5>Your Own Developer Account <span class="pill" id="plOwn">YOU OWN THE LISTING</span></h5>
+              <p><b>Lane 3 — you hold the store account</b> (Google $25 one-time / Apple $99 a year, paid to them). Either take a signed, store-ready build + completed listing pack and upload it yourself (£29 per store, free at Creator Pro and above), or connect your developer console once and publish + update with one click from your dashboard (£9/month, included at Studio tier).</p>
+              <select class="chan-sel" id="selOwnStore">
+                <option value="android">Google Play</option>
+                <option value="ios">App Store</option>
+                <option value="both">Both stores</option>
               </select>
-              <button class="btn btn-ghost chan-btn chan-go" id="btnIos">🚀 Submit via JOSHRIX</button>
+              <select class="chan-sel" id="selOwnMode">
+                <option value="export">Export pack — I upload it myself (£29/store, free Creator Pro+)</option>
+                <option value="connected">Connected publishing — one click from my dashboard (£9/mo)</option>
+              </select>
+              <button class="btn btn-ghost chan-btn chan-go" id="btnOwn">📦 Request Setup</button>
+              <p class="hint" id="ownStatus" style="margin-top:.4rem"></p>
             </div>
           </div>
         </div>
@@ -756,30 +772,36 @@ $('btnPwa').addEventListener('click', e => {
   const b = e.currentTarget; b.disabled = true; b.textContent = 'Generating manifest…';
   setTimeout(() => { b.textContent = '✓ Install banner live'; $('plPwa').textContent = 'ENABLED'; $('plPwa').classList.add('live'); }, 1400);
 });
-function wireStore(btnId, selId, pillId, modes, labels) {
-  const btn = $(btnId), sel = $(selId), pill = $(pillId);
-  sel.addEventListener('change', () => { btn.textContent = labels[sel.value]; });
-  btn.addEventListener('click', () => {
-    const m = modes[sel.value];
-    btn.disabled = true; sel.disabled = true; let i = 0;
-    (function tick() {
-      if (i < m.steps.length) { btn.textContent = m.steps[i++]; setTimeout(tick, 1300); }
-      else { btn.textContent = m.doneBtn; pill.textContent = m.donePill; pill.classList.add('live'); }
-    })();
+/* Lanes 2 & 3 — real distribution queue: requests persist server-side and the
+   team drives them through PACKAGING → SUBMITTED → IN STORE REVIEW → LIVE. */
+function wireDistLane(btnId, statusId, pillId, buildBody) {
+  const btn = $(btnId), st = $(statusId), pill = $(pillId);
+  btn.addEventListener('click', async () => {
+    if (!publishedGame) { st.textContent = '⚠ Publish first — press Approve & Publish in Stage 05, then request store distribution.'; return; }
+    btn.disabled = true;
+    st.textContent = 'Joining the distribution queue…';
+    try {
+      const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
+      let prof = {}; try { prof = JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (e) {}
+      const r = await fetch(base + '/api/distribution', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...buildBody(), gameId: publishedGame.id, email: prof.email || undefined, walletId: serverWalletId || undefined }),
+        signal: AbortSignal.timeout(15000)
+      });
+      const j = await r.json().catch(() => null);
+      if (r.ok && j && j.ok) {
+        pill.textContent = '◐ QUEUED · ' + j.ref;
+        pill.classList.add('live');
+        st.textContent = '✓ ' + j.note;
+      } else {
+        btn.disabled = false;
+        st.textContent = '⚠ ' + ((j && j.error) || 'Could not join the queue — try again.');
+      }
+    } catch (e) { btn.disabled = false; st.textContent = '⚠ Could not reach the distribution queue — check your connection.'; }
   });
 }
-wireStore('btnAab', 'selAab', 'plAab', {
-  joshrix: { steps: ['Wrapping (Trusted Web Activity)…', 'Signing with JOSHRIX release key…', 'Submitting to Google Play…'],
-             doneBtn: '✓ Submitted — publisher: JOSHRIX Studios', donePill: 'SUBMITTED' },
-  own:     { steps: ['Wrapping (Trusted Web Activity)…', 'Signing release build…'],
-             doneBtn: '⬇ penalty-king.aab — upload to Play Console', donePill: 'AAB READY' }
-}, { joshrix: '🚀 Submit via JOSHRIX', own: '⚙ Build signed .AAB' });
-wireStore('btnIos', 'selIos', 'plIos', {
-  joshrix: { steps: ['Building Capacitor shell…', 'Cloud build + signing (JOSHRIX team)…', 'Uploading to App Store Connect…'],
-             doneBtn: '✓ Submitted — TestFlight live under JOSHRIX Studios', donePill: 'SUBMITTED' },
-  own:     { steps: ['Building Capacitor shell…', 'Cloud build + notarising…'],
-             doneBtn: '⬇ .ipa — submit via App Store Connect', donePill: 'IPA READY' }
-}, { joshrix: '🚀 Submit via JOSHRIX', own: '⚙ Build iOS .IPA' });
+wireDistLane('btnDed', 'dedStatus', 'plDed', () => ({ lane: 'dedicated', store: $('selDed').value }));
+wireDistLane('btnOwn', 'ownStatus', 'plOwn', () => ({ lane: 'own', store: $('selOwnStore').value, mode: $('selOwnMode').value }));
 
 let reached = 1;
 function setStep(n) {
