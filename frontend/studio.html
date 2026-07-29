@@ -493,6 +493,32 @@ walletReady = (async () => {
     if (r.ok && j && j.mode === 'live') { serverMode = true; serverWalletId = j.walletId; syncBalance(j.balance); }
   } catch (e) { /* offline or no DB yet — local sim wallet stays authoritative */ }
 })();
+
+// Auto-refund a build that generated but failed to RENDER. The injected game
+// watchdog posts {__jx:'renderfail'} when it draws nothing (zero-size canvas,
+// no canvas, or an uncaught error); we return the forge charge for THAT build,
+// once. The forge id is single-use and server-tied, so this cannot be farmed.
+let refundedForge = null;
+window.addEventListener('message', async (e) => {
+  const d = e && e.data;
+  if (!d || d.__jx !== 'renderfail') return;
+  if (!(realBuild && realBuild.forgeId) || refundedForge === realBuild.forgeId) return;
+  refundedForge = realBuild.forgeId;
+  try {
+    const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
+    const r = await fetch(base + '/api/forge-refund', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ walletId: serverWalletId || undefined, forgeId: realBuild.forgeId })
+    });
+    const j = await r.json().catch(() => null);
+    if (j && typeof j.balanceAfter === 'number') syncBalance(j.balanceAfter);
+    const note = $('protoNote4');
+    if (note && j && j.refunded) {
+      note.style.display = 'block';
+      note.innerHTML = '✓ <b>Refunded ' + (j.amount || 300) + ' ACUs</b> — this build failed to render, so you were not charged for it. Press <b>Refine Concept</b> to forge again.';
+    }
+  } catch (_) { /* refund is best-effort; the charge id stays claimable */ }
+});
 const spend = n => {
   if (serverMode) { simSpend += n; return; }  // real charges arrive via balanceAfter
   acu = Math.max(0, acu - n);
@@ -728,7 +754,7 @@ function applyBlueprintIdentity() {
 // SecurityError on any storage access, which silently blanks a game that touches
 // it; and (2) an error overlay so a build that hits a runtime JS error self-reports
 // the actual message inside the frame instead of rendering a silent blank screen.
-const JX_GAME_SHIM = "<style>html,body{height:100%;margin:0}<\/style><script>(function(){try{window.localStorage.getItem('_jx');}catch(e){var mk=function(){var m={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(m,k)?m[k]:null;},setItem:function(k,v){m[k]=String(v);},removeItem:function(k){delete m[k];},clear:function(){m={};},key:function(i){return Object.keys(m)[i]||null;},get length(){return Object.keys(m).length;}};};try{Object.defineProperty(window,'localStorage',{value:mk(),configurable:true});}catch(_){}try{Object.defineProperty(window,'sessionStorage',{value:mk(),configurable:true});}catch(_){}}var shown=false;function overlay(msg){if(shown)return;shown=true;var d=document.createElement('div');d.id='__jxerr';d.setAttribute('style','position:fixed;left:0;right:0;bottom:0;z-index:2147483647;font:12px/1.5 system-ui,sans-serif;background:rgba(20,6,6,.96);color:#fca5a5;padding:10px 14px;border-top:2px solid #ef4444;max-height:55%;overflow:auto;white-space:pre-wrap;word-break:break-word');d.textContent='\\u26a0 '+msg;(document.body||document.documentElement).appendChild(d);}window.addEventListener('error',function(e){overlay('Runtime error: '+(e.message||'Script error')+(e.lineno?(' (line '+e.lineno+')'):''));});window.addEventListener('unhandledrejection',function(e){overlay('Unhandled promise rejection: '+((e.reason&&(e.reason.message||e.reason))||'unknown'));});function diag(){var cs=document.getElementsByTagName('canvas'),big=null,area=-1;for(var i=0;i<cs.length;i++){var a=cs[i].width*cs[i].height;if(a>area){area=a;big=cs[i];}}if(!cs.length){overlay('This build drew no <canvas> \\u2014 nothing to render. Press Refine Concept.');return;}if(big.width===0||big.height===0||big.clientWidth===0||big.clientHeight===0){overlay('Game canvas has no size (drawing '+big.width+'\\u00d7'+big.height+', shown '+big.clientWidth+'\\u00d7'+big.clientHeight+') \\u2014 the build did not lay out its canvas. Press Refine Concept.');}}if(document.readyState==='complete')setTimeout(diag,2500);else window.addEventListener('load',function(){setTimeout(diag,2500);});})();<\/script>";
+const JX_GAME_SHIM = "<style>html,body{height:100%;margin:0}<\/style><script>(function(){try{window.localStorage.getItem('_jx');}catch(e){var mk=function(){var m={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(m,k)?m[k]:null;},setItem:function(k,v){m[k]=String(v);},removeItem:function(k){delete m[k];},clear:function(){m={};},key:function(i){return Object.keys(m)[i]||null;},get length(){return Object.keys(m).length;}};};try{Object.defineProperty(window,'localStorage',{value:mk(),configurable:true});}catch(_){}try{Object.defineProperty(window,'sessionStorage',{value:mk(),configurable:true});}catch(_){}}var shown=false;function overlay(msg){if(shown)return;shown=true;var d=document.createElement('div');d.id='__jxerr';d.setAttribute('style','position:fixed;left:0;right:0;bottom:0;z-index:2147483647;font:12px/1.5 system-ui,sans-serif;background:rgba(20,6,6,.96);color:#fca5a5;padding:10px 14px;border-top:2px solid #ef4444;max-height:55%;overflow:auto;white-space:pre-wrap;word-break:break-word');d.textContent='\\u26a0 '+msg;(document.body||document.documentElement).appendChild(d);try{parent.postMessage({__jx:'renderfail',reason:msg},'*');}catch(_){}}window.addEventListener('error',function(e){overlay('Runtime error: '+(e.message||'Script error')+(e.lineno?(' (line '+e.lineno+')'):''));});window.addEventListener('unhandledrejection',function(e){overlay('Unhandled promise rejection: '+((e.reason&&(e.reason.message||e.reason))||'unknown'));});function diag(){var cs=document.getElementsByTagName('canvas'),big=null,area=-1;for(var i=0;i<cs.length;i++){var a=cs[i].width*cs[i].height;if(a>area){area=a;big=cs[i];}}if(!cs.length){overlay('This build drew no <canvas> \\u2014 nothing to render. Press Refine Concept.');return;}if(big.width===0||big.height===0||big.clientWidth===0||big.clientHeight===0){overlay('Game canvas has no size (drawing '+big.width+'\\u00d7'+big.height+', shown '+big.clientWidth+'\\u00d7'+big.clientHeight+') \\u2014 the build did not lay out its canvas. Press Refine Concept.');}}if(document.readyState==='complete')setTimeout(diag,2500);else window.addEventListener('load',function(){setTimeout(diag,2500);});})();<\/script>";
 function prepGameHtml(html){
   if (!html) return html;
   const i = html.search(/<head[^>]*>/i);

@@ -159,6 +159,13 @@ export async function ensureGameSchema(sql: Sql) {
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT 'explorer'`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS name text`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS last_refill_at timestamptz`;
+  await sql`CREATE TABLE IF NOT EXISTS forge_charges (
+    id text PRIMARY KEY,
+    wallet_id text NOT NULL,
+    amount bigint NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    refunded_at timestamptz
+  )`;
   await sql`CREATE TABLE IF NOT EXISTS dist_requests (
     id bigserial PRIMARY KEY,
     game_id text,
@@ -210,6 +217,28 @@ export async function debitWallet(sql: Sql, id: string, cost: number): Promise<n
 export async function creditWallet(sql: Sql, id: string, amount: number): Promise<number | null> {
   const rows = (await sql`UPDATE wallets SET balance = balance + ${amount} WHERE id = ${id} RETURNING balance`) as Array<{ balance: number }>;
   return rows.length ? Number(rows[0].balance) : null;
+}
+
+/**
+ * Record a settled forge charge so a build that fails to RENDER (a client-side
+ * blank, not an AI failure) can be refunded exactly once for exactly what it cost.
+ */
+export async function recordForgeCharge(sql: Sql, id: string, walletId: string, amount: number) {
+  await sql`INSERT INTO forge_charges (id, wallet_id, amount) VALUES (${id}, ${walletId}, ${amount}) ON CONFLICT (id) DO NOTHING`;
+}
+
+/**
+ * Claim a forge refund: single-use, tied to the paying wallet. Returns the amount
+ * to credit (once), or null if unknown/already refunded/wrong wallet. Because a
+ * charge id is only ever issued after a real 300-ACU debit, the refund can never
+ * exceed what was paid — there is no farming path (net cost is always >= 0).
+ */
+export async function claimForgeRefund(sql: Sql, id: string, walletId: string): Promise<number | null> {
+  const rows = (await sql`
+    UPDATE forge_charges SET refunded_at = now()
+    WHERE id = ${id} AND wallet_id = ${walletId} AND refunded_at IS NULL
+    RETURNING amount`) as Array<{ amount: number }>;
+  return rows.length ? Number(rows[0].amount) : null;
 }
 
 export async function getWallet(sql: Sql, id: string) {

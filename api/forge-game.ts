@@ -6,8 +6,9 @@
  * Build 2 (server-side ACU enforcement): with DATABASE_URL configured the 300-ACU
  * forge charge is debited server-side BEFORE generation and refunded on failure.
  */
+import { randomUUID } from "crypto";
 import { generateGameHtml, FORGE_GAME_ACU_CHARGE } from "./_gateway";
-import { getDb, ensureGameSchema, debitWallet, creditWallet } from "./_ledger";
+import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge } from "./_ledger";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -56,7 +57,15 @@ export default async function handler(req: any, res: any) {
       await refund(true);
       return res.status(502).json({ error: "Code Agent produced no playable canvas — please forge again (charge refunded minus a small compute floor)." });
     }
-    return res.status(200).json({ html, provider, acuCharge: FORGE_GAME_ACU_CHARGE, ...(balanceAfter !== null ? { balanceAfter } : {}) });
+    // Issue a single-use forge id so a build that GENERATED but fails to RENDER
+    // (a client-side blank) can auto-refund what it charged. Only recorded when a
+    // real server-side charge settled, so a refund can never exceed what was paid.
+    let forgeId: string | undefined;
+    if (sql && walletId && balanceAfter !== null) {
+      forgeId = randomUUID();
+      try { await recordForgeCharge(sql, forgeId, walletId, FORGE_GAME_ACU_CHARGE); } catch { forgeId = undefined; }
+    }
+    return res.status(200).json({ html, provider, acuCharge: FORGE_GAME_ACU_CHARGE, ...(forgeId ? { forgeId } : {}), ...(balanceAfter !== null ? { balanceAfter } : {}) });
   } catch (err: any) {
     await refund(false);
     return res.status(502).json({ error: "Game generation failed", detail: String(err?.message ?? err) });
