@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#050508">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>JOSHRIX Forge Studio — Prototype</title>
 <meta name="description" content="JOSHRIX Forge Studio prototype — describe a game, watch the agent fleet forge it, pass QA, playtest privately, then publish to web, PWA, Android and iOS.">
 <style>
@@ -1012,5 +1017,6 @@ function initGame() {
 }
 })();
 </script>
+<script>if('serviceWorker' in navigator && location.protocol==='https:'){addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{})})}</script>
 </body>
 </html>

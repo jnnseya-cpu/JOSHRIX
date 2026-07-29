@@ -1,0 +1,26 @@
+{
+  "name": "JOSHRIX Studio",
+  "short_name": "JOSHRIX",
+  "description": "Create Worlds. Build Games. Own the Future. Describe a game in any language and the agent fleet forges it — playable, certified, sellable, yours.",
+  "id": "/",
+  "start_url": "/index.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#050508",
+  "theme_color": "#050508",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["games", "entertainment", "productivity"],
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Forge Studio", "short_name": "Forge", "url": "/studio.html", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Play Penalty King 3D", "short_name": "Play 3D", "url": "/play3d.html", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Wallet", "short_name": "Wallet", "url": "/wallet.html", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] }
+  ]
+}

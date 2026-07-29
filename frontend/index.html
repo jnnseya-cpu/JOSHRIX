@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#050508">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>JOSHRIX Studio — Create Worlds. Build Games. Own the Future.</title>
 <meta name="description" content="JOSHRIX Studio — the autonomous AI game production OS. An agent fleet that takes you from raw concept to published, IP-protected game. Create Worlds. Build Games. Own the Future.">
 <style>
@@ -881,5 +886,6 @@ footer{
   document.querySelectorAll('.stat .num').forEach(el => so.observe(el));
 })();
 </script>
+<script>if('serviceWorker' in navigator && location.protocol==='https:'){addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{})})}</script>
 </body>
 </html>

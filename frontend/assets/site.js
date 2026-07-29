@@ -58,3 +58,8 @@
     note.textContent = '✓ Received — this is a front-end prototype; the API wiring lands with the backend build.';
   }));
 })();
+
+/* PWA: register the service worker (idempotent, silent on unsupported browsers) */
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
+}

@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#050508">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Penalty King 3D — JOSHRIX Studio</title>
 <meta name="description" content="JOSHRIX Web 3D engine profile — real-time 3D Penalty King with PBR lighting, shadows, crowd audio and live commentary.">
 <link rel="stylesheet" href="assets/joshrix.css">
@@ -66,6 +71,7 @@
     <div class="hud3">
       <span class="lv" id="hLvl">LVL 1</span><span id="hShot">SHOT 1/5</span>
       <span id="hGoal">GOALS 0</span><span class="cn" id="hCoin">ⓒ 0</span>
+      <span id="hQ" title="Quality auto-adjusts to keep the game smooth">AUTO</span>
     </div>
     <button id="mute3" title="Toggle sound">🔊</button>
     <a id="forgeChip" href="studio.html" title="Make your own game like this one">⚡ FORGE YOUR OWN</a>
@@ -148,11 +154,19 @@ document.getElementById('mute3').addEventListener('click', e => {
   e.currentTarget.textContent = mutedUI ? '🔇' : '🔊';
 });
 
-/* ============ scene ============ */
+/* ============ scene + device-aware quality (REALISM-PIPELINE tiers) ============ */
 const stage = document.getElementById('stage');
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const isMobile = matchMedia('(pointer: coarse)').matches || /Android|iPhone|iPad/i.test(navigator.userAgent);
+const cores = navigator.hardwareConcurrency || 4;
+const mem = navigator.deviceMemory || 4;
+let tier = (isMobile || cores <= 4 || mem <= 4) ? 'low' : 'high';
+
+const renderer = new THREE.WebGLRenderer({ antialias: tier === 'high', powerPreference: 'high-performance' });
+let basePR = Math.min(devicePixelRatio, tier === 'low' ? 1 : 1.5);
+let prScale = 1;                       // dynamic-resolution multiplier (the FPS governor moves this)
+renderer.setPixelRatio(basePR * prScale);
+renderer.shadowMap.enabled = tier === 'high';
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.02;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 stage.insertBefore(renderer.domElement, stage.firstChild);
@@ -173,10 +187,14 @@ addEventListener('resize', fit); fit();
 /* lights */
 scene.add(new THREE.HemisphereLight(0x8878ff, 0x0a2a12, .5));
 scene.add(new THREE.AmbientLight(0x404060, .5));
+const shadowLights = [];
 const flood = (x, z, shadows) => {
   const s = new THREE.SpotLight(0xf2eeff, 560, 80, .5, .45, 1.6);
   s.position.set(x, 15, z); s.target.position.set(0, 0, -6); scene.add(s.target);
-  if (shadows) { s.castShadow = true; s.shadow.mapSize.set(1024, 1024); s.shadow.bias = -0.0004; }
+  if (shadows && tier === 'high') {
+    s.castShadow = true; s.shadow.mapSize.set(768, 768); s.shadow.bias = -0.0004;
+    shadowLights.push(s);
+  }
   scene.add(s);
   const pole = new THREE.Mesh(new THREE.CylinderGeometry(.12, .16, 15, 8),
     new THREE.MeshStandardMaterial({ color: 0x232338, roughness: .7 }));
@@ -185,7 +203,10 @@ const flood = (x, z, shadows) => {
     new THREE.MeshBasicMaterial({ color: 0xfff6e8 }));
   lamp.position.set(x, 15, z); scene.add(lamp);
 };
-flood(-15, -14, true); flood(15, -14, true); flood(-15, 5, false); flood(15, 5, false);
+// low tier: two lights, no shadows, brighter ambience compensates
+flood(-15, -14, true); flood(15, -14, true);
+if (tier === 'high') { flood(-15, 5, false); flood(15, 5, false); }
+else { scene.add(new THREE.AmbientLight(0x8a86b0, .55)); }
 
 /* pitch with painted lines */
 const pitchCv = document.createElement('canvas'); pitchCv.width = pitchCv.height = 1024;
@@ -224,7 +245,7 @@ const mkStand = (w, d, x, z, ry) => {
 mkStand(46, 5, 0, -19.5, 0); mkStand(40, 5, -21, -4, Math.PI / 2); mkStand(40, 5, 21, -4, Math.PI / 2);
 const crowdGeo = new THREE.BufferGeometry();
 {
-  const N = 2600, pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
+  const N = tier === 'low' ? 1000 : 2600, pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
   const c = new THREE.Color();
   for (let i = 0; i < N; i++) {
     const side = i % 3;
@@ -422,9 +443,35 @@ function endShot(kind) {
   }, 1100);
 }
 
+/* ============ FPS governor — degrade before it ever freezes ============ */
+let frames = 0, fpsWindowStart = performance.now(), lowStreak = 0, highStreak = 0;
+function governor() {
+  const now = performance.now();
+  frames++;
+  if (now - fpsWindowStart < 1500) return;
+  const fps = frames / ((now - fpsWindowStart) / 1000);
+  frames = 0; fpsWindowStart = now;
+  if (fps < 28) { lowStreak++; highStreak = 0; } else if (fps > 52) { highStreak++; lowStreak = 0; } else { lowStreak = 0; highStreak = 0; }
+  if (lowStreak >= 2) {
+    lowStreak = 0;
+    if (prScale > 0.6) { prScale = Math.max(0.6, prScale - 0.2); renderer.setPixelRatio(basePR * prScale); }
+    else if (renderer.shadowMap.enabled) { renderer.shadowMap.enabled = false; shadowLights.forEach(l => { l.castShadow = false; }); }
+    else if (crowdMat.visible !== false) { crowdMat.visible = false; }
+  }
+  if (highStreak >= 4 && prScale < 1) {
+    highStreak = 0;
+    prScale = Math.min(1, prScale + 0.2); renderer.setPixelRatio(basePR * prScale);
+    if (crowdMat.visible === false) crowdMat.visible = true;
+  }
+  const q = renderer.shadowMap.enabled ? 'HIGH' : (prScale >= 1 ? 'BALANCED' : 'PERFORMANCE');
+  hud('hQ').textContent = `${q} · ${Math.round(fps)}FPS`;
+}
+
 /* ============ main loop ============ */
 const clock = new THREE.Clock();
 function tick() {
+  if (document.hidden) { requestAnimationFrame(tick); return; }  // never burn GPU in a background tab
+  governor();
   const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
   // keeper prowls his line while you aim (level 2+)
   if (state === 'aim' && level >= 2) {
