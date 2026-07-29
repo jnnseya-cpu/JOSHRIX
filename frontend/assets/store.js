@@ -109,22 +109,5 @@
     })).catch(() => {});
   }
 
-  // nav identity chip — every page that loads the store shows who you are.
-  // A signed-in identity REPLACES the Sign In / Sign Up buttons (never both).
-  addEventListener('DOMContentLoaded', () => {
-    const nav = document.querySelector('.nav-right');
-    if (!nav || !(state.displayName || state.avatar)) return;
-    nav.querySelectorAll('a[href$="login.html"], a[href$="signup.html"]').forEach((el) => el.remove());
-    if (document.querySelector('.jx-nav-name')) return;   // identity.js already drew the chip
-    const esc = (s) => String(s == null ? '' : s).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c]);
-    const a = document.createElement('a');
-    a.href = 'profile.html';
-    a.title = 'Your profile';
-    a.style.cssText = 'display:flex;align-items:center;gap:.5rem;text-decoration:none;color:var(--text);font-weight:600;font-size:.9rem';
-    const face = state.avatar
-      ? '<img src="' + state.avatar + '" alt="" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid var(--stroke-bright)">'
-      : '<span style="width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--violet),var(--cyan));color:#fff;font-weight:700">' + esc(((state.displayName || 'J')[0] || 'J').toUpperCase()) + '</span>';
-    a.innerHTML = face + '<span class="jx-nav-name">' + esc(state.displayName || state.handle || '') + '</span>';
-    nav.insertBefore(a, nav.firstChild);
-  });
+  // nav identity chip + account menu is rendered site-wide by assets/identity.js
 })();

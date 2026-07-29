@@ -58,28 +58,51 @@
   const note = document.createElement('p');
   note.className = 'hint'; note.id = 'authStatus';
   form.appendChild(note);
+  // record who signed in so every page can show the account chip + menu
+  const rememberUser = (u, email) => {
+    try {
+      const p = JSON.parse(localStorage.getItem('jx.profile') || '{}');
+      p.displayName = p.displayName || (u && u.displayName) || (email || (u && u.email) || '').split('@')[0] || 'Operator';
+      p.email = p.email || (u && u.email) || email || '';
+      localStorage.setItem('jx.profile', JSON.stringify(p));
+    } catch (e) {}
+  };
   if (!window.jxAuth || !window.jxAuth.enabled) {
-    note.textContent = 'Demo mode — sign-in activates at launch.';
+    // device-account mode: sign in = resume the account saved on this device
+    form.removeAttribute('data-demo');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const human = window.jxHumanCheck ? window.jxHumanCheck(form) : { ok: true };
+      if (!human.ok) { note.textContent = '\u2715 ' + human.reason; return; }
+      let p = {};
+      try { p = JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (err) {}
+      if (!(p.displayName || p.handle)) rememberUser(null, document.getElementById('li-email').value);
+      const who = p.displayName || p.handle || '';
+      note.textContent = '\u2713 Signed in on this device' + (who ? ' \u2014 welcome back, ' + who : '') + ' \u2014 opening your dashboard\u2026';
+      setTimeout(() => location.href = 'dashboard.html', 600);
+    });
     return;
   }
   form.removeAttribute('data-demo');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
-      const human = window.jxHumanCheck ? window.jxHumanCheck(form) : { ok: true };
-      if (!human.ok) { note.textContent = '\u2715 ' + human.reason; return; }
-    note.textContent = 'Signing in…';
+    const human = window.jxHumanCheck ? window.jxHumanCheck(form) : { ok: true };
+    if (!human.ok) { note.textContent = '\u2715 ' + human.reason; return; }
+    note.textContent = 'Signing in\u2026';
     try {
       const a = await window.jxAuth.ready;
-      await a.signIn(document.getElementById('li-email').value, document.getElementById('li-pass').value);
+      const u = await a.signIn(document.getElementById('li-email').value, document.getElementById('li-pass').value);
+      rememberUser(u, document.getElementById('li-email').value);
       location.href = 'dashboard.html';
-    } catch (err) { note.textContent = '✕ ' + (err && err.message || 'Sign-in failed'); }
+    } catch (err) { note.textContent = '\u2715 ' + (err && err.message || 'Sign-in failed'); }
   });
   document.getElementById('btnGoogle').addEventListener('click', async () => {
     try {
       const a = await window.jxAuth.ready;
-      await a.signInGoogle();
+      const u = await a.signInGoogle();
+      rememberUser(u);
       location.href = 'dashboard.html';
-    } catch (err) { note.textContent = '✕ ' + (err && err.message || 'Google sign-in failed'); }
+    } catch (err) { note.textContent = '\u2715 ' + (err && err.message || 'Google sign-in failed'); }
   });
 })();
 </script>
