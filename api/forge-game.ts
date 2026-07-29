@@ -7,7 +7,7 @@
  * forge charge is debited server-side BEFORE generation and refunded on failure.
  */
 import { randomUUID } from "crypto";
-import { generateGameHtml, FORGE_GAME_ACU_CHARGE } from "./_gateway";
+import { generateGameHtml, acuChargeForUsage, FORGE_GAME_ACU_CHARGE, FORGE_GAME_3D_ACU_CHARGE, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE } from "./_gateway";
 import { buildPlayableGame } from "./_engine";
 import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge } from "./_ledger";
 import type { GameBlueprint } from "../shared/contracts";
@@ -43,13 +43,15 @@ export default async function handler(req: any, res: any) {
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
-  const { prompt, title, summary, language, walletId, blueprint } = (req.body ?? {}) as Record<string, any>;
+  const { prompt, title, summary, language, walletId, blueprint, mode } = (req.body ?? {}) as Record<string, any>;
   if (!prompt || typeof prompt !== "string" || prompt.length < 4) {
     return res.status(400).json({ error: "Body must include the game concept in `prompt`." });
   }
   if (prompt.length > 20000) {
     return res.status(400).json({ error: "Prompt too long (max 20,000 chars)." });
   }
+  const is3d = mode === "3d";
+  const CHARGE = is3d ? FORGE_GAME_3D_ACU_CHARGE : FORGE_GAME_ACU_CHARGE;
 
   // Server-side wallet enforcement (active once DATABASE_URL is set)
   const sql = getDb();
@@ -58,12 +60,12 @@ export default async function handler(req: any, res: any) {
     if (!walletId) return res.status(402).json({ error: "No wallet — open the Studio to initialise your ACU wallet, or top up at /wallet.html." });
     try {
       await ensureGameSchema(sql);
-      balanceAfter = await debitWallet(sql, walletId, FORGE_GAME_ACU_CHARGE);
+      balanceAfter = await debitWallet(sql, walletId, CHARGE);
     } catch (err: any) {
       return res.status(502).json({ error: "Wallet check failed", detail: String(err?.message ?? err) });
     }
     if (balanceAfter === null) {
-      return res.status(402).json({ error: `Not enough ACUs (forging costs ${FORGE_GAME_ACU_CHARGE}). Top up at /wallet.html.`, acuCharge: FORGE_GAME_ACU_CHARGE });
+      return res.status(402).json({ error: `Not enough ACUs (this forge costs ${CHARGE}). Top up at /wallet.html.`, acuCharge: CHARGE });
     }
   }
 
@@ -72,7 +74,7 @@ export default async function handler(req: any, res: any) {
   const COMPUTE_FLOOR = 50;
   const refund = async (aiRan: boolean) => {
     if (sql && walletId && balanceAfter !== null) {
-      const back = aiRan ? FORGE_GAME_ACU_CHARGE - COMPUTE_FLOOR : FORGE_GAME_ACU_CHARGE;
+      const back = aiRan ? CHARGE - COMPUTE_FLOOR : CHARGE;
       try { await creditWallet(sql, walletId, back); } catch { /* best-effort; reconciliation catches strays */ }
     }
   };
@@ -89,25 +91,46 @@ export default async function handler(req: any, res: any) {
     let html = engineHtml;
     let provider = "engine";
     let fallbackHtml: string | undefined;
+    let aiUsage: { inputTokens: number; outputTokens: number } | undefined;
     try {
-      const ai = await generateGameHtml(prompt, { title, summary, language });
+      const ai = await generateGameHtml(prompt, { title, summary, language, mode: is3d ? "3d" : "2d" });
       // only trust a REAL Claude build as the bespoke path (the keyless demo build
       // is weaker than the engine, so the engine wins in that case)
       if (ai.provider === "claude" && ai.html.includes("<canvas")) {
         html = ai.html;
         provider = "claude";
         fallbackHtml = engineHtml;
+        aiUsage = ai.usage;
       }
     } catch { /* Code Agent failed or timed out — the engine build ships instead */ }
+    // METERED SETTLEMENT (business model: charge = 4x the AI provider cost of THIS
+    // run, from actual token usage). The upfront debit was only a hold:
+    //   bespoke shipped  -> 4x metered cost (floor FORGE_MIN_CHARGE)
+    //   engine-only ship -> flat ENGINE_BUILD_CHARGE (no AI ran / AI unusable)
+    // Unused hold is credited back instantly; shortfall is collected best-effort.
+    const settledCharge = provider === "claude" && aiUsage
+      ? Math.max(FORGE_MIN_CHARGE, acuChargeForUsage("claude-sonnet-5", aiUsage))
+      : ENGINE_BUILD_CHARGE;
+    if (sql && walletId && balanceAfter !== null && settledCharge !== CHARGE) {
+      try {
+        if (settledCharge < CHARGE) {
+          const nb = await creditWallet(sql, walletId, CHARGE - settledCharge);
+          if (nb !== null) balanceAfter = nb;
+        } else {
+          const nb = await debitWallet(sql, walletId, settledCharge - CHARGE);
+          if (nb !== null) balanceAfter = nb; // insufficient extra -> hold stands; reconciliation
+        }
+      } catch { /* settlement best-effort; ledger reconciliation catches strays */ }
+    }
     // Single-use forge id so a build that fails to RENDER on the client can
     // auto-refund. Recorded only after a real charge, so a refund can't exceed the pay.
     let forgeId: string | undefined;
     if (sql && walletId && balanceAfter !== null) {
       forgeId = randomUUID();
-      try { await recordForgeCharge(sql, forgeId, walletId, FORGE_GAME_ACU_CHARGE); } catch { forgeId = undefined; }
+      try { await recordForgeCharge(sql, forgeId, walletId, settledCharge); } catch { forgeId = undefined; }
     }
     return res.status(200).json({
-      html, provider, acuCharge: FORGE_GAME_ACU_CHARGE,
+      html, provider, acuCharge: settledCharge,
       ...(fallbackHtml ? { fallbackHtml } : {}),
       ...(forgeId ? { forgeId } : {}),
       ...(balanceAfter !== null ? { balanceAfter } : {}),

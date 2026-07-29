@@ -6,7 +6,7 @@
  * charge is debited from the server wallet BEFORE generation (No-Free-AI rule)
  * and refunded automatically if generation fails. 402 = not enough ACUs.
  */
-import { generateBlueprint, BLUEPRINT_ACU_CHARGE } from "./_gateway";
+import { generateBlueprint, acuChargeForUsage, BLUEPRINT_ACU_CHARGE, BLUEPRINT_MIN_CHARGE } from "./_gateway";
 import { getDb, ensureGameSchema, debitWallet, creditWallet } from "./_ledger";
 
 export default async function handler(req: any, res: any) {
@@ -41,8 +41,25 @@ export default async function handler(req: any, res: any) {
   }
 
   try {
-    const { blueprint, provider } = await generateBlueprint(prompt, { type, platform, scope, language });
-    return res.status(200).json({ blueprint, provider, acuCharge: BLUEPRINT_ACU_CHARGE, ...(balanceAfter !== null ? { balanceAfter } : {}) });
+    const { blueprint, provider, usage } = await generateBlueprint(prompt, { type, platform, scope, language });
+    // METERED SETTLEMENT — the upfront debit was a hold; the real charge is 4x the
+    // metered AI cost of THIS run (floor BLUEPRINT_MIN_CHARGE). Unused hold refunds.
+    let settled = BLUEPRINT_ACU_CHARGE;
+    if (provider === "claude" && usage) {
+      settled = Math.max(BLUEPRINT_MIN_CHARGE, acuChargeForUsage("claude-opus-5", usage));
+      if (sql && walletId && balanceAfter !== null && settled !== BLUEPRINT_ACU_CHARGE) {
+        try {
+          if (settled < BLUEPRINT_ACU_CHARGE) {
+            const nb = await creditWallet(sql, walletId, BLUEPRINT_ACU_CHARGE - settled);
+            if (nb !== null) balanceAfter = nb;
+          } else {
+            const nb = await debitWallet(sql, walletId, settled - BLUEPRINT_ACU_CHARGE);
+            if (nb !== null) balanceAfter = nb;
+          }
+        } catch { /* settlement best-effort */ }
+      }
+    }
+    return res.status(200).json({ blueprint, provider, acuCharge: settled, ...(balanceAfter !== null ? { balanceAfter } : {}) });
   } catch (err: any) {
     if (sql && walletId && balanceAfter !== null) {
       // generation failed AFTER the debit — put the ACUs back

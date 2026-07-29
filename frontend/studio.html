@@ -264,7 +264,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
       </div>
       <div class="actions">
         <button class="btn btn-primary" id="btnBlueprint">⚡ Generate Blueprint</button>
-        <span class="hint" id="bpHint">Idea Agent · market radar · rights screening — ~8 ACUs</span>
+        <span class="hint" id="bpHint">Idea Agent · market radar · rights screening — metered: 4× AI cost (typically 10–40 ACUs)</span>
       </div>
       <div class="bp" id="bp">
         <div class="bp-head">
@@ -282,6 +282,10 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
         </div>
       </div>
       <div class="actions" id="approveRow" style="display:none">
+        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.5rem .8rem">
+          <input type="checkbox" id="chk3d" style="accent-color:#7C3AED;width:18px;height:18px">
+          <span><b style="color:var(--cyan,#22D3EE)">⬢ 3D Build</b> — real three.js 3D world. Metered pricing: <b>4× the AI cost of your game</b> — 3D holds 1,200 ACUs, 2D holds 300, and the unused hold refunds the moment your build settles (typical final: 40–200 ACUs).</span>
+        </label>
         <button class="btn btn-primary" id="btnForge">▶ Approve &amp; Initiate Forge</button>
         <span class="hint">Approval gate 1 of 3 — you stay in control</span>
       </div>
@@ -343,7 +347,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
             <button class="btn btn-ghost" id="btnRefine">✎ Refine Concept</button>
             <button class="btn btn-ghost" id="btnViewSrc" type="button">⤓ View Build Source</button>
           </div>
-          <p class="hint" style="margin-top:.8rem">Approval gate 3 of 3 · <a href="play3d.html" target="_blank" rel="noopener" style="color:var(--cyan)">See the 3D engine tech demo</a> (a sample, not your game — games currently ship as 2D)</p>
+          <p class="hint" style="margin-top:.8rem">Approval gate 3 of 3 · Want full 3D? Tick <b>⬢ 3D Build</b> before forging. Pricing is metered — 4× the AI cost of your build, unused hold refunded instantly; a failed build refunds itself.</p>
         </div>
       </div>
     </div>
@@ -692,7 +696,7 @@ $('btnForge').addEventListener('click', () => {
       const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
       const r = await fetch(base + '/api/forge-game', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: $('prompt').value, title: lastBp.title, summary: lastBp.summary, language: $('selLang').value, walletId: serverWalletId || undefined, blueprint: lastBp }),
+        body: JSON.stringify({ prompt: $('prompt').value, title: lastBp.title, summary: lastBp.summary, language: $('selLang').value, walletId: serverWalletId || undefined, blueprint: lastBp, mode: ($('chk3d') && $('chk3d').checked) ? '3d' : '2d' }),
         signal: AbortSignal.timeout(280000)
       });
       const j = await r.json().catch(() => null);

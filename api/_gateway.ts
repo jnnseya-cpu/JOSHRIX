@@ -20,13 +20,32 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-29.31";
-export const BLUEPRINT_ACU_CHARGE = 8;
+export const BUILD_ID = "2026-07-29.33";
+
+/* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
+   The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
+   provider cost for THAT run, metered from actual token usage — never a flat guess.
+   Rates are the provider's standard published per-MTok prices. */
+const USD_PER_MTOK: Record<string, { in: number; out: number }> = {
+  "claude-sonnet-5": { in: 3, out: 15 },
+  "claude-opus-5": { in: 5, out: 25 },
+};
+const GBP_PER_USD = 0.79;
+export type TokenUsage = { inputTokens: number; outputTokens: number };
+export function acuChargeForUsage(model: string, usage: TokenUsage): number {
+  const r = USD_PER_MTOK[model] ?? USD_PER_MTOK["claude-sonnet-5"];
+  const usd = (usage.inputTokens / 1e6) * r.in + (usage.outputTokens / 1e6) * r.out;
+  const gbp = usd * GBP_PER_USD * ACU.providerMarkupFloor;
+  return Math.ceil(gbp * ACU.perGBP);
+}
+
+export const BLUEPRINT_ACU_CHARGE = 40;      // HOLD (estimate) — settled to metered 4x actual
+export const BLUEPRINT_MIN_CHARGE = 6;       // metered floor per blueprint run
 
 export async function generateBlueprint(
   prompt: string,
   opts: { type?: string; platform?: string; scope?: string; language?: string } = {},
-): Promise<{ blueprint: GameBlueprint; provider: string }> {
+): Promise<{ blueprint: GameBlueprint; provider: string; usage?: TokenUsage }> {
   if (process.env.ANTHROPIC_API_KEY) {
     const anthropic = new Anthropic();
     const msg = await anthropic.messages.create({
@@ -48,7 +67,10 @@ export async function generateBlueprint(
     const end = text.lastIndexOf("}");
     if (start === -1 || end === -1) throw new Error("Idea Agent returned no JSON blueprint");
     const blueprint = GameBlueprintSchema.parse(JSON.parse(text.slice(start, end + 1)));
-    return { blueprint, provider: "claude" };
+    return {
+      blueprint, provider: "claude",
+      usage: { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens },
+    };
   }
   return { blueprint: demoBlueprint(prompt, opts.language), provider: "demo" };
 }
@@ -103,42 +125,72 @@ export function providerStatus() {
 
 /* ---------------- Code Agent: real playable game generation ---------------- */
 
-const GAME_SYSTEM = `You are the JOSHRIX Code Agent. Generate a COMPLETE, self-contained HTML5 mini-game as ONE html file, implementing the creator's concept as faithfully as a 2D canvas web game allows.
-HARD REQUIREMENTS:
-- ONE file. No external resources of any kind: no CDNs, no images, no fonts, no network calls, no localStorage.
-- <canvas>-based. Works with BOTH mouse and touch. Canvas scales responsively (max-width:100%, touch-action:none).
-- Structure: title screen (game title + one-line how-to-play + START) -> core gameplay loop with score/progress -> win/lose states with restart.
-- Rising difficulty over time or levels. A satisfying 3-8 minute session. requestAnimationFrame; smooth on mobile.
-- Premium dark aesthetic: background #050508 family with violet #7C3AED and cyan #22D3EE accents, unless the concept clearly demands another palette (e.g. a bright children's world -> vivid colours are correct).
-- Lightweight procedural WebAudio sound effects (no audio files) + a mute button; create the AudioContext only on the first user gesture.
-- All player-facing text in the creator's language (use the provided language, else detect from the concept).
-- Age-appropriate for the stated audience. No real brands, clubs, celebrities or licensed characters.
-RUNTIME SAFETY — the game renders inside a sandboxed, opaque-origin iframe. A single uncaught error paints a BLANK screen, so:
-- Something MUST be painted to the canvas within the first frame of load (draw the title screen immediately on script run — never wait for an event, image, or timer before the first paint).
+const RUNTIME_SAFETY = `RUNTIME SAFETY — the game renders inside a sandboxed, opaque-origin iframe. A single uncaught error paints a BLANK screen, so:
+- Something MUST be painted within the first frame of load (draw/render the title screen immediately on script run — never wait for an event, image, or timer before the first paint).
 - Every function must be DEFINED BEFORE it is called on the boot path — no ReferenceError / "x is not defined" / calling a function above its declaration in the load order. Declare helpers first, then start the loop.
 - Do NOT touch localStorage, sessionStorage, cookies, or any Storage API — the sandbox throws on them. Keep all state in plain JS variables.
 - Wrap the whole boot in try/catch and inside requestAnimationFrame callbacks; guard every input handler. Never reference an id/element before it exists in the DOM.
 - No optional-chaining/nullish assumptions about objects that may be undefined; initialise arrays/objects before use.
-SIZE: keep the entire file under ~450 lines — tight, polished, fast to generate.
 OUTPUT: nothing but the file. Start with <!DOCTYPE html>. No markdown fences, no commentary.`;
 
-export const FORGE_GAME_ACU_CHARGE = 300;
+const GAME_SYSTEM = `You are the JOSHRIX Code Agent. Generate a COMPLETE, self-contained HTML5 game as ONE html file, implementing the creator's concept as faithfully as a 2D canvas web game allows. This is a COMMERCIAL product a creator will sell — it must feel like a polished paid arcade game, never a prototype.
+HARD REQUIREMENTS:
+- ONE file. No external resources of any kind: no CDNs, no images, no fonts, no network calls, no localStorage.
+- <canvas>-based. Works with BOTH mouse and touch. Canvas scales responsively (max-width:100%, touch-action:none).
+- Structure: animated title screen (game title + one-line how-to-play + START) -> core gameplay loop with score/progress -> win/lose states with restart. A pause button during play.
+- Rising difficulty over time or levels. A satisfying 3-8 minute session. requestAnimationFrame; smooth on mobile.
+POLISH BAR (all of these, not some):
+- Particle effects on every important event (collect, hit, death, level-up).
+- Eased motion (no linear teleports): smooth lerps, springy UI, screen shake on impacts.
+- Multi-layer parallax background that evokes the concept's WORLD (its places, not abstract stars — a forest concept gets trees and fireflies, a city concept gets skyline layers).
+- Distinct visual identity per entity: the player, each enemy/hazard type and each collectable must be DRAWN as recognisable shapes of the concept (a keeper is a figure with arms, a crystal is a faceted gem, a shadow sprite has eyes) — never plain circles for everything.
+- Juice: score pops, combo counters, flash on damage, glow effects (shadowBlur), animated HUD.
+- Premium palette fitting the concept (JOSHRIX default: #050508 ground, violet #7C3AED, cyan #22D3EE) unless the concept demands another (bright children's world -> vivid colours).
+- Procedural WebAudio sound design (no files): distinct SFX per event + a simple ambient loop + a mute button; create the AudioContext only on the first user gesture.
+- All player-facing text in the creator's language (use the provided language, else detect from the concept).
+- Age-appropriate for the stated audience. No real brands, clubs, celebrities or licensed characters.
+SIZE: 900-1500 lines. Use the space for gameplay depth and polish — more enemy behaviours, more levels, better feedback. Never pad; never truncate the file.
+${RUNTIME_SAFETY}`;
+
+const GAME_SYSTEM_3D = `You are the JOSHRIX Code Agent. Generate a COMPLETE HTML5 **3D** game as ONE html file using three.js, implementing the creator's concept faithfully in real 3D. This is a PREMIUM COMMERCIAL product — it must look and feel like a real 3D game, never a tech demo.
+THREE.JS SETUP (the ONLY allowed external resource — include this exact tag first in <head>):
+<script src="https://www.joshrix.com/assets/vendor/three.min.js"><\/script>
+This is three.js r147 UMD: the global THREE. NO ES modules, NO import statements, NO addons (OrbitControls etc. are NOT available — write your own camera logic).
+HARD REQUIREMENTS:
+- Real 3D scene: THREE.PerspectiveCamera, lighting rig (ambient + directional minimum), THREE.Fog for depth, MeshStandardMaterial with sensible metalness/roughness, a ground/environment that builds the concept's WORLD from primitive geometry composition (cones+cylinders make trees, boxes make buildings — compose recognisable objects, not floating cubes).
+- Player-controlled entity with smooth eased movement; camera follows with lag/lookAt. Collisions via distance checks.
+- Works with BOTH touch (drag) and mouse + arrow/WASD keys. window resize handler; renderer.setPixelRatio(Math.min(devicePixelRatio,2)); antialias:true.
+- HUD as DOM overlay divs (position:fixed) over the WebGL canvas: score, lives/health, level name. Animated title overlay with START button -> gameplay -> win/lose overlay with restart. A pause button.
+- Rising difficulty. 3-8 minute session. Particle bursts (THREE.Points or small meshes) on important events. Subtle idle animations everywhere (bobbing, rotation, pulsing emissive).
+- Procedural WebAudio SFX + mute button; AudioContext only on first user gesture.
+- All player-facing text in the creator's language. Age-appropriate. No real brands or licensed characters.
+- If typeof THREE === "undefined" after the script tag, write a visible message into the page and stop cleanly (no throw loop).
+SIZE: 900-1600 lines. Spend it on world detail, enemy behaviour and polish.
+${RUNTIME_SAFETY}`;
+
+export const FORGE_GAME_ACU_CHARGE = 300;       // HOLD (2D estimate) — settled to metered 4x actual
+export const FORGE_GAME_3D_ACU_CHARGE = 1200;   // HOLD (3D estimate) — settled to metered 4x actual
+export const FORGE_MIN_CHARGE = 40;             // metered floor when the Code Agent ran
+export const ENGINE_BUILD_CHARGE = 60;          // flat platform charge when only the engine built
 
 export async function generateGameHtml(
   prompt: string,
-  opts: { title?: string; summary?: string; language?: string } = {},
-): Promise<{ html: string; provider: string }> {
+  opts: { title?: string; summary?: string; language?: string; mode?: string } = {},
+): Promise<{ html: string; provider: string; usage?: TokenUsage }> {
   if (process.env.ANTHROPIC_API_KEY) {
     const anthropic = new Anthropic();
-    const msg = await anthropic.messages.create({
+    // Streaming: lets the Code Agent build games at ANY size (no request timeout
+    // risk at large max_tokens) — the creator pays 4x the metered cost, whatever it is.
+    const stream = anthropic.messages.stream({
       model: "claude-sonnet-5",   // Code Agent: fast frontier coder; Idea Agent stays on Opus
-      max_tokens: 9000,
-      system: GAME_SYSTEM,
+      max_tokens: 20000,
+      system: opts.mode === "3d" ? GAME_SYSTEM_3D : GAME_SYSTEM,
       messages: [{
         role: "user",
         content: `Creator's game concept:\n${prompt}\n\nBlueprint title: ${opts.title ?? "(derive from concept)"}\nBlueprint summary: ${opts.summary ?? "(none)"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the concept"}`,
       }],
     });
+    const msg = await stream.finalMessage();
     let text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
     const start = text.indexOf("<!DOCTYPE");
     const altStart = start === -1 ? text.indexOf("<html") : start;
@@ -146,7 +198,10 @@ export async function generateGameHtml(
     text = text.slice(start === -1 ? altStart : start);
     const end = text.lastIndexOf("</html>");
     if (end !== -1) text = text.slice(0, end + 7);
-    return { html: text, provider: "claude" };
+    return {
+      html: text, provider: "claude",
+      usage: { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens },
+    };
   }
   // demo fallback (no AI key): a tiny real playable game so the flow stays testable offline
   const title = (opts.title || "Your Game").replace(/[<>&]/g, "");
