@@ -91,6 +91,21 @@
   var $ = function(x){ return document.getElementById(x); };
   var sid = 'ps-' + Math.random().toString(36).slice(2, 12);
 
+  // Games run in a sandboxed, opaque-origin iframe (real isolation). That origin
+  // THROWS a SecurityError on any localStorage access, which silently blanks a
+  // game that touches storage; and a runtime JS error otherwise renders a blank
+  // screen with no clue why. prepGameHtml injects, before the game's own script,
+  // an in-memory storage shim and an on-screen error reporter so neither fails silently.
+  var JX_GAME_SHIM = "<script>(function(){try{window.localStorage.getItem('_jx');}catch(e){var mk=function(){var m={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(m,k)?m[k]:null;},setItem:function(k,v){m[k]=String(v);},removeItem:function(k){delete m[k];},clear:function(){m={};},key:function(i){return Object.keys(m)[i]||null;},get length(){return Object.keys(m).length;}};};try{Object.defineProperty(window,'localStorage',{value:mk(),configurable:true});}catch(_){}try{Object.defineProperty(window,'sessionStorage',{value:mk(),configurable:true});}catch(_){}}var shown=false;function overlay(msg){if(shown)return;shown=true;var d=document.createElement('div');d.setAttribute('style','position:fixed;left:0;right:0;bottom:0;z-index:2147483647;font:12px/1.5 system-ui,sans-serif;background:rgba(20,6,6,.96);color:#fca5a5;padding:10px 14px;border-top:2px solid #ef4444;max-height:50%;overflow:auto;white-space:pre-wrap;word-break:break-word');d.textContent='\\u26a0 Game runtime error:\\n'+msg;(document.body||document.documentElement).appendChild(d);}window.addEventListener('error',function(e){overlay((e.message||'Script error')+(e.lineno?(' (line '+e.lineno+')'):''));});window.addEventListener('unhandledrejection',function(e){overlay('Unhandled promise rejection: '+((e.reason&&(e.reason.message||e.reason))||'unknown'));});})();<\/script>";
+  function prepGameHtml(html){
+    if (!html) return html;
+    var i = html.search(/<head[^>]*>/i);
+    if (i !== -1) { var end = html.indexOf('>', i) + 1; return html.slice(0, end) + JX_GAME_SHIM + html.slice(end); }
+    var h = html.search(/<html[^>]*>/i);
+    if (h !== -1) { var e2 = html.indexOf('>', h) + 1; return html.slice(0, e2) + JX_GAME_SHIM + html.slice(e2); }
+    return JX_GAME_SHIM + html;
+  }
+
   function track(event, props){
     try {
       fetch(API + '/api/telemetry', { method:'POST', headers:{'Content-Type':'application/json'},
@@ -129,7 +144,7 @@
         f.setAttribute('sandbox', 'allow-scripts allow-pointer-lock');
         f.setAttribute('title', g.title || 'JOSHRIX game');
         f.setAttribute('allow', 'autoplay; fullscreen');
-        f.srcdoc = g.html;
+        f.srcdoc = prepGameHtml(g.html);
         $('frameCard').innerHTML = '';
         $('frameCard').appendChild(f);
         var fsBtn = $('btnFull');

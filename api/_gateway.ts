@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-29.26";
+export const BUILD_ID = "2026-07-29.27";
 export const BLUEPRINT_ACU_CHARGE = 8;
 
 export async function generateBlueprint(
@@ -113,7 +113,12 @@ HARD REQUIREMENTS:
 - Lightweight procedural WebAudio sound effects (no audio files) + a mute button; create the AudioContext only on the first user gesture.
 - All player-facing text in the creator's language (use the provided language, else detect from the concept).
 - Age-appropriate for the stated audience. No real brands, clubs, celebrities or licensed characters.
-- Robust: no uncaught exceptions; guard all input handlers.
+RUNTIME SAFETY — the game renders inside a sandboxed, opaque-origin iframe. A single uncaught error paints a BLANK screen, so:
+- Something MUST be painted to the canvas within the first frame of load (draw the title screen immediately on script run — never wait for an event, image, or timer before the first paint).
+- Every function must be DEFINED BEFORE it is called on the boot path — no ReferenceError / "x is not defined" / calling a function above its declaration in the load order. Declare helpers first, then start the loop.
+- Do NOT touch localStorage, sessionStorage, cookies, or any Storage API — the sandbox throws on them. Keep all state in plain JS variables.
+- Wrap the whole boot in try/catch and inside requestAnimationFrame callbacks; guard every input handler. Never reference an id/element before it exists in the DOM.
+- No optional-chaining/nullish assumptions about objects that may be undefined; initialise arrays/objects before use.
 SIZE: keep the entire file under ~450 lines — tight, polished, fast to generate.
 OUTPUT: nothing but the file. Start with <!DOCTYPE html>. No markdown fences, no commentary.`;
 

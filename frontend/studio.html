@@ -723,6 +723,20 @@ function applyBlueprintIdentity() {
 // The game runs in a sandboxed, opaque-origin iframe (no same-origin, no
 // localStorage, no parent access) — that is the real isolation. A strict
 // injected CSP was tried and reverted: it blanked rich real-world games.
+// prepGameHtml injects, BEFORE the game's own script, (1) an in-memory
+// localStorage/sessionStorage shim — a sandboxed opaque-origin iframe THROWS a
+// SecurityError on any storage access, which silently blanks a game that touches
+// it; and (2) an error overlay so a build that hits a runtime JS error self-reports
+// the actual message inside the frame instead of rendering a silent blank screen.
+const JX_GAME_SHIM = "<script>(function(){try{window.localStorage.getItem('_jx');}catch(e){var mk=function(){var m={};return{getItem:function(k){return Object.prototype.hasOwnProperty.call(m,k)?m[k]:null;},setItem:function(k,v){m[k]=String(v);},removeItem:function(k){delete m[k];},clear:function(){m={};},key:function(i){return Object.keys(m)[i]||null;},get length(){return Object.keys(m).length;}};};try{Object.defineProperty(window,'localStorage',{value:mk(),configurable:true});}catch(_){}try{Object.defineProperty(window,'sessionStorage',{value:mk(),configurable:true});}catch(_){}}var shown=false;function overlay(msg){if(shown)return;shown=true;var d=document.createElement('div');d.setAttribute('style','position:fixed;left:0;right:0;bottom:0;z-index:2147483647;font:12px/1.5 system-ui,sans-serif;background:rgba(20,6,6,.96);color:#fca5a5;padding:10px 14px;border-top:2px solid #ef4444;max-height:50%;overflow:auto;white-space:pre-wrap;word-break:break-word');d.textContent='\\u26a0 Game runtime error \\u2014 press Refine Concept to regenerate:\\n'+msg;(document.body||document.documentElement).appendChild(d);}window.addEventListener('error',function(e){overlay((e.message||'Script error')+(e.lineno?(' (line '+e.lineno+')'):''));});window.addEventListener('unhandledrejection',function(e){overlay('Unhandled promise rejection: '+((e.reason&&(e.reason.message||e.reason))||'unknown'));});})();<\/script>";
+function prepGameHtml(html){
+  if (!html) return html;
+  const i = html.search(/<head[^>]*>/i);
+  if (i !== -1) { const end = html.indexOf('>', i) + 1; return html.slice(0, end) + JX_GAME_SHIM + html.slice(end); }
+  const h = html.search(/<html[^>]*>/i);
+  if (h !== -1) { const end = html.indexOf('>', h) + 1; return html.slice(0, end) + JX_GAME_SHIM + html.slice(end); }
+  return JX_GAME_SHIM + html;
+}
 let realBuildCharged = false;
 let forgeStart = 0;
 async function renderPlaytest() {
@@ -747,7 +761,7 @@ async function renderPlaytest() {
       $('game').style.display = 'none';
       frame.appendChild(fr);
     }
-    fr.srcdoc = realBuild.html;
+    fr.srcdoc = prepGameHtml(realBuild.html);
     $('gfTitle').textContent = (lastBp.title || 'YOUR GAME').toUpperCase() + ' — REAL BUILD';
     $('playCopyTitle').textContent = '🎮 Play Your Build — Live Now';
     $('playCopyBody').textContent = 'The game on the left is your real build, running right now and visible only to you. Controls are explained on the game\'s own title screen.';
@@ -805,12 +819,13 @@ $('btnRefine').addEventListener('click', () => {
 // blank playtest can always be diagnosed (and the creator can see they own real code)
 $('btnViewSrc').addEventListener('click', () => {
   if (!(realBuild && realBuild.html)) { alert('No real build yet — forge a game first.'); return; }
+  const src = prepGameHtml(realBuild.html);
   try {
-    const blob = new Blob([realBuild.html], { type: 'text/html' });
+    const blob = new Blob([src], { type: 'text/html' });
     window.open(URL.createObjectURL(blob), '_blank', 'noopener');
   } catch (e) {
     const w = window.open('', '_blank');
-    if (w) { w.document.open(); w.document.write(realBuild.html); w.document.close(); }
+    if (w) { w.document.open(); w.document.write(src); w.document.close(); }
   }
 });
 
