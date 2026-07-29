@@ -8,7 +8,7 @@
  * Without DATABASE_URL responds { mode: "no_db" } so the client keeps its local sim.
  */
 import { randomUUID } from "node:crypto";
-import { getDb, ensureGameSchema, createWallet, getWallet, refillTesterWallet } from "./_ledger";
+import { getDb, ensureGameSchema, createWallet, getWallet, refillTesterWallet, deleteWallet } from "./_ledger";
 
 export const TESTER_GRANT_ACU = 2000;
 
@@ -25,6 +25,14 @@ export default async function handler(req: any, res: any) {
   const { walletId, email, action } = (req.body ?? {}) as Record<string, string>;
   try {
     await ensureGameSchema(sql);
+
+    if (action === "delete") {
+      // Account deletion: removes the server wallet (balance included). Published
+      // games remain hosted; moderation can unpublish them on request.
+      if (!walletId) return res.status(400).json({ error: "walletId required for delete" });
+      const gone = await deleteWallet(sql, walletId);
+      return res.status(200).json({ mode: "live", deleted: gone, walletId });
+    }
 
     if (action === "refill") {
       if (!walletId) return res.status(400).json({ error: "walletId required for refill" });

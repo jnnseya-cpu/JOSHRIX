@@ -213,6 +213,33 @@ export async function setGameStatus(sql: Sql, id: string, status: "approved" | "
   return rows.length > 0;
 }
 
+/** A creator's own games (dashboard "My Games") — newest first. */
+export async function listGamesByWallet(sql: Sql, walletId: string, limit = 50) {
+  return (await sql`SELECT id, title, status, plays, created_at FROM games WHERE creator_wallet = ${walletId} ORDER BY created_at DESC LIMIT ${limit}`) as any[];
+}
+
+/** GDPR delete: removes the wallet row; the creator's published games stay hosted. */
+export async function deleteWallet(sql: Sql, id: string): Promise<boolean> {
+  const rows = (await sql`DELETE FROM wallets WHERE id = ${id} RETURNING id`) as any[];
+  return rows.length > 0;
+}
+
+/** Real platform counters for the admin bridge (key-gated at the endpoint). */
+export async function adminStats(sql: Sql) {
+  const [row] = (await sql`
+    SELECT
+      (SELECT count(*) FROM games)                                        AS games_total,
+      (SELECT count(*) FROM games WHERE status = 'pending_review')        AS games_pending,
+      (SELECT count(*) FROM games WHERE status = 'approved')              AS games_approved,
+      (SELECT count(*) FROM games WHERE status = 'rejected')              AS games_rejected,
+      (SELECT coalesce(sum(plays), 0) FROM games)                         AS plays_total,
+      (SELECT count(*) FROM wallets)                                      AS wallets,
+      (SELECT coalesce(sum(balance), 0) FROM wallets)                     AS acu_outstanding,
+      (SELECT count(*) FROM dist_requests)                                AS dist_requests
+  `) as Array<Record<string, string | number>>;
+  return row;
+}
+
 /** Lane 1 — the Arcade: every approved game, most-played first. */
 export async function listApprovedGames(sql: Sql, limit = 60) {
   return (await sql`SELECT id, title, summary, language, plays, created_at FROM games WHERE status = 'approved' ORDER BY plays DESC, created_at DESC LIMIT ${limit}`) as any[];

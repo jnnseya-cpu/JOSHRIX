@@ -45,30 +45,15 @@
 </div><div class="console reveal">
 <div class="console-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t" id="dashSession">JOSHRIX OS — OPERATOR SESSION · CREATOR PRO</span><span class="status">FLEET SYNCED</span></div>
 <div class="modules" id="dashModules">
-<div class="module"><h3><span class="st"></span>ACU Balance</h3><span class="num">742</span><div class="bar"><i style="width:74%"></i></div><span class="readout">980/MO · RENEWS IN 11 DAYS · <a href="pricing.html">TOP UP</a></span></div>
-<div class="module"><h3><span class="st"></span>Revenue (30d)</h3><span class="num">£4,820</span><div class="bar ok"><i style="width:62%"></i></div><span class="readout">SALES £3.2K · IN-GAME £1.1K · ROYALTIES £0.5K</span></div>
-<div class="module"><h3><span class="st"></span>Pending Payout</h3><span class="num">£320</span><div class="bar ok"><i style="width:100%"></i></div><span class="readout">KYC VERIFIED · SETTLES T+7</span></div>
-<div class="module"><h3><span class="st"></span>Active Forge</h3><span class="num">1</span><div class="bar"><i style="width:38%"></i></div><span class="readout">“QUANTUM TYCOON 2” · CODE AGENT · ETA 41 MIN</span></div>
-<div class="module"><h3><span class="st"></span>My Games</h3><span class="num">12</span><div class="bar"><i style="width:80%"></i></div><span class="readout">8 PUBLISHED · 3 LISTED · 1 DRAFT</span></div>
-<div class="module"><h3><span class="st"></span>Marketplace Views</h3><span class="num">9.4K</span><div class="bar"><i style="width:57%"></i></div><span class="readout">CONVERSION 3.1% · 288 SALES</span></div>
-<div class="module"><h3><span class="st"></span>Quality Signal</h3><span class="num">92</span><div class="bar ok"><i style="width:92%"></i></div><span class="readout">CRASH-FREE 99.4% · 0 FLAGS</span></div>
-<div class="module"><h3><span class="st"></span>Referrals</h3><span class="num">17</span><div class="bar"><i style="width:44%"></i></div><span class="readout">EARNING 5% FIRST-YEAR NET · £84 ACCRUED</span></div>
+<div class="module"><h3><span class="st"></span>ACU Balance</h3><span class="num" id="mAcuBal">—</span><div class="bar"><i id="mAcuBar" style="width:0%"></i></div><span class="readout" id="mAcuRead"><a href="wallet.html">OPEN WALLET</a></span></div>
+<div class="module"><h3><span class="st"></span>My Games</h3><span class="num" id="mGames">0</span><div class="bar"><i id="mGamesBar" style="width:0%"></i></div><span class="readout" id="mGamesRead">NONE YET — <a href="studio.html">FORGE YOUR FIRST</a></span></div>
+<div class="module"><h3><span class="st"></span>Total Plays</h3><span class="num" id="mPlays">0</span><div class="bar"><i id="mPlaysBar" style="width:0%"></i></div><span class="readout">ACROSS ALL YOUR PUBLISHED WORLDS</span></div>
+<div class="module"><h3><span class="st"></span>Earnings</h3><span class="num">£0.00</span><div class="bar"><i style="width:0%"></i></div><span class="readout">MARKETPLACE SALES SETTLE HERE — <a href="wallet.html">PAYOUTS IN WALLET</a></span></div>
 </div></div>
 <div id="secCreator"><h2 class="jx reveal">My Games</h2>
-<table class="jx reveal"><thead><tr><th>Game</th><th>Status</th><th>Players (30d)</th><th>Revenue</th><th>Rating</th><th>Actions</th></tr></thead><tbody>
-<tr><td><b>Penalty King</b></td><td><span class="pill green">PUBLISHED</span></td><td>21.7K</td><td>£2,410</td><td>4.8★</td><td>Manage · Analytics · Promote</td></tr>
-<tr><td><b>Quantum Tycoon</b></td><td><span class="pill green">LISTED</span></td><td>4.8K</td><td>£1,130</td><td>4.6★</td><td>Manage · Analytics · Update</td></tr>
-<tr><td><b>Sugar Rush Run</b></td><td><span class="pill green">PUBLISHED</span></td><td>6.2K</td><td>£980</td><td>4.7★</td><td>Manage · Analytics · Promote</td></tr>
-<tr><td><b>Quantum Tycoon 2</b></td><td><span class="pill amber">FORGING</span></td><td>—</td><td>—</td><td>—</td><td>Watch forge · Approve gates</td></tr>
-</tbody></table>
-<h2 class="jx reveal">AI Recommendations</h2>
-<div class="reveal">
-<span class="pill">RAISE PENALTY KING TO £5.99 (+18% PROJECTED)</span>
-<span class="pill">ADD DEMO VIDEO TO QUANTUM TYCOON (+31% CONVERSION)</span>
-<span class="pill">BUNDLE SUGAR RUSH ASSETS AS A TEMPLATE (£29 SUGGESTED)</span>
-<span class="pill">OFFER COMMERCIAL LICENCE ON IRON MECHANICS</span>
-<span class="pill green">RUN WEEKEND TOURNAMENT — RETENTION +12%</span>
-</div></div>
+<table class="jx reveal"><thead><tr><th>Game</th><th>Status</th><th>Plays</th><th>Created</th><th>Links</th></tr></thead><tbody id="myGamesBody">
+<tr><td colspan="5" style="color:var(--muted)">Loading your games…</td></tr>
+</tbody></table></div>
 <div class="reveal" style="margin-top:2.2rem;display:flex;gap:1rem;flex-wrap:wrap">
 <a class="btn btn-primary" href="studio.html">▶&nbsp; New Forge</a>
 <a class="btn btn-ghost" href="profile.html">View Public Profile</a>
@@ -120,53 +105,57 @@
 </script>
 <script>
 (function () {
+  /* REAL data only — every number on this dashboard comes from the account
+     profile or the platform database. Zero is shown as zero. */
   const p = jxStore.get();
   const $ = (id) => document.getElementById(id);
+  const API = (window.JOSHRIX_API_BASE || '');
+  if (p.accountType === 'admin') { location.replace('admin.html'); return; }
   const who = p.handle || (p.displayName ? '@' + p.displayName.split(' ')[0].toLowerCase() : '@operator');
   $('dashWho').textContent = who;
 
-  const M = (h, num, w, read, ok) =>
-    '<div class="module"><h3><span class="st"></span>' + h + '</h3><span class="num">' + num +
-    '</span><div class="bar' + (ok ? ' ok' : '') + '"><i style="width:' + w + '%"></i></div><span class="readout">' + read + '</span></div>';
+  const esc = (s) => String(s == null ? '' : s).replace(/[<>&"]/g, (c) => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]);
 
-  const TYPES = {
-    studio: { tag: 'Studio Dashboard', session: 'JOSHRIX OS — STUDIO WORKSPACE · 10 SEATS', modules: [
-      M('Team Seats', '10', 100, '7 ACTIVE TODAY · RBAC ENFORCED', 1), M('Active Projects', '24', 68, '6 IN FORGE · 3 AWAITING APPROVAL'),
-      M('Approval Queue', '3', 30, 'ART ×1 · ECONOMY ×1 · RELEASE ×1'), M('Studio Revenue (30d)', '£18.4K', 74, 'GAMES £11K · TEMPLATES £7.4K', 1),
-      M('Shared Asset Library', '412', 55, '38 ADDED THIS WEEK'), M('Pipeline Health', '96%', 96, 'CI GREEN · STAGING SYNCED', 1) ] },
-    business: { tag: 'Business Dashboard', session: 'JOSHRIX OS — BRAND WORKSPACE', modules: [
-      M('Live Campaigns', '4', 60, '2 GAMES · 1 QUIZ · 1 TOURNAMENT'), M('Branded Portals', '2', 40, 'WHITE-LABEL · CUSTOM DOMAINS', 1),
-      M('Leads Captured (30d)', '1,240', 71, 'CPL £0.84 · EXPORTED TO CRM', 1), M('Campaign Plays', '88K', 66, 'AVG SESSION 4:10'),
-      M('Conversion', '4.2%', 42, 'GAME → SIGNUP'), M('Licences', '3', 30, 'COMMERCIAL ×2 · WHITE-LABEL ×1') ] },
-    enterprise: { tag: 'Enterprise Dashboard', session: 'JOSHRIX OS — PRIVATE WORKSPACE · SSO', modules: [
-      M('Workspaces', '6', 60, 'REGIONS: EU-WEST ×4 · US ×2'), M('Seats', '250', 84, 'SSO · SCIM PROVISIONED', 1),
-      M('Private Agents', '4', 40, 'CUSTOM MODEL ROUTING ACTIVE'), M('SLA', '99.95%', 99, 'THIS QUARTER · 0 SEV1', 1),
-      M('Data Residency', 'EU', 100, 'LONDON · FRANKFURT', 1), M('Audit Events (30d)', '12.4K', 55, 'ALL SIGNED · EXPORTABLE') ] },
-    education: { tag: 'Education Dashboard', session: 'JOSHRIX OS — CLASSROOM · SUPERVISED', modules: [
-      M('Classrooms', '8', 66, '3 LANGUAGES · SAFE MODE ON', 1), M('Students', '214', 78, '196 ACTIVE THIS WEEK'),
-      M('Live Assignments', '12', 48, 'DUE THIS WEEK ×5'), M('Projects Submitted', '96', 72, 'AVG FUN SCORE 81', 1),
-      M('Safety Flags', '0', 100, 'ALL CONTENT WITHIN POLICY', 1), M('Certificates Issued', '41', 41, 'CREATOR LEVEL 1 ×32 · LEVEL 2 ×9') ] },
-    buyer: { tag: 'Player Dashboard', session: 'JOSHRIX OS — PLAYER SESSION', modules: [
-      M('My Library', '12', 60, '3 PLAYED TODAY'), M('Wishlists', '5', 25, '2 ON SALE NOW', 1),
-      M('Orders', '8', 40, 'ALL LICENCES ON REGISTRY'), M('Licences', '3', 30, 'PERSONAL ×2 · COMMERCIAL ×1'),
-      M('Play Time (30d)', '46h', 66, 'TOP: PENALTY KING'), M('My Reviews', '6', 30, 'AVG 4.5★ GIVEN') ] },
+  // ACU balance: live from the server wallet when it exists, else the local profile
+  const showAcu = (n, note) => {
+    $('mAcuBal').textContent = Number(n || 0).toLocaleString();
+    $('mAcuBar').style.width = Math.min(100, (n / 2000) * 100) + '%';
+    if (note) $('mAcuRead').innerHTML = note + ' · <a href="wallet.html">WALLET</a>';
   };
-
-  const t = TYPES[p.accountType];
-  if (p.accountType === 'admin') { location.replace('admin.html'); return; }
-  if (!t && p.testerAcuGranted) {
-    // creator dashboard: show the real tester balance in the ACU module
-    const acuModule = document.querySelector('#dashModules .module');
-    if (acuModule) {
-      acuModule.querySelector('.num').textContent = (p.acu || 0).toLocaleString();
-      acuModule.querySelector('.readout').innerHTML = '🧪 TESTER GRANT · <a href="wallet.html">WALLET</a>';
-    }
+  showAcu(p.acu || 0, p.testerAcuGranted ? '🧪 TESTER GRANT' : '');
+  if (p.serverWalletId) {
+    fetch(API + '/api/wallet-init', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ walletId: p.serverWalletId }), signal: AbortSignal.timeout(8000) })
+      .then(r => r.json()).then(j => {
+        if (j && j.mode === 'live') showAcu(j.balance, (j.category === 'tester' ? '🧪 TESTER' : 'PURCHASED') + ' · SERVER-VERIFIED');
+      }).catch(() => {});
   }
-  if (t) {
-    $('dashTag').textContent = t.tag;
-    $('dashSession').textContent = t.session;
-    $('dashModules').innerHTML = t.modules.join('');
-    const sec = $('secCreator'); if (sec) sec.style.display = 'none';
+
+  // My Games: the creator's real forged games
+  const body = $('myGamesBody');
+  const PILL = { approved: '<span class="pill green">● LIVE</span>', pending_review: '<span class="pill amber">◐ IN REVIEW</span>', rejected: '<span class="pill" style="color:#f87171">✕ REJECTED</span>' };
+  const emptyRow = '<tr><td colspan="5" style="color:var(--muted)">No games yet — <a href="studio.html" style="color:var(--cyan)">forge your first world</a>. It appears here the moment you publish.</td></tr>';
+  if (!p.serverWalletId) { body.innerHTML = emptyRow; }
+  else {
+    fetch(API + '/api/my-games?walletId=' + encodeURIComponent(p.serverWalletId), { signal: AbortSignal.timeout(8000) })
+      .then(r => r.json()).then(j => {
+        const games = (j && j.games) || [];
+        $('mGames').textContent = games.length;
+        $('mGamesBar').style.width = Math.min(100, games.length * 10) + '%';
+        if (games.length) {
+          const live = games.filter(g => g.status === 'approved').length;
+          const rev = games.filter(g => g.status === 'pending_review').length;
+          $('mGamesRead').textContent = live + ' LIVE · ' + rev + ' IN REVIEW';
+        }
+        $('mPlays').textContent = Number((j && j.totalPlays) || 0).toLocaleString();
+        $('mPlaysBar').style.width = Math.min(100, ((j && j.totalPlays) || 0) / 5) + '%';
+        body.innerHTML = games.length ? games.map(g =>
+          '<tr><td><b>' + esc(g.title) + '</b></td><td>' + (PILL[g.status] || esc(g.status)) + '</td>'
+          + '<td>' + Number(g.plays || 0).toLocaleString() + '</td>'
+          + '<td>' + (g.createdAt ? new Date(g.createdAt).toLocaleDateString() : '—') + '</td>'
+          + '<td><a href="' + esc(g.status === 'approved' ? g.playUrl : g.previewUrl) + '" target="_blank" rel="noopener" style="color:var(--cyan)">▶ ' + (g.status === 'approved' ? 'Play' : 'Preview') + '</a></td></tr>'
+        ).join('') : emptyRow;
+      }).catch(() => { body.innerHTML = emptyRow; });
   }
 })();
 </script>

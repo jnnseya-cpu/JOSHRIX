@@ -60,13 +60,13 @@ table.jx td:first-child{white-space:nowrap}
   </div>
 
   <div class="wal-grid reveal">
-    <div class="wal-card"><b>ACU Balance</b><span class="big" id="wAcu">1,873</span>
-      <p class="sub" id="wAcuCat">promo 40 · subscription 833 · purchased 1,000</p></div>
-    <div class="wal-card"><b>Available Earnings</b><span class="big" id="wAvail">£482.00</span>
+    <div class="wal-card"><b>ACU Balance</b><span class="big" id="wAcu">0</span>
+      <p class="sub" id="wAcuCat">top up below to start forging</p></div>
+    <div class="wal-card"><b>Available Earnings</b><span class="big" id="wAvail">£0.00</span>
       <p class="sub">from sales, licences, lineage royalties &amp; referrals</p></div>
-    <div class="wal-card"><b>Pending</b><span class="big" id="wPend">£123.50</span>
+    <div class="wal-card"><b>Pending</b><span class="big" id="wPend">£0.00</span>
       <p class="sub">inside the refund window — releases automatically</p></div>
-    <div class="wal-card"><b>Lifetime Earned</b><span class="big" id="wLife">£964.00</span>
+    <div class="wal-card"><b>Lifetime Earned</b><span class="big" id="wLife">£0.00</span>
       <p class="sub">every penny traceable in the ledger below</p></div>
   </div>
 
@@ -80,7 +80,7 @@ table.jx td:first-child{white-space:nowrap}
   <div class="pane reveal">
     <h3>🏦 Pay Out — Withdraw Earnings</h3>
     <div class="frow">
-      <div><label>Amount (£)</label><select id="poAmt"><option value="1000">£10.00 — minimum</option><option value="5000" selected>£50.00</option><option value="25000">£250.00</option><option value="48200">£482.00 — full balance</option></select></div>
+      <div><label>Amount (£)</label><select id="poAmt"><option value="1000" selected>£10.00 — minimum</option><option value="5000">£50.00</option><option value="25000">£250.00</option></select></div>
       <div><label>Rail</label><select id="poRail">
         <option value="bank_transfer">Bank transfer — free · weekly</option>
         <option value="bank_transfer_instant">Bank transfer — instant · 1% (min 30p)</option>
@@ -98,9 +98,7 @@ table.jx td:first-child{white-space:nowrap}
     <table class="jx">
       <thead><tr><th>Event</th><th>Split</th><th>Postings (must sum to zero)</th></tr></thead>
       <tbody id="ledgerBody">
-        <tr><td>£25 ACU top-up</td><td>2,500 ACUs credited</td><td>gateway_clearing +£25.00 · deferred_acu_revenue −£25.00</td></tr>
-        <tr><td>Penalty King sold £4.99</td><td>platform £1.00 · processing £0.27 · you £3.72</td><td>clearing +£4.72 · platform_revenue −£1.00 · creator_earnings −£3.72</td></tr>
-        <tr><td>Remix sold £4.99 (lineage)</td><td>platform £1.00 · ancestor £1.12 · forker £2.60</td><td>clearing +£4.72 · platform −£1.00 · creator −£2.60 · lineage_royalties −£1.12</td></tr>
+        <tr><td colspan="3" style="color:var(--muted)">No transactions yet. Your first top-up or sale writes the first entry — every movement is double-entry and sums to zero.</td></tr>
       </tbody>
     </table>
   </div>
@@ -154,11 +152,11 @@ $('btnPayout').addEventListener('click', async () => {
     r.textContent = '✓ demo (offline) — payout request would be queued for the next settlement run';
   }
 });
-const applyLocalAcu = () => {
+const applyLocalAcu = (skipBalance) => {
   try {
     const p = JSON.parse(localStorage.getItem('jx.profile') || '{}');
     if (p.testerAcuGranted) {
-      $('wAcu').textContent = (p.acu || 0).toLocaleString();
+      if (!skipBalance) $('wAcu').textContent = (p.acu || 0).toLocaleString();
       $('wAcuCat').innerHTML = '🧪 tester grant · <a href="#" id="btnRefill" style="color:var(--cyan)">refill to 2,000</a>';
       const rf = document.getElementById('btnRefill');
       if (rf && !rf.dataset.wired) {
@@ -186,14 +184,23 @@ const applyLocalAcu = () => {
     }
   } catch (e) { /* no local profile */ }
 };
-fetch(API + '/api/wallet', { signal: AbortSignal.timeout(6000) }).then(r => r.json()).then(w => {
-  $('wAcu').textContent = w.acu.total.toLocaleString();
-  $('wAvail').textContent = '£' + (w.earnings.availableMinor/100).toFixed(2);
-  $('wPend').textContent = '£' + (w.earnings.pendingMinor/100).toFixed(2);
-  $('wLife').textContent = '£' + (w.earnings.lifetimeMinor/100).toFixed(2);
-  applyLocalAcu(); // tester balance wins over the demo wallet
-}).catch(applyLocalAcu);
-applyLocalAcu();
+/* REAL balances only: the server wallet is authoritative when it exists;
+   earnings stay £0.00 until actual marketplace sales settle. */
+(function () {
+  let prof = {};
+  try { prof = JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (e) {}
+  if (prof.serverWalletId) {
+    fetch(API + '/api/wallet-init', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ walletId: prof.serverWalletId }), signal: AbortSignal.timeout(8000) })
+      .then(r => r.json()).then(j => {
+        if (j && j.mode === 'live') {
+          $('wAcu').textContent = Number(j.balance).toLocaleString();
+          if (j.category !== 'tester') $('wAcuCat').textContent = 'purchased · server-verified';
+          applyLocalAcu(true); // server balance wins; this just adds the tester refill link
+        } else applyLocalAcu();
+      }).catch(() => applyLocalAcu());
+  } else { applyLocalAcu(); }
+})();
 })();
 </script>
 </body>

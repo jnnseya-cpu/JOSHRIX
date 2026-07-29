@@ -100,16 +100,15 @@
   <p class="lede">Omniscient visibility across operators, forges, revenue, moderation, and system health. Every action below is dual-controlled and written to the immutable audit chain.</p>
 </div><div class="console reveal">
 <div class="console-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t">SUPER ADMIN OS · GROUPE NSEYA / JNN GLOBAL</span><span class="status">ALL SYSTEMS NOMINAL</span></div>
-<div class="modules">
-<div class="module"><h3><span class="st"></span>Operators</h3><span class="num">47.2K</span><div class="bar"><i style="width:72%"></i></div><span class="readout">+1,240 THIS WEEK · 96% KYC PASS</span></div>
-<div class="module"><h3><span class="st"></span>MRR</h3><span class="num">£612K</span><div class="bar ok"><i style="width:81%"></i></div><span class="readout">CHURN 2.1% · ARPU £13.40</span></div>
-<div class="module"><h3><span class="st"></span>Marketplace GMV (30d)</h3><span class="num">£1.84M</span><div class="bar ok"><i style="width:66%"></i></div><span class="readout">TAKE RATE 19.2% · REFUNDS 1.4%</span></div>
-<div class="module"><h3><span class="st"></span>AI Provider Cost</h3><span class="num">£96K</span><div class="bar"><i style="width:24%"></i></div><span class="readout">ACU MARGIN 76.4% · 4× FLOOR HOLDING</span></div>
-<div class="module"><h3><span class="st"></span>Fully-Loaded Margin</h3><span class="num" id="floadNum">71.3%</span><div class="bar ok" id="floadBar"><i style="width:71%"></i></div><span class="readout" id="floadRead">VAT 16.7% · STRIPE 2.3% · GCP 0.9% · REFUNDS 1.5% — FLOOR 60% · ALERT: OK</span></div>
-<div class="module"><h3><span class="st"></span>Active Forges</h3><span class="num">1,318</span><div class="bar"><i style="width:55%"></i></div><span class="readout">SUCCESS 97.6% · P95 3.2H</span></div>
-<div class="module"><h3><span class="st"></span>Moderation Queue</h3><span class="num">23</span><div class="bar warn"><i style="width:23%"></i></div><span class="readout">4 COPYRIGHT · 2 AGE-RATING · 17 ROUTINE</span></div>
-<div class="module"><h3><span class="st"></span>Security</h3><span class="num">0</span><div class="bar ok"><i style="width:100%"></i></div><span class="readout">SEV1 INCIDENTS · FRAUD HOLDS: 12</span></div>
-<div class="module"><h3><span class="st"></span>Payout Liability</h3><span class="num">£214K</span><div class="bar"><i style="width:48%"></i></div><span class="readout">NEXT SETTLEMENT RUN: 04:00 UTC</span></div>
+<div class="modules" id="realStats">
+<div class="module"><h3><span class="st"></span>Games — Total</h3><span class="num" id="sGames">—</span><div class="bar"><i id="sGamesBar" style="width:0%"></i></div><span class="readout" id="sGamesRead">LOADING REAL COUNTS…</span></div>
+<div class="module"><h3><span class="st"></span>Awaiting Review</h3><span class="num" id="sPending">—</span><div class="bar warn"><i id="sPendingBar" style="width:0%"></i></div><span class="readout">YOUR QUEUE — REVIEW BELOW</span></div>
+<div class="module"><h3><span class="st"></span>Live in Arcade</h3><span class="num" id="sApproved">—</span><div class="bar ok"><i id="sApprovedBar" style="width:0%"></i></div><span class="readout" id="sApprovedRead">APPROVED &amp; PUBLIC</span></div>
+<div class="module"><h3><span class="st"></span>Total Plays</h3><span class="num" id="sPlays">—</span><div class="bar"><i id="sPlaysBar" style="width:0%"></i></div><span class="readout">ACROSS ALL PUBLIC GAMES</span></div>
+<div class="module"><h3><span class="st"></span>Wallets</h3><span class="num" id="sWallets">—</span><div class="bar"><i id="sWalletsBar" style="width:0%"></i></div><span class="readout" id="sWalletsRead">ACU OUTSTANDING: —</span></div>
+<div class="module"><h3><span class="st"></span>Store Requests</h3><span class="num" id="sDist">—</span><div class="bar"><i id="sDistBar" style="width:0%"></i></div><span class="readout">DISTRIBUTION QUEUE (LANES 2–3)</span></div>
+<div class="module"><h3><span class="st"></span>Stripe Settlements</h3><span class="num" id="sMoney">—</span><div class="bar ok"><i id="sMoneyBar" style="width:0%"></i></div><span class="readout" id="sMoneyRead">EVENTS SETTLED VIA VERIFIED WEBHOOK</span></div>
+<div class="module"><h3><span class="st"></span>Founders</h3><span class="num" id="sFounders">—</span><div class="bar"><i id="sFoundersBar" style="width:0%"></i></div><span class="readout">FOUNDER PASSES SOLD</span></div>
 </div></div>
 <h2 class="jx reveal">Live Review Queue <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— REAL GAMES AWAITING APPROVAL</span></h2>
 <div class="reveal" id="liveQueue" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
@@ -171,19 +170,35 @@
   });
 })();
 </script>
-<h2 class="jx reveal">Moderation Queue <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— DEMO PREVIEW</span></h2>
-<table class="jx reveal"><thead><tr><th>ID</th><th>Game</th><th>Issue</th><th>Risk</th><th>AI Notes</th><th>Decision</th></tr></thead><tbody>
-<tr><td>MOD-4412</td><td><b>Super Plumber World</b></td><td>Copyright similarity</td><td><span class="pill amber">HIGH 87</span></td><td>Character 92% similar to protected mark</td><td>Reject · Notify · Ban keyword</td></tr>
-<tr><td>MOD-4413</td><td><b>Lucky Spin Palace</b></td><td>Gambling mechanics</td><td><span class="pill amber">HIGH 78</span></td><td>Paid random rewards + cash-out loop</td><td>Reject · Jurisdiction review</td></tr>
-<tr><td>MOD-4414</td><td><b>Zombie Alley</b></td><td>Age rating appeal</td><td><span class="pill">MED 41</span></td><td>Violence within 16+ threshold</td><td>Approve at 16+</td></tr>
-<tr><td>MOD-4415</td><td><b>Café Tycoon</b></td><td>Routine review</td><td><span class="pill green">LOW 6</span></td><td>All checks clear</td><td>Approve · Feature-eligible</td></tr>
-</tbody></table>
-<h2 class="jx reveal">Admin Actions</h2>
-<div class="reveal">
-<span class="pill">APPROVE GAME</span><span class="pill">REJECT GAME</span><span class="pill">SUSPEND LISTING</span><span class="pill">SUSPEND USER</span>
-<span class="pill">FEATURE GAME</span><span class="pill">EDIT COMMISSION</span><span class="pill">REFUND ORDER</span><span class="pill">RELEASE PAYOUT</span>
-<span class="pill">BLOCK KEYWORD</span><span class="pill">FORCE IP REVIEW</span><span class="pill amber">PAUSE AGENT CLASS</span><span class="pill amber">TRIGGER SECURITY AUDIT</span>
-</div>
+<script>
+/* Real platform stats — loaded with the admin key once the bridge is unlocked. */
+(function(){
+  function loadStats(){
+    var key = '';
+    try { key = sessionStorage.getItem('jx.modKey') || ''; } catch(e){}
+    if (!key) { setTimeout(loadStats, 1500); return; }
+    fetch('/api/admin-stats', { headers: { 'x-admin-key': key } })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(j){
+        if (!j) return;
+        var g = j.games || {}, m = j.money || {};
+        var set = function(id, v, barId, pct){ var el = document.getElementById(id); if (el) el.textContent = Number(v || 0).toLocaleString(); var b = document.getElementById(barId); if (b) b.style.width = Math.min(100, pct) + '%'; };
+        set('sGames', g.games_total, 'sGamesBar', Number(g.games_total || 0) * 5);
+        document.getElementById('sGamesRead').textContent = (g.games_rejected || 0) + ' REJECTED LIFETIME';
+        set('sPending', g.games_pending, 'sPendingBar', Number(g.games_pending || 0) * 10);
+        set('sApproved', g.games_approved, 'sApprovedBar', Number(g.games_approved || 0) * 5);
+        set('sPlays', g.plays_total, 'sPlaysBar', Number(g.plays_total || 0) / 5);
+        set('sWallets', g.wallets, 'sWalletsBar', Number(g.wallets || 0) * 2);
+        document.getElementById('sWalletsRead').textContent = 'ACU OUTSTANDING: ' + Number(g.acu_outstanding || 0).toLocaleString();
+        set('sDist', g.dist_requests, 'sDistBar', Number(g.dist_requests || 0) * 10);
+        set('sMoney', m.events, 'sMoneyBar', Number(m.events || 0) * 5);
+        document.getElementById('sMoneyRead').textContent = 'ACU CREDITED VIA STRIPE: ' + Number(m.acu_credited || 0).toLocaleString();
+        set('sFounders', m.founders, 'sFoundersBar', Number(m.founders || 0) * 10);
+      }).catch(function(){});
+  }
+  loadStats();
+})();
+</script>
 </main>
 <footer class="jx">
   <div class="foot-grid">
@@ -216,20 +231,6 @@
 </footer>
 <script src="assets/site.js"></script>
 <script>
-/* Economy Agent live feed — the margin control loop rendered in the admin module */
-fetch(((window.JOSHRIX_API_BASE || '') + '/api/economy'), { signal: AbortSignal.timeout(6000) })
-  .then(r => r.json()).then(d => {
-    const worst = d.summary.worstAlert.toUpperCase();
-    const margins = d.skus.map(s => s.marginOnExVat);
-    const avg = margins.reduce((a, b) => a + b, 0) / margins.length;
-    document.getElementById('floadNum').textContent = (avg * 100).toFixed(1) + '%';
-    document.getElementById('floadBar').className = 'bar ' + (worst === 'OK' ? 'ok' : 'warn');
-    document.getElementById('floadBar').firstElementChild.style.width = Math.round(avg * 100) + '%';
-    document.getElementById('floadRead').textContent =
-      d.skus.map(s => s.sku.toUpperCase() + ' ' + Math.round(s.marginOnExVat * 100) + '%').join(' · ') +
-      ' — FLOOR ' + Math.round(d.summary.marginFloor * 100) + '% · ALERT: ' + worst +
-      (d.summary.repricesNeeded.length ? ' · REPRICE: ' + d.summary.repricesNeeded.join(',') : '');
-  }).catch(() => {});
 </script>
 </body>
 </html>

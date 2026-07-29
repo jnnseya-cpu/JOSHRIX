@@ -78,16 +78,23 @@
 </form>
 
 <div class="console reveal" style="margin-top:2.4rem">
-<div class="console-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t">PUBLIC OPERATOR RECORD</span><span class="status">VERIFIED</span></div>
+<div class="console-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t">PUBLIC OPERATOR RECORD</span><span class="status">LIVE</span></div>
 <div class="modules">
-<div class="module"><h3><span class="st"></span>Games Published</h3><span class="num">8</span><span class="readout">4 GENRES · 2 TEMPLATES SOLD</span></div>
-<div class="module"><h3><span class="st"></span>Total Players</h3><span class="num">38K</span><span class="readout">DAY-7 RETENTION 34%</span></div>
-<div class="module"><h3><span class="st"></span>Marketplace Rating</h3><span class="num">4.8★</span><span class="readout">288 SALES · 1.2% REFUND RATE</span></div>
-<div class="module"><h3><span class="st"></span>IP Certificates</h3><span class="num">14</span><span class="readout">ALL ON REGISTRY · 0 DISPUTES</span></div>
+<div class="module"><h3><span class="st"></span>Games Published</h3><span class="num" id="prGames">0</span><span class="readout" id="prGamesRead">FORGE YOUR FIRST IN THE STUDIO</span></div>
+<div class="module"><h3><span class="st"></span>Total Plays</h3><span class="num" id="prPlays">0</span><span class="readout">ACROSS YOUR PUBLIC WORLDS</span></div>
+<div class="module"><h3><span class="st"></span>Marketplace Sales</h3><span class="num">0</span><span class="readout">SELLING OPENS WITH THE MARKETPLACE</span></div>
+<div class="module"><h3><span class="st"></span>ACU Balance</h3><span class="num" id="prAcu">0</span><span class="readout"><a href="wallet.html">OPEN WALLET</a></span></div>
 </div></div>
 <div class="reveal" style="margin-top:2.2rem;display:flex;gap:1rem;flex-wrap:wrap">
 <a class="btn btn-primary" href="dashboard.html">← Back To Dashboard</a>
 <a class="btn btn-ghost" href="marketplace.html">Shop My Listings</a></div>
+
+<div class="reveal" style="margin-top:2.6rem;border:1px solid rgba(248,113,113,.4);border-radius:14px;padding:1.3rem 1.4rem">
+  <h3 style="color:#f87171;font-size:.95rem;letter-spacing:.1em;text-transform:uppercase;margin:0 0 .5rem">Danger Zone</h3>
+  <p style="color:var(--muted,#9d9db3);font-size:.92rem;line-height:1.6;margin:0 0 .9rem">Delete this account and its data from this device and our servers: your profile, sign-in link, and your ACU wallet (any remaining balance is forfeited — testers' balances have no monetary value; for purchased ACUs request a refund BEFORE deleting, see the <a href="refunds.html" style="color:var(--cyan)">refund policy</a>). Published games stay hosted under their play links; contact us to take those down too.</p>
+  <button class="btn btn-ghost" id="btnDeleteAcct" style="border-color:rgba(248,113,113,.6);color:#f87171">🗑 Delete My Account</button>
+  <span id="delMsg" style="margin-left:.8rem;font-size:.88rem;color:var(--muted,#9d9db3)"></span>
+</div>
 </main>
 <script>
 (function () {
@@ -127,6 +134,40 @@
   $('btnPhoto').addEventListener('click', () => jxStore.pickImage('avatar'));
   $('pCover').addEventListener('click', () => jxStore.pickImage('cover'));
   $('btnCover').addEventListener('click', () => jxStore.pickImage('cover'));
+
+  /* real record numbers: ACU from profile/server, games+plays from /api/my-games */
+  const API = (window.JOSHRIX_API_BASE || '');
+  $('prAcu').textContent = (p.acu || 0).toLocaleString();
+  if (p.serverWalletId) {
+    fetch(API + '/api/my-games?walletId=' + encodeURIComponent(p.serverWalletId), { signal: AbortSignal.timeout(8000) })
+      .then(r => r.json()).then(j => {
+        const games = (j && j.games) || [];
+        $('prGames').textContent = games.length;
+        if (games.length) $('prGamesRead').textContent = games.filter(g => g.status === 'approved').length + ' LIVE IN THE ARCADE';
+        $('prPlays').textContent = Number((j && j.totalPlays) || 0).toLocaleString();
+      }).catch(() => {});
+  }
+
+  /* Danger Zone — delete account: server wallet, local data, and sign-in session */
+  $('btnDeleteAcct').addEventListener('click', async () => {
+    if (!confirm('Delete your JOSHRIX account?\n\nThis removes your profile from this device and deletes your ACU wallet on our servers (remaining balance is forfeited). This cannot be undone.')) return;
+    if (!confirm('Last check — really delete everything?')) return;
+    const msg = $('delMsg');
+    msg.textContent = 'Deleting…';
+    try {
+      if (p.serverWalletId) {
+        await fetch(API + '/api/wallet-init', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ walletId: p.serverWalletId, action: 'delete' }), signal: AbortSignal.timeout(10000) });
+      }
+    } catch (e) { /* wallet delete best-effort; local wipe proceeds */ }
+    try { if (window.jxAuth && window.jxAuth.enabled) { const a = await window.jxAuth.ready; await a.signOut(); } } catch (e) {}
+    try {
+      Object.keys(localStorage).filter(k => k.indexOf('jx.') === 0).forEach(k => localStorage.removeItem(k));
+      sessionStorage.clear();
+    } catch (e) {}
+    msg.textContent = '✓ Account deleted.';
+    setTimeout(() => { location.href = 'index.html'; }, 900);
+  });
 })();
 </script>
 <footer class="jx">
