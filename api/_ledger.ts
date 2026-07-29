@@ -72,7 +72,9 @@ export async function claimEvent(sql: Sql, eventId: string, type: string, payloa
   return rows.length > 0;
 }
 
-/** Post a balanced double-entry transaction; refuses unbalanced postings. */
+/** Post a balanced double-entry transaction; refuses unbalanced postings.
+ *  All postings land in ONE statement (unnest) so the set is all-or-nothing —
+ *  a mid-write failure can never leave a half-posted, unbalanced ledger. */
 export async function postTx(
   sql: Sql,
   kind: string,
@@ -84,10 +86,16 @@ export async function postTx(
   const [tx] = (await sql`
     INSERT INTO ledger_tx (kind, refs) VALUES (${kind}, ${JSON.stringify(refs)}::jsonb) RETURNING id
   `) as Array<{ id: number }>;
-  for (const p of postings) {
-    await sql`INSERT INTO ledger_postings (tx_id, account, delta_minor) VALUES (${tx.id}, ${p.account}, ${p.deltaMinor})`;
-  }
+  const accounts = postings.map((p) => p.account);
+  const deltas = postings.map((p) => p.deltaMinor);
+  await sql`INSERT INTO ledger_postings (tx_id, account, delta_minor)
+    SELECT ${tx.id}, a, d FROM unnest(${accounts}::text[], ${deltas}::bigint[]) AS t(a, d)`;
   return tx.id;
+}
+
+/** Release a claimed event so a failed settlement can be retried by Stripe. */
+export async function unclaimEvent(sql: Sql, eventId: string) {
+  await sql`DELETE FROM ledger_events WHERE event_id = ${eventId}`;
 }
 
 export async function creditAcu(
@@ -150,6 +158,7 @@ export async function ensureGameSchema(sql: Sql) {
   )`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT 'explorer'`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS name text`;
+  await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS last_refill_at timestamptz`;
   await sql`CREATE TABLE IF NOT EXISTS dist_requests (
     id bigserial PRIMARY KEY,
     game_id text,
@@ -172,10 +181,24 @@ export async function updateWalletIdentity(sql: Sql, id: string, opts: { name?: 
   await sql`UPDATE wallets SET name = COALESCE(${opts.name ?? null}, name), email = COALESCE(${opts.email ?? null}, email) WHERE id = ${id}`;
 }
 
-/** Refill is TESTER wallets only — real balances only move via Stripe settlement. */
+/**
+ * Refill: TESTER wallets only, and hardened against free-AI farming —
+ * only when nearly empty (< 300), at most once per 6 hours, never lowers a
+ * balance (GREATEST), and never touches wallets that have ever purchased.
+ * Returns the new balance, or null when refused.
+ */
 export async function refillTesterWallet(sql: Sql, id: string, to = 2000): Promise<number | null> {
-  const rows = (await sql`UPDATE wallets SET balance = ${to} WHERE id = ${id} AND category = 'tester' RETURNING balance`) as Array<{ balance: number }>;
+  const rows = (await sql`
+    UPDATE wallets SET balance = GREATEST(balance, ${to}), last_refill_at = now()
+    WHERE id = ${id} AND category = 'tester' AND balance < 300
+      AND (last_refill_at IS NULL OR last_refill_at < now() - interval '6 hours')
+    RETURNING balance`) as Array<{ balance: number }>;
   return rows.length ? Number(rows[0].balance) : null;
+}
+
+/** Stripe settlement marks a wallet as purchased — refill/delete lock out forever. */
+export async function markWalletPurchased(sql: Sql, id: string) {
+  await sql`UPDATE wallets SET category = 'purchased' WHERE id = ${id}`;
 }
 
 /** Atomic check-and-debit: returns the new balance, or null if missing/insufficient. */
@@ -208,9 +231,15 @@ export async function saveGame(sql: Sql, g: { id: string; title: string; summary
 
 export async function getGame(sql: Sql, id: string, withHtml = false) {
   const rows = withHtml
-    ? ((await sql`SELECT id, title, summary, language, status, plays, created_at, creator_email, html FROM games WHERE id = ${id}`) as any[])
-    : ((await sql`SELECT id, title, summary, language, status, plays, created_at, creator_email FROM games WHERE id = ${id}`) as any[]);
+    ? ((await sql`SELECT id, title, summary, language, status, plays, created_at, creator_email, creator_wallet, html FROM games WHERE id = ${id}`) as any[])
+    : ((await sql`SELECT id, title, summary, language, status, plays, created_at, creator_email, creator_wallet FROM games WHERE id = ${id}`) as any[]);
   return rows[0] ?? null;
+}
+
+/** Anti-flood: how many games a wallet currently has awaiting review. */
+export async function countPendingByWallet(sql: Sql, walletId: string): Promise<number> {
+  const rows = (await sql`SELECT count(*) AS n FROM games WHERE creator_wallet = ${walletId} AND status = 'pending_review'`) as Array<{ n: string | number }>;
+  return Number(rows[0]?.n ?? 0);
 }
 
 export async function bumpPlays(sql: Sql, id: string) {
@@ -218,7 +247,7 @@ export async function bumpPlays(sql: Sql, id: string) {
 }
 
 export async function listPendingGames(sql: Sql) {
-  return (await sql`SELECT id, title, summary, language, created_at, creator_email FROM games WHERE status = 'pending_review' ORDER BY created_at ASC LIMIT 50`) as any[];
+  return (await sql`SELECT id, title, summary, language, created_at, creator_email, creator_wallet FROM games WHERE status = 'pending_review' ORDER BY created_at ASC LIMIT 50`) as any[];
 }
 
 export async function setGameStatus(sql: Sql, id: string, status: "approved" | "rejected", note?: string | null): Promise<boolean> {
@@ -254,6 +283,12 @@ export async function ensureCommsSchema(sql: Sql) {
 export async function saveDelivery(sql: Sql, d: { event: string; channel: string; recipient?: string | null; status: string; provider?: string | null }) {
   await sql`INSERT INTO comms_deliveries (event, channel, recipient, status, provider)
     VALUES (${d.event}, ${d.channel}, ${d.recipient ?? null}, ${d.status}, ${d.provider ?? null})`;
+}
+
+/** Deliveries of an event in the last N minutes — cheap global rate limiting. */
+export async function countRecentDeliveries(sql: Sql, event: string, minutes: number): Promise<number> {
+  const rows = (await sql`SELECT count(*) AS n FROM comms_deliveries WHERE event = ${event} AND created_at > now() - make_interval(mins => ${minutes})`) as Array<{ n: string | number }>;
+  return Number(rows[0]?.n ?? 0);
 }
 
 /** Has this recipient already received this event? (dedupe for public triggers) */

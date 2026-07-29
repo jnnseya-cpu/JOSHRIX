@@ -40,21 +40,25 @@ export default async function handler(req: any, res: any) {
     }
   }
 
-  const refund = async () => {
+  // Refund on failure, minus a small non-refundable compute floor when the AI
+  // actually ran — otherwise "always fail on purpose" farms free model calls.
+  const COMPUTE_FLOOR = 50;
+  const refund = async (aiRan: boolean) => {
     if (sql && walletId && balanceAfter !== null) {
-      try { await creditWallet(sql, walletId, FORGE_GAME_ACU_CHARGE); } catch { /* best-effort; reconciliation catches strays */ }
+      const back = aiRan ? FORGE_GAME_ACU_CHARGE - COMPUTE_FLOOR : FORGE_GAME_ACU_CHARGE;
+      try { await creditWallet(sql, walletId, back); } catch { /* best-effort; reconciliation catches strays */ }
     }
   };
 
   try {
     const { html, provider } = await generateGameHtml(prompt, { title, summary, language });
     if (!html.includes("<canvas")) {
-      await refund();
-      return res.status(502).json({ error: "Code Agent produced no playable canvas — please forge again (no ACUs were kept)." });
+      await refund(true);
+      return res.status(502).json({ error: "Code Agent produced no playable canvas — please forge again (charge refunded minus a small compute floor)." });
     }
     return res.status(200).json({ html, provider, acuCharge: FORGE_GAME_ACU_CHARGE, ...(balanceAfter !== null ? { balanceAfter } : {}) });
   } catch (err: any) {
-    await refund();
+    await refund(false);
     return res.status(502).json({ error: "Game generation failed", detail: String(err?.message ?? err) });
   }
 }

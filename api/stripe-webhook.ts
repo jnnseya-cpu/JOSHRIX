@@ -9,7 +9,7 @@
  */
 import Stripe from "stripe";
 import { TOPUP_PACKAGES, topupPostings, PLANS } from "../shared/payments";
-import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet, setWalletPlan } from "./_ledger";
+import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet, setWalletPlan, markWalletPurchased, unclaimEvent } from "./_ledger";
 import { notify } from "./_notify";
 
 // Vercel: disable body parsing so the raw payload is available for verification
@@ -53,11 +53,34 @@ export function handleStripeEvent(event: Stripe.Event) {
       }
       return { ok: true as const, action: "checkout_completed_untyped", eventId: event.id };
     }
+    case "invoice.paid":
+    case "invoice.payment_succeeded": {
+      // subscription RENEWALS: credit the month's ACUs (first invoice is handled
+      // by checkout.session.completed — skip it here to avoid double-credit)
+      const inv = event.data.object as any;
+      const md = inv.subscription_details?.metadata || inv.parent?.subscription_details?.metadata || inv.lines?.data?.[0]?.metadata || {};
+      if (md.kind === "plan_subscription" && inv.billing_reason !== "subscription_create") {
+        return { ok: true as const, action: "plan_renewed", eventId: event.id, planId: md.planId ?? "", walletId: md.walletId ?? "" };
+      }
+      return { ok: true as const, action: "invoice_logged", eventId: event.id };
+    }
+    case "customer.subscription.deleted": {
+      // subscription ended: entitlement is withdrawn (plan back to explorer)
+      const sub = event.data.object as any;
+      const md = sub.metadata || {};
+      if (md.kind === "plan_subscription" && md.walletId) {
+        return { ok: true as const, action: "plan_ended", eventId: event.id, walletId: md.walletId };
+      }
+      return { ok: true as const, action: "subscription_deleted_untyped", eventId: event.id };
+    }
     case "payment_intent.payment_failed":
       return { ok: true as const, action: "payment_failed_logged", eventId: event.id };
-    case "charge.refunded":
-      // PRODUCTION: reverse ledger postings, claw back uncomsumed ACUs, flag account on abuse
-      return { ok: true as const, action: "refund_recorded", eventId: event.id };
+    case "charge.refunded": {
+      // reverse the ledger; ACU clawback is flagged to the operator (manual until
+      // the charge→wallet mapping is stored end-to-end)
+      const charge = event.data.object as any;
+      return { ok: true as const, action: "refund_recorded", eventId: event.id, amountMinor: Number(charge.amount_refunded ?? 0) };
+    }
     default:
       return { ok: true as const, action: "ignored", eventId: event.id, type: event.type };
   }
@@ -100,6 +123,7 @@ export default async function handler(req: any, res: any) {
           if (walletId) {
             await ensureGameSchema(sql);
             await creditWallet(sql, walletId, r.acu);
+            await markWalletPurchased(sql, walletId);   // paid wallets leave tester status forever
           }
           await notify("acu.topup.successful", email, { amount: r.acu.toLocaleString() });
         } else if (result.ok && (result as any).action === "plan_activated") {
@@ -111,8 +135,34 @@ export default async function handler(req: any, res: any) {
             await ensureGameSchema(sql);
             await setWalletPlan(sql, wid, plan.id);
             if (plan.monthlyAcu > 0) await creditWallet(sql, wid, plan.monthlyAcu);
+            await markWalletPurchased(sql, wid);
           }
           await notify("subscription.activated", email, { plan: plan?.name ?? planId });
+        } else if (result.ok && (result as any).action === "plan_renewed") {
+          // monthly renewal: credit the plan's ACUs to the subscriber's wallet
+          const plan = PLANS.find((p) => p.id === (result as any).planId);
+          const wid = (result as any).walletId as string;
+          if (plan && wid && plan.monthlyAcu > 0) {
+            await ensureGameSchema(sql);
+            await creditWallet(sql, wid, plan.monthlyAcu);
+          }
+          await notify("subscription.renewed", email, { plan: plan?.name ?? "" });
+        } else if (result.ok && (result as any).action === "plan_ended") {
+          const wid = (result as any).walletId as string;
+          await ensureGameSchema(sql);
+          await setWalletPlan(sql, wid, "explorer");
+          await notify("subscription.cancelled", email, {});
+        } else if (result.ok && (result as any).action === "refund_recorded") {
+          // reverse the revenue in the ledger and flag the operator for ACU clawback
+          const amt = Number((result as any).amountMinor ?? 0);
+          if (amt > 0) {
+            await postTx(sql, "refund_reversal", [
+              { account: "gateway_clearing", deltaMinor: -amt },
+              { account: "deferred_acu_revenue", deltaMinor: amt },
+            ], { eventId: event.id });
+          }
+          await notify("executive.alert", process.env.CONTACT_INBOX || process.env.SMTP_USER || null,
+            { item: `Stripe refund £${(amt / 100).toFixed(2)} — review the buyer's wallet for ACU clawback (event ${event.id})` });
         } else if (result.ok && (result as any).action === "founder_pass") {
           await recordFounder(sql, { stripeSession: session.id ?? event.id, pass: (result as any).pass, email, amountMinor: (session.amount_total as number) ?? null });
         }
@@ -121,6 +171,10 @@ export default async function handler(req: any, res: any) {
     } catch (err: any) {
       persisted = "error";
       console.error(JSON.stringify({ ledgerError: String(err?.message ?? err), eventId: event.id }));
+      // release the idempotency claim and fail LOUDLY so Stripe retries —
+      // a charged customer must never silently lose their credits
+      try { await unclaimEvent(sql, event.id); } catch { /* claim row may not exist */ }
+      return res.status(500).json({ received: false, persisted, error: "settlement failed — will retry" });
     }
   }
 

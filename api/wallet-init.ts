@@ -1,10 +1,13 @@
 /**
  * POST /api/wallet-init — server-side wallet bootstrap (Build 2: real ACU enforcement).
- * Body: { walletId?, email?, action? }
+ * Body: { walletId?, email?, name?, action? }
  *  - no walletId          → creates a fresh TESTER wallet funded with 2,000 ACUs
- *  - walletId             → returns that wallet's live balance
- *  - action: "refill"     → resets a TESTER wallet back to 2,000 ACUs (testers only;
- *                           purchased wallets only ever move via the Stripe webhook)
+ *  - walletId             → returns that wallet's live balance (+refreshes identity)
+ *  - action: "refill"     → tester wallets only, hardened: only when balance < 300,
+ *                           max once per 6 hours, never lowers a balance, and never
+ *                           on a wallet that has ever purchased
+ *  - action: "delete"     → tester wallets only; purchased accounts must contact
+ *                           support (refund flow first — see refunds policy)
  * Without DATABASE_URL responds { mode: "no_db" } so the client keeps its local sim.
  */
 import { randomUUID } from "node:crypto";
@@ -27,9 +30,12 @@ export default async function handler(req: any, res: any) {
     await ensureGameSchema(sql);
 
     if (action === "delete") {
-      // Account deletion: removes the server wallet (balance included). Published
-      // games remain hosted; moderation can unpublish them on request.
       if (!walletId) return res.status(400).json({ error: "walletId required for delete" });
+      const w = await getWallet(sql, walletId);
+      if (!w) return res.status(200).json({ mode: "live", deleted: false, walletId });
+      if (w.category !== "tester") {
+        return res.status(403).json({ error: "Purchased accounts are closed via support (request any refund first — see the refund policy)." });
+      }
       const gone = await deleteWallet(sql, walletId);
       return res.status(200).json({ mode: "live", deleted: gone, walletId });
     }
@@ -37,7 +43,9 @@ export default async function handler(req: any, res: any) {
     if (action === "refill") {
       if (!walletId) return res.status(400).json({ error: "walletId required for refill" });
       const balance = await refillTesterWallet(sql, walletId, TESTER_GRANT_ACU);
-      if (balance === null) return res.status(403).json({ error: "Refill is for tester wallets only." });
+      if (balance === null) {
+        return res.status(403).json({ error: "Refill is for tester wallets only, when the balance is under 300, at most once every 6 hours." });
+      }
       return res.status(200).json({ mode: "live", walletId, balance, category: "tester", refilled: true });
     }
 

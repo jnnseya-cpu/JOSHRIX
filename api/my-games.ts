@@ -7,9 +7,13 @@ import { getDb, ensureGameSchema, listGamesByWallet } from "./_ledger";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
-  if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (req.method === "OPTIONS") return res.status(204).end();
+  // POST only: wallet ids are bearer secrets and must never ride query strings
+  if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
-  const walletId = String(req.query?.walletId ?? "");
+  const walletId = String((req.body ?? {}).walletId ?? "");
   if (!/^w-[a-z0-9]{6,40}$/.test(walletId)) return res.status(400).json({ error: "Invalid walletId" });
 
   const sql = getDb();

@@ -6,7 +6,8 @@
  * submissions are accepted-and-dropped so bots learn nothing.
  */
 import { sendEmail } from "./comms";
-import { getDb, ensureCommsSchema, saveDelivery } from "./_ledger";
+import { getDb, ensureCommsSchema, saveDelivery, countRecentDeliveries } from "./_ledger";
+import { EMAIL_RE, stripHeader } from "./_guard";
 
 const esc = (s: unknown) => String(s ?? "").replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[c] as string));
 
@@ -20,13 +21,23 @@ export default async function handler(req: any, res: any) {
   const { name, email, topic, message, website } = (req.body ?? {}) as Record<string, string>;
   if (website) return res.status(200).json({ ok: true }); // honeypot: swallow silently
   if (!name || name.length < 2 || name.length > 120) return res.status(400).json({ error: "Please give your name." });
-  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: "A valid email is required so we can reply." });
+  if (!email || !EMAIL_RE.test(email)) return res.status(400).json({ error: "A valid email is required so we can reply." });
   if (!message || message.length < 10 || message.length > 5000) return res.status(400).json({ error: "Message must be 10–5,000 characters." });
 
   const inbox = process.env.CONTACT_INBOX || process.env.SMTP_USER;
   if (!inbox) return res.status(503).json({ error: "Contact inbox not configured yet — email us directly." });
 
-  const subject = `[Contact · ${(topic || "General").slice(0, 40)}] ${name.slice(0, 60)}`;
+  const sqlPre = getDb();
+  if (sqlPre) {
+    await ensureCommsSchema(sqlPre);
+    // inbox-flood throttle: 30 contact messages per hour, globally
+    if (await countRecentDeliveries(sqlPre, "contact.message", 60) >= 30) {
+      return res.status(429).json({ error: "The contact desk is very busy — please try again in an hour or email us directly." });
+    }
+  }
+
+  // header-injection-safe subject (no CR/LF ever reaches the mail headers)
+  const subject = stripHeader(`[Contact · ${(topic || "General").slice(0, 40)}] ${name.slice(0, 60)}`);
   const html = `<!DOCTYPE html><html><body style="margin:0;background:#0b0b14;font-family:system-ui,sans-serif;color:#ececf4">
 <div style="max-width:560px;margin:0 auto;padding:26px 20px">
   <p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9d9db3;margin:0 0 6px">joshrix.com contact form</p>

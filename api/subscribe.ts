@@ -8,6 +8,7 @@
  */
 import Stripe from "stripe";
 import { PLANS } from "../shared/payments";
+import { safeOrigin } from "./_guard";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -24,7 +25,7 @@ export default async function handler(req: any, res: any) {
   if (process.env.STRIPE_SECRET_KEY) {
     try {
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-      const origin = req.headers?.origin || "https://www.joshrix.com";
+      const origin = safeOrigin(req);
       const session = await stripe.checkout.sessions.create({
         mode: "subscription",
         line_items: [{

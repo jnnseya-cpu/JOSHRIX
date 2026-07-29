@@ -105,7 +105,8 @@
 
   if (!id) { $('gTitle').textContent = 'No game selected'; showMsg('This link is missing a game id. Head to the Studio and forge one!', false); return; }
 
-  fetch(API + '/api/game-html?id=' + encodeURIComponent(id) + (preview ? '&preview=1' : ''))
+  var pw = qs.get('w') || '';
+  fetch(API + '/api/game-html?id=' + encodeURIComponent(id) + (preview ? '&preview=1' : '') + (pw ? '&w=' + encodeURIComponent(pw) : ''))
     .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, status: r.status, j: j }; }); })
     .then(function(res){
       var g = res.j || {};

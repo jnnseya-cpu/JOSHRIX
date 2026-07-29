@@ -6,8 +6,11 @@
  * serves to the public; the creator can preview immediately via ?preview=1.
  */
 import { randomUUID } from "node:crypto";
-import { getDb, ensureGameSchema, saveGame } from "./_ledger";
+import { getDb, ensureGameSchema, saveGame, getWallet, countPendingByWallet } from "./_ledger";
 import { notify } from "./_notify";
+import { EMAIL_RE } from "./_guard";
+
+const MAX_PENDING_PER_WALLET = 10;
 
 const MAX_HTML_BYTES = 900_000; // self-contained games are ~450 lines; anything huge is suspect
 
@@ -40,6 +43,22 @@ export default async function handler(req: any, res: any) {
 
   try {
     await ensureGameSchema(sql);
+
+    // publishing requires a real wallet — the same bearer secret that forged the game
+    if (!walletId) return res.status(401).json({ error: "A wallet is required to publish — open the Studio first." });
+    const wallet = await getWallet(sql, walletId);
+    if (!wallet) return res.status(401).json({ error: "Unknown wallet — open the Studio to initialise one." });
+
+    // anti-flood: bounded review queue per wallet
+    const pending = await countPendingByWallet(sql, walletId);
+    if (pending >= MAX_PENDING_PER_WALLET) {
+      return res.status(429).json({ error: `You already have ${pending} games awaiting review — wait for moderation before publishing more.` });
+    }
+
+    // notifications go ONLY to the wallet's registered email (never a caller-supplied
+    // address — that would be an open relay); a valid body email may set the record.
+    const creatorEmail = (email && EMAIL_RE.test(email) ? email : null) ?? wallet.email ?? null;
+
     const id = "g-" + slug(title) + "-" + randomUUID().replace(/-/g, "").slice(0, 10);
     await saveGame(sql, {
       id,
@@ -47,16 +66,16 @@ export default async function handler(req: any, res: any) {
       summary: summary?.slice(0, 500) ?? null,
       language: language?.slice(0, 40) ?? null,
       html,
-      creatorWallet: walletId ?? null,
-      creatorEmail: email ?? null,
+      creatorWallet: walletId,
+      creatorEmail,
     });
-    await notify("game.submitted", email ?? null, { game: title.trim().slice(0, 60) });
+    await notify("game.submitted", wallet.email ?? null, { game: title.trim().slice(0, 60) });
     return res.status(200).json({
       id,
       playUrl: `/play/${id}`,
       status: "pending_review",
       note: "Your game is saved. It goes public at its play URL once moderation approves it; you can playtest it now via the preview link.",
-      previewUrl: `/play/${id}?preview=1`,
+      previewUrl: `/play/${id}?preview=1&w=${encodeURIComponent(walletId)}`,
     });
   } catch (err: any) {
     return res.status(502).json({ error: "Could not save game", detail: String(err?.message ?? err) });

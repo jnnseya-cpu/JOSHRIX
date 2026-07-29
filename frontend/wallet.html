@@ -124,11 +124,12 @@ PKGS.forEach(([p, id], i) => {
       let wid; try { wid = JSON.parse(localStorage.getItem('jx.profile') || '{}').serverWalletId; } catch (e) {}
       const resp = await fetch(API + '/api/topup', { method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ packageId: id, method: 'card', walletId: wid || undefined }), signal: AbortSignal.timeout(7000) });
-      const j = await resp.json();
-      if (resp.ok && j.checkoutUrl) { r.textContent = '→ Opening secure Stripe checkout…'; window.location.href = j.checkoutUrl; return; }
-      r.textContent = resp.ok
-        ? `✓ ${j.intent.status} — ${j.intent.acuCredited.toLocaleString()} ACUs credited for £${(j.intent.amountMinor/100).toFixed(2)}\nledger: ${j.ledger.postings.map(x => x.account + ' ' + (x.deltaMinor>0?'+':'') + '£' + (x.deltaMinor/100).toFixed(2)).join(' · ')}`
-        : '✕ ' + (j.error || 'failed');
+      const j = await resp.json().catch(() => null);
+      if (resp.ok && j && j.checkoutUrl) { r.textContent = '→ Opening secure Stripe checkout…'; window.location.href = j.checkoutUrl; return; }
+      if (!resp.ok || !j) { r.textContent = '✕ ' + ((j && j.error) || ('Payment could not start (HTTP ' + resp.status + ') — try again.')); return; }
+      r.textContent = j.intent && typeof j.intent.acuCredited === 'number'
+        ? `✓ ${j.intent.status} — ${j.intent.acuCredited.toLocaleString()} ACUs credited for £${(j.intent.amountMinor/100).toFixed(2)}`
+        : '✕ Unexpected response — no charge was made. Try again.';
     } catch (e) {
       r.textContent = `✓ demo (offline) — ${(p).toLocaleString()} ACUs would be credited for £${(p/100).toFixed(2)} on gateway settlement`;
     }
@@ -158,7 +159,7 @@ const applyLocalAcu = (skipBalance) => {
     const p = JSON.parse(localStorage.getItem('jx.profile') || '{}');
     if (p.testerAcuGranted) {
       if (!skipBalance) $('wAcu').textContent = (p.acu || 0).toLocaleString();
-      $('wAcuCat').innerHTML = '🧪 tester grant · <a href="#" id="btnRefill" style="color:var(--cyan)">refill to 2,000</a>';
+      $('wAcuCat').insertAdjacentHTML('beforeend', ' · 🧪 <a href="#" id="btnRefill" style="color:var(--cyan)">refill</a>');
       const rf = document.getElementById('btnRefill');
       if (rf && !rf.dataset.wired) {
         rf.dataset.wired = '1';

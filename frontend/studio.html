@@ -474,12 +474,13 @@ $('acuBal').textContent = acu.toLocaleString();
    server — every AI call is debited there and returns balanceAfter. The local sim
    ticks then become cosmetic (they show work happening, never move real money). */
 let serverMode = false, serverWalletId = null, simSpend = 0;
+let walletReady = null;   // resolves when /api/wallet-init settles (either way)
 const syncBalance = b => {
   acu = Math.max(0, Number(b) || 0);
   $('acuBal').textContent = acu.toLocaleString();
   if (window.jxStore) jxStore.save({ acu, serverWalletId });
 };
-(async () => {
+walletReady = (async () => {
   try {
     let prof = {}; try { prof = JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (e) {}
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
@@ -518,9 +519,14 @@ const updateCount = () => {
   el.style.color = n > 19000 ? 'var(--amber)' : '';
 };
 $('prompt').addEventListener('input', updateCount);
+let refinePrompt = null;   // the concept text the refine discount belongs to
+$('prompt').addEventListener('input', () => {
+  if (refining && refinePrompt !== null && $('prompt').value !== refinePrompt) refining = false;
+});
 updateCount();
 $('btnBlueprint').addEventListener('click', async () => {
   const btn = $('btnBlueprint');
+  if (walletReady) { btn.disabled = true; btn.textContent = '⚡ Connecting wallet…'; await walletReady; btn.disabled = false; btn.textContent = refining ? '⚡ Refine Blueprint' : '⚡ Generate Blueprint'; }
   if (!needAcu(refining ? 2 : 8, $('bpHint'))) return;
   btn.disabled = true;
   btn.textContent = '⚡ Forging blueprint…';
@@ -629,6 +635,8 @@ $('btnForge').addEventListener('click', () => {
   jxTrack('forge.blueprint_approved', { scope: $('selScope').value });
   // the REAL build: the Code Agent writes the actual game while the fleet animates
   realBuild = null; realBuildErr = null;
+  realBuildCharged = false;          // every forge is charged (and synced) once
+  publishedGame = null;              // a re-forge is a NEW game — old share URL no longer applies
   realBuildPromise = (async () => {
     try {
       const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
@@ -738,6 +746,10 @@ async function renderPlaytest() {
     applyBlueprintIdentity();
   } else {
     applyBlueprintIdentity();
+    // a stale iframe from a previous successful forge must not impersonate this run
+    const staleFr = document.getElementById('realGame');
+    if (staleFr) staleFr.remove();
+    $('game').style.display = '';
     // NEVER let the demo wear the creator's title as if it were their build
     $('gfTitle').textContent = 'PLATFORM DEMO GAME — NOT YOUR BUILD';
     $('playCopyTitle').textContent = '⚠ This is NOT your game';
@@ -765,6 +777,7 @@ document.addEventListener('fullscreenchange', () => {
 });
 $('btnRefine').addEventListener('click', () => {
   refining = true;
+  refinePrompt = $('prompt').value;
   setStep(1); show('p1');
   $('btnBlueprint').disabled = false;
   $('btnBlueprint').textContent = '⚡ Refine Blueprint';

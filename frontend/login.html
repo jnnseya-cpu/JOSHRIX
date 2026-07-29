@@ -68,6 +68,8 @@
     } catch (e) {}
   };
   if (!window.jxAuth || !window.jxAuth.enabled) {
+    var gB = document.getElementById('btnGoogle');
+    if (gB) gB.addEventListener('click', function(){ note.textContent = 'Google sign-in is unavailable in tester/device mode \u2014 use the form below.'; });
     // device-account mode: sign in = resume the account saved on this device
     form.removeAttribute('data-demo');
     form.addEventListener('submit', (e) => {

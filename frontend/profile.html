@@ -105,7 +105,7 @@
     $('pTypeBadge').textContent = TYPE_LABEL[p.accountType] || 'CREATOR';
     $('pBioView').textContent = p.bio || 'Tell the world what you forge.';
     const av = $('pAvatar');
-    av.innerHTML = p.avatar ? '<img src="' + p.avatar + '" alt="profile photo" style="width:100%;height:100%;object-fit:cover">'
+    av.innerHTML = p.avatar ? '<img src="' + String(p.avatar).replace(/"/g, '&quot;') + '" alt="profile photo" style="width:100%;height:100%;object-fit:cover">'
                             : ((p.displayName || 'J')[0] || 'J').toUpperCase();
     if (p.cover) $('pCover').style.backgroundImage = 'url(' + p.cover + ')';
   }
@@ -147,7 +147,8 @@
       }).catch(() => {});
   }
   if (p.serverWalletId) {
-    fetch(API + '/api/my-games?walletId=' + encodeURIComponent(p.serverWalletId), { signal: AbortSignal.timeout(8000) })
+    fetch(API + '/api/my-games', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ walletId: p.serverWalletId }), signal: AbortSignal.timeout(8000) })
       .then(r => r.json()).then(j => {
         const games = (j && j.games) || [];
         $('prGames').textContent = games.length;

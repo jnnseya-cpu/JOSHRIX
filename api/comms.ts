@@ -42,6 +42,7 @@ export function emailProvider(): "smtp" | "resend" | "sandbox" {
 
 export async function sendEmail(to: string, subject: string, html: string): Promise<{ status: string; provider: string }> {
   const from = process.env.COMMS_FROM || process.env.SMTP_USER || "JOSHRIX <no-reply@joshrix.com>";
+  subject = String(subject ?? "").replace(/[\r\n]+/g, " ").slice(0, 200);   // header-injection guard
   const rail = emailProvider();
 
   if (rail === "smtp") {

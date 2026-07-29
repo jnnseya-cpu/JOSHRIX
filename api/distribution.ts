@@ -11,6 +11,7 @@
  * through PACKAGING → SUBMITTED → IN STORE REVIEW → LIVE / NEEDS CHANGES.
  */
 import { getDb, ensureGameSchema, getGame, saveDistRequest } from "./_ledger";
+import { EMAIL_RE } from "./_guard";
 
 const LANES = ["dedicated", "own"];
 const STORES = ["android", "ios", "both"];
@@ -36,8 +37,13 @@ export default async function handler(req: any, res: any) {
     if (gameId) {
       const g = await getGame(sql, gameId);
       if (!g) return res.status(404).json({ error: "Game not found — publish it first (Approve & Publish in the Studio)." });
+      // only the game's creator can request distribution for it
+      if (g.creator_wallet && g.creator_wallet !== walletId) {
+        return res.status(403).json({ error: "Only the game's creator can request store distribution for it." });
+      }
     }
-    const id = await saveDistRequest(sql, { gameId: gameId ?? null, lane, store, mode: mode ?? null, email: email ?? null, walletId: walletId ?? null });
+    const safeEmail = email && EMAIL_RE.test(email) ? email : null;
+    const id = await saveDistRequest(sql, { gameId: gameId ?? null, lane, store, mode: mode ?? null, email: safeEmail, walletId: walletId ?? null });
     return res.status(200).json({
       ok: true,
       ref: `DIST-${id}`,

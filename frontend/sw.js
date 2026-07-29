@@ -4,7 +4,7 @@
  * cache-first for versioned static assets; network-first with cache
  * fallback for pages, so the app opens instantly and survives offline.
  */
-const VERSION = 'jx-v7';
+const VERSION = 'jx-v8';
 // Clean URLs only: Vercel cleanUrls 308-redirects /x.html → /x, and a cached
 // redirected response served for a navigation makes Chrome throw — so we cache
 // the canonical paths, and installs never fail on one missing page.
@@ -35,14 +35,20 @@ self.addEventListener('fetch', (e) => {
   if (e.request.method !== 'GET' || url.origin !== location.origin) return;
   if (url.pathname.startsWith('/api/')) return; // money and AI are never cached
 
-  // static assets: cache-first
+  // static assets: stale-while-revalidate — instant from cache, refreshed in the
+  // background so fixes reach installed users on their NEXT load, always
   if (url.pathname.startsWith('/assets/') || url.pathname.endsWith('.png') || url.pathname.endsWith('.webmanifest')) {
     e.respondWith(
-      caches.match(e.request).then((hit) => hit || fetch(e.request).then((res) => {
-        const copy = res.clone();
-        caches.open(VERSION).then((c) => c.put(e.request, copy));
-        return res;
-      }))
+      caches.match(e.request).then((hit) => {
+        const refresh = fetch(e.request).then((res) => {
+          if (res && res.ok) {
+            const copy = res.clone();
+            caches.open(VERSION).then((c) => c.put(e.request, copy));
+          }
+          return res;
+        }).catch(() => hit);
+        return hit || refresh;
+      })
     );
     return;
   }

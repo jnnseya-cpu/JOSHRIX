@@ -6,6 +6,7 @@
  */
 import Stripe from "stripe";
 import { TopupRequestSchema, TOPUP_PACKAGES, topupPostings } from "../shared/payments";
+import { safeOrigin } from "./_guard";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -21,7 +22,7 @@ export default async function handler(req: any, res: any) {
   if (process.env.STRIPE_SECRET_KEY) {
     try {
       const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
-      const origin = req.headers?.origin || req.headers?.referer?.replace(/\/[^/]*$/, "") || "https://joshrix.com";
+      const origin = safeOrigin(req);
       const session = await stripe.checkout.sessions.create({
         mode: "payment",
         line_items: [{

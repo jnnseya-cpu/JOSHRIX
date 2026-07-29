@@ -33,14 +33,16 @@
 </div>
 <script>
 (function(){
-  var API = '';
+  var API = (window.JOSHRIX_API_BASE || '');
   function verify(key, cb){
     fetch(API + '/api/moderation', { headers: { 'x-admin-key': key } })
       .then(function(r){ cb(r.status === 200, r.status); })
       .catch(function(){ cb(false, 0); });
   }
   function unlock(){
-    document.getElementById('adminLock').remove();
+    var l = document.getElementById('adminLock');
+    if (!l) return;                    // second verify already unlocked
+    l.remove();
     document.body.style.overflow = '';
     var mk = document.getElementById('modKey');
     if (mk) mk.value = sessionStorage.getItem('jx.modKey') || '';
@@ -156,7 +158,7 @@
             + '<div style="font-size:.85rem;color:var(--muted,#9d9db3)">' + esc(g.summary || '') + '</div>'
             + '<div style="font-size:.78rem;color:var(--muted,#9d9db3)">' + esc(g.id) + (g.creator_email ? ' · ' + esc(g.creator_email) : '') + '</div></div>'
             + '<div class="qact" style="display:flex;gap:.5rem;flex-wrap:wrap">'
-            + '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="/play/' + encodeURIComponent(g.id) + '?preview=1">▶ Play</a>'
+            + '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="/play/' + encodeURIComponent(g.id) + '?preview=1&w=' + encodeURIComponent(g.creator_wallet || '') + '">▶ Play</a>'
             + '<button class="btn btn-primary btn-sm qa-approve">✓ Approve</button>'
             + '<button class="btn btn-ghost btn-sm qa-reject" style="color:#f87171">✕ Reject</button></div>';
           row.querySelector('.qa-approve').addEventListener('click', function(){ decide(g.id, 'approve', null, row); });
@@ -215,13 +217,13 @@
             + '<select class="wplan" style="background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.35rem .5rem;color:inherit;font-size:.78rem">'
             + PLAN_IDS.map(function(p){ return '<option value="' + p + '"' + ((w.plan || 'explorer') === p ? ' selected' : '') + '>' + p.replace('_', ' ') + '</option>'; }).join('') + '</select>'
             + '<button class="btn btn-ghost btn-sm wsetplan">Set plan</button>'
-            + '<b style="margin-left:auto">' + Number(w.balance).toLocaleString() + ' ACU</b>'
+            + '<b class="wbal" style="margin-left:auto">' + Number(w.balance).toLocaleString() + ' ACU</b>'
             + '<button class="btn btn-ghost btn-sm wgrant">＋2,000</button>';
           row.querySelector('.wgrant').addEventListener('click', function(){
             var b = row.querySelector('.wgrant'); b.disabled = true;
             grant(w.id, 2000, function(err, j){
               if (err) { b.disabled = false; alert(err); return; }
-              row.querySelector('b').textContent = Number(j.balance).toLocaleString() + ' ACU';
+              row.querySelector('.wbal').textContent = Number(j.balance).toLocaleString() + ' ACU';
               b.textContent = '✓ granted'; setTimeout(function(){ b.textContent = '＋2,000'; b.disabled = false; }, 1500);
             });
           });
@@ -237,7 +239,7 @@
                 b.disabled = false;
                 if (!res2.ok) { alert(res2.j.error || 'failed'); return; }
                 b.textContent = '✓ ' + res2.j.planName;
-                row.querySelector('b').textContent = Number(res2.j.balance).toLocaleString() + ' ACU';
+                row.querySelector('.wbal').textContent = Number(res2.j.balance).toLocaleString() + ' ACU';
                 setTimeout(function(){ b.textContent = 'Set plan'; }, 2000);
               }).catch(function(){ b.disabled = false; alert('Could not reach the server'); });
           });
@@ -354,9 +356,10 @@
       .then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
       .then(function(res){
         btn.disabled = false;
+        var escB = function(x){ return String(x == null ? '' : x).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
         msg.innerHTML = res.ok
-          ? '✓ Published: <a href="' + res.j.url + '" target="_blank" rel="noopener" style="color:var(--cyan)">' + res.j.title + '</a> (' + res.j.provider + ')'
-          : '⚠ ' + (res.j.error || 'failed') + (res.j.detail ? ' — ' + res.j.detail : '');
+          ? '✓ Published: <a href="' + escB(res.j.url) + '" target="_blank" rel="noopener" style="color:var(--cyan)">' + escB(res.j.title) + '</a> (' + escB(res.j.provider) + ')'
+          : '⚠ ' + escB(res.j.error || 'failed') + (res.j.detail ? ' — ' + escB(res.j.detail) : '');
       })
       .catch(function(){ btn.disabled = false; msg.textContent = '⚠ Could not reach the Content Agent'; });
   });

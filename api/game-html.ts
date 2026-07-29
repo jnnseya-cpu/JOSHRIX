@@ -18,6 +18,9 @@ export default async function handler(req: any, res: any) {
   const id = String(req.query?.id ?? "");
   if (!/^g-[a-z0-9-]{3,80}$/.test(id)) return res.status(400).json({ error: "Invalid game id" });
   const preview = String(req.query?.preview ?? "") === "1";
+  const previewWallet = String(req.query?.w ?? "");   // creator's wallet proves preview ownership
+  const adminKey = req.headers?.["x-admin-key"];
+  const isAdmin = !!process.env.MODERATION_KEY && adminKey === process.env.MODERATION_KEY;
 
   try {
     await ensureGameSchema(sql);
@@ -39,6 +42,11 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ ...meta, plays: meta.plays + 1, html: game.html });
     }
     if (game.status === "pending_review" && preview) {
+      // unapproved HTML is served ONLY to its creator (wallet match) or moderation
+      const owns = !game.creator_wallet || (previewWallet && previewWallet === game.creator_wallet);
+      if (!owns && !isAdmin) {
+        return res.status(200).json({ ...meta, note: "This game is in moderation review and will be playable once approved." });
+      }
       return res.status(200).json({ ...meta, html: game.html, note: "Creator preview — public once approved." });
     }
     if (game.status === "pending_review") {

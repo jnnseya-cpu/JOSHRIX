@@ -98,6 +98,8 @@
     note.after(b);
   };
   if (!window.jxAuth || !window.jxAuth.enabled) {
+    var gB = document.getElementById('btnGoogle');
+    if (gB) gB.addEventListener('click', function(){ note.textContent = 'Google sign-in is unavailable in tester/device mode \u2014 use the form below.'; });
     note.textContent = window.jxAuth && window.jxAuth.testMode
       ? '🧪 Tester mode — this account lives on this device only.'
       : 'Local mode — your account lives on this device until launch.';

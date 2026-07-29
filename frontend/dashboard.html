@@ -145,7 +145,8 @@
   const emptyRow = '<tr><td colspan="5" style="color:var(--muted)">No games yet — <a href="studio.html" style="color:var(--cyan)">forge your first world</a>. It appears here the moment you publish.</td></tr>';
   if (!p.serverWalletId) { body.innerHTML = emptyRow; }
   else {
-    fetch(API + '/api/my-games?walletId=' + encodeURIComponent(p.serverWalletId), { signal: AbortSignal.timeout(8000) })
+    fetch(API + '/api/my-games', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ walletId: p.serverWalletId }), signal: AbortSignal.timeout(8000) })
       .then(r => r.json()).then(j => {
         const games = (j && j.games) || [];
         $('mGames').textContent = games.length;
