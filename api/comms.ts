@@ -33,19 +33,52 @@ export function renderEmail(subject: string, eventName: string, mandatory: boole
 </div></body></html>`;
 }
 
+/** Which real email rail is configured: Hostinger/any SMTP first, then Resend, else sandbox. */
+export function emailProvider(): "smtp" | "resend" | "sandbox" {
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) return "smtp";
+  if (process.env.RESEND_API_KEY) return "resend";
+  return "sandbox";
+}
+
 export async function sendEmail(to: string, subject: string, html: string): Promise<{ status: string; provider: string }> {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return { status: "logged", provider: "sandbox" };
-  try {
-    const r = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ from: process.env.COMMS_FROM || "JOSHRIX <no-reply@joshrix.com>", to: [to], subject, html }),
-    });
-    return r.ok ? { status: "sent", provider: "resend" } : { status: "failed", provider: "resend" };
-  } catch {
-    return { status: "failed", provider: "resend" };
+  const from = process.env.COMMS_FROM || process.env.SMTP_USER || "JOSHRIX <no-reply@joshrix.com>";
+  const rail = emailProvider();
+
+  if (rail === "smtp") {
+    // Hostinger (or any) SMTP: host smtp.hostinger.com, port 465 (SSL) or 587 (STARTTLS)
+    try {
+      const { default: nodemailer } = await import("nodemailer");
+      const port = Number(process.env.SMTP_PORT || 465);
+      const transport = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port,
+        secure: port === 465,
+        auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+        connectionTimeout: 8000,
+        greetingTimeout: 8000,
+        socketTimeout: 15000,
+      });
+      await transport.sendMail({ from, to, subject, html });
+      return { status: "sent", provider: "smtp" };
+    } catch {
+      return { status: "failed", provider: "smtp" };
+    }
   }
+
+  if (rail === "resend") {
+    try {
+      const r = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ from, to: [to], subject, html }),
+      });
+      return r.ok ? { status: "sent", provider: "resend" } : { status: "failed", provider: "resend" };
+    } catch {
+      return { status: "failed", provider: "resend" };
+    }
+  }
+
+  return { status: "logged", provider: "sandbox" };
 }
 
 export default async function handler(req: any, res: any) {
@@ -72,7 +105,7 @@ export default async function handler(req: any, res: any) {
       await ensureCommsSchema(sql);
       return res.status(200).json({ deliveries: await listDeliveries(sql) });
     }
-    return res.status(200).json({ stats: commStats(), catalogue: COMM_CATALOGUE, emailProvider: process.env.RESEND_API_KEY ? "resend" : "sandbox" });
+    return res.status(200).json({ stats: commStats(), catalogue: COMM_CATALOGUE, emailProvider: emailProvider() });
   }
 
   if (req.method === "POST") {
