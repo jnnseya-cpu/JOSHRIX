@@ -54,8 +54,8 @@ export const api = onRequest(
         res.status(400).json({ error: "Body must include a game description in `prompt`." });
         return;
       }
-      if (prompt.length > 4000) {
-        res.status(400).json({ error: "Prompt too long (max 4000 chars)." });
+      if (prompt.length > 20000) {
+        res.status(400).json({ error: "Prompt too long (max 20,000 chars)." });
         return;
       }
       try {

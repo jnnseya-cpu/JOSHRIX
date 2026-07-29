@@ -301,9 +301,10 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
   <section class="panel" id="p4">
     <div class="panel-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t">Stage 05 — Private Playtest · Creator Sandbox</span></div>
     <div class="panel-body">
+      <div class="lineage" id="protoNote4" style="display:none">🧪 <b>Prototype preview:</b> the playable build below is the platform's demo game so you can test the full flow today. “<span id="protoTitle4"></span>” — your generated blueprint — enters the full production forge at launch.</div>
       <div class="pub-grid">
         <div class="game-frame">
-          <div class="gf-bar"><span>PENALTY KING — PLAYABLE BUILD</span><span style="display:flex;align-items:center;gap:.7rem"><button class="gmute" id="muteBtn" title="Toggle sound">🔊</button><span class="live">◉ PRIVATE — ONLY YOU</span></span></div>
+          <div class="gf-bar"><span id="gfTitle">PENALTY KING — PLAYABLE BUILD</span><span style="display:flex;align-items:center;gap:.7rem"><button class="gmute" id="muteBtn" title="Toggle sound">🔊</button><span class="live">◉ PRIVATE — ONLY YOU</span></span></div>
           <canvas id="game" width="560" height="420"></canvas>
         </div>
         <div>
@@ -378,9 +379,9 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
           <div class="listing">
             <div class="art"></div>
             <div class="body">
-              <h4>Penalty King</h4>
-              <p>Step up in packed African stadiums. Five shots, one keeper, weekly leagues. Unlock boots, buy stadiums, trade player cards.</p>
-              <div class="tags"><i style="color:var(--green);border-color:rgba(74,222,128,.45);background:rgba(74,222,128,.07)">◉ FUN 92 · AUTOPLAY VERIFIED</i><i>Sports</i><i>Arcade</i><i>Rising difficulty</i><i>Multiplayer-ready</i><i>Age 7+</i><i>Rights Verified</i></div>
+              <h4 id="listTitle">Penalty King</h4>
+              <p id="listDesc">Step up in packed African stadiums. Five shots, one keeper, weekly leagues. Unlock boots, buy stadiums, trade player cards.</p>
+              <div class="tags" id="listTags"><i style="color:var(--green);border-color:rgba(74,222,128,.45);background:rgba(74,222,128,.07)">◉ FUN 92 · AUTOPLAY VERIFIED</i><i>Sports</i><i>Arcade</i><i>Rising difficulty</i><i>Multiplayer-ready</i><i>Age 7+</i><i>Rights Verified</i></div>
               <b class="incl-t">Why buyers pay when free exists</b>
               <ul class="incl">
                 <li>Full source code + every asset — you own it, not a licence to play</li>
@@ -444,31 +445,37 @@ const needAcu = (cost, hintEl) => {
 /* ---------- Stage 1: blueprint ---------- */
 let refining = false;   // refine passes are delta-priced, never a full re-charge
 let forgeAcu0 = 2000;   // ACU balance when the current forge run started
+let lastBp = { title: 'Penalty King', summary: null, genre: [] };  // the user's generated blueprint follows them through the flow
 $('btnBlueprint').addEventListener('click', async () => {
   const btn = $('btnBlueprint');
   if (!needAcu(refining ? 2 : 8, $('bpHint'))) return;
   btn.disabled = true;
   btn.textContent = '⚡ Forging blueprint…';
   // live Idea Agent via the deployed API (Claude when keys are set, demo otherwise);
-  // silent local fallback when offline or in the self-contained preview
-  let remote = null;
+  // API errors are SHOWN, never silently swallowed; offline falls back locally
+  let remote = null, apiError = null;
   try {
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
     const r = await fetch(base + '/api/blueprint', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: $('prompt').value, type: $('selType').value, platform: $('selPlat').value, scope: $('selScope').value, language: $('selLang').value }),
-      signal: AbortSignal.timeout(9000)
+      signal: AbortSignal.timeout(30000)
     });
     if (r.ok) remote = await r.json();
+    else { const e = await r.json().catch(() => null); apiError = (e && (e.error + (e.detail ? ' — ' + e.detail : ''))) || ('HTTP ' + r.status); }
   } catch (e) { /* offline — local Idea Agent below */ }
   if (remote && remote.blueprint) {
     const b = remote.blueprint;
+    lastBp = { title: b.title, summary: b.summary, genre: b.genre || [] };
     $('bpTitle').textContent = b.title;
     $('bpScore').textContent = `Commercial Score ${b.commercialScore} / 100`;
     $('bpLoop').textContent = b.coreLoop.join(' → ');
     $('bpAud').textContent = b.targetAudience;
     $('bpMon').textContent = b.monetisationModel;
     $('bpEst').textContent = `~${b.estimatedCredits.toLocaleString()} ACUs · maturity target: Commercial starter`;
+    $('bpHint').innerHTML = remote.provider === 'claude'
+      ? '✦ Blueprint written live by the Idea Agent (Claude)'
+      : '◌ Blueprint from the offline demo agent — add AI keys for live generation';
   } else {
     const p = $('prompt').value.toLowerCase();
     let title = 'Penalty King';
@@ -477,7 +484,9 @@ $('btnBlueprint').addEventListener('click', async () => {
       title = (words[0] || 'Neon').replace(/[^\p{L}]/gu,'') || 'Neon';
       title = title.charAt(0).toUpperCase() + title.slice(1) + ' Quest';
     }
+    lastBp = { title, summary: null, genre: [] };
     $('bpTitle').textContent = title;
+    if (apiError) $('bpHint').innerHTML = '⚠ Idea Agent error: ' + apiError + ' — showing local draft instead';
   }
   btn.textContent = refining ? '⚡ Refine Blueprint' : '⚡ Generate Blueprint';
   spend(refining ? 2 : 8);
@@ -573,7 +582,20 @@ $('btnQA').addEventListener('click', () => {
 
 /* ---------- Stage 4: private playtest ---------- */
 let gameOn = false;
-$('btnPlaytest').addEventListener('click', () => { setStep(4); show('p4'); if (!gameOn) { gameOn = true; initGame(); jxTrack('forge.playtest_started'); } });
+function applyBlueprintIdentity() {
+  if (!lastBp.title || lastBp.title === 'Penalty King') return;
+  $('protoNote4').style.display = 'block';
+  $('protoTitle4').textContent = lastBp.title;
+  $('gfTitle').textContent = lastBp.title.toUpperCase() + ' — DEMO BUILD PREVIEW';
+  $('listTitle').textContent = lastBp.title;
+  if (lastBp.summary) $('listDesc').textContent = lastBp.summary;
+  if (lastBp.genre && lastBp.genre.length) {
+    $('listTags').innerHTML = '<i style="color:var(--green);border-color:rgba(74,222,128,.45);background:rgba(74,222,128,.07)">◉ FUN 92 · AUTOPLAY VERIFIED</i>'
+      + lastBp.genre.slice(0, 4).map(g => '<i>' + String(g).replace(/[<>&]/g, '') + '</i>').join('')
+      + '<i>Rights Verified</i>';
+  }
+}
+$('btnPlaytest').addEventListener('click', () => { setStep(4); show('p4'); applyBlueprintIdentity(); if (!gameOn) { gameOn = true; initGame(); jxTrack('forge.playtest_started'); } });
 $('btnRefine').addEventListener('click', () => {
   refining = true;
   setStep(1); show('p1');

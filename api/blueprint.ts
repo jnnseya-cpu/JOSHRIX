@@ -16,8 +16,8 @@ export default async function handler(req: any, res: any) {
   if (!prompt || typeof prompt !== "string" || prompt.length < 4) {
     return res.status(400).json({ error: "Body must include a game description in `prompt`." });
   }
-  if (prompt.length > 4000) {
-    return res.status(400).json({ error: "Prompt too long (max 4000 chars)." });
+  if (prompt.length > 20000) {
+    return res.status(400).json({ error: "Prompt too long (max 20,000 chars)." });
   }
   try {
     const { blueprint, provider } = await generateBlueprint(prompt, { type, platform, scope, language });
