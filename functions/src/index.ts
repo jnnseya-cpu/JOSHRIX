@@ -8,7 +8,7 @@
 import { onRequest } from "firebase-functions/v2/https";
 import { defineSecret } from "firebase-functions/params";
 import Stripe from "stripe";
-import { generateBlueprint, providerStatus, BLUEPRINT_ACU_CHARGE } from "./gateway";
+import { generateBlueprint, generateGameHtml, providerStatus, BLUEPRINT_ACU_CHARGE, FORGE_GAME_ACU_CHARGE } from "./gateway";
 import { TelemetryBatchSchema } from "./shared/telemetry";
 import {
   TopupRequestSchema, CheckoutRequestSchema, PayoutRequestSchema,
@@ -26,7 +26,7 @@ export const api = onRequest(
   {
     region: "europe-west2",
     cors: true,
-    timeoutSeconds: 60,
+    timeoutSeconds: 300,
     memory: "512MiB",
     secrets: [ANTHROPIC_API_KEY, STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET],
   },
@@ -63,6 +63,20 @@ export const api = onRequest(
         res.status(200).json({ blueprint, provider, acuCharge: BLUEPRINT_ACU_CHARGE });
       } catch (err: unknown) {
         res.status(502).json({ error: "Blueprint generation failed", detail: String((err as Error)?.message ?? err) });
+      }
+      return;
+    }
+
+    if (path === "/forge-game" && req.method === "POST") {
+      const { prompt, title, summary, language } = (req.body ?? {}) as Record<string, string>;
+      if (!prompt || typeof prompt !== "string" || prompt.length < 4) { res.status(400).json({ error: "Body must include the game concept in `prompt`." }); return; }
+      if (prompt.length > 20000) { res.status(400).json({ error: "Prompt too long (max 20,000 chars)." }); return; }
+      try {
+        const { html, provider } = await generateGameHtml(prompt, { title, summary, language });
+        if (!html.includes("<canvas")) { res.status(502).json({ error: "Code Agent produced no playable canvas — please forge again." }); return; }
+        res.status(200).json({ html, provider, acuCharge: FORGE_GAME_ACU_CHARGE });
+      } catch (err: unknown) {
+        res.status(502).json({ error: "Game generation failed", detail: String((err as Error)?.message ?? err) });
       }
       return;
     }

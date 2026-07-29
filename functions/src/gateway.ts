@@ -99,3 +99,64 @@ export function providerStatus() {
     acu: ACU,
   };
 }
+
+/* ---------------- Code Agent: real playable game generation ---------------- */
+
+const GAME_SYSTEM = `You are the JOSHRIX Code Agent. Generate a COMPLETE, self-contained HTML5 mini-game as ONE html file, implementing the creator's concept as faithfully as a 2D canvas web game allows.
+HARD REQUIREMENTS:
+- ONE file. No external resources of any kind: no CDNs, no images, no fonts, no network calls, no localStorage.
+- <canvas>-based. Works with BOTH mouse and touch. Canvas scales responsively (max-width:100%, touch-action:none).
+- Structure: title screen (game title + one-line how-to-play + START) -> core gameplay loop with score/progress -> win/lose states with restart.
+- Rising difficulty over time or levels. A satisfying 3-8 minute session. requestAnimationFrame; smooth on mobile.
+- Premium dark aesthetic: background #050508 family with violet #7C3AED and cyan #22D3EE accents, unless the concept clearly demands another palette (e.g. a bright children's world -> vivid colours are correct).
+- Lightweight procedural WebAudio sound effects (no audio files) + a mute button; create the AudioContext only on the first user gesture.
+- All player-facing text in the creator's language (use the provided language, else detect from the concept).
+- Age-appropriate for the stated audience. No real brands, clubs, celebrities or licensed characters.
+- Robust: no uncaught exceptions; guard all input handlers.
+OUTPUT: nothing but the file. Start with <!DOCTYPE html>. No markdown fences, no commentary.`;
+
+export const FORGE_GAME_ACU_CHARGE = 300;
+
+export async function generateGameHtml(
+  prompt: string,
+  opts: { title?: string; summary?: string; language?: string } = {},
+): Promise<{ html: string; provider: string }> {
+  if (process.env.ANTHROPIC_API_KEY) {
+    const anthropic = new Anthropic();
+    const msg = await anthropic.messages.create({
+      model: "claude-sonnet-5",   // Code Agent: fast frontier coder; Idea Agent stays on Opus
+      max_tokens: 16000,
+      system: GAME_SYSTEM,
+      messages: [{
+        role: "user",
+        content: `Creator's game concept:\n${prompt}\n\nBlueprint title: ${opts.title ?? "(derive from concept)"}\nBlueprint summary: ${opts.summary ?? "(none)"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the concept"}`,
+      }],
+    });
+    let text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
+    const start = text.indexOf("<!DOCTYPE");
+    const altStart = start === -1 ? text.indexOf("<html") : start;
+    if (altStart === -1) throw new Error("Code Agent returned no HTML document");
+    text = text.slice(start === -1 ? altStart : start);
+    const end = text.lastIndexOf("</html>");
+    if (end !== -1) text = text.slice(0, end + 7);
+    return { html: text, provider: "claude" };
+  }
+  // demo fallback (no AI key): a tiny real playable game so the flow stays testable offline
+  const title = (opts.title || "Your Game").replace(/[<>&]/g, "");
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0;background:#050508;color:#F4F4FA;font-family:system-ui;display:flex;flex-direction:column;align-items:center}
+h3{color:#22D3EE;margin:12px 0 4px}p{color:#9CA3B8;margin:0 0 8px;font-size:13px}canvas{max-width:100%;touch-action:none;border:1px solid #333;border-radius:8px}</style>
+</head><body><h3>${title}</h3><p>Demo build (offline) — tap the orbs before they fade!</p><canvas id="c" width="560" height="380"></canvas>
+<script>const cv=document.getElementById('c'),cx=cv.getContext('2d');let orbs=[],score=0,miss=0,t=0,speed=1400;
+function spawn(){orbs.push({x:40+Math.random()*480,y:40+Math.random()*300,r:26,born:Date.now()})}
+setInterval(()=>{spawn();speed=Math.max(600,speed-15)},1400);
+function draw(){cx.fillStyle='#050508';cx.fillRect(0,0,560,380);t++;
+orbs=orbs.filter(o=>{const age=(Date.now()-o.born)/speed;if(age>1){miss++;return false}
+cx.beginPath();cx.arc(o.x,o.y,o.r*(1-age*0.5),0,7);cx.fillStyle=age<0.5?'#7C3AED':'#E879F9';cx.fill();return true});
+cx.fillStyle='#22D3EE';cx.font='bold 16px system-ui';cx.fillText('SCORE '+score,12,24);cx.fillStyle='#FB7185';cx.fillText('MISSED '+miss,120,24);
+requestAnimationFrame(draw)}
+function tap(e){const r=cv.getBoundingClientRect(),p=e.touches?e.touches[0]:e;const x=(p.clientX-r.left)*(560/r.width),y=(p.clientY-r.top)*(380/r.height);
+orbs=orbs.filter(o=>{if(Math.hypot(o.x-x,o.y-y)<o.r+8){score++;return false}return true});e.preventDefault()}
+cv.addEventListener('mousedown',tap);cv.addEventListener('touchstart',tap,{passive:false});draw();</script></body></html>`;
+  return { html, provider: "demo" };
+}

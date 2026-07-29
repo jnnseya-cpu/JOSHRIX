@@ -221,8 +221,8 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
     <div class="panel-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t">Stage 01 — Neural Synthesis · Idea Agent</span></div>
     <div class="panel-body">
       <div class="lineage" id="lineageNote" style="display:none">⑂ Remixing <b>Penalty King</b> — lineage will be registered on fork: ancestor <b>JX-IP-00921</b> earns a <b>30% royalty share</b> of this game's creator revenue, forever. You keep 70% — and your remix can be remixed too.</div>
-      <label for="prompt">Describe your game — in any language</label>
-      <textarea id="prompt">A football penalty game where players compete online, unlock boots, buy stadiums, and sell player cards. Set in African stadiums with weekly leagues.</textarea>
+      <label for="prompt">Describe your game — in any language <span class="hint" id="promptCount" style="float:right;font-weight:600">0 / 20,000</span></label>
+      <textarea id="prompt" maxlength="20000">A football penalty game where players compete online, unlock boots, buy stadiums, and sell player cards. Set in African stadiums with weekly leagues.</textarea>
       <div class="row">
         <div><label>Game type</label>
           <select id="selType"><option>Sports · Arcade</option><option>2D Platformer</option><option>Puzzle</option><option>Quiz</option><option>Tower Defence</option></select></div>
@@ -446,6 +446,17 @@ const needAcu = (cost, hintEl) => {
 let refining = false;   // refine passes are delta-priced, never a full re-charge
 let forgeAcu0 = 2000;   // ACU balance when the current forge run started
 let lastBp = { title: 'Penalty King', summary: null, genre: [] };  // the user's generated blueprint follows them through the flow
+let realBuild = null, realBuildPromise = null, realBuildErr = null;  // the Code Agent's actual generated game
+
+/* live character counter on the concept box */
+const updateCount = () => {
+  const n = $('prompt').value.length;
+  const el = $('promptCount');
+  el.textContent = n.toLocaleString() + ' / 20,000';
+  el.style.color = n > 19000 ? 'var(--amber)' : '';
+};
+$('prompt').addEventListener('input', updateCount);
+updateCount();
 $('btnBlueprint').addEventListener('click', async () => {
   const btn = $('btnBlueprint');
   if (!needAcu(refining ? 2 : 8, $('bpHint'))) return;
@@ -534,6 +545,21 @@ $('btnForge').addEventListener('click', () => {
   forgeAcu0 = acu;
   AudioFX.setLang($('selLang').value === 'auto' ? 'en' : $('selLang').value);
   jxTrack('forge.blueprint_approved', { scope: $('selScope').value });
+  // the REAL build: the Code Agent writes the actual game while the fleet animates
+  realBuild = null; realBuildErr = null;
+  realBuildPromise = (async () => {
+    try {
+      const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
+      const r = await fetch(base + '/api/forge-game', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: $('prompt').value, title: lastBp.title, summary: lastBp.summary, language: $('selLang').value }),
+        signal: AbortSignal.timeout(280000)
+      });
+      const j = await r.json().catch(() => null);
+      if (r.ok && j && j.html) { realBuild = j; }
+      else { realBuildErr = (j && (j.error + (j.detail ? ' — ' + j.detail : ''))) || ('HTTP ' + r.status); }
+    } catch (e) { realBuildErr = 'offline — Code Agent unreachable'; }
+  })();
   $('qaRow').style.display = 'none';
   AGENTS.forEach((a, i) => {
     const el = $('ag' + i);
@@ -584,9 +610,9 @@ $('btnQA').addEventListener('click', () => {
 let gameOn = false;
 function applyBlueprintIdentity() {
   if (!lastBp.title || lastBp.title === 'Penalty King') return;
-  $('protoNote4').style.display = 'block';
-  $('protoTitle4').textContent = lastBp.title;
-  $('gfTitle').textContent = lastBp.title.toUpperCase() + ' — DEMO BUILD PREVIEW';
+  const pt = $('protoTitle4');
+  if (pt) { $('protoNote4').style.display = 'block'; pt.textContent = lastBp.title; }
+  if (!realBuild) $('gfTitle').textContent = lastBp.title.toUpperCase() + ' — DEMO BUILD PREVIEW';
   $('listTitle').textContent = lastBp.title;
   if (lastBp.summary) $('listDesc').textContent = lastBp.summary;
   if (lastBp.genre && lastBp.genre.length) {
@@ -595,7 +621,43 @@ function applyBlueprintIdentity() {
       + '<i>Rights Verified</i>';
   }
 }
-$('btnPlaytest').addEventListener('click', () => { setStep(4); show('p4'); applyBlueprintIdentity(); if (!gameOn) { gameOn = true; initGame(); jxTrack('forge.playtest_started'); } });
+let realBuildCharged = false;
+async function renderPlaytest() {
+  if (realBuildPromise && !realBuild && !realBuildErr) {
+    $('protoNote4').style.display = 'block';
+    $('protoNote4').innerHTML = '⚒ <b>Code Agent is finishing your build…</b> writing your playable game from the concept — this can take a minute for rich concepts.';
+    await realBuildPromise;
+  }
+  if (realBuild && realBuild.html) {
+    const frame = document.querySelector('#p4 .game-frame');
+    let fr = document.getElementById('realGame');
+    if (!fr) {
+      fr = document.createElement('iframe');
+      fr.id = 'realGame';
+      fr.setAttribute('sandbox', 'allow-scripts allow-pointer-lock');
+      fr.setAttribute('title', 'Your generated game');
+      fr.style.cssText = 'display:block;width:100%;height:470px;border:0;background:#050508';
+      $('game').style.display = 'none';
+      frame.appendChild(fr);
+    }
+    fr.srcdoc = realBuild.html;
+    $('gfTitle').textContent = (lastBp.title || 'YOUR GAME').toUpperCase() + ' — REAL BUILD';
+    $('protoNote4').style.display = 'block';
+    $('protoNote4').innerHTML = realBuild.provider === 'claude'
+      ? '✦ <b>Real build:</b> this playable game was written by the Code Agent from your concept, live. Not happy? Refine Concept regenerates it.'
+      : '◌ <b>Offline build:</b> generated by the demo agent — with AI keys live this is written by Claude from your concept.';
+    if (!realBuildCharged) { realBuildCharged = true; spend(realBuild.acuCharge || 300); }
+    applyBlueprintIdentity();
+  } else {
+    applyBlueprintIdentity();
+    if (realBuildErr) {
+      $('protoNote4').style.display = 'block';
+      $('protoNote4').innerHTML = '⚠ Code Agent: ' + realBuildErr + ' — showing the platform demo build instead. Forge again to retry.';
+    }
+    if (!gameOn) { gameOn = true; initGame(); }
+  }
+}
+$('btnPlaytest').addEventListener('click', () => { setStep(4); show('p4'); jxTrack('forge.playtest_started'); renderPlaytest(); });
 $('btnRefine').addEventListener('click', () => {
   refining = true;
   setStep(1); show('p1');
