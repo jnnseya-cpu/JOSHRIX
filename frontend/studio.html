@@ -507,14 +507,19 @@ $('btnBlueprint').addEventListener('click', async () => {
   let remote = null, apiError = null;
   try {
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
+    // 55s window: rich concepts take the Idea Agent (Claude Opus) well past 30s
     const r = await fetch(base + '/api/blueprint', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ prompt: $('prompt').value, type: $('selType').value, platform: $('selPlat').value, scope: $('selScope').value, language: $('selLang').value, walletId: serverWalletId || undefined }),
-      signal: AbortSignal.timeout(30000)
+      signal: AbortSignal.timeout(55000)
     });
     if (r.ok) remote = await r.json();
     else { const e = await r.json().catch(() => null); apiError = (e && (e.error + (e.detail ? ' — ' + e.detail : ''))) || ('HTTP ' + r.status); }
-  } catch (e) { /* offline — local Idea Agent below */ }
+  } catch (e) {
+    apiError = (e && e.name === 'TimeoutError')
+      ? 'the Idea Agent is taking longer than 55s on this rich concept — press Generate again'
+      : 'could not reach the Idea Agent (connection dropped) — check your network and press Generate again';
+  }
   if (remote && typeof remote.balanceAfter === 'number') syncBalance(remote.balanceAfter);
   if (remote && remote.blueprint) {
     const b = remote.blueprint;
@@ -529,21 +534,24 @@ $('btnBlueprint').addEventListener('click', async () => {
       ? '✦ Blueprint written live by the Idea Agent (Claude)'
       : '◌ Blueprint from the offline demo agent — add AI keys for live generation';
   } else {
-    const p = $('prompt').value.toLowerCase();
-    let title = 'Penalty King';
-    if (!p.includes('penalty') && !p.includes('football')) {
-      const words = $('prompt').value.split(/\s+/).filter(w => w.length > 4);
-      title = (words[0] || 'Neon').replace(/[^\p{L}]/gu,'') || 'Neon';
-      title = title.charAt(0).toUpperCase() + title.slice(1) + ' Quest';
-    }
+    // NEVER present the demo card as the creator's blueprint — blank it and say why
+    const words = $('prompt').value.split(/\s+/).filter(w => w.length > 4);
+    let title = ((words[0] || 'Your').replace(/[^\p{L}]/gu,'') || 'Your');
+    title = title.charAt(0).toUpperCase() + title.slice(1) + ' — draft title';
     lastBp = { title, summary: null, genre: [] };
     $('bpTitle').textContent = title;
-    if (apiError) $('bpHint').innerHTML = '⚠ Idea Agent error: ' + apiError + ' — showing local draft instead';
+    $('bpScore').textContent = 'Commercial Score — pending';
+    $('bpLoop').textContent = '—';
+    $('bpAud').textContent = '—';
+    $('bpMon').textContent = '—';
+    $('bpEst').textContent = '— live blueprint not received';
+    $('bpHint').innerHTML = '⚠ Live blueprint unavailable: ' + (apiError || 'unknown error') + '.';
   }
   btn.textContent = refining ? '⚡ Refine Blueprint' : '⚡ Generate Blueprint';
-  spend(refining ? 2 : 8);
+  btn.disabled = false;
+  if (!apiError) spend(refining ? 2 : 8);
   $('bp').classList.add('show');
-  $('approveRow').style.display = 'flex';
+  $('approveRow').style.display = apiError ? 'none' : 'flex';  // no forging from a failed blueprint — regenerate first
   jxTrack('forge.blueprint_generated', { provider: remote && remote.provider ? remote.provider : 'local', refine: refining });
 });
 
