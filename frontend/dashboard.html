@@ -11,6 +11,9 @@
 <title>Dashboard — JOSHRIX Studio</title>
 <meta name="description" content="The operator command centre — forges, revenue, ACUs, games, and AI recommendations.">
 <link rel="stylesheet" href="assets/joshrix.css">
+<script src="assets/config.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/store.js"></script>
 </head>
 <body>
 <canvas id="stars" aria-hidden="true"></canvas>
@@ -36,12 +39,12 @@
 </nav>
 <main class="jx">
 <div class="page-hero reveal">
-  <div class="sec-tag">Creator Dashboard</div>
-  <h1 class="jx">Command Centre — <span class="grad">@justin</span></h1>
+  <div class="sec-tag" id="dashTag">Creator Dashboard</div>
+  <h1 class="jx">Command Centre — <span class="grad" id="dashWho">@justin</span></h1>
   <p class="lede">What am I building? What's making money? What's costing credits? What needs action? What should I sell next? — answered at a glance.</p>
 </div><div class="console reveal">
-<div class="console-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t">JOSHRIX OS — OPERATOR SESSION · CREATOR PRO</span><span class="status">FLEET SYNCED</span></div>
-<div class="modules">
+<div class="console-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t" id="dashSession">JOSHRIX OS — OPERATOR SESSION · CREATOR PRO</span><span class="status">FLEET SYNCED</span></div>
+<div class="modules" id="dashModules">
 <div class="module"><h3><span class="st"></span>ACU Balance</h3><span class="num">742</span><div class="bar"><i style="width:74%"></i></div><span class="readout">980/MO · RENEWS IN 11 DAYS · <a href="pricing.html">TOP UP</a></span></div>
 <div class="module"><h3><span class="st"></span>Revenue (30d)</h3><span class="num">£4,820</span><div class="bar ok"><i style="width:62%"></i></div><span class="readout">SALES £3.2K · IN-GAME £1.1K · ROYALTIES £0.5K</span></div>
 <div class="module"><h3><span class="st"></span>Pending Payout</h3><span class="num">£320</span><div class="bar ok"><i style="width:100%"></i></div><span class="readout">KYC VERIFIED · SETTLES T+7</span></div>
@@ -51,7 +54,7 @@
 <div class="module"><h3><span class="st"></span>Quality Signal</h3><span class="num">92</span><div class="bar ok"><i style="width:92%"></i></div><span class="readout">CRASH-FREE 99.4% · 0 FLAGS</span></div>
 <div class="module"><h3><span class="st"></span>Referrals</h3><span class="num">17</span><div class="bar"><i style="width:44%"></i></div><span class="readout">EARNING 5% FIRST-YEAR NET · £84 ACCRUED</span></div>
 </div></div>
-<h2 class="jx reveal">My Games</h2>
+<div id="secCreator"><h2 class="jx reveal">My Games</h2>
 <table class="jx reveal"><thead><tr><th>Game</th><th>Status</th><th>Players (30d)</th><th>Revenue</th><th>Rating</th><th>Actions</th></tr></thead><tbody>
 <tr><td><b>Penalty King</b></td><td><span class="pill green">PUBLISHED</span></td><td>21.7K</td><td>£2,410</td><td>4.8★</td><td>Manage · Analytics · Promote</td></tr>
 <tr><td><b>Quantum Tycoon</b></td><td><span class="pill green">LISTED</span></td><td>4.8K</td><td>£1,130</td><td>4.6★</td><td>Manage · Analytics · Update</td></tr>
@@ -65,7 +68,7 @@
 <span class="pill">BUNDLE SUGAR RUSH ASSETS AS A TEMPLATE (£29 SUGGESTED)</span>
 <span class="pill">OFFER COMMERCIAL LICENCE ON IRON MECHANICS</span>
 <span class="pill green">RUN WEEKEND TOURNAMENT — RETENTION +12%</span>
-</div>
+</div></div>
 <div class="reveal" style="margin-top:2.2rem;display:flex;gap:1rem;flex-wrap:wrap">
 <a class="btn btn-primary" href="studio.html">▶&nbsp; New Forge</a>
 <a class="btn btn-ghost" href="profile.html">View Public Profile</a>
@@ -100,7 +103,6 @@
     <span class="sys">◉ ALL SYSTEMS OPERATIONAL</span>
   </div>
 </footer>
-<script src="assets/auth.js"></script>
 <script src="assets/site.js"></script>
 <script>
 (function () {
@@ -114,6 +116,50 @@
       document.getElementById('btnOut').addEventListener('click', () => a.signOut().then(() => location.href = 'index.html'));
     }
   }));
+})();
+</script>
+<script>
+(function () {
+  const p = jxStore.get();
+  const $ = (id) => document.getElementById(id);
+  const who = p.handle || (p.displayName ? '@' + p.displayName.split(' ')[0].toLowerCase() : '@operator');
+  $('dashWho').textContent = who;
+
+  const M = (h, num, w, read, ok) =>
+    '<div class="module"><h3><span class="st"></span>' + h + '</h3><span class="num">' + num +
+    '</span><div class="bar' + (ok ? ' ok' : '') + '"><i style="width:' + w + '%"></i></div><span class="readout">' + read + '</span></div>';
+
+  const TYPES = {
+    studio: { tag: 'Studio Dashboard', session: 'JOSHRIX OS — STUDIO WORKSPACE · 10 SEATS', modules: [
+      M('Team Seats', '10', 100, '7 ACTIVE TODAY · RBAC ENFORCED', 1), M('Active Projects', '24', 68, '6 IN FORGE · 3 AWAITING APPROVAL'),
+      M('Approval Queue', '3', 30, 'ART ×1 · ECONOMY ×1 · RELEASE ×1'), M('Studio Revenue (30d)', '£18.4K', 74, 'GAMES £11K · TEMPLATES £7.4K', 1),
+      M('Shared Asset Library', '412', 55, '38 ADDED THIS WEEK'), M('Pipeline Health', '96%', 96, 'CI GREEN · STAGING SYNCED', 1) ] },
+    business: { tag: 'Business Dashboard', session: 'JOSHRIX OS — BRAND WORKSPACE', modules: [
+      M('Live Campaigns', '4', 60, '2 GAMES · 1 QUIZ · 1 TOURNAMENT'), M('Branded Portals', '2', 40, 'WHITE-LABEL · CUSTOM DOMAINS', 1),
+      M('Leads Captured (30d)', '1,240', 71, 'CPL £0.84 · EXPORTED TO CRM', 1), M('Campaign Plays', '88K', 66, 'AVG SESSION 4:10'),
+      M('Conversion', '4.2%', 42, 'GAME → SIGNUP'), M('Licences', '3', 30, 'COMMERCIAL ×2 · WHITE-LABEL ×1') ] },
+    enterprise: { tag: 'Enterprise Dashboard', session: 'JOSHRIX OS — PRIVATE WORKSPACE · SSO', modules: [
+      M('Workspaces', '6', 60, 'REGIONS: EU-WEST ×4 · US ×2'), M('Seats', '250', 84, 'SSO · SCIM PROVISIONED', 1),
+      M('Private Agents', '4', 40, 'CUSTOM MODEL ROUTING ACTIVE'), M('SLA', '99.95%', 99, 'THIS QUARTER · 0 SEV1', 1),
+      M('Data Residency', 'EU', 100, 'LONDON · FRANKFURT', 1), M('Audit Events (30d)', '12.4K', 55, 'ALL SIGNED · EXPORTABLE') ] },
+    education: { tag: 'Education Dashboard', session: 'JOSHRIX OS — CLASSROOM · SUPERVISED', modules: [
+      M('Classrooms', '8', 66, '3 LANGUAGES · SAFE MODE ON', 1), M('Students', '214', 78, '196 ACTIVE THIS WEEK'),
+      M('Live Assignments', '12', 48, 'DUE THIS WEEK ×5'), M('Projects Submitted', '96', 72, 'AVG FUN SCORE 81', 1),
+      M('Safety Flags', '0', 100, 'ALL CONTENT WITHIN POLICY', 1), M('Certificates Issued', '41', 41, 'CREATOR LEVEL 1 ×32 · LEVEL 2 ×9') ] },
+    buyer: { tag: 'Player Dashboard', session: 'JOSHRIX OS — PLAYER SESSION', modules: [
+      M('My Library', '12', 60, '3 PLAYED TODAY'), M('Wishlists', '5', 25, '2 ON SALE NOW', 1),
+      M('Orders', '8', 40, 'ALL LICENCES ON REGISTRY'), M('Licences', '3', 30, 'PERSONAL ×2 · COMMERCIAL ×1'),
+      M('Play Time (30d)', '46h', 66, 'TOP: PENALTY KING'), M('My Reviews', '6', 30, 'AVG 4.5★ GIVEN') ] },
+  };
+
+  const t = TYPES[p.accountType];
+  if (p.accountType === 'admin') { location.replace('admin.html'); return; }
+  if (t) {
+    $('dashTag').textContent = t.tag;
+    $('dashSession').textContent = t.session;
+    $('dashModules').innerHTML = t.modules.join('');
+    const sec = $('secCreator'); if (sec) sec.style.display = 'none';
+  }
 })();
 </script>
 </body>

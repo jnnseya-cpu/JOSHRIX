@@ -11,6 +11,9 @@
 <title>Profile — JOSHRIX Studio</title>
 <meta name="description" content="Public operator profile — games, ratings, certificates, and badges.">
 <link rel="stylesheet" href="assets/joshrix.css">
+<script src="assets/config.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/store.js"></script>
 </head>
 <body>
 <canvas id="stars" aria-hidden="true"></canvas>
@@ -34,17 +37,47 @@
   </div>
 </nav>
 <main class="jx">
-<div class="sec-tag reveal">Operator Profile</div><div class="cover reveal"></div>
+<div class="sec-tag reveal">Operator Profile</div>
+<div class="cover reveal" id="pCover" title="Click to change your cover picture" style="cursor:pointer;position:relative;background-size:cover;background-position:center">
+  <span style="position:absolute;right:1rem;bottom:1rem;font-family:var(--mono);font-size:.58rem;letter-spacing:.2em;color:var(--text);background:rgba(5,5,8,.6);border:1px solid var(--stroke-bright);border-radius:999px;padding:.4rem .9rem">✎ CHANGE COVER</span>
+</div>
 <div class="profile-head reveal">
-  <div class="avatar">J</div>
-  <div class="who"><h1 class="jx">Justin N.</h1><span class="handle">@JUSTIN · OPERATOR SINCE 2026 · KINSHASA / LONDON</span></div>
-  <div class="badges">
-    <span class="pill green">RIGHTS VERIFIED</span><span class="pill">CREATOR PRO</span>
-    <span class="pill">TOP 1% SELLER</span><span class="pill amber">AMBASSADOR</span>
+  <div class="avatar" id="pAvatar" title="Click to change your photo" style="cursor:pointer;overflow:hidden">J</div>
+  <div class="who"><h1 class="jx" id="pName">Your Name</h1><span class="handle" id="pMeta">@HANDLE · OPERATOR</span></div>
+  <div class="badges" id="pBadges">
+    <span class="pill green">RIGHTS VERIFIED</span><span class="pill" id="pTypeBadge">CREATOR</span>
   </div>
 </div>
-<p class="lede reveal" style="margin-top:1.4rem">Building sports and simulation worlds with the fleet. Penalty King operator. Everything I forge, I own — and most of it is for sale.</p>
-<div class="console reveal">
+<p class="lede reveal" id="pBioView" style="margin-top:1.4rem">Tell the world what you forge.</p>
+
+<h2 class="jx reveal">Edit Profile <span class="pill green" id="saveState" style="vertical-align:middle;margin-left:.6rem">✓ ALL CHANGES SAVED</span></h2>
+<form class="form reveal" id="profileForm" onsubmit="return false">
+  <div class="grid c3" style="gap:1rem">
+    <div><label class="jx" for="pfName">Display name</label><input class="jx" id="pfName" placeholder="Your name or studio"></div>
+    <div><label class="jx" for="pfHandle">Operator handle</label><input class="jx" id="pfHandle" placeholder="@yourhandle"></div>
+    <div><label class="jx" for="pfType">Account type</label>
+      <select class="jx" id="pfType">
+        <option value="creator">Solo Creator</option><option value="studio">Studio Team</option>
+        <option value="business">Business / Brand</option><option value="enterprise">Enterprise</option>
+        <option value="education">Education</option><option value="buyer">Player / Buyer</option>
+        <option value="admin">Platform Admin</option>
+      </select></div>
+    <div><label class="jx" for="pfCountry">Country</label>
+      <select class="jx" id="pfCountry"><option>United Kingdom</option><option>DR Congo</option><option>Nigeria</option><option>Kenya</option><option>South Africa</option><option>Ghana</option><option>United States</option><option>France</option><option>India</option><option>Other</option></select></div>
+    <div><label class="jx" for="pfLang">Creation language</label>
+      <select class="jx" id="pfLang"><option value="en">English</option><option value="fr">Français</option><option value="es">Español</option><option value="pt">Português</option><option value="sw">Kiswahili</option><option value="ar">العربية</option><option value="yo">Yorùbá</option><option value="ha">Hausa</option><option value="hi">हिन्दी</option><option value="zh">中文</option></select></div>
+    <div><label class="jx" for="pfSite">Website / link</label><input class="jx" id="pfSite" placeholder="https://…"></div>
+  </div>
+  <label class="jx" for="pfBio" style="margin-top:1rem">Bio</label>
+  <textarea class="jx" id="pfBio" rows="3" style="width:100%;background:rgba(255,255,255,.04);border:1px solid var(--stroke-bright);border-radius:10px;color:var(--text);font-family:var(--body);font-size:1.05rem;padding:.9rem 1rem;outline:none" placeholder="What do you forge? What do you sell?"></textarea>
+  <div style="margin-top:1.2rem;display:flex;gap:1rem;flex-wrap:wrap">
+    <button class="btn btn-ghost" type="button" id="btnPhoto">📷 Change Photo</button>
+    <button class="btn btn-ghost" type="button" id="btnCover">🖼 Change Cover</button>
+    <span class="hint">Everything autosaves — locally always, to your account when signed in.</span>
+  </div>
+</form>
+
+<div class="console reveal" style="margin-top:2.4rem">
 <div class="console-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t">PUBLIC OPERATOR RECORD</span><span class="status">VERIFIED</span></div>
 <div class="modules">
 <div class="module"><h3><span class="st"></span>Games Published</h3><span class="num">8</span><span class="readout">4 GENRES · 2 TEMPLATES SOLD</span></div>
@@ -52,16 +85,50 @@
 <div class="module"><h3><span class="st"></span>Marketplace Rating</h3><span class="num">4.8★</span><span class="readout">288 SALES · 1.2% REFUND RATE</span></div>
 <div class="module"><h3><span class="st"></span>IP Certificates</h3><span class="num">14</span><span class="readout">ALL ON REGISTRY · 0 DISPUTES</span></div>
 </div></div>
-<h2 class="jx reveal">Published Worlds</h2>
-<div class="grid c3">
-<div class="card reveal"><span class="pill green">◉ LIVE</span><h3 style="margin-top:.7rem">Penalty King</h3><p>Sports · Arcade — five shots, one keeper, weekly leagues.</p></div>
-<div class="card reveal"><span class="pill green">◉ LIVE</span><h3 style="margin-top:.7rem">Quantum Tycoon</h3><p>Simulation · Strategy — a research empire, one particle at a time.</p></div>
-<div class="card reveal"><span class="pill green">◉ LIVE</span><h3 style="margin-top:.7rem">Sugar Rush Run</h3><p>Endless Runner · Kids — the candy-canyon dash.</p></div>
-</div>
 <div class="reveal" style="margin-top:2.2rem;display:flex;gap:1rem;flex-wrap:wrap">
-<a class="btn btn-primary" href="marketplace.html">Shop My Listings</a>
-<a class="btn btn-ghost" href="dashboard.html">← Back To Dashboard</a></div>
+<a class="btn btn-primary" href="dashboard.html">← Back To Dashboard</a>
+<a class="btn btn-ghost" href="marketplace.html">Shop My Listings</a></div>
 </main>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const TYPE_LABEL = { creator: 'SOLO CREATOR', studio: 'STUDIO TEAM', business: 'BUSINESS / BRAND', enterprise: 'ENTERPRISE', education: 'EDUCATION', buyer: 'PLAYER / BUYER', admin: 'PLATFORM ADMIN' };
+
+  function render(p) {
+    $('pName').textContent = p.displayName || 'Your Name';
+    $('pMeta').textContent = (p.handle ? p.handle.toUpperCase() : '@HANDLE') + ' · ' + (TYPE_LABEL[p.accountType] || 'OPERATOR') + (p.country ? ' · ' + p.country.toUpperCase() : '');
+    $('pTypeBadge').textContent = TYPE_LABEL[p.accountType] || 'CREATOR';
+    $('pBioView').textContent = p.bio || 'Tell the world what you forge.';
+    const av = $('pAvatar');
+    av.innerHTML = p.avatar ? '<img src="' + p.avatar + '" alt="profile photo" style="width:100%;height:100%;object-fit:cover">'
+                            : ((p.displayName || 'J')[0] || 'J').toUpperCase();
+    if (p.cover) $('pCover').style.backgroundImage = 'url(' + p.cover + ')';
+  }
+
+  const p = jxStore.get();
+  render(p);
+  $('pfName').value = p.displayName || ''; $('pfHandle').value = p.handle || '';
+  $('pfType').value = p.accountType || 'creator'; $('pfCountry').value = p.country || 'United Kingdom';
+  $('pfLang').value = p.language || 'en'; $('pfSite').value = p.website || ''; $('pfBio').value = p.bio || '';
+
+  jxStore.onStatus((s) => {
+    const el = $('saveState');
+    if (s === 'saving') { el.textContent = '⋯ SAVING'; el.className = 'pill amber'; }
+    else if (s === 'local') { el.textContent = '✓ SAVED ON THIS DEVICE'; el.className = 'pill'; }
+    else { el.textContent = '✓ ALL CHANGES SAVED'; el.className = 'pill green'; }
+  });
+  jxStore.onChange(render);
+
+  const bind = (id, key, ev) => $(id).addEventListener(ev || 'input', () => jxStore.save({ [key]: $(id).value }));
+  bind('pfName', 'displayName'); bind('pfHandle', 'handle'); bind('pfBio', 'bio'); bind('pfSite', 'website');
+  bind('pfType', 'accountType', 'change'); bind('pfCountry', 'country', 'change'); bind('pfLang', 'language', 'change');
+
+  $('pAvatar').addEventListener('click', () => jxStore.pickImage('avatar'));
+  $('btnPhoto').addEventListener('click', () => jxStore.pickImage('avatar'));
+  $('pCover').addEventListener('click', () => jxStore.pickImage('cover'));
+  $('btnCover').addEventListener('click', () => jxStore.pickImage('cover'));
+})();
+</script>
 <footer class="jx">
   <div class="foot-grid">
     <div class="foot-brand">

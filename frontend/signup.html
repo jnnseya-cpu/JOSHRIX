@@ -11,6 +11,9 @@
 <title>Sign Up — JOSHRIX Studio</title>
 <meta name="description" content="Create your JOSHRIX Studio account — creator, studio, business, enterprise, education, or player.">
 <link rel="stylesheet" href="assets/joshrix.css">
+<script src="assets/config.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/store.js"></script>
 </head>
 <body>
 <canvas id="stars" aria-hidden="true"></canvas>
@@ -60,8 +63,22 @@
   const note = document.createElement('p');
   note.className = 'hint'; note.id = 'authStatus';
   form.appendChild(note);
+  const saveProfile = () => jxStore.save({
+    accountType: document.getElementById('accountType').value || 'creator',
+    handle: document.getElementById('su-handle').value,
+    displayName: document.getElementById('su-name').value,
+    email: document.getElementById('su-email').value,
+    country: document.getElementById('su-country').value,
+  });
   if (!window.jxAuth || !window.jxAuth.enabled) {
-    note.textContent = 'Demo mode — account creation activates at launch.';
+    note.textContent = 'Local mode — your account lives on this device until launch.';
+    form.removeAttribute('data-demo');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      saveProfile();
+      note.textContent = '\u2713 Account created on this device \u2014 opening your dashboard\u2026';
+      setTimeout(() => location.href = 'dashboard.html', 700);
+    });
     return;
   }
   form.removeAttribute('data-demo');
@@ -76,6 +93,7 @@
         document.getElementById('su-pass').value,
         document.getElementById('su-name').value || document.getElementById('su-handle').value
       );
+      saveProfile();
       note.textContent = '✓ Account created — entering your dashboard…';
       location.href = 'dashboard.html';
     } catch (err) { note.textContent = '✕ ' + (err && err.message || 'Sign-up failed'); }
@@ -119,7 +137,6 @@
     <span class="sys">◉ ALL SYSTEMS OPERATIONAL</span>
   </div>
 </footer>
-<script src="assets/auth.js"></script>
 <script src="assets/site.js"></script>
 </body>
 </html>
