@@ -100,6 +100,21 @@
     <span class="sys">◉ ALL SYSTEMS OPERATIONAL</span>
   </div>
 </footer>
+<script src="assets/auth.js"></script>
 <script src="assets/site.js"></script>
+<script>
+(function () {
+  if (!window.jxAuth || !window.jxAuth.enabled) return;
+  window.jxAuth.ready.then((a) => a.onUser((u) => {
+    const nav = document.querySelector('.nav-right');
+    if (!nav) return;
+    if (u) {
+      nav.innerHTML = '<span class="pill green" style="align-self:center">◉ ' +
+        (u.displayName || u.email) + '</span> <button class="btn btn-ghost btn-sm" id="btnOut">Sign Out</button>' + nav.innerHTML;
+      document.getElementById('btnOut').addEventListener('click', () => a.signOut().then(() => location.href = 'index.html'));
+    }
+  }));
+})();
+</script>
 </body>
 </html>

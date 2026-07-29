@@ -10,6 +10,8 @@ export default function handler(_req: any, res: any) {
     service: "joshrix-studio",
     layers: { frontend: "static /frontend", backend: "serverless /api", shared: "shared/contracts.ts" },
     providers: providerStatus(),
+    ledger: !!(process.env.DATABASE_URL || process.env.POSTGRES_URL),
+    stripe: { checkout: !!process.env.STRIPE_SECRET_KEY, webhook: !!process.env.STRIPE_WEBHOOK_SECRET },
     mode: process.env.ANTHROPIC_API_KEY ? "live" : "demo (add ANTHROPIC_API_KEY to go live)",
   });
 }

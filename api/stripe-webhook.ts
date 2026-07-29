@@ -9,6 +9,7 @@
  */
 import Stripe from "stripe";
 import { TOPUP_PACKAGES, topupPostings } from "../shared/payments";
+import { getDb, ensureSchema, claimEvent, postTx, creditAcu, recordFounder } from "./_ledger";
 
 // Vercel: disable body parsing so the raw payload is available for verification
 export const config = { api: { bodyParser: false } };
@@ -73,7 +74,34 @@ export default async function handler(req: any, res: any) {
   }
 
   const result = handleStripeEvent(event);
-  // structured settlement log until the Postgres ledger is attached
-  console.log(JSON.stringify({ stripeWebhook: result }));
-  return res.status(200).json({ received: true, ...result });
+
+  // Persist to the Postgres ledger when DATABASE_URL is configured
+  const sql = getDb();
+  let persisted: "yes" | "duplicate" | "no_db" | "error" = "no_db";
+  if (sql) {
+    try {
+      await ensureSchema(sql);
+      const fresh = await claimEvent(sql, event.id, event.type, { type: event.type });
+      if (!fresh) {
+        persisted = "duplicate"; // already settled — never double-credit
+      } else {
+        const session = (event.data?.object ?? {}) as Stripe.Checkout.Session;
+        const email = (session as any)?.customer_details?.email ?? null;
+        if (result.ok && (result as any).action === "credit_acu") {
+          const r = result as Extract<ReturnType<typeof handleStripeEvent>, { action: "credit_acu" }>;
+          await postTx(sql, "acu_topup", r.ledger.postings, { eventId: event.id, session: session.id ?? "", packageId: r.packageId });
+          await creditAcu(sql, { stripeSession: session.id ?? event.id, email, packageId: r.packageId, acu: r.acu });
+        } else if (result.ok && (result as any).action === "founder_pass") {
+          await recordFounder(sql, { stripeSession: session.id ?? event.id, pass: (result as any).pass, email, amountMinor: (session.amount_total as number) ?? null });
+        }
+        persisted = "yes";
+      }
+    } catch (err: any) {
+      persisted = "error";
+      console.error(JSON.stringify({ ledgerError: String(err?.message ?? err), eventId: event.id }));
+    }
+  }
+
+  console.log(JSON.stringify({ stripeWebhook: { ...result, persisted } }));
+  return res.status(200).json({ received: true, persisted, ...result });
 }

@@ -19,3 +19,15 @@ window.JOSHRIX_FOUNDER_LINKS = window.JOSHRIX_FOUNDER_LINKS || {
   // founder_pro: 'https://buy.stripe.com/YYYY',
   // first_studio: 'https://buy.stripe.com/ZZZZ',
 };
+
+/**
+ * Firebase Auth (signup/login). Paste your Firebase project's WEB APP config
+ * here (Firebase console → Project settings → Your apps → Web app). These
+ * client keys are public by design — security lives in Firebase rules.
+ * Until set, signup/login run in demo mode.
+ */
+window.JOSHRIX_FIREBASE_CONFIG = window.JOSHRIX_FIREBASE_CONFIG || null;
+// window.JOSHRIX_FIREBASE_CONFIG = {
+//   apiKey: "...", authDomain: "your-project.firebaseapp.com",
+//   projectId: "your-project", appId: "1:...:web:..."
+// };

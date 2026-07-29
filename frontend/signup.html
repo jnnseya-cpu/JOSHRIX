@@ -48,11 +48,48 @@
   <select class="jx" id="su-country"><option>United Kingdom</option><option>DR Congo</option><option>Nigeria</option><option>Kenya</option><option>United States</option><option>France</option><option>Other</option></select>
   <div style="margin-top:1.6rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
     <button class="btn btn-primary" type="submit">Create Account</button>
+    <button class="btn btn-ghost" type="button" id="btnGoogle">Continue with Google</button>
     <span class="hint">Already an operator? <a href="login.html">Sign in</a></span>
   </div>
   <p class="hint">KYC verification is required before payouts. MFA available on all accounts and required for admins.</p>
 </form>
 </main>
+<script>
+(function () {
+  const form = document.querySelector('form.form');
+  const note = document.createElement('p');
+  note.className = 'hint'; note.id = 'authStatus';
+  form.appendChild(note);
+  if (!window.jxAuth || !window.jxAuth.enabled) {
+    note.textContent = 'Demo mode — account creation activates at launch.';
+    return;
+  }
+  form.removeAttribute('data-demo');
+  note.textContent = '';
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    note.textContent = 'Creating your account…';
+    try {
+      const a = await window.jxAuth.ready;
+      await a.signUp(
+        document.getElementById('su-email').value,
+        document.getElementById('su-pass').value,
+        document.getElementById('su-name').value || document.getElementById('su-handle').value
+      );
+      note.textContent = '✓ Account created — entering your dashboard…';
+      location.href = 'dashboard.html';
+    } catch (err) { note.textContent = '✕ ' + (err && err.message || 'Sign-up failed'); }
+  });
+  document.getElementById('btnGoogle').addEventListener('click', async () => {
+    note.textContent = 'Opening Google sign-in…';
+    try {
+      const a = await window.jxAuth.ready;
+      await a.signInGoogle();
+      location.href = 'dashboard.html';
+    } catch (err) { note.textContent = '✕ ' + (err && err.message || 'Google sign-in failed'); }
+  });
+})();
+</script>
 <footer class="jx">
   <div class="foot-grid">
     <div class="foot-brand">
@@ -82,6 +119,7 @@
     <span class="sys">◉ ALL SYSTEMS OPERATIONAL</span>
   </div>
 </footer>
+<script src="assets/auth.js"></script>
 <script src="assets/site.js"></script>
 </body>
 </html>
