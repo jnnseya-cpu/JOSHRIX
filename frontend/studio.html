@@ -304,7 +304,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
       <div class="lineage" id="protoNote4" style="display:none">🧪 <b>Prototype preview:</b> the playable build below is the platform's demo game so you can test the full flow today. “<span id="protoTitle4"></span>” — your generated blueprint — enters the full production forge at launch.</div>
       <div class="pub-grid">
         <div class="game-frame">
-          <div class="gf-bar"><span id="gfTitle">PENALTY KING — PLAYABLE BUILD</span><span style="display:flex;align-items:center;gap:.7rem"><button class="gmute" id="muteBtn" title="Toggle sound">🔊</button><span class="live">◉ PRIVATE — ONLY YOU</span></span></div>
+          <div class="gf-bar"><span id="gfTitle">PENALTY KING — PLAYABLE BUILD</span><span style="display:flex;align-items:center;gap:.7rem"><button class="gmute" id="fsBtn" title="Play fullscreen">⛶</button><button class="gmute" id="muteBtn" title="Toggle sound">🔊</button><span class="live">◉ PRIVATE — ONLY YOU</span></span></div>
           <canvas id="game" width="560" height="420"></canvas>
         </div>
         <div>
@@ -712,6 +712,17 @@ async function renderPlaytest() {
   }
 }
 $('btnPlaytest').addEventListener('click', () => { setStep(4); show('p4'); jxTrack('forge.playtest_started'); renderPlaytest(); });
+/* fullscreen playtest — works for both the real build iframe and the demo canvas */
+$('fsBtn').addEventListener('click', () => {
+  const frame = document.querySelector('#p4 .game-frame');
+  if (document.fullscreenElement) { document.exitFullscreen(); return; }
+  (frame.requestFullscreen || frame.webkitRequestFullscreen || (() => {})).call(frame);
+});
+document.addEventListener('fullscreenchange', () => {
+  const fr = document.getElementById('realGame');
+  if (fr) fr.style.height = document.fullscreenElement ? 'calc(100vh - 44px)' : '470px';
+  $('fsBtn').textContent = document.fullscreenElement ? '✕' : '⛶';
+});
 $('btnRefine').addEventListener('click', () => {
   refining = true;
   setStep(1); show('p1');

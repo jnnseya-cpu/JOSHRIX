@@ -7,6 +7,7 @@
  */
 import { randomUUID } from "node:crypto";
 import { getDb, ensureGameSchema, saveGame } from "./_ledger";
+import { notify } from "./_notify";
 
 const MAX_HTML_BYTES = 900_000; // self-contained games are ~450 lines; anything huge is suspect
 
@@ -49,6 +50,7 @@ export default async function handler(req: any, res: any) {
       creatorWallet: walletId ?? null,
       creatorEmail: email ?? null,
     });
+    await notify("game.submitted", email ?? null, { game: title.trim().slice(0, 60) });
     return res.status(200).json({
       id,
       playUrl: `/play/${id}`,

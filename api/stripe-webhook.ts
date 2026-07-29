@@ -10,6 +10,7 @@
 import Stripe from "stripe";
 import { TOPUP_PACKAGES, topupPostings } from "../shared/payments";
 import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet } from "./_ledger";
+import { notify } from "./_notify";
 
 // Vercel: disable body parsing so the raw payload is available for verification
 export const config = { api: { bodyParser: false } };
@@ -97,6 +98,7 @@ export default async function handler(req: any, res: any) {
             await ensureGameSchema(sql);
             await creditWallet(sql, walletId, r.acu);
           }
+          await notify("acu.topup.successful", email, { amount: r.acu.toLocaleString() });
         } else if (result.ok && (result as any).action === "founder_pass") {
           await recordFounder(sql, { stripeSession: session.id ?? event.id, pass: (result as any).pass, email, amountMinor: (session.amount_total as number) ?? null });
         }

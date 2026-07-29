@@ -7,6 +7,7 @@
  * only ever grow through verified Stripe settlement.
  */
 import { getDb, ensureGameSchema, listWallets, creditWallet, getWallet } from "./_ledger";
+import { notify } from "./_notify";
 
 const MAX_GRANT = 100_000;
 
@@ -43,6 +44,7 @@ export default async function handler(req: any, res: any) {
       const exists = await getWallet(sql, walletId);
       if (!exists) return res.status(404).json({ error: "Wallet not found — ask the tester for the wallet ID shown on their Wallet page." });
       const balance = await creditWallet(sql, walletId, amt);
+      await notify("acu.granted", exists.email ?? null, { amount: amt.toLocaleString() });
       return res.status(200).json({ ok: true, walletId, granted: amt, balance });
     }
 

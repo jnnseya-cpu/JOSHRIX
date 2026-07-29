@@ -183,7 +183,7 @@ export async function creditWallet(sql: Sql, id: string, amount: number): Promis
 }
 
 export async function getWallet(sql: Sql, id: string) {
-  const rows = (await sql`SELECT id, balance, category FROM wallets WHERE id = ${id}`) as Array<{ id: string; balance: number; category: string }>;
+  const rows = (await sql`SELECT id, balance, category, email FROM wallets WHERE id = ${id}`) as Array<{ id: string; balance: number; category: string; email: string | null }>;
   return rows[0] ?? null;
 }
 
@@ -195,8 +195,8 @@ export async function saveGame(sql: Sql, g: { id: string; title: string; summary
 
 export async function getGame(sql: Sql, id: string, withHtml = false) {
   const rows = withHtml
-    ? ((await sql`SELECT id, title, summary, language, status, plays, created_at, html FROM games WHERE id = ${id}`) as any[])
-    : ((await sql`SELECT id, title, summary, language, status, plays, created_at FROM games WHERE id = ${id}`) as any[]);
+    ? ((await sql`SELECT id, title, summary, language, status, plays, created_at, creator_email, html FROM games WHERE id = ${id}`) as any[])
+    : ((await sql`SELECT id, title, summary, language, status, plays, created_at, creator_email FROM games WHERE id = ${id}`) as any[]);
   return rows[0] ?? null;
 }
 

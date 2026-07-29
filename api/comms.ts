@@ -33,7 +33,7 @@ export function renderEmail(subject: string, eventName: string, mandatory: boole
 </div></body></html>`;
 }
 
-async function sendEmail(to: string, subject: string, html: string): Promise<{ status: string; provider: string }> {
+export async function sendEmail(to: string, subject: string, html: string): Promise<{ status: string; provider: string }> {
   const key = process.env.RESEND_API_KEY;
   if (!key) return { status: "logged", provider: "sandbox" };
   try {

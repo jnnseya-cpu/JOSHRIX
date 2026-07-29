@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="assets/joshrix.css">
 <script src="assets/config.js"></script>
 <script src="assets/auth.js"></script>
+<script src="assets/humangate.js"></script>
 </head>
 <body>
 <canvas id="stars" aria-hidden="true"></canvas>
@@ -64,6 +65,8 @@
   form.removeAttribute('data-demo');
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+      const human = window.jxHumanCheck ? window.jxHumanCheck(form) : { ok: true };
+      if (!human.ok) { note.textContent = '\u2715 ' + human.reason; return; }
     note.textContent = 'Signing in…';
     try {
       const a = await window.jxAuth.ready;

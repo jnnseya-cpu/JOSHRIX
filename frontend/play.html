@@ -22,6 +22,8 @@
   .pill.rejected{color:#f87171;border-color:rgba(248,113,113,.45);background:rgba(248,113,113,.08)}
   .frame-card{position:relative;border:1px solid var(--stroke,#26263a);border-radius:16px;overflow:hidden;background:#07070c;box-shadow:0 20px 60px rgba(0,0,0,.5)}
   .frame-card iframe{display:block;width:100%;height:min(72vh,640px);border:0;background:#000}
+  .frame-card:fullscreen{border-radius:0}
+  .frame-card:fullscreen iframe{height:100vh}
   .frame-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.9rem;min-height:320px;text-align:center;padding:2rem}
   .frame-msg p{max-width:52ch;color:var(--muted,#9d9db3)}
   .play-meta{display:flex;flex-wrap:wrap;gap:.6rem 1.4rem;align-items:center;margin:.9rem 0 2.2rem;color:var(--muted,#9d9db3);font-size:.92rem}
@@ -53,6 +55,7 @@
   <div class="play-head">
     <h1 id="gTitle">Loading world…</h1>
     <span class="pill" id="gPill" hidden></span>
+    <button class="btn btn-ghost btn-sm" id="btnFull" hidden>⛶ Fullscreen</button>
     <button class="btn btn-ghost btn-sm" id="btnShare" hidden>⤴ Share</button>
   </div>
   <div class="frame-card" id="frameCard">
@@ -120,6 +123,16 @@
         f.srcdoc = g.html;
         $('frameCard').innerHTML = '';
         $('frameCard').appendChild(f);
+        var fsBtn = $('btnFull');
+        fsBtn.hidden = false;
+        fsBtn.addEventListener('click', function(){
+          var card = $('frameCard');
+          if (document.fullscreenElement) { document.exitFullscreen(); return; }
+          (card.requestFullscreen || card.webkitRequestFullscreen || function(){}).call(card);
+        });
+        document.addEventListener('fullscreenchange', function(){
+          fsBtn.textContent = document.fullscreenElement ? '✕ Exit Fullscreen' : '⛶ Fullscreen';
+        });
         track('play.session_start', { status: g.status, preview: preview });
       } else if (g.status === 'pending_review') {
         showMsg('This world is in moderation review. It goes live at this link the moment it\'s approved — check back soon.', false);
