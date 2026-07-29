@@ -132,7 +132,10 @@
     fetch(API + '/api/wallet-init', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ walletId: p.serverWalletId }), signal: AbortSignal.timeout(8000) })
       .then(r => r.json()).then(j => {
-        if (j && j.mode === 'live') showAcu(j.balance, (j.category === 'tester' ? '🧪 TESTER' : 'PURCHASED') + ' · SERVER-VERIFIED');
+        if (j && j.mode === 'live') {
+          showAcu(j.balance, (j.category === 'tester' ? '🧪 TESTER' : 'PURCHASED') + ' · SERVER-VERIFIED');
+          jxStore.save({ acu: Number(j.balance) });   // re-sync the local copy so every page agrees
+        }
       }).catch(() => {});
   }
 

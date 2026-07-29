@@ -24,11 +24,10 @@
     <span class="word">JOSHRIX<em>STUDIO</em></span>
   </a>
   <ul class="nav-links">
-    <li><a href="agent-fleet.html">Fleet</a></li>
-    <li><a href="worlds.html">Worlds</a></li>
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="wallet.html">Wallet</a></li>
     <li><a href="arcade.html">Arcade</a></li><li><a href="marketplace.html">Marketplace</a></li>
     <li><a href="pricing.html">Pricing</a></li>
-    <li><a href="how-it-works.html">How It Works</a></li>
     <li><a href="docs.html">Docs</a></li>
   </ul>
   <div class="nav-right">
@@ -134,9 +133,19 @@
   $('pCover').addEventListener('click', () => jxStore.pickImage('cover'));
   $('btnCover').addEventListener('click', () => jxStore.pickImage('cover'));
 
-  /* real record numbers: ACU from profile/server, games+plays from /api/my-games */
+  /* real record numbers: server balance is the ONE truth; local copy re-syncs */
   const API = (window.JOSHRIX_API_BASE || '');
   $('prAcu').textContent = (p.acu || 0).toLocaleString();
+  if (p.serverWalletId) {
+    fetch(API + '/api/wallet-init', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ walletId: p.serverWalletId, email: p.email || undefined, name: p.displayName || p.handle || undefined }), signal: AbortSignal.timeout(8000) })
+      .then(r => r.json()).then(j => {
+        if (j && j.mode === 'live' && typeof j.balance === 'number') {
+          $('prAcu').textContent = Number(j.balance).toLocaleString();
+          jxStore.save({ acu: Number(j.balance) });   // re-sync the local copy
+        }
+      }).catch(() => {});
+  }
   if (p.serverWalletId) {
     fetch(API + '/api/my-games?walletId=' + encodeURIComponent(p.serverWalletId), { signal: AbortSignal.timeout(8000) })
       .then(r => r.json()).then(j => {

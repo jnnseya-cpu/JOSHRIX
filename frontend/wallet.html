@@ -202,6 +202,7 @@ const applyLocalAcu = (skipBalance) => {
       .then(r => r.json()).then(j => {
         if (j && j.mode === 'live') {
           $('wAcu').textContent = Number(j.balance).toLocaleString();
+          try { const pp = JSON.parse(localStorage.getItem('jx.profile') || '{}'); pp.acu = Number(j.balance); localStorage.setItem('jx.profile', JSON.stringify(pp)); } catch (e) {}
           if (j.category !== 'tester') $('wAcuCat').textContent = 'purchased · server-verified';
           if (j.plan && j.plan !== 'explorer') {
             $('wAcuCat').innerHTML += ' · plan: <b style="color:var(--cyan)">' + String(j.plan).replace('_', ' ') + '</b>';
