@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#050508">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<title>Developer Spec — JOSHRIX Studio</title>
+<meta name="description" content="The JOSHRIX developer specification, rendered on-site.">
+<link rel="stylesheet" href="assets/joshrix.css">
+<script src="assets/config.js"></script>
+<style>
+  .doc{max-width:860px;margin:0 auto;padding:0 1rem 3rem}
+  .doc-body{margin-top:1.4rem}
+  .doc-body h1{font-size:clamp(1.5rem,4vw,2.1rem);margin:1.2rem 0 .6rem;line-height:1.25}
+  .doc-body h2{font-size:1.3rem;margin:2rem 0 .5rem;padding-bottom:.35rem;border-bottom:1px solid var(--stroke,#26263a)}
+  .doc-body h3{font-size:1.08rem;margin:1.5rem 0 .4rem}
+  .doc-body h4{font-size:.98rem;margin:1.2rem 0 .3rem}
+  .doc-body p,.doc-body li{color:var(--muted,#c9c9d6);line-height:1.75;font-size:.98rem}
+  .doc-body p{margin:.7rem 0}
+  .doc-body ul,.doc-body ol{padding-left:1.4rem;margin:.6rem 0}
+  .doc-body a{color:#22D3EE}
+  .doc-body code{background:rgba(124,58,237,.14);border:1px solid rgba(124,58,237,.25);border-radius:5px;padding:.08em .38em;font-size:.86em}
+  .doc-body pre{background:#0b0b14;border:1px solid var(--stroke,#26263a);border-radius:10px;padding:1rem;overflow-x:auto;margin:.9rem 0}
+  .doc-body pre code{background:none;border:0;padding:0;font-size:.84rem;line-height:1.6;color:#c9c9d6}
+  .doc-body blockquote{border-left:3px solid #7C3AED;margin:.9rem 0;padding:.2rem 0 .2rem 1rem;color:var(--muted,#9d9db3)}
+  .doc-body table{width:100%;border-collapse:collapse;margin:.9rem 0;font-size:.9rem}
+  .doc-body th,.doc-body td{border:1px solid var(--stroke,#26263a);padding:.5rem .7rem;text-align:left;color:var(--muted,#c9c9d6)}
+  .doc-body th{color:var(--ink,#ececf4);background:rgba(255,255,255,.03)}
+  .doc-body .tblwrap{overflow-x:auto}
+  .doc-body hr{border:0;border-top:1px solid var(--stroke,#26263a);margin:1.6rem 0}
+  .doc-top{display:flex;flex-wrap:wrap;gap:.6rem 1rem;align-items:center;margin-top:1rem}
+  .doc-top .crumb{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#9d9db3)}
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="noise" aria-hidden="true"></div>
+<nav class="jx">
+  <a class="brand" href="index.html">
+    <svg viewBox="-50 -50 100 100"><defs><linearGradient id="jxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#22D3EE"/></linearGradient></defs><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#jxG)" stroke-width="7" stroke-linejoin="round"/><polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#jxG)"/></svg>
+    <span class="word">JOSHRIX<em>STUDIO</em></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="docs.html">Docs</a></li>
+    <li><a href="blog.html">Blog</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+  </ul>
+  <div class="nav-right"><a class="btn btn-primary btn-sm" href="studio.html">Launch Studio</a></div>
+</nav>
+<main class="jx doc">
+  <div class="doc-top">
+    <span class="crumb"><a href="docs.html" style="color:inherit">Documentation</a> · Developer Spec</span>
+  </div>
+  <div class="doc-body" id="docBody"><p>Loading the spec…</p></div>
+</main>
+<div class="foot-base" style="justify-content:center;gap:1.4rem;display:flex;flex-wrap:wrap;padding:1.5rem">
+  <span>© 2026 JOSHRIX Studio</span>
+  <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a>
+</div>
+<script>
+(function(){
+  var ALLOWED = ['INDEX','PLATFORM','PRODUCT-PRINCIPLES','AGENT-ARCHITECTURE','DEVELOPER-GUIDE','APP-BUILD-SPEC','DATA-MODEL','API','MONETISATION','SECURITY','INTELLIGENCE','ROADMAP','GAP-ANALYSIS'];
+  var name = (new URLSearchParams(location.search).get('d') || 'INDEX').toUpperCase().replace(/[^A-Z-]/g, '');
+  if (ALLOWED.indexOf(name) === -1) name = 'INDEX';
+  document.title = name.replace(/-/g, ' ') + ' — JOSHRIX Developer Spec';
+  var esc = function(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+
+  /* compact markdown renderer: headings, code fences, inline styles, lists,
+     tables, quotes, hr, links (.md links rewritten to stay on-site) */
+  function inline(s){
+    return s
+      .replace(/`([^`]+)`/g, function(_, c){ return '<code>' + c + '</code>'; })
+      .replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>')
+      .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<i>$2</i>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, function(_, t, u){
+        var m = u.match(/([A-Z-]+)\.md/i);
+        if (m) u = 'doc.html?d=' + m[1].toUpperCase();
+        var ext = /^https?:/i.test(u) ? ' target="_blank" rel="noopener"' : '';
+        return '<a href="' + u + '"' + ext + '>' + t + '</a>';
+      });
+  }
+  function render(md){
+    var lines = md.split(/\r?\n/), out = [], i = 0;
+    while (i < lines.length) {
+      var L = lines[i];
+      if (/^```/.test(L)) {
+        var buf = []; i++;
+        while (i < lines.length && !/^```/.test(lines[i])) buf.push(lines[i++]);
+        i++;
+        out.push('<pre><code>' + esc(buf.join('\n')) + '</code></pre>');
+        continue;
+      }
+      if (/^\|/.test(L) && i + 1 < lines.length && /^\|[\s:|-]+\|?\s*$/.test(lines[i+1])) {
+        var head = L, rows = []; i += 2;
+        while (i < lines.length && /^\|/.test(lines[i])) rows.push(lines[i++]);
+        var cells = function(r){ return r.replace(/^\||\|$/g,'').split('|').map(function(c){ return inline(esc(c.trim())); }); };
+        out.push('<div class="tblwrap"><table><thead><tr>' + cells(head).map(function(c){ return '<th>' + c + '</th>'; }).join('')
+          + '</tr></thead><tbody>' + rows.map(function(r){ return '<tr>' + cells(r).map(function(c){ return '<td>' + c + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>');
+        continue;
+      }
+      var h = L.match(/^(#{1,4})\s+(.*)/);
+      if (h) { out.push('<h' + h[1].length + '>' + inline(esc(h[2])) + '</h' + h[1].length + '>'); i++; continue; }
+      if (/^\s*([-*+]|\d+\.)\s+/.test(L)) {
+        var ordered = /^\s*\d+\./.test(L), items = [];
+        while (i < lines.length && /^\s*([-*+]|\d+\.)\s+/.test(lines[i])) {
+          items.push('<li>' + inline(esc(lines[i].replace(/^\s*([-*+]|\d+\.)\s+/, ''))) + '</li>'); i++;
+        }
+        out.push((ordered ? '<ol>' : '<ul>') + items.join('') + (ordered ? '</ol>' : '</ul>'));
+        continue;
+      }
+      if (/^>\s?/.test(L)) {
+        var q = [];
+        while (i < lines.length && /^>\s?/.test(lines[i])) q.push(inline(esc(lines[i].replace(/^>\s?/, '')))), i++;
+        out.push('<blockquote><p>' + q.join('<br>') + '</p></blockquote>');
+        continue;
+      }
+      if (/^\s*(---+|\*\*\*+)\s*$/.test(L)) { out.push('<hr>'); i++; continue; }
+      if (L.trim() === '') { i++; continue; }
+      var p = [];
+      while (i < lines.length && lines[i].trim() !== '' && !/^(#{1,4}\s|```|\||>\s?|\s*([-*+]|\d+\.)\s+|\s*---+\s*$)/.test(lines[i])) p.push(lines[i++]);
+      out.push('<p>' + inline(esc(p.join(' '))) + '</p>');
+    }
+    return out.join('\n');
+  }
+
+  fetch('specs/' + name + '.md')
+    .then(function(r){ if (!r.ok) throw 0; return r.text(); })
+    .then(function(md){ document.getElementById('docBody').innerHTML = render(md); })
+    .catch(function(){ document.getElementById('docBody').innerHTML = '<p>Could not load this document — <a href="docs.html">back to Documentation</a>.</p>'; });
+})();
+</script>
+<script src="assets/site.js"></script>
+</body>
+</html>

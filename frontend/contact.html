@@ -39,14 +39,43 @@
   <h1 class="jx">Talk To The <span class="grad">Studio</span></h1>
   <p class="lede">Enterprise, press, partnerships, careers, or support — one door, routed to the right humans (and agents).</p>
 </div><div class="grid c2">
-<form class="form wide reveal" data-demo>
+<form class="form wide reveal" id="contactForm">
   <label class="jx" for="cn">Name</label><input class="jx" id="cn" required placeholder="Your name">
   <label class="jx" for="ce">Email</label><input class="jx" id="ce" type="email" required placeholder="you@company.com">
   <label class="jx" for="ct">Topic</label>
   <select class="jx" id="ct"><option>Enterprise / White-label</option><option>Press</option><option>Partnerships</option><option>Careers</option><option>Support</option><option>Something else</option></select>
   <label class="jx" for="cm">Message</label><textarea class="jx" id="cm" required placeholder="Tell us what you're building…"></textarea>
-  <div style="margin-top:1.4rem"><button class="btn btn-primary" type="submit">Send Message</button></div>
+  <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;height:1px;width:1px;opacity:0">
+  <div style="margin-top:1.4rem"><button class="btn btn-primary" type="submit">Send Message</button><span class="hint" id="cMsg" style="margin-left:1rem"></span></div>
 </form>
+<script>
+(function(){
+  var f = document.getElementById('contactForm');
+  f.addEventListener('submit', async function(e){
+    e.preventDefault();
+    var m = document.getElementById('cMsg');
+    var btn = f.querySelector('button[type=submit]');
+    btn.disabled = true; m.textContent = 'Sending…';
+    try {
+      var r = await fetch((window.JOSHRIX_API_BASE || '') + '/api/contact', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: document.getElementById('cn').value,
+          email: document.getElementById('ce').value,
+          topic: document.getElementById('ct').value,
+          message: document.getElementById('cm').value,
+          website: f.querySelector('input[name=website]').value
+        }),
+        signal: AbortSignal.timeout(20000)
+      });
+      var j = await r.json().catch(function(){ return null; });
+      if (r.ok) { m.textContent = '✓ Sent — we reply to your email.'; f.reset(); }
+      else { m.textContent = '✕ ' + ((j && j.error) || 'Could not send — try again.'); }
+    } catch (err) { m.textContent = '✕ Connection problem — try again.'; }
+    btn.disabled = false;
+  });
+})();
+</script>
 <div>
 <div class="card reveal"><h3>Enterprise</h3><p>White-label deployments, education programmes, and API partnerships — see <a href="enterprise.html">Enterprise</a>.</p></div>
 <div class="card reveal" style="margin-top:1.2rem"><h3>Operators</h3><p>Product questions answered fastest through the in-app Support Agent once you're signed in.</p></div>

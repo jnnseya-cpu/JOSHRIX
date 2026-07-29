@@ -17,8 +17,8 @@
   var width = s.getAttribute('data-width') || '100%';
   var ratio = parseFloat(s.getAttribute('data-ratio') || '0.6');
 
-  // game id → page (v1 static map; production resolves via /play/<id>)
-  var src = base + (game === 'penalty-king-3d' ? '/play3d.html' : '/play/' + encodeURIComponent(game));
+  // real hosted games embed their /play/<id> page in compact embed mode
+  var src = base + (game === 'penalty-king-3d' ? '/play3d.html' : '/play/' + encodeURIComponent(game) + '?embed=1');
 
   var wrap = document.createElement('div');
   wrap.style.cssText = 'position:relative;width:' + width + ';max-width:100%;border-radius:14px;overflow:hidden;' +

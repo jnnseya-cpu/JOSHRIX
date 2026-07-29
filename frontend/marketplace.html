@@ -38,7 +38,21 @@
   <div class="sec-tag">Marketplace</div>
   <h1 class="jx">Create → Play → <span class="grad">Sell</span></h1>
   <p class="lede">Five listing classes, seven licence models, escrow for high-value sales, and a commission ladder that rewards subscribers. Every listing carries verified rights provenance.</p>
-</div><div class="grid c3"><div class="card reveal"><span class="tag">FULL GAME</span><h3>Penalty King — Full Game</h3><p>Commercial licence · Rights Verified</p><p style="margin-top:.8rem"><b style="font-family:var(--mono);font-size:1.2rem">£4.99</b></p></div><div class="card reveal"><span class="tag">TEMPLATE</span><h3>Subway Runner Template</h3><p>Non-exclusive · forge your own variant</p><p style="margin-top:.8rem"><b style="font-family:var(--mono);font-size:1.2rem">£29</b></p></div><div class="card reveal"><span class="tag">ASSET PACK</span><h3>Cyberpunk UI Kit</h3><p>84 components · commercial licence</p><p style="margin-top:.8rem"><b style="font-family:var(--mono);font-size:1.2rem">£12</b></p></div><div class="card reveal"><span class="tag">MECHANIC</span><h3>Loot Drop Mechanic</h3><p>Drop-in blueprint module · jurisdiction-gated</p><p style="margin-top:.8rem"><b style="font-family:var(--mono);font-size:1.2rem">£19</b></p></div><div class="card reveal"><span class="tag">AUDIO</span><h3>Orchestral Boss Themes</h3><p>12 tracks · provenance certified</p><p style="margin-top:.8rem"><b style="font-family:var(--mono);font-size:1.2rem">£15</b></p></div><div class="card reveal"><span class="tag">SERVICE</span><h3>Custom Level Design</h3><p>Verified Studio seller · escrow protected</p><p style="margin-top:.8rem"><b style="font-family:var(--mono);font-size:1.2rem">from £120</b></p></div></div><h2 class="jx reveal">Licence <span class="grad">Models</span></h2>
+</div><h2 class="jx reveal" style="margin-top:0">Live Now — <span class="grad">Play Free</span></h2>
+<p class="lede reveal" style="max-width:66ch">Every approved creator game, free to play today. Paid listings, templates, asset packs and services open with the marketplace launch — the licence models below are how they'll work.</p>
+<div class="grid c3" id="mkGrid"><p style="color:var(--muted)">Loading live games…</p></div>
+<script>
+(function(){
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
+  fetch((window.JOSHRIX_API_BASE || '') + '/api/arcade').then(function(r){ return r.json(); }).then(function(j){
+    var g = document.getElementById('mkGrid'), games = j.games || [];
+    g.innerHTML = games.length ? games.slice(0, 9).map(function(x){
+      return '<a class="card reveal in" style="text-decoration:none;color:inherit" href="' + esc(x.playUrl) + '"><span class="tag">LIVE GAME</span><h3>' + esc(x.title) + '</h3><p>' + esc(x.summary || 'A world forged on JOSHRIX.') + '</p><p style="margin-top:.8rem"><b style="font-family:var(--mono);font-size:1rem">▶ ' + Number(x.plays || 0).toLocaleString() + ' plays · FREE</b></p></a>';
+    }).join('') : '<p style="color:var(--muted)">The first approved games land here the moment moderation clears them — <a href="studio.html" style="color:var(--cyan)">forge yours</a>.</p>';
+  }).catch(function(){ document.getElementById('mkGrid').innerHTML = '<p style="color:var(--muted)">Could not load live games — refresh to retry.</p>'; });
+})();
+</script>
+<h2 class="jx reveal">Licence <span class="grad">Models</span></h2>
 <table class="jx reveal"><thead><tr><th>Licence</th><th>Rights</th></tr></thead><tbody>
 <tr><td><b>Personal</b></td><td>One person, non-commercial use</td></tr>
 <tr><td><b>Single Commercial Project</b></td><td>Use in one commercial game</td></tr>

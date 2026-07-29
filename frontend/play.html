@@ -32,6 +32,13 @@
   @media (prefers-reduced-motion: reduce){.spin{animation:none}}
   .foot-legal{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;padding:1.4rem 1rem 2rem;color:var(--muted,#9d9db3);font-size:.85rem}
   .foot-legal a{color:inherit}
+  /* compact embed mode (?embed=1) — just the game, sized to the host iframe */
+  body.embed nav, body.embed .foot-legal, body.embed .play-meta, body.embed #stars, body.embed .noise{display:none}
+  body.embed .play-shell{max-width:none;padding:0}
+  body.embed .play-head{margin:.45rem .6rem;gap:.4rem .7rem}
+  body.embed .play-head h1{font-size:1rem}
+  body.embed .frame-card{border-radius:0;border:0;box-shadow:none}
+  body.embed .frame-card iframe{height:calc(100vh - 46px)}
 </style>
 </head>
 <body>
@@ -80,6 +87,7 @@
   // id arrives via the /play/:id rewrite (?id=) or a direct /play/<id> path
   var id = qs.get('id') || (location.pathname.match(/\/play\/([A-Za-z0-9-]+)/) || [])[1] || '';
   var preview = qs.get('preview') === '1';
+  if (qs.get('embed') === '1') document.body.classList.add('embed');
   var $ = function(x){ return document.getElementById(x); };
   var sid = 'ps-' + Math.random().toString(36).slice(2, 12);
 

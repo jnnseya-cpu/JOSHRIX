@@ -38,31 +38,23 @@
   <div class="sec-tag">Featured Worlds</div>
   <h1 class="jx">Forged In <span class="grad">JOSHRIX Studio</span></h1>
   <p class="lede">Live universes forged by the operator community — from raw concept to global deployment in a single forge cycle. Playable now, evolving nightly.</p>
-</div><div class="grid c3"><div class="card reveal" style="border-top:2px solid transparent;background:linear-gradient(180deg,rgba(232,121,249,.14),rgba(22,22,42,.55) 40%)">
-  <span class="pill green">◉ LIVE · 12.4K</span>
-  <h3 style="margin-top:.8rem">Neonfall</h3>
-  <span class="pill">Cyberpunk · Open World</span>
-  <p style="margin-top:.7rem">A rain-slicked megacity where every rooftop hides a contract and every alley hides a secret.</p></div><div class="card reveal" style="border-top:2px solid transparent;background:linear-gradient(180deg,rgba(34,211,238,.14),rgba(22,22,42,.55) 40%)">
-  <span class="pill green">◉ LIVE · 8.9K</span>
-  <h3 style="margin-top:.8rem">Aether Drift</h3>
-  <span class="pill">Sci-Fi · Exploration</span>
-  <p style="margin-top:.7rem">Chart a shattered star system in a hand-built vessel. Gravity is a suggestion. Wonder is guaranteed.</p></div><div class="card reveal" style="border-top:2px solid transparent;background:linear-gradient(180deg,rgba(251,146,60,.13),rgba(22,22,42,.55) 40%)">
-  <span class="pill green">◉ LIVE · 15.1K</span>
-  <h3 style="margin-top:.8rem">Ironhollow</h3>
-  <span class="pill">Dark Fantasy · Souls-like</span>
-  <p style="margin-top:.7rem">Embers drift over a kingdom that refused to die. Forge your legend one impossible duel at a time.</p></div><div class="card reveal" style="border-top:2px solid transparent;background:linear-gradient(180deg,rgba(74,222,128,.13),rgba(22,22,42,.55) 40%)">
-  <span class="pill green">◉ LIVE · 21.7K</span>
-  <h3 style="margin-top:.8rem">Penalty King</h3>
-  <span class="pill">Sports · Arcade</span>
-  <p style="margin-top:.7rem">Five shots, one keeper, packed African stadiums. Unlock boots, buy stadiums, trade player cards.</p></div><div class="card reveal" style="border-top:2px solid transparent;background:linear-gradient(180deg,rgba(251,191,36,.13),rgba(22,22,42,.55) 40%)">
-  <span class="pill green">◉ LIVE · 6.2K</span>
-  <h3 style="margin-top:.8rem">Sugar Rush Run</h3>
-  <span class="pill">Endless Runner · Kids</span>
-  <p style="margin-top:.7rem">A candy-canyon dash built by a 14-year-old operator — now a weekly-league phenomenon.</p></div><div class="card reveal" style="border-top:2px solid transparent;background:linear-gradient(180deg,rgba(168,85,247,.14),rgba(22,22,42,.55) 40%)">
-  <span class="pill green">◉ LIVE · 4.8K</span>
-  <h3 style="margin-top:.8rem">Quantum Tycoon</h3>
-  <span class="pill">Simulation · Strategy</span>
-  <p style="margin-top:.7rem">Build a research empire one entangled particle at a time. Forged, listed, and profitable in one weekend.</p></div></div><div class="reveal" style="margin-top:2.4rem;display:flex;gap:1rem;flex-wrap:wrap"><a class="btn btn-primary" href="studio.html">▶&nbsp; Forge Your World</a><a class="btn btn-ghost" href="showcase.html">Creator Showcase</a></div>
+</div><div class="grid c3" id="wGrid"><p style="color:var(--muted)">Loading live worlds…</p></div>
+<script>
+(function(){
+  var esc = function(x){ return String(x == null ? '' : x).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
+  var HUES = ['232,121,249','34,211,238','251,146,60','74,222,128','251,191,36','168,85,247'];
+  fetch((window.JOSHRIX_API_BASE || '') + '/api/arcade').then(function(r){ return r.json(); }).then(function(j){
+    var g = document.getElementById('wGrid'), games = j.games || [];
+    g.innerHTML = games.length ? games.slice(0, 12).map(function(x, i){
+      return '<a class="card reveal in" style="text-decoration:none;color:inherit;border-top:2px solid transparent;background:linear-gradient(180deg,rgba(' + HUES[i % HUES.length] + ',.14),rgba(22,22,42,.55) 40%)" href="' + esc(x.playUrl) + '">'
+        + '<span class="pill green">◉ LIVE · ' + Number(x.plays || 0).toLocaleString() + ' plays</span>'
+        + '<h3 style="margin-top:.8rem">' + esc(x.title) + '</h3>'
+        + (x.language ? '<span class="pill">' + esc(x.language) + '</span>' : '')
+        + '<p style="margin-top:.7rem">' + esc(x.summary || 'A world forged on JOSHRIX.') + '</p></a>';
+    }).join('') : '<p style="color:var(--muted)">The first live worlds appear here the moment moderation approves them — <a href="studio.html" style="color:var(--cyan)">forge yours now</a>.</p>';
+  }).catch(function(){ document.getElementById('wGrid').innerHTML = '<p style="color:var(--muted)">Could not load worlds — refresh to retry.</p>'; });
+})();
+</script><div class="reveal" style="margin-top:2.4rem;display:flex;gap:1rem;flex-wrap:wrap"><a class="btn btn-primary" href="studio.html">▶&nbsp; Forge Your World</a><a class="btn btn-ghost" href="showcase.html">Creator Showcase</a></div>
 </main>
 <footer class="jx">
   <div class="foot-grid">

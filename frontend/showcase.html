@@ -39,16 +39,23 @@
   <h1 class="jx">Operators Making <span class="grad">Real Money</span></h1>
   <p class="lede">Top forges, top sellers, and the creators defining what a one-person game studio can be.</p>
 </div><h2 class="jx reveal" style="margin-top:0">Top Games This Week</h2>
-<table class="jx reveal"><thead><tr><th>#</th><th>Game</th><th>Operator</th><th>Genre</th><th>Players</th><th>GMV</th></tr></thead><tbody>
-<tr><td>1</td><td><b>Penalty King</b></td><td>@justin</td><td>Sports</td><td>21.7K</td><td>£8,420</td></tr>
-<tr><td>2</td><td><b>Ironhollow</b></td><td>@emberforge</td><td>Souls-like</td><td>15.1K</td><td>£6,100</td></tr>
-<tr><td>3</td><td><b>Neonfall</b></td><td>@kzn.studio</td><td>Cyberpunk</td><td>12.4K</td><td>£5,380</td></tr>
-<tr><td>4</td><td><b>Aether Drift</b></td><td>@stellae</td><td>Exploration</td><td>8.9K</td><td>£3,940</td></tr>
-<tr><td>5</td><td><b>Sugar Rush Run</b></td><td>@mimi14</td><td>Runner</td><td>6.2K</td><td>£1,270</td></tr>
+<table class="jx reveal"><thead><tr><th>#</th><th>Game</th><th>Language</th><th>Plays</th><th>Play</th></tr></thead><tbody id="topGamesBody">
+<tr><td colspan="5" style="color:var(--muted)">Loading the real chart…</td></tr>
 </tbody></table>
+<script>
+(function(){
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
+  fetch((window.JOSHRIX_API_BASE || '') + '/api/arcade').then(function(r){ return r.json(); }).then(function(j){
+    var b = document.getElementById('topGamesBody'), games = (j.games || []).slice(0, 10);
+    b.innerHTML = games.length ? games.map(function(g, i){
+      return '<tr><td>' + (i + 1) + '</td><td><b>' + esc(g.title) + '</b></td><td>' + esc(g.language || '—') + '</td><td>' + Number(g.plays || 0).toLocaleString() + '</td><td><a href="' + esc(g.playUrl) + '" style="color:var(--cyan)">▶ Play</a></td></tr>';
+    }).join('') : '<tr><td colspan="5" style="color:var(--muted)">The chart fills as games go live — <a href="studio.html" style="color:var(--cyan)">forge the first</a>.</td></tr>';
+  }).catch(function(){ document.getElementById('topGamesBody').innerHTML = '<tr><td colspan="5" style="color:var(--muted)">Could not load the chart.</td></tr>'; });
+})();
+</script>
 <h2 class="jx reveal">Creator Partner Levels</h2>
 <div class="grid c4">
-<div class="card reveal"><h3>Affiliate</h3><p>Promotes the platform. Earns 5% of first-year net subscription revenue per referral.</p></div>
+<div class="card reveal"><h3>Growth Partner</h3><p>Refers paying users — ACUs and privileges from the first paid referral, 1% lifetime commission unlocked at 20. <a href="referrals.html" style="color:var(--cyan)">Programme terms</a>.</p></div>
 <div class="card reveal"><h3>Template Creator</h3><p>Sells templates and assets. Marketplace earnings with provenance certification.</p></div>
 <div class="card reveal"><h3>Verified Studio</h3><p>Produces games for clients. Receives leads and a lower marketplace commission.</p></div>
 <div class="card reveal"><h3>Regional Partner</h3><p>Recruits and trains creators in a country or language market. Negotiated revenue share.</p></div>
