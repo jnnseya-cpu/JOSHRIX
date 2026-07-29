@@ -170,6 +170,71 @@
   });
 })();
 </script>
+<h2 class="jx reveal">Tester Wallets <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— GRANT ACUs FOR REAL AI TESTING</span></h2>
+<div class="reveal" id="grantPanel" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
+  <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">
+    <button class="btn btn-primary btn-sm" id="btnLoadWallets">⟳ Load Wallets</button>
+    <span id="walletsHint" style="font-size:.85rem;color:var(--muted,#9d9db3)">Every tester gets a wallet automatically when they open the Studio — their wallet ID is shown on their Wallet page.</span>
+  </div>
+  <div id="walletsList" style="display:grid;gap:.6rem;margin-top:1rem"></div>
+  <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-top:1rem;border-top:1px solid var(--stroke,#26263a);padding-top:1rem">
+    <input id="grantWid" placeholder="Wallet ID (w-…)" style="flex:1 1 220px;max-width:300px;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.55rem .8rem;color:inherit;font-family:var(--mono,monospace);font-size:.85rem">
+    <input id="grantAmt" type="number" min="1" max="100000" value="2000" style="width:110px;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.55rem .8rem;color:inherit">
+    <button class="btn btn-ghost btn-sm" id="btnGrant">💠 Grant ACUs</button>
+    <span id="grantMsg" style="font-size:.85rem;color:var(--muted,#9d9db3)"></span>
+  </div>
+</div>
+<script>
+(function(){
+  var API = (window.JOSHRIX_API_BASE || '');
+  var $g = function(x){ return document.getElementById(x); };
+  function keyHdr(){ var k = ''; try { k = sessionStorage.getItem('jx.modKey') || ''; } catch(e){} return { 'x-admin-key': k }; }
+  function esc(s){ return String(s == null ? '' : s).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); }
+  function grant(wid, amt, cb){
+    fetch(API + '/api/admin-wallets', { method:'POST', headers: Object.assign({ 'Content-Type':'application/json' }, keyHdr()),
+      body: JSON.stringify({ walletId: wid, amount: amt }) })
+      .then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+      .then(function(res){ cb(res.ok ? null : (res.j.error || 'failed'), res.j); })
+      .catch(function(){ cb('Could not reach the server'); });
+  }
+  $g('btnLoadWallets').addEventListener('click', function(){
+    $g('walletsHint').textContent = 'Loading…';
+    fetch(API + '/api/admin-wallets', { headers: keyHdr() })
+      .then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+      .then(function(res){
+        var list = $g('walletsList'); list.innerHTML = '';
+        if (!res.ok) { $g('walletsHint').textContent = '⚠ ' + (res.j.error || 'failed'); return; }
+        var ws = res.j.wallets || [];
+        $g('walletsHint').textContent = ws.length + ' wallet' + (ws.length === 1 ? '' : 's') + ' · ' + ws.reduce(function(s,w){ return s + w.balance; }, 0).toLocaleString() + ' ACUs outstanding';
+        ws.forEach(function(w){
+          var row = document.createElement('div');
+          row.style.cssText = 'display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.6rem .9rem';
+          row.innerHTML = '<code style="font-size:.8rem;color:var(--cyan,#22D3EE)">' + esc(w.id) + '</code>'
+            + '<span style="font-size:.78rem;color:var(--muted,#9d9db3)">' + esc(w.category) + (w.email ? ' · ' + esc(w.email) : '') + '</span>'
+            + '<b style="margin-left:auto">' + Number(w.balance).toLocaleString() + ' ACU</b>'
+            + '<button class="btn btn-ghost btn-sm wgrant">＋2,000</button>';
+          row.querySelector('.wgrant').addEventListener('click', function(){
+            var b = row.querySelector('.wgrant'); b.disabled = true;
+            grant(w.id, 2000, function(err, j){
+              if (err) { b.disabled = false; alert(err); return; }
+              row.querySelector('b').textContent = Number(j.balance).toLocaleString() + ' ACU';
+              b.textContent = '✓ granted'; setTimeout(function(){ b.textContent = '＋2,000'; b.disabled = false; }, 1500);
+            });
+          });
+          list.appendChild(row);
+        });
+      }).catch(function(){ $g('walletsHint').textContent = '⚠ Could not reach the server'; });
+  });
+  $g('btnGrant').addEventListener('click', function(){
+    var wid = $g('grantWid').value.trim(), amt = parseInt($g('grantAmt').value, 10);
+    if (!wid) { $g('grantMsg').textContent = 'Enter the wallet ID.'; return; }
+    $g('grantMsg').textContent = 'Granting…';
+    grant(wid, amt, function(err, j){
+      $g('grantMsg').textContent = err ? ('⚠ ' + err) : ('✓ ' + amt.toLocaleString() + ' ACUs granted — new balance ' + Number(j.balance).toLocaleString());
+    });
+  });
+})();
+</script>
 <script>
 /* Real platform stats — loaded with the admin key once the bridge is unlocked. */
 (function(){

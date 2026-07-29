@@ -61,7 +61,8 @@ table.jx td:first-child{white-space:nowrap}
 
   <div class="wal-grid reveal">
     <div class="wal-card"><b>ACU Balance</b><span class="big" id="wAcu">0</span>
-      <p class="sub" id="wAcuCat">top up below to start forging</p></div>
+      <p class="sub" id="wAcuCat">top up below to start forging</p>
+      <p class="sub" id="wWid" style="display:none;font-family:var(--mono);font-size:.72rem;letter-spacing:.03em">wallet <code id="wWidCode" style="color:var(--cyan)"></code> <a href="#" id="wWidCopy" style="color:var(--cyan)">copy</a><br><span style="color:var(--muted)">give this ID to the admin for ACU grants</span></p></div>
     <div class="wal-card"><b>Available Earnings</b><span class="big" id="wAvail">£0.00</span>
       <p class="sub">from sales, licences, lineage royalties &amp; referrals</p></div>
     <div class="wal-card"><b>Pending</b><span class="big" id="wPend">£0.00</span>
@@ -190,6 +191,12 @@ const applyLocalAcu = (skipBalance) => {
   let prof = {};
   try { prof = JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (e) {}
   if (prof.serverWalletId) {
+    $('wWid').style.display = 'block';
+    $('wWidCode').textContent = prof.serverWalletId;
+    $('wWidCopy').addEventListener('click', (e) => {
+      e.preventDefault();
+      try { navigator.clipboard.writeText(prof.serverWalletId); $('wWidCopy').textContent = '✓ copied'; setTimeout(() => { $('wWidCopy').textContent = 'copy'; }, 1500); } catch (err) {}
+    });
     fetch(API + '/api/wallet-init', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ walletId: prof.serverWalletId }), signal: AbortSignal.timeout(8000) })
       .then(r => r.json()).then(j => {

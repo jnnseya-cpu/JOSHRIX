@@ -224,6 +224,11 @@ export async function deleteWallet(sql: Sql, id: string): Promise<boolean> {
   return rows.length > 0;
 }
 
+/** All wallets, newest first — for the admin grants panel (key-gated at the endpoint). */
+export async function listWallets(sql: Sql, limit = 100) {
+  return (await sql`SELECT id, balance, category, email, created_at FROM wallets ORDER BY created_at DESC LIMIT ${limit}`) as any[];
+}
+
 /** Real platform counters for the admin bridge (key-gated at the endpoint). */
 export async function adminStats(sql: Sql) {
   const [row] = (await sql`
