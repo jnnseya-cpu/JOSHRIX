@@ -11,6 +11,7 @@
     handle: '', displayName: '', email: '', bio: '',
     country: 'United Kingdom', language: 'en', website: '',
     avatar: '', cover: '', createdAt: 0,
+    acu: 0, acuCategory: '', testerAcuGranted: false,
   };
   let state = { ...DEFAULTS };
   try { Object.assign(state, JSON.parse(localStorage.getItem(KEY) || '{}')); } catch (e) { /* fresh */ }
@@ -89,6 +90,17 @@
     onChange: (cb) => { listeners.push(cb); },
     onStatus: (cb) => { statusCb = cb; },
   };
+
+  // tester grant: accounts in tester mode receive 2,000 tester ACUs, once per
+  // device — tester credit only, never a real-account entitlement (No-Free-AI rule)
+  try {
+    if (sessionStorage.getItem('jx.testMode') === '1' && !state.testerAcuGranted) {
+      state.acu = (state.acu || 0) + 2000;
+      state.acuCategory = 'tester';
+      state.testerAcuGranted = true;
+      persistLocal();
+    }
+  } catch (e) { /* private browsing */ }
 
   // pull the cloud copy when a signed-in user lands
   if (window.jxAuth && window.jxAuth.enabled && window.jxAuth.ready) {

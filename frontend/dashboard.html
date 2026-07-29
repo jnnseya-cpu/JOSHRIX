@@ -154,6 +154,14 @@
 
   const t = TYPES[p.accountType];
   if (p.accountType === 'admin') { location.replace('admin.html'); return; }
+  if (!t && p.testerAcuGranted) {
+    // creator dashboard: show the real tester balance in the ACU module
+    const acuModule = document.querySelector('#dashModules .module');
+    if (acuModule) {
+      acuModule.querySelector('.num').textContent = (p.acu || 0).toLocaleString();
+      acuModule.querySelector('.readout').innerHTML = '🧪 TESTER GRANT · <a href="wallet.html">WALLET</a>';
+    }
+  }
   if (t) {
     $('dashTag').textContent = t.tag;
     $('dashSession').textContent = t.session;

@@ -153,12 +153,23 @@ $('btnPayout').addEventListener('click', async () => {
     r.textContent = '✓ demo (offline) — payout request would be queued for the next settlement run';
   }
 });
+const applyLocalAcu = () => {
+  try {
+    const p = JSON.parse(localStorage.getItem('jx.profile') || '{}');
+    if (p.testerAcuGranted) {
+      $('wAcu').textContent = (p.acu || 0).toLocaleString();
+      $('wAcuCat').textContent = '🧪 tester grant · ' + (p.acu || 0).toLocaleString() + ' ACUs on this device';
+    }
+  } catch (e) { /* no local profile */ }
+};
 fetch(API + '/api/wallet', { signal: AbortSignal.timeout(6000) }).then(r => r.json()).then(w => {
   $('wAcu').textContent = w.acu.total.toLocaleString();
   $('wAvail').textContent = '£' + (w.earnings.availableMinor/100).toFixed(2);
   $('wPend').textContent = '£' + (w.earnings.pendingMinor/100).toFixed(2);
   $('wLife').textContent = '£' + (w.earnings.lifetimeMinor/100).toFixed(2);
-}).catch(() => {});
+  applyLocalAcu(); // tester balance wins over the demo wallet
+}).catch(applyLocalAcu);
+applyLocalAcu();
 })();
 </script>
 </body>
