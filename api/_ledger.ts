@@ -250,6 +250,12 @@ export async function saveDelivery(sql: Sql, d: { event: string; channel: string
     VALUES (${d.event}, ${d.channel}, ${d.recipient ?? null}, ${d.status}, ${d.provider ?? null})`;
 }
 
+/** Has this recipient already received this event? (dedupe for public triggers) */
+export async function hasDelivery(sql: Sql, event: string, recipient: string): Promise<boolean> {
+  const rows = (await sql`SELECT count(*) AS n FROM comms_deliveries WHERE event = ${event} AND recipient = ${recipient}`) as Array<{ n: string | number }>;
+  return Number(rows[0]?.n ?? 0) > 0;
+}
+
 export async function listDeliveries(sql: Sql, limit = 40) {
   return (await sql`SELECT event, channel, recipient, status, provider, created_at FROM comms_deliveries ORDER BY created_at DESC LIMIT ${limit}`) as any[];
 }

@@ -64,6 +64,17 @@
   const note = document.createElement('p');
   note.className = 'hint'; note.id = 'authStatus';
   form.appendChild(note);
+  const fireWelcome = () => {
+    try {
+      const em = document.getElementById('su-email').value;
+      const nm = document.getElementById('su-name').value;
+      const hp = form.querySelector('input[name=website]');
+      fetch((window.JOSHRIX_API_BASE || '') + '/api/welcome', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, keepalive: true,
+        body: JSON.stringify({ email: em, name: nm, website: hp ? hp.value : '' })
+      }).catch(() => {});
+    } catch (e) {}
+  };
   const saveProfile = () => jxStore.save({
     accountType: document.getElementById('accountType').value || 'creator',
     handle: document.getElementById('su-handle').value,
@@ -80,6 +91,7 @@
     b.addEventListener('click', () => {
       try { sessionStorage.setItem('jx.testMode', '1'); } catch (e) {}
       saveProfile();
+      fireWelcome();
       note.textContent = '✓ Tester account created on this device — opening your dashboard…';
       setTimeout(() => location.href = 'dashboard.html', 600);
     });
@@ -95,6 +107,7 @@
       const human = window.jxHumanCheck ? window.jxHumanCheck(form) : { ok: true };
       if (!human.ok) { note.textContent = '\u2715 ' + human.reason; return; }
       saveProfile();
+      fireWelcome();
       note.textContent = '\u2713 Account created on this device \u2014 opening your dashboard\u2026';
       setTimeout(() => location.href = 'dashboard.html', 700);
     });
@@ -115,6 +128,7 @@
         document.getElementById('su-name').value || document.getElementById('su-handle').value
       );
       saveProfile();
+      fireWelcome();
       note.textContent = '✓ Account created — entering your dashboard…';
       location.href = 'dashboard.html';
     } catch (err) {
