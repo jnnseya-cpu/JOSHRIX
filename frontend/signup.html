@@ -134,7 +134,7 @@
       note.textContent = '✓ Account created — entering your dashboard…';
       location.href = 'dashboard.html';
     } catch (err) {
-      note.textContent = '✕ ' + (err && err.message || 'Sign-up failed');
+      note.textContent = '✕ ' + (window.jxAuth.friendly ? window.jxAuth.friendly(err) : (err && err.message || 'Sign-up failed'));
       offerTestMode(); // real auth not ready yet? testing stays one tap away
     }
   });
@@ -142,10 +142,15 @@
     note.textContent = 'Opening Google sign-in…';
     try {
       const a = await window.jxAuth.ready;
-      await a.signInGoogle();
+      await a.signInGoogle();   // on phones this navigates away and returns via redirect
       location.href = 'dashboard.html';
-    } catch (err) { note.textContent = '✕ ' + (err && err.message || 'Google sign-in failed'); }
+    } catch (err) { note.textContent = '✕ ' + (window.jxAuth.friendly ? window.jxAuth.friendly(err) : (err && err.message || 'Google sign-in failed')); }
   });
+  // a Google redirect that came back with an error (e.g. unauthorised domain) must not fail silently
+  (async () => {
+    try { await window.jxAuth.ready; } catch (e) { return; }
+    if (window.jxAuth.redirectError) note.textContent = '✕ ' + window.jxAuth.friendly(window.jxAuth.redirectError);
+  })();
 })();
 </script>
 <footer class="jx">

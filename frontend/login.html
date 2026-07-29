@@ -96,16 +96,22 @@
       const u = await a.signIn(document.getElementById('li-email').value, document.getElementById('li-pass').value);
       rememberUser(u, document.getElementById('li-email').value);
       location.href = 'dashboard.html';
-    } catch (err) { note.textContent = '\u2715 ' + (err && err.message || 'Sign-in failed'); }
+    } catch (err) { note.textContent = '\u2715 ' + (window.jxAuth.friendly ? window.jxAuth.friendly(err) : (err && err.message || 'Sign-in failed')); }
   });
   document.getElementById('btnGoogle').addEventListener('click', async () => {
+    note.textContent = 'Opening Google sign-in\u2026';
     try {
       const a = await window.jxAuth.ready;
-      const u = await a.signInGoogle();
+      const u = await a.signInGoogle();   // on phones this navigates away and returns via redirect
       rememberUser(u);
       location.href = 'dashboard.html';
-    } catch (err) { note.textContent = '\u2715 ' + (err && err.message || 'Google sign-in failed'); }
+    } catch (err) { note.textContent = '\u2715 ' + (window.jxAuth.friendly ? window.jxAuth.friendly(err) : (err && err.message || 'Google sign-in failed')); }
   });
+  // a Google redirect that came back with an error (e.g. unauthorised domain) must not fail silently
+  (async () => {
+    try { await window.jxAuth.ready; } catch (e) { return; }
+    if (window.jxAuth.redirectError) note.textContent = '\u2715 ' + window.jxAuth.friendly(window.jxAuth.redirectError);
+  })();
 })();
 </script>
 <footer class="jx">
