@@ -4,13 +4,13 @@
  * cache-first for versioned static assets; network-first with cache
  * fallback for pages, so the app opens instantly and survives offline.
  */
-const VERSION = 'jx-v6';
+const VERSION = 'jx-v7';
 // Clean URLs only: Vercel cleanUrls 308-redirects /x.html → /x, and a cached
 // redirected response served for a navigation makes Chrome throw — so we cache
 // the canonical paths, and installs never fail on one missing page.
 const CORE = [
   '/', '/studio', '/play3d', '/wallet', '/pricing', '/play', '/arcade',
-  '/assets/joshrix.css', '/assets/site.js', '/assets/install.js', '/assets/config.js', '/manifest.webmanifest',
+  '/assets/joshrix.css', '/assets/site.js', '/assets/install.js', '/assets/identity.js', '/assets/config.js', '/manifest.webmanifest',
   '/assets/icons/icon-192.png', '/assets/icons/icon-512.png',
 ];
 

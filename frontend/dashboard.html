@@ -96,9 +96,14 @@
     const nav = document.querySelector('.nav-right');
     if (!nav) return;
     if (u) {
-      nav.innerHTML = '<span class="pill green" style="align-self:center">◉ ' +
-        (u.displayName || u.email) + '</span> <button class="btn btn-ghost btn-sm" id="btnOut">Sign Out</button>' + nav.innerHTML;
-      document.getElementById('btnOut').addEventListener('click', () => a.signOut().then(() => location.href = 'index.html'));
+      // the store's identity chip already shows who you are — only add Sign Out
+      const b = document.createElement('button');
+      b.className = 'btn btn-ghost btn-sm';
+      b.id = 'btnOut';
+      b.textContent = 'Sign Out';
+      b.addEventListener('click', () => a.signOut().then(() => location.href = 'index.html'));
+      nav.appendChild(b);
+      nav.querySelectorAll('a[href="login.html"], a[href="signup.html"]').forEach((el) => el.remove());
     }
   }));
 })();
