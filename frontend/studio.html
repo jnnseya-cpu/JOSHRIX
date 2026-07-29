@@ -275,9 +275,9 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
           <div class="bp-cell"><b>Core Loop</b><span id="bpLoop">Aim → Shoot → Resolve → Reward → Progress</span></div>
           <div class="bp-cell"><b>Audience</b><span id="bpAud">Casual sports gamers 13+ · mobile-first markets</span></div>
           <div class="bp-cell"><b>Monetisation</b><span id="bpMon">Freemium · cosmetic boots &amp; stadiums · tournament entry · no paid random rewards</span></div>
-          <div class="bp-cell"><b>Session · Rounds</b><span>3-min sessions · 5 shots per round · weekly leagues</span></div>
-          <div class="bp-cell"><b>Rights Screening</b><span style="color:var(--green)">CLEAR — no real club names, no licensed marks</span></div>
-          <div class="bp-cell"><b>Stand-Out Hooks</b><span>Weekly leagues · tradeable player cards · African stadium identity — retention hooks free clones don't ship</span></div>
+          <div class="bp-cell"><b>Mechanics</b><span id="bpMech">—</span></div>
+          <div class="bp-cell"><b>Rights Screening</b><span id="bpRights">—</span></div>
+          <div class="bp-cell"><b>Launch Levels</b><span id="bpLvls">—</span></div>
           <div class="bp-cell"><b>Estimated Forge</b><span id="bpEst">~1,840 ACUs · maturity target: Commercial starter</span></div>
         </div>
       </div>
@@ -551,6 +551,13 @@ $('btnBlueprint').addEventListener('click', async () => {
     $('bpLoop').textContent = b.coreLoop.join(' → ');
     $('bpAud').textContent = b.targetAudience;
     $('bpMon').textContent = b.monetisationModel;
+    $('bpMech').textContent = (b.mechanics || []).slice(0, 5).join(' · ') || '—';
+    const risk = typeof b.riskScore === 'number' ? b.riskScore : null;
+    $('bpRights').textContent = risk === null ? '—'
+      : risk < 40 ? `CLEAR — rights risk ${risk}/100 · no protected marks detected`
+      : `REVIEW — rights risk ${risk}/100 · moderation will double-check`;
+    $('bpRights').style.color = risk !== null && risk < 40 ? 'var(--green)' : 'var(--amber)';
+    $('bpLvls').textContent = (b.levels || []).slice(0, 4).map(l => l.name).join(' · ') || '—';
     $('bpEst').textContent = `~${b.estimatedCredits.toLocaleString()} ACUs · maturity target: Commercial starter`;
     $('bpHint').innerHTML = remote.provider === 'claude'
       ? '✦ Blueprint written live by the Idea Agent (Claude)'
@@ -566,6 +573,9 @@ $('btnBlueprint').addEventListener('click', async () => {
     $('bpLoop').textContent = '—';
     $('bpAud').textContent = '—';
     $('bpMon').textContent = '—';
+    $('bpMech').textContent = '—';
+    $('bpRights').textContent = '—';
+    $('bpLvls').textContent = '—';
     $('bpEst').textContent = '— live blueprint not received';
     $('bpHint').innerHTML = '⚠ Live blueprint unavailable: ' + (apiError || 'unknown error') + '.';
   }
