@@ -4,15 +4,22 @@
  * cache-first for versioned static assets; network-first with cache
  * fallback for pages, so the app opens instantly and survives offline.
  */
-const VERSION = 'jx-v3';
+const VERSION = 'jx-v4';
+// Clean URLs only: Vercel cleanUrls 308-redirects /x.html → /x, and a cached
+// redirected response served for a navigation makes Chrome throw — so we cache
+// the canonical paths, and installs never fail on one missing page.
 const CORE = [
-  '/index.html', '/studio.html', '/play3d.html', '/wallet.html', '/pricing.html', '/play.html',
-  '/assets/joshrix.css', '/assets/site.js', '/assets/config.js', '/manifest.webmanifest',
+  '/', '/studio', '/play3d', '/wallet', '/pricing', '/play',
+  '/assets/joshrix.css', '/assets/site.js', '/assets/install.js', '/assets/config.js', '/manifest.webmanifest',
   '/assets/icons/icon-192.png', '/assets/icons/icon-512.png',
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
+  e.waitUntil(
+    caches.open(VERSION)
+      .then((c) => Promise.allSettled(CORE.map((u) => c.add(u))))
+      .then(() => self.skipWaiting())
+  );
 });
 
 self.addEventListener('activate', (e) => {
@@ -48,6 +55,6 @@ self.addEventListener('fetch', (e) => {
         caches.open(VERSION).then((c) => c.put(e.request, copy));
         return res;
       })
-      .catch(() => caches.match(e.request).then((hit) => hit || caches.match('/index.html')))
+      .catch(() => caches.match(e.request).then((hit) => hit || caches.match('/')))
   );
 });

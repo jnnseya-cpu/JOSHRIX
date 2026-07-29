@@ -63,3 +63,12 @@
 if ('serviceWorker' in navigator && location.protocol === 'https:') {
   addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(() => {}); });
 }
+
+/* PWA install chip lives in its own file so the landing page (which does not
+   load site.js) can use it too — see assets/install.js */
+(() => {
+  const s = document.createElement('script');
+  s.src = '/assets/install.js';
+  s.defer = true;
+  document.head.appendChild(s);
+})();

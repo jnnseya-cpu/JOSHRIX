@@ -1,4 +1,4 @@
-window.JOSHRIX_BUILD = '2026-07-29.3';
+window.JOSHRIX_BUILD = '2026-07-29.4';
 /**
  * JOSHRIX runtime config.
  * Frontend deploys to Vercel; the backend API is a Firebase Cloud Function.

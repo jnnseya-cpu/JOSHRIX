@@ -3,7 +3,7 @@
   "short_name": "JOSHRIX",
   "description": "Create Worlds. Build Games. Own the Future. Describe a game in any language and the agent fleet forges it — playable, certified, sellable, yours.",
   "id": "/",
-  "start_url": "/index.html",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "orientation": "any",
@@ -19,8 +19,8 @@
     { "src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Forge Studio", "short_name": "Forge", "url": "/studio.html", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Play Penalty King 3D", "short_name": "Play 3D", "url": "/play3d.html", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Wallet", "short_name": "Wallet", "url": "/wallet.html", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Forge Studio", "short_name": "Forge", "url": "/studio", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Play Penalty King 3D", "short_name": "Play 3D", "url": "/play3d", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Wallet", "short_name": "Wallet", "url": "/wallet", "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }
