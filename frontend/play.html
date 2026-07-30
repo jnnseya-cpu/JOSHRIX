@@ -141,7 +141,7 @@
 
       if (g.html) {
         var f = document.createElement('iframe');
-        f.setAttribute('sandbox', 'allow-scripts allow-pointer-lock');
+        f.setAttribute('sandbox', 'allow-scripts allow-pointer-lock allow-forms');
         f.setAttribute('title', g.title || 'JOSHRIX game');
         f.setAttribute('allow', 'autoplay; fullscreen');
         f.srcdoc = prepGameHtml(g.html);

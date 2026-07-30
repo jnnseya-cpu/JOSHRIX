@@ -842,7 +842,8 @@ async function renderPlaytest() {
     if (!fr) {
       fr = document.createElement('iframe');
       fr.id = 'realGame';
-      fr.setAttribute('sandbox', 'allow-scripts allow-pointer-lock');
+      fr.setAttribute('sandbox', 'allow-scripts allow-pointer-lock allow-forms');
+      fr.setAttribute('allow', 'autoplay; fullscreen');
       fr.setAttribute('title', 'Your generated game');
       fr.style.cssText = 'display:block;width:100%;height:470px;border:0;background:#050508';
       $('game').style.display = 'none';
@@ -914,6 +915,8 @@ $('btnEnhance').addEventListener('click', async () => {
   enhancing = true;
   const btn = $('btnEnhance');
   btn.disabled = true;
+  const fixNote = window.prompt('Tell the Polish Agent what to fix or improve (optional):',
+    'Make sure the START button works reliably (click AND touch), then raise the visual polish.') || '';
   const note = $('protoNote4');
   note.style.display = 'block';
   const t0 = Date.now();
@@ -924,7 +927,7 @@ $('btnEnhance').addEventListener('click', async () => {
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
     const r = await fetch(base + '/api/forge-enhance', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ html: realBuild.html, walletId: serverWalletId || undefined, notes: $('prompt').value, language: $('selLang').value }),
+      body: JSON.stringify({ html: realBuild.html, walletId: serverWalletId || undefined, notes: (fixNote ? fixNote + ' — original concept: ' : '') + $('prompt').value, language: $('selLang').value }),
       signal: AbortSignal.timeout(295000)
     });
     const j = await r.json().catch(() => null);

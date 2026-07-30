@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-29.43";
+export const BUILD_ID = "2026-07-29.44";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -132,6 +132,7 @@ const RUNTIME_SAFETY = `RUNTIME SAFETY — the game renders inside a sandboxed, 
 - Every function must be DEFINED BEFORE it is called on the boot path — no ReferenceError / "x is not defined" / calling a function above its declaration in the load order. Declare helpers first, then start the loop.
 - Do NOT touch localStorage, sessionStorage, cookies, or any Storage API — the sandbox throws on them. Keep all state in plain JS variables.
 - Wrap the whole boot in try/catch and inside requestAnimationFrame callbacks; guard every input handler. Never reference an id/element before it exists in the DOM.
+- The START control MUST be a plain <button type="button"> or <div> with BOTH click and touchstart listeners attached AFTER the element exists — never a form submit, never an inline onclick calling a function scoped inside an IIFE. Starting the game must be the single most reliable interaction in the file.
 - No optional-chaining/nullish assumptions about objects that may be undefined; initialise arrays/objects before use.
 OUTPUT: nothing but the file. Start with <!DOCTYPE html>. No markdown fences, no commentary.`;
 
