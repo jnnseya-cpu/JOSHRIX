@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-29.44";
+export const BUILD_ID = "2026-07-29.45";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -211,29 +211,39 @@ export async function enhanceGameHtml(
   html: string,
   opts: { notes?: string; language?: string } = {},
 ): Promise<{ html: string; provider: string; usage?: TokenUsage }> {
-  if (!process.env.ANTHROPIC_API_KEY) return { html, provider: "demo" };
-  const anthropic = new Anthropic();
-  const stream = anthropic.messages.stream({
-    model: "claude-sonnet-5",
-    max_tokens: 15000,
-    system: ENHANCE_SYSTEM,
-    messages: [{
-      role: "user",
-      content: `Creator's enhancement notes: ${opts.notes?.slice(0, 2000) || "(none — apply your full fidelity bar)"}\nLanguage of player-facing text: ${opts.language && opts.language !== "auto" ? opts.language : "keep the file's current language"}\n\nCurrent game file:\n${html}`,
-    }],
-  });
-  const msg = await finishWithinDeadline(stream);
-  let text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
-  const start = text.indexOf("<!DOCTYPE");
-  const altStart = start === -1 ? text.indexOf("<html") : start;
-  if (altStart === -1) throw new Error("Polish Agent returned no HTML document");
-  text = text.slice(start === -1 ? altStart : start);
-  const end = text.lastIndexOf("</html>");
-  if (end !== -1) text = text.slice(0, end + 7);
-  return {
-    html: text, provider: "claude",
-    usage: { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens },
-  };
+  const userMsg = `Creator's enhancement notes: ${opts.notes?.slice(0, 2000) || "(none — apply your full fidelity bar)"}\nLanguage of player-facing text: ${opts.language && opts.language !== "auto" ? opts.language : "keep the file's current language"}\n\nCurrent game file:\n${html}`;
+  const errors: string[] = [];
+  // Same multi-provider chain as the forge — a polish pass must not depend on one vendor.
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      const anthropic = new Anthropic();
+      const stream = anthropic.messages.stream({
+        model: "claude-sonnet-5",
+        max_tokens: 15000,
+        system: ENHANCE_SYSTEM,
+        messages: [{ role: "user", content: userMsg }],
+      });
+      const msg = await finishWithinDeadline(stream);
+      const text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
+      return {
+        html: extractHtml(text), provider: "claude",
+        usage: { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens },
+      };
+    } catch (e: any) { errors.push("claude: " + String(e?.message ?? e)); }
+  }
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const g = await geminiGenerate(ENHANCE_SYSTEM, userMsg, 15000);
+      return { html: g.html, provider: "gemini", usage: g.usage };
+    } catch (e: any) { errors.push("gemini: " + String(e?.message ?? e)); }
+  }
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      const o = await openaiGenerate(ENHANCE_SYSTEM, userMsg, 15000);
+      return { html: o.html, provider: "openai", usage: o.usage };
+    } catch (e: any) { errors.push("openai: " + String(e?.message ?? e)); }
+  }
+  throw new Error(errors.length ? errors.join(" | ") : "no AI provider configured");
 }
 
 /** Pull a complete HTML document out of a model reply (or throw). */

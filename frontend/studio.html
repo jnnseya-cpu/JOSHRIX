@@ -946,7 +946,7 @@ $('btnEnhance').addEventListener('click', async () => {
       note.innerHTML = '✨ <b>Enhanced.</b> This pass cost <b>' + (j.acuCharge || '?') + ' ACUs</b> (metered — unused hold refunded). Not enough? Press Enhance again to stack another pass — there is no limit.';
       jxTrack('forge.enhanced', { charge: j.acuCharge });
     } else {
-      note.innerHTML = '⚠ Enhance pass failed' + (j && j.error ? ': <b>' + j.error + '</b>' : '') + ' — your current build is untouched and the hold was refunded.';
+      note.innerHTML = '⚠ Enhance pass failed' + (j && j.error ? ': <b>' + j.error + (j.detail ? ' — ' + j.detail : '') + '</b>' : '') + ' — your current build is untouched and the hold was refunded. Try again: the pass now retries across three AI providers.';
       if (j && typeof j.balanceAfter === 'number') syncBalance(j.balanceAfter);
     }
   } catch (e) {

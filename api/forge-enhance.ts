@@ -52,12 +52,13 @@ export default async function handler(req: any, res: any) {
 
   try {
     const out = await enhanceGameHtml(html, { notes, language });
-    if (out.provider !== "claude" || !out.html.includes("<canvas")) {
+    if (out.provider === "demo" || !out.html.includes("<canvas")) {
       await refundHold();
       return res.status(502).json({ error: "Polish Agent unavailable or produced no playable file — hold refunded." });
     }
     // metered settlement: 4x actual cost of this pass, unused hold back instantly
-    const settled = Math.max(FORGE_MIN_CHARGE, acuChargeForUsage("claude-sonnet-5", out.usage!));
+    const meterKey = out.provider === "claude" ? "claude-sonnet-5" : out.provider;
+    const settled = Math.max(FORGE_MIN_CHARGE, out.usage ? acuChargeForUsage(meterKey, out.usage) : FORGE_MIN_CHARGE * 2);
     if (sql && walletId && balanceAfter !== null && settled !== ENHANCE_HOLD) {
       try {
         if (settled < ENHANCE_HOLD) {
