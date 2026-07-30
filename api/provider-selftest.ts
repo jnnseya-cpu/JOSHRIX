@@ -1,18 +1,34 @@
 /**
- * GET /api/provider-selftest?key=<MODERATION_KEY>
- * Owner-only diagnostics: fires a tiny "say OK" request at every configured AI
- * provider and reports success, latency, and the EXACT error text on failure —
- * so "which provider is broken and why" is one URL, not a log hunt.
- * Admin-gated because each call costs a few real tokens.
+ * GET /api/provider-selftest
+ * Diagnostics: fires a tiny "say OK" request at every configured AI provider and
+ * reports success, latency, and the EXACT error text on failure — so "which
+ * provider is broken and why" is one URL, no key, no log hunt.
+ * Cost control: unauthenticated calls are served from a 2-minute cache (the
+ * probes cost a few real tokens); the admin key (?key=) forces a fresh run.
  */
 import Anthropic from "@anthropic-ai/sdk";
+import { getDb, ensureGameSchema, saveForgeResult, getForgeResult } from "./_ledger";
 
 const T = 30_000;
+const CACHE_TICKET = "selftest-cache-0000";
+const CACHE_MS = 120_000;
 
 export default async function handler(req: any, res: any) {
   const key = (req.headers["x-admin-key"] as string) || (req.query?.key as string) || "";
-  if (!process.env.MODERATION_KEY || key !== process.env.MODERATION_KEY) {
-    return res.status(401).json({ error: "admin key required (?key= or x-admin-key)" });
+  const isAdmin = !!process.env.MODERATION_KEY && key === process.env.MODERATION_KEY;
+
+  const sql = getDb();
+  if (!isAdmin && sql) {
+    try {
+      await ensureGameSchema(sql);
+      const row = await getForgeResult(sql, CACHE_TICKET);
+      if (row) {
+        const cached = JSON.parse(row.payload);
+        if (cached && cached.at && Date.now() - cached.at < CACHE_MS) {
+          return res.status(200).json({ ...cached.body, cached: true, ageSeconds: Math.round((Date.now() - cached.at) / 1000) });
+        }
+      }
+    } catch { /* run live */ }
   }
 
   const out: Record<string, any> = {};
@@ -72,5 +88,7 @@ export default async function handler(req: any, res: any) {
   } else out.openai = { ok: false, error: "no OPENAI_API_KEY" };
 
   const healthy = Object.values(out).filter((p: any) => p.ok).length;
-  return res.status(200).json({ healthy, of: 3, providers: out });
+  const body = { healthy, of: 3, providers: out };
+  if (sql) { try { await saveForgeResult(sql, CACHE_TICKET, null, JSON.stringify({ at: Date.now(), body })); } catch { /* best-effort */ } }
+  return res.status(200).json({ ...body, cached: false });
 }
