@@ -40,7 +40,7 @@ export default async function handler(req: any, res: any) {
       return res.status(502).json({ error: "Wallet check failed", detail: String(err?.message ?? err) });
     }
     if (balanceAfter === null) {
-      return res.status(402).json({ error: `Not enough ACUs (an enhance pass holds ${ENHANCE_HOLD}, settles to 4x metered cost). Top up at /wallet.html.`, acuCharge: ENHANCE_HOLD });
+      return res.status(402).json({ error: `Not enough ACUs (an enhance pass holds ${ENHANCE_HOLD}; the unused part refunds when it settles). Top up at /wallet.html.`, acuCharge: ENHANCE_HOLD });
     }
   }
 

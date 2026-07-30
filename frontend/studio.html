@@ -275,7 +275,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
       </div>
       <div class="actions">
         <button class="btn btn-primary" id="btnBlueprint">⚡ Generate Blueprint</button>
-        <span class="hint" id="bpHint">Idea Agent · market radar · rights screening — metered: 4× AI cost (typically 10–40 ACUs)</span>
+        <span class="hint" id="bpHint">Idea Agent · market radar · rights screening — metered compute (typically 10–40 ACUs)</span>
       </div>
       <div class="bp" id="bp">
         <div class="bp-head">
@@ -295,7 +295,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
       <div class="actions" id="approveRow" style="display:none">
         <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.5rem .8rem">
           <input type="checkbox" id="chk3d" style="accent-color:#7C3AED;width:18px;height:18px">
-          <span><b style="color:var(--cyan,#22D3EE)">⬢ 3D Build</b> — real three.js 3D world. Metered pricing: <b>4× the AI cost of your game</b> — 3D holds 1,200 ACUs, 2D holds 300, and the unused hold refunds the moment your build settles (typical final: 40–200 ACUs).</span>
+          <span><b style="color:var(--cyan,#22D3EE)">⬢ 3D Build</b> — real three.js 3D world. Metered pricing: you pay only for the compute your build actually uses — 3D holds 1,200 ACUs, 2D holds 300, and the unused hold refunds the moment your build settles (typical final: 40–200 ACUs).</span>
         </label>
         <button class="btn btn-primary" id="btnForge">▶ Approve &amp; Initiate Forge</button>
         <span class="hint">Approval gate 1 of 3 — you stay in control</span>
@@ -359,7 +359,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
             <button class="btn btn-ghost" id="btnRefine">✎ Refine Concept</button>
             <button class="btn btn-ghost" id="btnViewSrc" type="button">⤓ View Build Source</button>
           </div>
-          <p class="hint" style="margin-top:.8rem">Approval gate 3 of 3 · Want full 3D? Tick <b>⬢ 3D Build</b> before forging. Pricing is metered — 4× the AI cost of your build, unused hold refunded instantly; a failed build refunds itself.</p>
+          <p class="hint" style="margin-top:.8rem">Approval gate 3 of 3 · Want full 3D? Tick <b>⬢ 3D Build</b> before forging. Pricing is metered — you pay for the compute your build actually uses, unused hold refunded instantly; a failed build refunds itself.</p>
         </div>
       </div>
     </div>
@@ -888,7 +888,7 @@ $('btnEnhance').addEventListener('click', async () => {
   note.style.display = 'block';
   const t0 = Date.now();
   const etick = setInterval(() => {
-    note.innerHTML = '✨ <b>Polish Agent is raising your build\'s production value…</b> ' + Math.round((Date.now() - t0) / 1000) + 's — big passes take a few minutes. Metered: 4× the AI cost of the pass.';
+    note.innerHTML = '✨ <b>Polish Agent is raising your build\'s production value…</b> ' + Math.round((Date.now() - t0) / 1000) + 's — big passes take a few minutes. Metered — you only pay for what the pass uses.';
   }, 1000);
   try {
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
@@ -910,7 +910,7 @@ $('btnEnhance').addEventListener('click', async () => {
       const fr = document.getElementById('realGame');
       if (fr) fr.srcdoc = prepGameHtml(j.html);
       if (typeof j.balanceAfter === 'number') syncBalance(j.balanceAfter);
-      note.innerHTML = '✨ <b>Enhanced.</b> This pass cost <b>' + (j.acuCharge || '?') + ' ACUs</b> (4× its metered AI cost — unused hold refunded). Not enough? Press Enhance again to stack another pass — there is no limit.';
+      note.innerHTML = '✨ <b>Enhanced.</b> This pass cost <b>' + (j.acuCharge || '?') + ' ACUs</b> (metered — unused hold refunded). Not enough? Press Enhance again to stack another pass — there is no limit.';
       jxTrack('forge.enhanced', { charge: j.acuCharge });
     } else {
       note.innerHTML = '⚠ Enhance pass failed' + (j && j.error ? ': <b>' + j.error + '</b>' : '') + ' — your current build is untouched and the hold was refunded.';
