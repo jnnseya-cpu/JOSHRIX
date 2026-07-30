@@ -704,17 +704,47 @@ $('btnForge').addEventListener('click', () => {
   publishedGame = null;              // a re-forge is a NEW game — old share URL no longer applies
   forgeStart = Date.now();           // for the playtest progress counter
   realBuildPromise = (async () => {
-    try {
-      const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
-      const r = await fetch(base + '/api/forge-game', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: $('prompt').value, title: lastBp.title, summary: lastBp.summary, language: $('selLang').value, walletId: serverWalletId || undefined, blueprint: lastBp, mode: ($('chk3d') && $('chk3d').checked) ? '3d' : '2d' }),
-        signal: AbortSignal.timeout(295000)
-      });
-      const j = await r.json().catch(() => null);
-      if (r.ok && j && j.html) { realBuild = j; }
-      else { realBuildErr = (j && (j.error + (j.detail ? ' — ' + j.detail : ''))) || ('HTTP ' + r.status); }
-    } catch (e) { realBuildErr = 'the connection dropped mid-forge — any unused hold settles back automatically'; }
+    /* DUAL-CHANNEL DELIVERY — the game must arrive even if this connection dies.
+       Channel 1: the forge request itself. Channel 2: the server persists every
+       finished build under this ticket, and we poll /api/forge-result for it.
+       Whichever channel produces the build first wins. */
+    const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
+    const ticket = (crypto.randomUUID ? crypto.randomUUID() : 'tk-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10));
+    const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+    const finish = (j) => { if (!realBuild && j && j.html) { realBuild = j; return true; } return false; };
+    let mainErr = null;
+
+    const main = (async () => {
+      try {
+        const r = await fetch(base + '/api/forge-game', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt: $('prompt').value, title: lastBp.title, summary: lastBp.summary, language: $('selLang').value, walletId: serverWalletId || undefined, blueprint: lastBp, mode: ($('chk3d') && $('chk3d').checked) ? '3d' : '2d', ticket: ticket }),
+          signal: AbortSignal.timeout(295000)
+        });
+        const j = await r.json().catch(() => null);
+        if (r.ok) finish(j);
+        else mainErr = (j && (j.error + (j.detail ? ' — ' + j.detail : ''))) || ('HTTP ' + r.status);
+      } catch (e) { mainErr = 'connection dropped mid-forge'; }
+    })();
+
+    const poller = (async () => {
+      await sleep(45000);                        // builds take ≥45s — no point earlier
+      for (let i = 0; i < 45 && !realBuild; i++) {
+        try {
+          const r = await fetch(base + '/api/forge-result?ticket=' + encodeURIComponent(ticket) + '&w=' + encodeURIComponent(serverWalletId || ''), { signal: AbortSignal.timeout(10000) });
+          const j = await r.json().catch(() => null);
+          if (j && j.ready && finish(j)) return;
+        } catch (e) { /* poll again */ }
+        await sleep(6000);
+      }
+    })();
+
+    // resolve as soon as either channel lands the build; else when both are done
+    await new Promise((resolve) => {
+      const iv = setInterval(() => { if (realBuild) { clearInterval(iv); resolve(); } }, 400);
+      Promise.allSettled([main, poller]).then(() => { clearInterval(iv); resolve(); });
+    });
+    if (!realBuild) realBuildErr = mainErr || 'the forge did not return in time — any unused hold settles back automatically';
   })();
   $('qaRow').style.display = 'none';
   AGENTS.forEach((a, i) => {

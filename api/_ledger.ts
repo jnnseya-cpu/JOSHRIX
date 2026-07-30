@@ -159,6 +159,12 @@ export async function ensureGameSchema(sql: Sql) {
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT 'explorer'`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS name text`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS last_refill_at timestamptz`;
+  await sql`CREATE TABLE IF NOT EXISTS forge_results (
+    ticket text PRIMARY KEY,
+    wallet_id text,
+    payload text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`;
   await sql`CREATE TABLE IF NOT EXISTS forge_charges (
     id text PRIMARY KEY,
     wallet_id text NOT NULL,
@@ -217,6 +223,21 @@ export async function debitWallet(sql: Sql, id: string, cost: number): Promise<n
 export async function creditWallet(sql: Sql, id: string, amount: number): Promise<number | null> {
   const rows = (await sql`UPDATE wallets SET balance = balance + ${amount} WHERE id = ${id} RETURNING balance`) as Array<{ balance: number }>;
   return rows.length ? Number(rows[0].balance) : null;
+}
+
+/**
+ * Persist a finished forge so the Studio can retrieve it on a second channel:
+ * the game must arrive even when the original HTTP connection died mid-forge
+ * (Wi-Fi blip, laptop sleep, platform reset). Ticket is client-minted per forge.
+ */
+export async function saveForgeResult(sql: Sql, ticket: string, walletId: string | null, payload: string) {
+  await sql`INSERT INTO forge_results (ticket, wallet_id, payload) VALUES (${ticket}, ${walletId}, ${payload})
+            ON CONFLICT (ticket) DO UPDATE SET payload = EXCLUDED.payload, wallet_id = EXCLUDED.wallet_id`;
+}
+
+export async function getForgeResult(sql: Sql, ticket: string) {
+  const rows = (await sql`SELECT wallet_id, payload FROM forge_results WHERE ticket = ${ticket}`) as Array<{ wallet_id: string | null; payload: string }>;
+  return rows[0] ?? null;
 }
 
 /**

@@ -9,7 +9,7 @@
 import { randomUUID } from "crypto";
 import { generateGameHtml, acuChargeForUsage, FORGE_GAME_ACU_CHARGE, FORGE_GAME_3D_ACU_CHARGE, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE } from "./_gateway";
 import { buildPlayableGame } from "./_engine";
-import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge } from "./_ledger";
+import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge, saveForgeResult } from "./_ledger";
 import type { GameBlueprint } from "../shared/contracts";
 
 /** Coerce whatever the client sends as a blueprint into the shape the engine needs. */
@@ -43,7 +43,7 @@ export default async function handler(req: any, res: any) {
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
-  const { prompt, title, summary, language, walletId, blueprint, mode } = (req.body ?? {}) as Record<string, any>;
+  const { prompt, title, summary, language, walletId, blueprint, mode, ticket } = (req.body ?? {}) as Record<string, any>;
   if (!prompt || typeof prompt !== "string" || prompt.length < 4) {
     return res.status(400).json({ error: "Body must include the game concept in `prompt`." });
   }
@@ -130,12 +130,19 @@ export default async function handler(req: any, res: any) {
       forgeId = randomUUID();
       try { await recordForgeCharge(sql, forgeId, walletId, settledCharge); } catch { forgeId = undefined; }
     }
-    return res.status(200).json({
+    const body = {
       html, provider, acuCharge: settledCharge,
       ...(fallbackHtml ? { fallbackHtml } : {}),
       ...(forgeId ? { forgeId } : {}),
       ...(balanceAfter !== null ? { balanceAfter } : {}),
-    });
+    };
+    // Persist the finished build BEFORE responding: if this response never reaches
+    // the browser (dropped connection, sleep), the Studio's poller still gets the
+    // game from /api/forge-result — a completed forge can no longer be lost.
+    if (sql && typeof ticket === "string" && /^[a-z0-9-]{8,64}$/i.test(ticket)) {
+      try { await saveForgeResult(sql, ticket, walletId || null, JSON.stringify(body)); } catch { /* best-effort */ }
+    }
+    return res.status(200).json(body);
   } catch (err: any) {
     await refund(false);
     return res.status(502).json({ error: "Game build failed", detail: String(err?.message ?? err) });
