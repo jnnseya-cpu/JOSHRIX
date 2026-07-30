@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-29.39";
+export const BUILD_ID = "2026-07-29.40";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -149,7 +149,7 @@ POLISH BAR (all of these, not some):
 - Procedural WebAudio sound design (no files): distinct SFX per event + a simple ambient loop + a mute button; create the AudioContext only on the first user gesture.
 - All player-facing text in the creator's language (use the provided language, else detect from the concept).
 - Age-appropriate for the stated audience. No real brands, clubs, celebrities or licensed characters.
-SIZE: 900-1500 lines. Use the space for gameplay depth and polish — more enemy behaviours, more levels, better feedback. Never pad; never truncate the file.
+SIZE: 650-900 lines. Ship a COMPLETE file — finishing the game matters more than length; depth comes from Enhance passes. Never pad; never truncate.
 ${RUNTIME_SAFETY}`;
 
 const GAME_SYSTEM_3D = `You are the JOSHRIX Code Agent. Generate a COMPLETE HTML5 **3D** game as ONE html file using three.js, implementing the creator's concept faithfully in real 3D. This is an ULTRA-PREMIUM COMMERCIAL product — it must look like a cinematic, high-production 3D game. Never a tech demo, never floating primitives on a flat plane.
@@ -172,7 +172,7 @@ GAME REQUIREMENTS:
 - All player-facing text in the creator's language. Age-appropriate. No real brands or licensed characters.
 - If typeof THREE === "undefined" after the script tag, write a visible message into the page and stop cleanly (no throw loop).
 PERFORMANCE: target 60fps on mobile — InstancedMesh over many meshes, cap shadow casters, reuse geometries/materials, no per-frame allocations in the loop.
-SIZE: 1400-2200 lines. Spend every line on world density, material quality and polish. Never truncate the file.
+SIZE: 800-1100 lines. Ship a COMPLETE file — a finished world at this size beats a truncated epic; density grows through Enhance passes. Never truncate.
 ${RUNTIME_SAFETY}`;
 
 const ENHANCE_SYSTEM = `You are the JOSHRIX Polish Agent. You receive a COMPLETE working HTML game file (2D canvas or three.js 3D). Return an UPGRADED version of the SAME game as ONE html file: identical core gameplay and controls, dramatically higher production value.
@@ -212,7 +212,7 @@ export async function enhanceGameHtml(
   const anthropic = new Anthropic();
   const stream = anthropic.messages.stream({
     model: "claude-sonnet-5",
-    max_tokens: 26000,
+    max_tokens: 15000,
     system: ENHANCE_SYSTEM,
     messages: [{
       role: "user",
@@ -243,7 +243,7 @@ export async function generateGameHtml(
     // risk at large max_tokens) — the creator pays 4x the metered cost, whatever it is.
     const stream = anthropic.messages.stream({
       model: "claude-sonnet-5",   // Code Agent: fast frontier coder; Idea Agent stays on Opus
-      max_tokens: opts.mode === "3d" ? 26000 : 20000,
+      max_tokens: opts.mode === "3d" ? 15000 : 12000,
       system: opts.mode === "3d" ? GAME_SYSTEM_3D : GAME_SYSTEM,
       messages: [{
         role: "user",
