@@ -671,41 +671,35 @@ footer{
   <div class="sec-tag reveal">Featured Worlds</div>
   <h2 class="reveal">Forged In <span class="grad">JOSHRIX Studio</span></h2>
   <p class="sec-sub reveal">Live universes forged by the operator community — from raw concept to global deployment in a single forge cycle. Playable now, evolving nightly.</p>
-  <div class="worlds">
-    <article class="world reveal">
-      <div class="art art-1"></div>
-      <div class="veil"></div>
-      <div class="live"><span class="dot"></span>LIVE · 12.4K</div>
-      <div class="meta">
-        <span class="genre">Cyberpunk · Open World</span>
-        <h3>Neonfall</h3>
-        <p class="desc">A rain-slicked megacity where every rooftop hides a contract and every alley hides a secret.</p>
-        <span class="enter">Enter World <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-      </div>
-    </article>
-    <article class="world reveal">
-      <div class="art art-2"></div>
-      <div class="veil"></div>
-      <div class="live"><span class="dot"></span>LIVE · 8.9K</div>
-      <div class="meta">
-        <span class="genre">Sci-Fi · Exploration</span>
-        <h3>Aether Drift</h3>
-        <p class="desc">Chart a shattered star system in a hand-built vessel. Gravity is a suggestion. Wonder is guaranteed.</p>
-        <span class="enter">Enter World <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-      </div>
-    </article>
-    <article class="world reveal">
-      <div class="art art-3"></div>
-      <div class="veil"></div>
-      <div class="live"><span class="dot"></span>LIVE · 15.1K</div>
-      <div class="meta">
-        <span class="genre">Dark Fantasy · Souls-like</span>
-        <h3>Ironhollow</h3>
-        <p class="desc">Embers drift over a kingdom that refused to die. Forge your legend one impossible duel at a time.</p>
-        <span class="enter">Enter World <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
-      </div>
-    </article>
+  <div class="worlds" id="realWorlds">
+    <p class="sec-sub" id="worldsEmpty" style="display:none">No public worlds yet — moderation-approved games appear here the moment they go live. <a href="studio.html" style="color:var(--cyan,#22D3EE)">Be the first to forge one.</a></p>
   </div>
+  <script>
+  /* Real data only: featured worlds are the community's actual approved games. */
+  (function () {
+    var API = (window.JOSHRIX_API_BASE || '');
+    var esc = function (t) { return String(t == null ? '' : t).replace(/[<>&"]/g, function (c) { return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
+    fetch(API + '/api/arcade').then(function (r) { return r.json(); }).then(function (j) {
+      var games = (j && j.games) || [];
+      var box = document.getElementById('realWorlds');
+      if (!games.length) { document.getElementById('worldsEmpty').style.display = 'block'; return; }
+      games.slice(0, 3).forEach(function (g, i) {
+        var a = document.createElement('a');
+        a.className = 'world reveal';
+        a.href = 'play/' + encodeURIComponent(g.id);
+        a.style.textDecoration = 'none';
+        a.innerHTML =
+          '<div class="art art-' + ((i % 3) + 1) + '"></div><div class="veil"></div>' +
+          '<div class="live"><span class="dot"></span>LIVE · ' + Number(g.plays || 0).toLocaleString() + ' plays</div>' +
+          '<div class="meta"><span class="genre">Forged in the Studio</span>' +
+          '<h3>' + esc(g.title || 'Untitled world') + '</h3>' +
+          '<p class="desc">' + esc((g.summary || '').slice(0, 120)) + '</p>' +
+          '<span class="enter">Enter World <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>';
+        box.appendChild(a);
+      });
+    }).catch(function () { document.getElementById('worldsEmpty').style.display = 'block'; });
+  })();
+  </script>
 </section>
 
 <section id="why">

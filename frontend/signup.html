@@ -61,6 +61,19 @@
 <script>
 (function () {
   const form = document.querySelector('form.form');
+  // where to land after sign-in: honour ?next= (same-site pages only), default dashboard
+  const NEXT = (function () {
+    try {
+      const n = new URLSearchParams(location.search).get('next') || '';
+      return /^[a-z0-9-]+\.html$/i.test(n) ? n : 'dashboard.html';
+    } catch (e) { return 'dashboard.html'; }
+  })();
+  try { sessionStorage.setItem('jx.next', NEXT); } catch (e) {}
+  // carry the destination through to signup too
+  document.querySelectorAll('a[href="signup.html"], a[href="login.html"]').forEach((a) => {
+    if (NEXT !== 'dashboard.html') a.href = a.getAttribute('href') + '?next=' + NEXT;
+  });
+
   const note = document.createElement('p');
   note.className = 'hint'; note.id = 'authStatus';
   form.appendChild(note);
@@ -93,7 +106,7 @@
       saveProfile();
       fireWelcome();
       note.textContent = '✓ Tester account created on this device — opening your dashboard…';
-      setTimeout(() => location.href = 'dashboard.html', 600);
+      setTimeout(() => location.href = NEXT, 600);
     });
     note.after(b);
   };
@@ -111,7 +124,7 @@
       saveProfile();
       fireWelcome();
       note.textContent = '\u2713 Account created on this device \u2014 opening your dashboard\u2026';
-      setTimeout(() => location.href = 'dashboard.html', 700);
+      setTimeout(() => location.href = NEXT, 700);
     });
     return;
   }
@@ -132,7 +145,7 @@
       saveProfile();
       fireWelcome();
       note.textContent = '✓ Account created — entering your dashboard…';
-      location.href = 'dashboard.html';
+      location.href = NEXT;
     } catch (err) {
       note.textContent = '✕ ' + (window.jxAuth.friendly ? window.jxAuth.friendly(err) : (err && err.message || 'Sign-up failed'));
       offerTestMode(); // real auth not ready yet? testing stays one tap away
@@ -143,7 +156,7 @@
     try {
       const a = await window.jxAuth.ready;
       await a.signInGoogle();   // on phones this navigates away and returns via redirect
-      location.href = 'dashboard.html';
+      location.href = NEXT;
     } catch (err) { note.textContent = '✕ ' + (window.jxAuth.friendly ? window.jxAuth.friendly(err) : (err && err.message || 'Google sign-in failed')); }
   });
   // a Google redirect that came back with an error (e.g. unauthorised domain) must not fail silently

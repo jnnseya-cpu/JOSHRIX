@@ -3,6 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+/* Studio is for signed-in creators only — no account, no forge. Runs first so
+   the page never flashes before the redirect. Tester/device accounts count
+   (they exist in jx.profile after signup); login returns the user here. */
+(function () {
+  try {
+    var p = JSON.parse(localStorage.getItem('jx.profile') || '{}');
+    if (!(p.displayName || p.handle || p.email)) location.replace('login.html?next=studio.html');
+  } catch (e) { location.replace('login.html?next=studio.html'); }
+})();
+</script>
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#050508">
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png">

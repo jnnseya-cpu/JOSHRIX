@@ -76,7 +76,11 @@
       if (c && c.user) {
         sessionStorage.removeItem('jx.gredirect');
         rememberUser(c.user);
-        if (/login|signup/i.test(location.pathname)) { location.href = 'dashboard.html'; }
+        if (/login|signup/i.test(location.pathname)) {
+          let nx = 'dashboard.html';
+          try { const t = sessionStorage.getItem('jx.next'); if (t && /^[a-z0-9-]+\.html$/i.test(t)) nx = t; } catch (e) {}
+          location.href = nx;
+        }
       } else if (came) {
         sessionStorage.removeItem('jx.gredirect');
       }
