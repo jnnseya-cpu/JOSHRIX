@@ -823,9 +823,9 @@ async function renderPlaytest() {
     $('playCopyTitle').textContent = '🎮 Play Your Build — Live Now';
     $('playCopyBody').textContent = 'The game on the left is your real build, running right now and visible only to you. Controls are explained on the game\'s own title screen.';
     $('protoNote4').style.display = 'block';
-    $('protoNote4').innerHTML = realBuild.provider === 'claude'
-      ? '✦ <b>Bespoke build:</b> the Code Agent wrote this game from your concept, live. Not happy? Refine Concept regenerates it.'
-      : '✦ <b>Engine build:</b> AI designed this game from your concept and the JOSHRIX engine built it. The bespoke AI build was unavailable this run — Refine Concept retries it.';
+    $('protoNote4').innerHTML = (realBuild.provider && realBuild.provider !== 'engine')
+      ? '✦ <b>Bespoke build</b> (' + realBuild.provider + '): the Code Agent wrote this game from your concept, live. Not happy? Refine Concept regenerates it.'
+      : '⚠ <b>Engine build — NOT your concept:</b> the bespoke AI build did not come back this run, so the guaranteed engine game is standing in. Press <b>Refine Concept → Forge</b> to retry the bespoke build.';
     if (!realBuildCharged) {
       realBuildCharged = true;
       if (typeof realBuild.balanceAfter === 'number') syncBalance(realBuild.balanceAfter);
@@ -879,7 +879,7 @@ $('btnRefine').addEventListener('click', () => {
 let enhancing = false;
 $('btnEnhance').addEventListener('click', async () => {
   if (!(realBuild && realBuild.html)) { alert('No real build yet — forge a game first.'); return; }
-  if (realBuild.provider !== 'claude') { alert('Enhance needs a bespoke AI build — press Refine Concept to forge one first.'); return; }
+  if (realBuild.provider === 'engine') { alert('Enhance needs a bespoke AI build — press Refine Concept to forge one first.'); return; }
   if (enhancing) return;
   enhancing = true;
   const btn = $('btnEnhance');

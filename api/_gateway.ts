@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-29.40";
+export const BUILD_ID = "2026-07-29.41";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -29,6 +29,8 @@ export const BUILD_ID = "2026-07-29.40";
 const USD_PER_MTOK: Record<string, { in: number; out: number }> = {
   "claude-sonnet-5": { in: 3, out: 15 },
   "claude-opus-5": { in: 5, out: 25 },
+  "gemini": { in: 0.3, out: 2.5 },   // approx published flash-tier rates
+  "openai": { in: 2.5, out: 10 },    // approx published 4o-tier rates
 };
 const GBP_PER_USD = 0.79;
 export type TokenUsage = { inputTokens: number; outputTokens: number };
@@ -233,35 +235,106 @@ export async function enhanceGameHtml(
   };
 }
 
+/** Pull a complete HTML document out of a model reply (or throw). */
+function extractHtml(text: string): string {
+  const start = text.indexOf("<!DOCTYPE");
+  const altStart = start === -1 ? text.indexOf("<html") : start;
+  if (altStart === -1) throw new Error("model returned no HTML document");
+  let out = text.slice(start === -1 ? altStart : start);
+  const end = out.lastIndexOf("</html>");
+  if (end !== -1) out = out.slice(0, end + 7);
+  return out;
+}
+
+const PROVIDER_TIMEOUT_MS = 200_000;
+
+/** Gemini REST fallback (activates when GEMINI_API_KEY is set in Vercel). */
+async function geminiGenerate(system: string, user: string, maxTokens: number): Promise<{ html: string; usage?: TokenUsage }> {
+  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{ role: "user", parts: [{ text: user }] }],
+      generationConfig: { maxOutputTokens: maxTokens, temperature: 0.9 },
+    }),
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+  });
+  if (!r.ok) throw new Error(`Gemini HTTP ${r.status}`);
+  const j: any = await r.json();
+  const text = (j.candidates?.[0]?.content?.parts || []).map((p: any) => p.text || "").join("");
+  const u = j.usageMetadata;
+  return {
+    html: extractHtml(text),
+    usage: u ? { inputTokens: Number(u.promptTokenCount || 0), outputTokens: Number(u.candidatesTokenCount || 0) } : undefined,
+  };
+}
+
+/** OpenAI REST fallback (activates when OPENAI_API_KEY is set in Vercel). */
+async function openaiGenerate(system: string, user: string, maxTokens: number): Promise<{ html: string; usage?: TokenUsage }> {
+  const model = process.env.OPENAI_MODEL || "gpt-4o";
+  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "system", content: system }, { role: "user", content: user }],
+      max_completion_tokens: maxTokens,
+    }),
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+  });
+  if (!r.ok) throw new Error(`OpenAI HTTP ${r.status}`);
+  const j: any = await r.json();
+  const text = j.choices?.[0]?.message?.content || "";
+  const u = j.usage;
+  return {
+    html: extractHtml(text),
+    usage: u ? { inputTokens: Number(u.prompt_tokens || 0), outputTokens: Number(u.completion_tokens || 0) } : undefined,
+  };
+}
+
 export async function generateGameHtml(
   prompt: string,
   opts: { title?: string; summary?: string; language?: string; mode?: string } = {},
 ): Promise<{ html: string; provider: string; usage?: TokenUsage }> {
+  const system = opts.mode === "3d" ? GAME_SYSTEM_3D : GAME_SYSTEM;
+  const maxTokens = opts.mode === "3d" ? 15000 : 12000;
+  const userMsg = `Creator's game concept:\n${prompt}\n\nBlueprint title: ${opts.title ?? "(derive from concept)"}\nBlueprint summary: ${opts.summary ?? "(none)"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the concept"}`;
+
+  // MULTI-PROVIDER CHAIN — no single vendor may block a creator's game.
+  // Claude first (best code quality), then Gemini, then OpenAI; whichever
+  // answers first with a complete file ships as the bespoke build.
   if (process.env.ANTHROPIC_API_KEY) {
-    const anthropic = new Anthropic();
-    // Streaming: lets the Code Agent build games at ANY size (no request timeout
-    // risk at large max_tokens) — the creator pays 4x the metered cost, whatever it is.
-    const stream = anthropic.messages.stream({
-      model: "claude-sonnet-5",   // Code Agent: fast frontier coder; Idea Agent stays on Opus
-      max_tokens: opts.mode === "3d" ? 15000 : 12000,
-      system: opts.mode === "3d" ? GAME_SYSTEM_3D : GAME_SYSTEM,
-      messages: [{
-        role: "user",
-        content: `Creator's game concept:\n${prompt}\n\nBlueprint title: ${opts.title ?? "(derive from concept)"}\nBlueprint summary: ${opts.summary ?? "(none)"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the concept"}`,
-      }],
-    });
-    const msg = await finishWithinDeadline(stream);
-    let text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
-    const start = text.indexOf("<!DOCTYPE");
-    const altStart = start === -1 ? text.indexOf("<html") : start;
-    if (altStart === -1) throw new Error("Code Agent returned no HTML document");
-    text = text.slice(start === -1 ? altStart : start);
-    const end = text.lastIndexOf("</html>");
-    if (end !== -1) text = text.slice(0, end + 7);
-    return {
-      html: text, provider: "claude",
-      usage: { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens },
-    };
+    try {
+      const anthropic = new Anthropic();
+      const stream = anthropic.messages.stream({
+        model: "claude-sonnet-5",   // Code Agent: fast frontier coder; Idea Agent stays on Opus
+        max_tokens: maxTokens,
+        system,
+        messages: [{ role: "user", content: userMsg }],
+      });
+      const msg = await finishWithinDeadline(stream);
+      const text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
+      return {
+        html: extractHtml(text), provider: "claude",
+        usage: { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens },
+      };
+    } catch { /* fall through to the next provider */ }
+  }
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const g = await geminiGenerate(system, userMsg, maxTokens);
+      return { html: g.html, provider: "gemini", usage: g.usage };
+    } catch { /* fall through */ }
+  }
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      const o = await openaiGenerate(system, userMsg, maxTokens);
+      return { html: o.html, provider: "openai", usage: o.usage };
+    } catch { /* fall through */ }
+  }
+  if (process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY) {
+    throw new Error("all configured AI providers failed this run");
   }
   // demo fallback (no AI key): a tiny real playable game so the flow stays testable offline
   const title = (opts.title || "Your Game").replace(/[<>&]/g, "");

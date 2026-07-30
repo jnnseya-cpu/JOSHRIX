@@ -94,22 +94,23 @@ export default async function handler(req: any, res: any) {
     let aiUsage: { inputTokens: number; outputTokens: number } | undefined;
     try {
       const ai = await generateGameHtml(prompt, { title, summary, language, mode: is3d ? "3d" : "2d" });
-      // only trust a REAL Claude build as the bespoke path (the keyless demo build
-      // is weaker than the engine, so the engine wins in that case)
-      if (ai.provider === "claude" && ai.html.includes("<canvas")) {
+      // any REAL provider build ships as bespoke (claude/gemini/openai); the
+      // keyless demo build is weaker than the engine, so the engine wins there
+      if (ai.provider !== "demo" && ai.html.includes("<canvas")) {
         html = ai.html;
-        provider = "claude";
+        provider = ai.provider;
         fallbackHtml = engineHtml;
         aiUsage = ai.usage;
       }
-    } catch { /* Code Agent failed or timed out — the engine build ships instead */ }
+    } catch { /* every provider failed or timed out — the engine build ships instead */ }
     // METERED SETTLEMENT (business model: charge = 4x the AI provider cost of THIS
     // run, from actual token usage). The upfront debit was only a hold:
     //   bespoke shipped  -> 4x metered cost (floor FORGE_MIN_CHARGE)
     //   engine-only ship -> flat ENGINE_BUILD_CHARGE (no AI ran / AI unusable)
     // Unused hold is credited back instantly; shortfall is collected best-effort.
-    const settledCharge = provider === "claude" && aiUsage
-      ? Math.max(FORGE_MIN_CHARGE, acuChargeForUsage("claude-sonnet-5", aiUsage))
+    const meterKey = provider === "claude" ? "claude-sonnet-5" : provider;  // gemini/openai rates in the table
+    const settledCharge = provider !== "engine"
+      ? Math.max(FORGE_MIN_CHARGE, aiUsage ? acuChargeForUsage(meterKey, aiUsage) : FORGE_MIN_CHARGE * 2)
       : ENGINE_BUILD_CHARGE;
     if (sql && walletId && balanceAfter !== null && settledCharge !== CHARGE) {
       try {
