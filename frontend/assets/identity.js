@@ -15,10 +15,31 @@
     location.href = 'index.html';
   };
 
+  // Signed out: every page still needs a VISIBLE way in. The nav link list is
+  // display:none on phones, so we plant a Sign In button in the header itself
+  // (next to the CTA) wherever one isn't already present.
+  const addSignInEntry = () => {
+    if (/login\.html|signup\.html/i.test(location.pathname)) return;  // page IS the way in
+    const header = document.querySelector('nav');
+    if (!header) return;
+    let nav = header.querySelector('.nav-right');
+    let before = null;
+    if (!nav) {
+      const cta = header.querySelector('.nav-cta, a[href$="studio.html"]');
+      if (cta && cta.parentElement) { nav = cta.parentElement; before = cta; }
+    }
+    if (!nav || nav.querySelector('a[href$="login.html"], a[href$="signup.html"]')) return;
+    const a = document.createElement('a');
+    a.href = 'login.html';
+    a.textContent = 'Sign In';
+    a.style.cssText = 'display:inline-flex;align-items:center;padding:.5rem .95rem;border:1px solid var(--stroke-bright,#3b3b52);border-radius:10px;color:var(--text,#ececf4);text-decoration:none;font-weight:700;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap';
+    nav.insertBefore(a, before || nav.firstChild);
+  };
+
   const run = () => {
     let p = {};
     try { p = JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (e) { return; }
-    if (!(p.displayName || p.avatar || p.handle)) return;
+    if (!(p.displayName || p.avatar || p.handle)) { addSignInEntry(); return; }
     let nav = document.querySelector('.nav-right');
     let before = null;
     if (!nav) {

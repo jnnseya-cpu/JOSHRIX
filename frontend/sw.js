@@ -4,7 +4,7 @@
  * cache-first for versioned static assets; network-first with cache
  * fallback for pages, so the app opens instantly and survives offline.
  */
-const VERSION = 'jx-v10';
+const VERSION = 'jx-v11';
 // Clean URLs only: Vercel cleanUrls 308-redirects /x.html → /x, and a cached
 // redirected response served for a navigation makes Chrome throw — so we cache
 // the canonical paths, and installs never fail on one missing page.

@@ -1,4 +1,13 @@
 /* JOSHRIX Studio — shared page behavior: starfield, reveals, active nav */
+/* Site-wide account presence: every page must show the account chip (signed in)
+   or a Sign In button (signed out) — load identity.js wherever the page didn't. */
+(() => {
+  if (!window.__jxIdentity && !document.querySelector('script[src*="identity.js"]')) {
+    const s = document.createElement('script');
+    s.src = '/assets/identity.js';
+    document.head.appendChild(s);
+  }
+})();
 (() => {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
