@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-29.38";
+export const BUILD_ID = "2026-07-29.39";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -187,6 +187,21 @@ export const FORGE_MIN_CHARGE = 40;             // metered floor when the Code A
 export const ENGINE_BUILD_CHARGE = 60;          // flat platform charge when only the engine built
 export const ENHANCE_HOLD = 500;                // HOLD per enhance pass — settled to metered 4x actual
 
+/** The serverless function dies hard at 300s — a generation that runs past it
+ *  drops the connection and the creator sees "Code Agent unreachable" with no
+ *  response at all. Abort the model stream at 240s instead: the caller catches
+ *  the error, ships the guaranteed engine build, and settles the small flat
+ *  charge — a playable answer ALWAYS comes back inside the platform ceiling. */
+const GENERATION_DEADLINE_MS = 240_000;
+async function finishWithinDeadline(stream: ReturnType<Anthropic["messages"]["stream"]>): Promise<Anthropic.Message> {
+  const killer = setTimeout(() => { try { stream.abort(); } catch { /* already done */ } }, GENERATION_DEADLINE_MS);
+  try {
+    return await stream.finalMessage();
+  } finally {
+    clearTimeout(killer);
+  }
+}
+
 /** Polish Agent: take a working build and raise its production value. Each pass is
  *  metered at 4x — creators stack passes without limit to push fidelity ever higher. */
 export async function enhanceGameHtml(
@@ -204,7 +219,7 @@ export async function enhanceGameHtml(
       content: `Creator's enhancement notes: ${opts.notes?.slice(0, 2000) || "(none — apply your full fidelity bar)"}\nLanguage of player-facing text: ${opts.language && opts.language !== "auto" ? opts.language : "keep the file's current language"}\n\nCurrent game file:\n${html}`,
     }],
   });
-  const msg = await stream.finalMessage();
+  const msg = await finishWithinDeadline(stream);
   let text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
   const start = text.indexOf("<!DOCTYPE");
   const altStart = start === -1 ? text.indexOf("<html") : start;
@@ -235,7 +250,7 @@ export async function generateGameHtml(
         content: `Creator's game concept:\n${prompt}\n\nBlueprint title: ${opts.title ?? "(derive from concept)"}\nBlueprint summary: ${opts.summary ?? "(none)"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the concept"}`,
       }],
     });
-    const msg = await stream.finalMessage();
+    const msg = await finishWithinDeadline(stream);
     let text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
     const start = text.indexOf("<!DOCTYPE");
     const altStart = start === -1 ? text.indexOf("<html") : start;

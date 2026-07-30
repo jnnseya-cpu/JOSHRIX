@@ -714,7 +714,7 @@ $('btnForge').addEventListener('click', () => {
       const j = await r.json().catch(() => null);
       if (r.ok && j && j.html) { realBuild = j; }
       else { realBuildErr = (j && (j.error + (j.detail ? ' — ' + j.detail : ''))) || ('HTTP ' + r.status); }
-    } catch (e) { realBuildErr = 'offline — Code Agent unreachable'; }
+    } catch (e) { realBuildErr = 'the connection dropped mid-forge — any unused hold settles back automatically'; }
   })();
   $('qaRow').style.display = 'none';
   AGENTS.forEach((a, i) => {
@@ -843,7 +843,7 @@ async function renderPlaytest() {
     $('playCopyTitle').textContent = '⚠ This is NOT your game';
     $('playCopyBody').innerHTML = 'Your build did not come back' + (realBuildErr ? ' (<b>' + realBuildErr + '</b>)' : '') +
       ' — the game on the left is the platform\'s demo so the flow stays testable. <b>Do not publish this.</b> Go back and press Forge again' +
-      (realBuildErr && realBuildErr.indexOf('offline') === -1 ? ' — rich concepts can need a second attempt.' : '.');
+      (realBuildErr ? ' — rich concepts can need a second attempt.' : '.');
     if (realBuildErr) {
       $('protoNote4').style.display = 'block';
       $('protoNote4').innerHTML = '⚠ Code Agent: ' + realBuildErr + ' — showing the platform demo build instead. Forge again to retry.';
