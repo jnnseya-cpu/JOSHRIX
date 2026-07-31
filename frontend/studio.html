@@ -854,9 +854,12 @@ async function renderPlaytest() {
     $('playCopyTitle').textContent = '🎮 Play Your Build — Live Now';
     $('playCopyBody').textContent = 'The game on the left is your real build, running right now and visible only to you. Controls are explained on the game\'s own title screen.';
     $('protoNote4').style.display = 'block';
+    var bespokeWhy = realBuild.bespokeError
+      ? '<br><span style="opacity:.8;font-size:.85em">Why: ' + String(realBuild.bespokeError).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>'
+      : '';
     $('protoNote4').innerHTML = (realBuild.provider && realBuild.provider !== 'engine')
       ? '✦ <b>Bespoke build</b> (' + realBuild.provider + '): the Code Agent wrote this game from your concept, live. Not happy? Refine Concept regenerates it.'
-      : '⚠ <b>Engine build — NOT your concept:</b> the bespoke AI build did not come back this run, so the guaranteed engine game is standing in. Press <b>Refine Concept → Forge</b> to retry the bespoke build.';
+      : '⚠ <b>Engine build — NOT your concept:</b> the bespoke AI build did not come back this run, so the guaranteed engine game is standing in. Press <b>Refine Concept → Forge</b> to retry the bespoke build.' + bespokeWhy;
     if (!realBuildCharged) {
       realBuildCharged = true;
       if (typeof realBuild.balanceAfter === 'number') syncBalance(realBuild.balanceAfter);

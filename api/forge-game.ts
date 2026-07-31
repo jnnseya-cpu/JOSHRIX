@@ -92,6 +92,7 @@ export default async function handler(req: any, res: any) {
     let provider = "engine";
     let fallbackHtml: string | undefined;
     let aiUsage: { inputTokens: number; outputTokens: number } | undefined;
+    let bespokeError: string | undefined;
     try {
       const ai = await generateGameHtml(prompt, { title, summary, language, mode: is3d ? "3d" : "2d" });
       // any REAL provider build ships as bespoke (claude/gemini/openai); the
@@ -102,7 +103,11 @@ export default async function handler(req: any, res: any) {
         fallbackHtml = engineHtml;
         aiUsage = ai.usage;
       }
-    } catch { /* every provider failed or timed out — the engine build ships instead */ }
+    } catch (err: any) {
+      // every provider failed — the engine build ships, but the WHY travels with
+      // it so the Studio can name the exact per-provider failure instead of guessing
+      bespokeError = String(err?.message ?? err).slice(0, 600);
+    }
     // METERED SETTLEMENT (business model: charge = 4x the AI provider cost of THIS
     // run, from actual token usage). The upfront debit was only a hold:
     //   bespoke shipped  -> 4x metered cost (floor FORGE_MIN_CHARGE)
@@ -132,6 +137,7 @@ export default async function handler(req: any, res: any) {
     }
     const body = {
       html, provider, acuCharge: settledCharge,
+      ...(bespokeError ? { bespokeError } : {}),
       ...(fallbackHtml ? { fallbackHtml } : {}),
       ...(forgeId ? { forgeId } : {}),
       ...(balanceAfter !== null ? { balanceAfter } : {}),

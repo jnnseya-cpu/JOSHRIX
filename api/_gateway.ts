@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-29.47";
+export const BUILD_ID = "2026-07-29.48";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -253,8 +253,11 @@ function extractHtml(text: string): string {
   if (altStart === -1) throw new Error("model returned no HTML document");
   let out = text.slice(start === -1 ? altStart : start);
   const end = out.lastIndexOf("</html>");
-  if (end !== -1) out = out.slice(0, end + 7);
-  return out;
+  // No closing tag = the reply was cut off mid-file; shipping it means broken JS
+  // and a dead START button. Treat truncation as a provider failure so the chain
+  // falls through to the next provider (or the engine) instead.
+  if (end === -1) throw new Error("model reply truncated (no closing </html>)");
+  return out.slice(0, end + 7);
 }
 
 const PROVIDER_TIMEOUT_MS = 200_000;
@@ -271,9 +274,10 @@ async function geminiGenerate(system: string, user: string, maxTokens: number): 
     }),
     signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   });
-  if (!r.ok) throw new Error(`Gemini HTTP ${r.status}`);
-  const j: any = await r.json();
-  const text = (j.candidates?.[0]?.content?.parts || []).map((p: any) => p.text || "").join("");
+  const j: any = await r.json().catch(() => null);
+  if (!r.ok) throw new Error(`Gemini HTTP ${r.status}: ${String(j?.error?.message ?? "").slice(0, 200)}`);
+  const text = (j?.candidates?.[0]?.content?.parts || []).map((p: any) => p.text || "").join("");
+  if (!text) throw new Error(`Gemini empty reply (finishReason: ${j?.candidates?.[0]?.finishReason ?? "none"})`);
   const u = j.usageMetadata;
   return {
     html: extractHtml(text),
@@ -294,9 +298,10 @@ async function openaiGenerate(system: string, user: string, maxTokens: number): 
     }),
     signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   });
-  if (!r.ok) throw new Error(`OpenAI HTTP ${r.status}`);
-  const j: any = await r.json();
-  const text = j.choices?.[0]?.message?.content || "";
+  const j: any = await r.json().catch(() => null);
+  if (!r.ok) throw new Error(`OpenAI HTTP ${r.status}: ${String(j?.error?.message ?? "").slice(0, 200)}`);
+  const text = j?.choices?.[0]?.message?.content || "";
+  if (!text) throw new Error(`OpenAI empty reply (finish_reason: ${j?.choices?.[0]?.finish_reason ?? "none"})`);
   const u = j.usage;
   return {
     html: extractHtml(text),
@@ -315,6 +320,7 @@ export async function generateGameHtml(
   // MULTI-PROVIDER CHAIN — no single vendor may block a creator's game.
   // Claude first (best code quality), then Gemini, then OpenAI; whichever
   // answers first with a complete file ships as the bespoke build.
+  const errors: string[] = [];
   if (process.env.ANTHROPIC_API_KEY) {
     try {
       const anthropic = new Anthropic();
@@ -330,22 +336,22 @@ export async function generateGameHtml(
         html: extractHtml(text), provider: "claude",
         usage: { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens },
       };
-    } catch { /* fall through to the next provider */ }
+    } catch (e: any) { errors.push("claude: " + String(e?.message ?? e)); }
   }
   if (process.env.GEMINI_API_KEY) {
     try {
       const g = await geminiGenerate(system, userMsg, maxTokens);
       return { html: g.html, provider: "gemini", usage: g.usage };
-    } catch { /* fall through */ }
+    } catch (e: any) { errors.push("gemini: " + String(e?.message ?? e)); }
   }
   if (process.env.OPENAI_API_KEY) {
     try {
       const o = await openaiGenerate(system, userMsg, maxTokens);
       return { html: o.html, provider: "openai", usage: o.usage };
-    } catch { /* fall through */ }
+    } catch (e: any) { errors.push("openai: " + String(e?.message ?? e)); }
   }
   if (process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY) {
-    throw new Error("all configured AI providers failed this run");
+    throw new Error(errors.length ? errors.join(" | ") : "all configured AI providers failed this run");
   }
   // demo fallback (no AI key): a tiny real playable game so the flow stays testable offline
   const title = (opts.title || "Your Game").replace(/[<>&]/g, "");
