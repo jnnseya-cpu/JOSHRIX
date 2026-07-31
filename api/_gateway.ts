@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-31.50";
+export const BUILD_ID = "2026-07-31.51";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -231,18 +231,22 @@ export async function enhanceGameHtml(
 ): Promise<{ html: string; provider: string; usage?: TokenUsage }> {
   const userMsg = `Creator's enhancement notes: ${opts.notes?.slice(0, 2000) || "(none — apply your full fidelity bar)"}\nLanguage of player-facing text: ${opts.language && opts.language !== "auto" ? opts.language : "keep the file's current language"}\n\nCurrent game file:\n${html}`;
   const errors: string[] = [];
-  // Same multi-provider chain as the forge — a polish pass must not depend on one vendor.
-  if (process.env.ANTHROPIC_API_KEY) {
-    try {
-      const c = await claudeGenerate(ENHANCE_SYSTEM, userMsg, 15000);
-      return { html: c.html, provider: "claude", usage: c.usage };
-    } catch (e: any) { errors.push("claude: " + String(e?.message ?? e)); }
-  }
+  // Same multi-provider chain as the forge — a polish pass must not depend on one
+  // vendor. A polish pass returns the WHOLE improved file, so output budgets sit
+  // above forge budgets (a truncated reply is treated as a failure, never shipped);
+  // Gemini leads because the full-size probe shows it completing fast and whole,
+  // and gpt-4o stays under its 16384 output cap.
   if (process.env.GEMINI_API_KEY) {
     try {
-      const g = await geminiGenerate(ENHANCE_SYSTEM, userMsg, 15000);
+      const g = await geminiGenerate(ENHANCE_SYSTEM, userMsg, 20000);
       return { html: g.html, provider: "gemini", usage: g.usage };
     } catch (e: any) { errors.push("gemini: " + String(e?.message ?? e)); }
+  }
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      const c = await claudeGenerate(ENHANCE_SYSTEM, userMsg, 20000);
+      return { html: c.html, provider: "claude", usage: c.usage };
+    } catch (e: any) { errors.push("claude: " + String(e?.message ?? e)); }
   }
   if (process.env.OPENAI_API_KEY) {
     try {
@@ -357,31 +361,35 @@ export async function generateGameHtml(
   prompt: string,
   opts: { title?: string; summary?: string; language?: string; mode?: string } = {},
 ): Promise<{ html: string; provider: string; usage?: TokenUsage }> {
-  const system = opts.mode === "3d" ? GAME_SYSTEM_3D : GAME_SYSTEM;
-  const maxTokens = opts.mode === "3d" ? 15000 : 12000;
+  const is3d = opts.mode === "3d";
+  const system = is3d ? GAME_SYSTEM_3D : GAME_SYSTEM;
   const userMsg = `Creator's game concept:\n${prompt}\n\nBlueprint title: ${opts.title ?? "(derive from concept)"}\nBlueprint summary: ${opts.summary ?? "(none)"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the concept"}`;
 
-  // MULTI-PROVIDER CHAIN — no single vendor may block a creator's game.
-  // Claude first (best code quality), then Gemini, then OpenAI; whichever
-  // answers first with a complete file ships as the bespoke build.
+  // Per-provider output budgets, sized from the full-size diagnostic probe:
+  // Claude writes past 12k tokens and truncates (= broken game), so it gets the
+  // headroom it demonstrably needs; Gemini finishes a complete game in ~9k;
+  // gpt-4o's hard output cap is 16384 so it must stay under that.
+  const claudeMax = is3d ? 20000 : 16000;
+  const geminiMax = is3d ? 15000 : 12000;
+  const openaiMax = is3d ? 15000 : 12000;
+
+  // MULTI-PROVIDER CHAIN — no single vendor may block a creator's game; whichever
+  // answers first with a COMPLETE file ships as the bespoke build.
+  // 2D leads with Gemini: the probe shows it finishing a complete full-size game
+  // in ~35s, so creators get their bespoke build fast. 3D (the premium lane)
+  // leads with Claude, the strongest coder, now with real output headroom.
+  type Cand = { name: string; enabled: boolean; run: () => Promise<{ html: string; usage?: TokenUsage }> };
+  const claude: Cand = { name: "claude", enabled: !!process.env.ANTHROPIC_API_KEY, run: () => claudeGenerate(system, userMsg, claudeMax) };
+  const gemini: Cand = { name: "gemini", enabled: !!process.env.GEMINI_API_KEY, run: () => geminiGenerate(system, userMsg, geminiMax) };
+  const openai: Cand = { name: "openai", enabled: !!process.env.OPENAI_API_KEY, run: () => openaiGenerate(system, userMsg, openaiMax) };
+  const chain = is3d ? [claude, gemini, openai] : [gemini, claude, openai];
   const errors: string[] = [];
-  if (process.env.ANTHROPIC_API_KEY) {
+  for (const c of chain) {
+    if (!c.enabled) continue;
     try {
-      const c = await claudeGenerate(system, userMsg, maxTokens);
-      return { html: c.html, provider: "claude", usage: c.usage };
-    } catch (e: any) { errors.push("claude: " + String(e?.message ?? e)); }
-  }
-  if (process.env.GEMINI_API_KEY) {
-    try {
-      const g = await geminiGenerate(system, userMsg, maxTokens);
-      return { html: g.html, provider: "gemini", usage: g.usage };
-    } catch (e: any) { errors.push("gemini: " + String(e?.message ?? e)); }
-  }
-  if (process.env.OPENAI_API_KEY) {
-    try {
-      const o = await openaiGenerate(system, userMsg, maxTokens);
-      return { html: o.html, provider: "openai", usage: o.usage };
-    } catch (e: any) { errors.push("openai: " + String(e?.message ?? e)); }
+      const r = await c.run();
+      return { html: r.html, provider: c.name, usage: r.usage };
+    } catch (e: any) { errors.push(c.name + ": " + String(e?.message ?? e)); }
   }
   if (process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY) {
     throw new Error(errors.length ? errors.join(" | ") : "all configured AI providers failed this run");
