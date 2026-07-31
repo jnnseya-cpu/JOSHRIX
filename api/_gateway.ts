@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-29.48";
+export const BUILD_ID = "2026-07-29.49";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -270,7 +270,14 @@ async function geminiGenerate(system: string, user: string, maxTokens: number): 
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
       contents: [{ role: "user", parts: [{ text: user }] }],
-      generationConfig: { maxOutputTokens: maxTokens, temperature: 0.9 },
+      generationConfig: {
+        maxOutputTokens: maxTokens,
+        temperature: 0.9,
+        // Gemini 2.5 Flash spends output budget on internal "thinking" by default —
+        // fine for a 16-token probe, fatal for a 12k-token game file (the reply gets
+        // cut off mid-file). Flash allows disabling it; Pro does not (min budget 128).
+        ...(model.includes("flash") ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
+      },
     }),
     signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   });
