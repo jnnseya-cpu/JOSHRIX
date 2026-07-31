@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-31.51";
+export const BUILD_ID = "2026-07-31.52";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -335,7 +335,6 @@ export async function openaiGenerate(system: string, user: string, maxTokens: nu
  */
 export async function fullSizeProbe(): Promise<Record<string, any>> {
   const userMsg = `Creator's game concept:\nA vibrant arcade game: catch falling stars in a basket before they hit the ground. 3 lives, speed rises each level, combo scoring.\n\nBlueprint title: Star Catcher (diagnostic probe)\nBlueprint summary: full-size provider diagnostic — write the complete game as normal\nCreation language: English`;
-  const MAX = 12000;
   const run = async (fn: () => Promise<{ html: string; usage?: TokenUsage }>) => {
     const t0 = Date.now();
     try {
@@ -349,10 +348,12 @@ export async function fullSizeProbe(): Promise<Record<string, any>> {
       return { ok: false, ms: Date.now() - t0, error: String(e?.message ?? e).slice(0, 400) };
     }
   };
+  // Budgets mirror the live 2D forge chain exactly — a probe that tests different
+  // numbers than production answers a different question.
   const [claude, gemini, openai] = await Promise.all([
-    process.env.ANTHROPIC_API_KEY ? run(() => claudeGenerate(GAME_SYSTEM, userMsg, MAX)) : Promise.resolve({ ok: false, error: "no ANTHROPIC_API_KEY" }),
-    process.env.GEMINI_API_KEY ? run(() => geminiGenerate(GAME_SYSTEM, userMsg, MAX)) : Promise.resolve({ ok: false, error: "no GEMINI_API_KEY" }),
-    process.env.OPENAI_API_KEY ? run(() => openaiGenerate(GAME_SYSTEM, userMsg, MAX)) : Promise.resolve({ ok: false, error: "no OPENAI_API_KEY" }),
+    process.env.ANTHROPIC_API_KEY ? run(() => claudeGenerate(GAME_SYSTEM, userMsg, 16000)) : Promise.resolve({ ok: false, error: "no ANTHROPIC_API_KEY" }),
+    process.env.GEMINI_API_KEY ? run(() => geminiGenerate(GAME_SYSTEM, userMsg, 12000)) : Promise.resolve({ ok: false, error: "no GEMINI_API_KEY" }),
+    process.env.OPENAI_API_KEY ? run(() => openaiGenerate(GAME_SYSTEM, userMsg, 12000)) : Promise.resolve({ ok: false, error: "no OPENAI_API_KEY" }),
   ]);
   return { claude, gemini, openai };
 }
