@@ -172,6 +172,14 @@ export async function ensureGameSchema(sql: Sql) {
     created_at timestamptz NOT NULL DEFAULT now(),
     refunded_at timestamptz
   )`;
+  await sql`CREATE TABLE IF NOT EXISTS forge_log (
+    id bigserial PRIMARY KEY,
+    provider text NOT NULL,
+    mode text,
+    ms integer,
+    error text,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`;
   await sql`CREATE TABLE IF NOT EXISTS dist_requests (
     id bigserial PRIMARY KEY,
     game_id text,
@@ -238,6 +246,19 @@ export async function saveForgeResult(sql: Sql, ticket: string, walletId: string
 export async function getForgeResult(sql: Sql, ticket: string) {
   const rows = (await sql`SELECT wallet_id, payload FROM forge_results WHERE ticket = ${ticket}`) as Array<{ wallet_id: string | null; payload: string }>;
   return rows[0] ?? null;
+}
+
+/**
+ * Server-side forge history: which provider shipped each build and the exact
+ * per-provider error text when every AI failed — so diagnosing a bad run never
+ * depends on what the creator's browser happened to display.
+ */
+export async function recordForgeLog(sql: Sql, e: { provider: string; mode?: string | null; ms?: number | null; error?: string | null }) {
+  await sql`INSERT INTO forge_log (provider, mode, ms, error) VALUES (${e.provider}, ${e.mode ?? null}, ${e.ms ?? null}, ${e.error ?? null})`;
+}
+
+export async function listForgeLog(sql: Sql, limit = 20) {
+  return (await sql`SELECT provider, mode, ms, error, created_at FROM forge_log ORDER BY id DESC LIMIT ${limit}`) as any[];
 }
 
 /**

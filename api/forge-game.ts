@@ -9,7 +9,7 @@
 import { randomUUID } from "crypto";
 import { generateGameHtml, acuChargeForUsage, FORGE_GAME_ACU_CHARGE, FORGE_GAME_3D_ACU_CHARGE, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE } from "./_gateway";
 import { buildPlayableGame } from "./_engine";
-import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge, saveForgeResult } from "./_ledger";
+import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge, saveForgeResult, recordForgeLog } from "./_ledger";
 import type { GameBlueprint } from "../shared/contracts";
 
 /** Coerce whatever the client sends as a blueprint into the shape the engine needs. */
@@ -93,6 +93,7 @@ export default async function handler(req: any, res: any) {
     let fallbackHtml: string | undefined;
     let aiUsage: { inputTokens: number; outputTokens: number } | undefined;
     let bespokeError: string | undefined;
+    const genStart = Date.now();
     try {
       const ai = await generateGameHtml(prompt, { title, summary, language, mode: is3d ? "3d" : "2d" });
       // any REAL provider build ships as bespoke (claude/gemini/openai); the
@@ -107,6 +108,12 @@ export default async function handler(req: any, res: any) {
       // every provider failed — the engine build ships, but the WHY travels with
       // it so the Studio can name the exact per-provider failure instead of guessing
       bespokeError = String(err?.message ?? err).slice(0, 600);
+    }
+    // Server-side history: every forge outcome lands in /api/forge-log with the
+    // provider that shipped (or 'engine' + the aggregated error) — diagnosable
+    // from one URL, independent of what the creator's browser shows.
+    if (sql) {
+      try { await recordForgeLog(sql, { provider, mode: is3d ? "3d" : "2d", ms: Date.now() - genStart, error: bespokeError ?? null }); } catch { /* best-effort */ }
     }
     // METERED SETTLEMENT (business model: charge = 4x the AI provider cost of THIS
     // run, from actual token usage). The upfront debit was only a hold:

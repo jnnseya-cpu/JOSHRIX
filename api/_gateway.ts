@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-29.49";
+export const BUILD_ID = "2026-07-31.50";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -205,6 +205,24 @@ async function finishWithinDeadline(stream: ReturnType<Anthropic["messages"]["st
   }
 }
 
+/** Claude generation — the primary Code Agent, shared by forge, enhance, and the
+ *  full-size diagnostic probe so all three exercise the exact same call. */
+export async function claudeGenerate(system: string, user: string, maxTokens: number): Promise<{ html: string; usage?: TokenUsage }> {
+  const anthropic = new Anthropic();
+  const stream = anthropic.messages.stream({
+    model: "claude-sonnet-5",   // Code Agent: fast frontier coder; Idea Agent stays on Opus
+    max_tokens: maxTokens,
+    system,
+    messages: [{ role: "user", content: user }],
+  });
+  const msg = await finishWithinDeadline(stream);
+  const text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
+  return {
+    html: extractHtml(text),
+    usage: { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens },
+  };
+}
+
 /** Polish Agent: take a working build and raise its production value. Each pass is
  *  metered at 4x — creators stack passes without limit to push fidelity ever higher. */
 export async function enhanceGameHtml(
@@ -216,19 +234,8 @@ export async function enhanceGameHtml(
   // Same multi-provider chain as the forge — a polish pass must not depend on one vendor.
   if (process.env.ANTHROPIC_API_KEY) {
     try {
-      const anthropic = new Anthropic();
-      const stream = anthropic.messages.stream({
-        model: "claude-sonnet-5",
-        max_tokens: 15000,
-        system: ENHANCE_SYSTEM,
-        messages: [{ role: "user", content: userMsg }],
-      });
-      const msg = await finishWithinDeadline(stream);
-      const text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
-      return {
-        html: extractHtml(text), provider: "claude",
-        usage: { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens },
-      };
+      const c = await claudeGenerate(ENHANCE_SYSTEM, userMsg, 15000);
+      return { html: c.html, provider: "claude", usage: c.usage };
     } catch (e: any) { errors.push("claude: " + String(e?.message ?? e)); }
   }
   if (process.env.GEMINI_API_KEY) {
@@ -263,7 +270,7 @@ function extractHtml(text: string): string {
 const PROVIDER_TIMEOUT_MS = 200_000;
 
 /** Gemini REST fallback (activates when GEMINI_API_KEY is set in Vercel). */
-async function geminiGenerate(system: string, user: string, maxTokens: number): Promise<{ html: string; usage?: TokenUsage }> {
+export async function geminiGenerate(system: string, user: string, maxTokens: number): Promise<{ html: string; usage?: TokenUsage }> {
   const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
   const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
     method: "POST", headers: { "Content-Type": "application/json" },
@@ -293,7 +300,7 @@ async function geminiGenerate(system: string, user: string, maxTokens: number): 
 }
 
 /** OpenAI REST fallback (activates when OPENAI_API_KEY is set in Vercel). */
-async function openaiGenerate(system: string, user: string, maxTokens: number): Promise<{ html: string; usage?: TokenUsage }> {
+export async function openaiGenerate(system: string, user: string, maxTokens: number): Promise<{ html: string; usage?: TokenUsage }> {
   const model = process.env.OPENAI_MODEL || "gpt-4o";
   const r = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -316,6 +323,36 @@ async function openaiGenerate(system: string, user: string, maxTokens: number): 
   };
 }
 
+/**
+ * Full-size diagnostic: make EVERY configured provider write a complete real game
+ * at live forge size, in parallel, and report exactly what came back. The tiny
+ * "say OK" self-test can't see the failures that only appear at real generation
+ * size — token-budget truncation, deadline aborts, output limits. This can.
+ */
+export async function fullSizeProbe(): Promise<Record<string, any>> {
+  const userMsg = `Creator's game concept:\nA vibrant arcade game: catch falling stars in a basket before they hit the ground. 3 lives, speed rises each level, combo scoring.\n\nBlueprint title: Star Catcher (diagnostic probe)\nBlueprint summary: full-size provider diagnostic — write the complete game as normal\nCreation language: English`;
+  const MAX = 12000;
+  const run = async (fn: () => Promise<{ html: string; usage?: TokenUsage }>) => {
+    const t0 = Date.now();
+    try {
+      const r = await fn();
+      return {
+        ok: true, ms: Date.now() - t0, bytes: r.html.length,
+        hasCanvas: r.html.includes("<canvas"),
+        outputTokens: r.usage?.outputTokens ?? null,
+      };
+    } catch (e: any) {
+      return { ok: false, ms: Date.now() - t0, error: String(e?.message ?? e).slice(0, 400) };
+    }
+  };
+  const [claude, gemini, openai] = await Promise.all([
+    process.env.ANTHROPIC_API_KEY ? run(() => claudeGenerate(GAME_SYSTEM, userMsg, MAX)) : Promise.resolve({ ok: false, error: "no ANTHROPIC_API_KEY" }),
+    process.env.GEMINI_API_KEY ? run(() => geminiGenerate(GAME_SYSTEM, userMsg, MAX)) : Promise.resolve({ ok: false, error: "no GEMINI_API_KEY" }),
+    process.env.OPENAI_API_KEY ? run(() => openaiGenerate(GAME_SYSTEM, userMsg, MAX)) : Promise.resolve({ ok: false, error: "no OPENAI_API_KEY" }),
+  ]);
+  return { claude, gemini, openai };
+}
+
 export async function generateGameHtml(
   prompt: string,
   opts: { title?: string; summary?: string; language?: string; mode?: string } = {},
@@ -330,19 +367,8 @@ export async function generateGameHtml(
   const errors: string[] = [];
   if (process.env.ANTHROPIC_API_KEY) {
     try {
-      const anthropic = new Anthropic();
-      const stream = anthropic.messages.stream({
-        model: "claude-sonnet-5",   // Code Agent: fast frontier coder; Idea Agent stays on Opus
-        max_tokens: maxTokens,
-        system,
-        messages: [{ role: "user", content: userMsg }],
-      });
-      const msg = await finishWithinDeadline(stream);
-      const text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
-      return {
-        html: extractHtml(text), provider: "claude",
-        usage: { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens },
-      };
+      const c = await claudeGenerate(system, userMsg, maxTokens);
+      return { html: c.html, provider: "claude", usage: c.usage };
     } catch (e: any) { errors.push("claude: " + String(e?.message ?? e)); }
   }
   if (process.env.GEMINI_API_KEY) {
