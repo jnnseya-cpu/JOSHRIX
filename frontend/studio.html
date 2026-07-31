@@ -580,6 +580,36 @@ let refinePrompt = null;   // the concept text the refine discount belongs to
 $('prompt').addEventListener('input', () => {
   if (refining && refinePrompt !== null && $('prompt').value !== refinePrompt) refining = false;
 });
+/* Concept autosave — everything on this form persists across refreshes and
+   crashes until the creator types a new concept over it. */
+const DRAFT_KEY = 'jx.conceptDraft';
+const setSel = (id, v) => {
+  const el = $(id);
+  if (el && typeof v === 'string' && [...el.options].some(o => o.value === v)) el.value = v;
+};
+try {
+  const d = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+  if (d && typeof d.prompt === 'string' && d.prompt.trim()) {
+    $('prompt').value = d.prompt;
+    setSel('selType', d.type); setSel('selPlat', d.platform);
+    setSel('selScope', d.scope); setSel('selLang', d.language);
+    if ($('chk3d') && typeof d.is3d === 'boolean') $('chk3d').checked = d.is3d;
+  }
+} catch { /* corrupt draft — start clean */ }
+const saveDraft = () => {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({
+      prompt: $('prompt').value,
+      type: $('selType').value, platform: $('selPlat').value,
+      scope: $('selScope').value, language: $('selLang').value,
+      ...($('chk3d') ? { is3d: $('chk3d').checked } : {}),
+    }));
+  } catch { /* storage full/blocked — autosave is best-effort */ }
+};
+$('prompt').addEventListener('input', saveDraft);
+['selType', 'selPlat', 'selScope', 'selLang', 'chk3d'].forEach(id => {
+  if ($(id)) $(id).addEventListener('change', saveDraft);
+});
 updateCount();
 $('btnBlueprint').addEventListener('click', async () => {
   const btn = $('btnBlueprint');
@@ -1024,6 +1054,7 @@ $('btnRemix').addEventListener('click', () => {
   jxTrack('remix.forked', { parent: 'penalty-king', royalty: 0.3 });
   $('lineageNote').style.display = 'block';
   $('prompt').value = 'Remix of Penalty King: keep the five-shot penalty core and rising keeper AI, but set it in ';
+  saveDraft(); updateCount();
   $('btnBlueprint').disabled = false;
   $('btnBlueprint').textContent = '⚡ Generate Remix Blueprint';
   $('bpHint').textContent = 'Remix fork — lineage registered to JX-IP-00921 · you keep 70% of creator revenue';
