@@ -3,7 +3,7 @@
  * Body: { walletId?, email?, name?, action? }
  *  - no walletId          → creates a fresh TESTER wallet funded with 2,000 ACUs
  *  - walletId             → returns that wallet's live balance (+refreshes identity)
- *  - action: "refill"     → tester wallets only, hardened: only when balance < 300,
+ *  - action: "refill"     → tester wallets only, hardened: only when balance < 1500,
  *                           max once per 6 hours, never lowers a balance, and never
  *                           on a wallet that has ever purchased
  *  - action: "delete"     → tester wallets only; purchased accounts must contact
@@ -44,7 +44,7 @@ export default async function handler(req: any, res: any) {
       if (!walletId) return res.status(400).json({ error: "walletId required for refill" });
       const balance = await refillTesterWallet(sql, walletId, TESTER_GRANT_ACU);
       if (balance === null) {
-        return res.status(403).json({ error: "Refill is for tester wallets only, when the balance is under 300, at most once every 6 hours." });
+        return res.status(403).json({ error: "Refill is for tester wallets only, when the balance is under 1,500, at most once every 6 hours." });
       }
       return res.status(200).json({ mode: "live", walletId, balance, category: "tester", refilled: true });
     }

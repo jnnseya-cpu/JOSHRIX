@@ -204,14 +204,17 @@ export async function updateWalletIdentity(sql: Sql, id: string, opts: { name?: 
 
 /**
  * Refill: TESTER wallets only, and hardened against free-AI farming —
- * only when nearly empty (< 300), at most once per 6 hours, never lowers a
- * balance (GREATEST), and never touches wallets that have ever purchased.
+ * only when below a 3D forge hold (< 1500, so a tester is never trapped
+ * unable to test the premium lane), at most once per 6 hours, never lowers
+ * a balance (GREATEST), and never touches wallets that have ever purchased.
+ * The abuse cap is unchanged by the threshold: a refill only tops UP to
+ * 2000, so a tester wallet can never spend more than 2000 ACUs per 6 hours.
  * Returns the new balance, or null when refused.
  */
 export async function refillTesterWallet(sql: Sql, id: string, to = 2000): Promise<number | null> {
   const rows = (await sql`
     UPDATE wallets SET balance = GREATEST(balance, ${to}), last_refill_at = now()
-    WHERE id = ${id} AND category = 'tester' AND balance < 300
+    WHERE id = ${id} AND category = 'tester' AND balance < 1500
       AND (last_refill_at IS NULL OR last_refill_at < now() - interval '6 hours')
     RETURNING balance`) as Array<{ balance: number }>;
   return rows.length ? Number(rows[0].balance) : null;
