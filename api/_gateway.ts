@@ -20,7 +20,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-07-31.52";
+export const BUILD_ID = "2026-07-31.53";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -257,6 +257,13 @@ export async function enhanceGameHtml(
   throw new Error(errors.length ? errors.join(" | ") : "no AI provider configured");
 }
 
+/** Does this build actually render a game? 2D games carry a literal <canvas>
+ *  tag; 3D games create their canvas from JavaScript (three.js WebGLRenderer),
+ *  so demanding the tag alone silently rejects every valid 3D build. */
+export function looksPlayable(html: string): boolean {
+  return html.includes("<canvas") || html.includes("WebGLRenderer") || html.includes("three.min.js");
+}
+
 /** Pull a complete HTML document out of a model reply (or throw). */
 function extractHtml(text: string): string {
   const start = text.indexOf("<!DOCTYPE");
@@ -370,7 +377,7 @@ export async function generateGameHtml(
   // Claude writes past 12k tokens and truncates (= broken game), so it gets the
   // headroom it demonstrably needs; Gemini finishes a complete game in ~9k;
   // gpt-4o's hard output cap is 16384 so it must stay under that.
-  const claudeMax = is3d ? 20000 : 16000;
+  const claudeMax = is3d ? 18000 : 16000;
   const geminiMax = is3d ? 15000 : 12000;
   const openaiMax = is3d ? 15000 : 12000;
 
@@ -385,8 +392,14 @@ export async function generateGameHtml(
   const openai: Cand = { name: "openai", enabled: !!process.env.OPENAI_API_KEY, run: () => openaiGenerate(system, userMsg, openaiMax) };
   const chain = is3d ? [claude, gemini, openai] : [gemini, claude, openai];
   const errors: string[] = [];
+  // Whole-chain time budget: the serverless function dies hard at 300s, and a
+  // reply must still be built, settled, and persisted after generation. Skip
+  // remaining providers rather than start one that can't finish in time.
+  const chainStart = Date.now();
+  const CHAIN_BUDGET_MS = 230_000;
   for (const c of chain) {
     if (!c.enabled) continue;
+    if (Date.now() - chainStart > CHAIN_BUDGET_MS) { errors.push(c.name + ": skipped — forge time budget exhausted"); continue; }
     try {
       const r = await c.run();
       return { html: r.html, provider: c.name, usage: r.usage };

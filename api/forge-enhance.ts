@@ -11,7 +11,7 @@
  * auto-refunds via the forge_charges ledger like any forge.
  */
 import { randomUUID } from "crypto";
-import { enhanceGameHtml, acuChargeForUsage, ENHANCE_HOLD, FORGE_MIN_CHARGE } from "./_gateway";
+import { enhanceGameHtml, looksPlayable, acuChargeForUsage, ENHANCE_HOLD, FORGE_MIN_CHARGE } from "./_gateway";
 import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge } from "./_ledger";
 
 export default async function handler(req: any, res: any) {
@@ -22,8 +22,8 @@ export default async function handler(req: any, res: any) {
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
   const { html, walletId, notes, language } = (req.body ?? {}) as Record<string, string>;
-  if (!html || typeof html !== "string" || !html.includes("<canvas")) {
-    return res.status(400).json({ error: "Body must include the current game `html` (a real build with a canvas)." });
+  if (!html || typeof html !== "string" || !looksPlayable(html)) {
+    return res.status(400).json({ error: "Body must include the current game `html` (a real 2D canvas or 3D WebGL build)." });
   }
   if (html.length > 600_000) {
     return res.status(400).json({ error: "Game file too large to enhance (max 600KB)." });
@@ -52,7 +52,7 @@ export default async function handler(req: any, res: any) {
 
   try {
     const out = await enhanceGameHtml(html, { notes, language });
-    if (out.provider === "demo" || !out.html.includes("<canvas")) {
+    if (out.provider === "demo" || !looksPlayable(out.html)) {
       await refundHold();
       return res.status(502).json({ error: "Polish Agent unavailable or produced no playable file — hold refunded." });
     }

@@ -7,7 +7,7 @@
  * forge charge is debited server-side BEFORE generation and refunded on failure.
  */
 import { randomUUID } from "crypto";
-import { generateGameHtml, acuChargeForUsage, FORGE_GAME_ACU_CHARGE, FORGE_GAME_3D_ACU_CHARGE, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE } from "./_gateway";
+import { generateGameHtml, looksPlayable, acuChargeForUsage, FORGE_GAME_ACU_CHARGE, FORGE_GAME_3D_ACU_CHARGE, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE } from "./_gateway";
 import { buildPlayableGame } from "./_engine";
 import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge, saveForgeResult, recordForgeLog } from "./_ledger";
 import type { GameBlueprint } from "../shared/contracts";
@@ -97,12 +97,17 @@ export default async function handler(req: any, res: any) {
     try {
       const ai = await generateGameHtml(prompt, { title, summary, language, mode: is3d ? "3d" : "2d" });
       // any REAL provider build ships as bespoke (claude/gemini/openai); the
-      // keyless demo build is weaker than the engine, so the engine wins there
-      if (ai.provider !== "demo" && ai.html.includes("<canvas")) {
+      // keyless demo build is weaker than the engine, so the engine wins there.
+      // looksPlayable, not a literal <canvas> check — 3D builds create their
+      // canvas from JavaScript and used to be silently rejected here.
+      if (ai.provider !== "demo" && looksPlayable(ai.html)) {
         html = ai.html;
         provider = ai.provider;
         fallbackHtml = engineHtml;
         aiUsage = ai.usage;
+      } else if (ai.provider !== "demo") {
+        // a complete file came back but doesn't render a game — never reject silently
+        bespokeError = `${ai.provider} returned a complete file with no canvas/WebGL scene — engine shipped instead`;
       }
     } catch (err: any) {
       // every provider failed — the engine build ships, but the WHY travels with
