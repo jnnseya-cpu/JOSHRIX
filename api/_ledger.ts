@@ -287,8 +287,19 @@ export async function claimForgeRefund(sql: Sql, id: string, walletId: string): 
 }
 
 export async function getWallet(sql: Sql, id: string) {
-  const rows = (await sql`SELECT id, balance, category, email, plan FROM wallets WHERE id = ${id}`) as Array<{ id: string; balance: number; category: string; email: string | null; plan: string }>;
+  const rows = (await sql`SELECT id, balance, category, email, name, plan FROM wallets WHERE id = ${id}`) as Array<{ id: string; balance: number; category: string; email: string | null; name: string | null; plan: string }>;
   return rows[0] ?? null;
+}
+
+/** Admin lookup: find wallets by (partial) email or display name, case-insensitive —
+ *  admins know people, not wallet IDs. Exact email matches sort first. */
+export async function findWalletsByIdentity(sql: Sql, q: string, limit = 8) {
+  const like = "%" + q + "%";
+  return (await sql`
+    SELECT id, balance, category, email, name, plan FROM wallets
+    WHERE email ILIKE ${like} OR name ILIKE ${like}
+    ORDER BY (lower(email) = lower(${q})) DESC, created_at DESC
+    LIMIT ${limit}`) as any[];
 }
 
 /** Admin-only: put a wallet on a subscription plan (validated at the endpoint). */

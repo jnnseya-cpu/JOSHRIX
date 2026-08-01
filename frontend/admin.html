@@ -178,9 +178,10 @@
     <button class="btn btn-primary btn-sm" id="btnLoadWallets">⟳ Load Wallets</button>
     <span id="walletsHint" style="font-size:.85rem;color:var(--muted,#9d9db3)">Every tester gets a wallet automatically when they open the Studio — their wallet ID is shown on their Wallet page.</span>
   </div>
+  <input id="walletFilter" placeholder="🔍 Filter loaded wallets by name, email, or ID…" style="display:none;width:100%;max-width:420px;margin-top:1rem;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.55rem .8rem;color:inherit;font-size:.85rem">
   <div id="walletsList" style="display:grid;gap:.6rem;margin-top:1rem"></div>
   <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-top:1rem;border-top:1px solid var(--stroke,#26263a);padding-top:1rem">
-    <input id="grantWid" placeholder="Wallet ID (w-…)" style="flex:1 1 220px;max-width:300px;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.55rem .8rem;color:inherit;font-family:var(--mono,monospace);font-size:.85rem">
+    <input id="grantWid" placeholder="Wallet ID, email, or name" style="flex:1 1 220px;max-width:300px;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.55rem .8rem;color:inherit;font-family:var(--mono,monospace);font-size:.85rem">
     <input id="grantAmt" type="number" min="1" max="100000" value="2000" style="width:110px;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.55rem .8rem;color:inherit">
     <button class="btn btn-ghost btn-sm" id="btnGrant">💠 Grant ACUs</button>
     <span id="grantMsg" style="font-size:.85rem;color:var(--muted,#9d9db3)"></span>
@@ -245,14 +246,34 @@
           });
           list.appendChild(row);
         });
+        // live search over the loaded list — find a person by name, email, or ID
+        var flt = $g('walletFilter');
+        flt.style.display = 'block';
+        if (!flt.dataset.wired) {
+          flt.dataset.wired = '1';
+          flt.addEventListener('input', function(){
+            var q = flt.value.trim().toLowerCase();
+            Array.prototype.forEach.call($g('walletsList').children, function(row){
+              row.style.display = (!q || row.textContent.toLowerCase().indexOf(q) !== -1) ? '' : 'none';
+            });
+          });
+        }
       }).catch(function(){ $g('walletsHint').textContent = '⚠ Could not reach the server'; });
   });
   $g('btnGrant').addEventListener('click', function(){
     var wid = $g('grantWid').value.trim(), amt = parseInt($g('grantAmt').value, 10);
-    if (!wid) { $g('grantMsg').textContent = 'Enter the wallet ID.'; return; }
+    if (!wid) { $g('grantMsg').textContent = 'Enter a wallet ID, email, or name.'; return; }
     $g('grantMsg').textContent = 'Granting…';
     grant(wid, amt, function(err, j){
-      $g('grantMsg').textContent = err ? ('⚠ ' + err) : ('✓ ' + amt.toLocaleString() + ' ACUs granted — new balance ' + Number(j.balance).toLocaleString());
+      if (err && j && j.matches && j.matches.length) {
+        // several people match — show them so the admin can pick the exact wallet
+        $g('grantMsg').innerHTML = '⚠ ' + esc(err) + '<br>' + j.matches.map(function(m){
+          return '• ' + esc(m.name || 'Unnamed') + (m.email ? ' · ' + esc(m.email) : '') + ' · <code style="color:var(--cyan,#22D3EE)">' + esc(m.id) + '</code> · ' + Number(m.balance).toLocaleString() + ' ACU';
+        }).join('<br>');
+        return;
+      }
+      var who = (!err && (j.matchedName || j.matchedEmail)) ? (' to ' + esc(j.matchedName || j.matchedEmail)) : '';
+      $g('grantMsg').innerHTML = err ? ('⚠ ' + esc(err)) : ('✓ ' + amt.toLocaleString() + ' ACUs granted' + who + ' — new balance ' + Number(j.balance).toLocaleString());
     });
   });
 })();
