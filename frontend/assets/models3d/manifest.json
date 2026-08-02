@@ -2,184 +2,740 @@
   "base": "https://www.joshrix.com/assets/models3d/",
   "loader": "https://www.joshrix.com/assets/vendor/GLTFLoader.js",
   "packs": {
-    "wonder": {
-      "license": "CC0-equivalent — JOSHRIX original, procedurally authored in-house",
+    "lib": {
+      "license": "JOSHRIX original — procedurally authored in-house, no third-party rights",
       "style": "stylized low-poly, flat-shaded, vertex colours",
       "models": [
         {
-          "file": "wonder/tree_round_0.glb",
+          "file": "lib/tree_round_0.glb",
           "tags": [
             "tree",
             "nature"
           ],
-          "height": 1.9
+          "height": 2.1,
+          "bytes": 11952
         },
         {
-          "file": "wonder/tree_round_1.glb",
+          "file": "lib/tree_round_1.glb",
           "tags": [
             "tree",
             "nature"
           ],
-          "height": 2
+          "height": 2.1,
+          "bytes": 11948
         },
         {
-          "file": "wonder/tree_round_2.glb",
+          "file": "lib/tree_round_2.glb",
           "tags": [
             "tree",
             "nature"
           ],
-          "height": 2.1
+          "height": 2.1,
+          "bytes": 11944
         },
         {
-          "file": "wonder/tree_pine_0.glb",
-          "tags": [
-            "tree",
-            "pine",
-            "nature"
-          ],
-          "height": 2
-        },
-        {
-          "file": "wonder/tree_pine_1.glb",
+          "file": "lib/tree_pine_0.glb",
           "tags": [
             "tree",
             "pine",
             "nature"
           ],
-          "height": 2
+          "height": 2.4,
+          "bytes": 9708
         },
         {
-          "file": "wonder/rock_0.glb",
+          "file": "lib/tree_pine_1.glb",
+          "tags": [
+            "tree",
+            "pine",
+            "nature"
+          ],
+          "height": 2.4,
+          "bytes": 9708
+        },
+        {
+          "file": "lib/tree_palm.glb",
+          "tags": [
+            "tree",
+            "palm",
+            "nature",
+            "beach"
+          ],
+          "height": 2.5,
+          "bytes": 15504
+        },
+        {
+          "file": "lib/tree_dead.glb",
+          "tags": [
+            "tree",
+            "dead",
+            "nature",
+            "dark"
+          ],
+          "height": 2.2,
+          "bytes": 10140
+        },
+        {
+          "file": "lib/bush_0.glb",
+          "tags": [
+            "bush",
+            "foliage",
+            "nature"
+          ],
+          "height": 0.6,
+          "bytes": 12460
+        },
+        {
+          "file": "lib/bush_1.glb",
+          "tags": [
+            "bush",
+            "foliage",
+            "nature"
+          ],
+          "height": 0.6,
+          "bytes": 12444
+        },
+        {
+          "file": "lib/flower_0.glb",
+          "tags": [
+            "flower",
+            "foliage",
+            "nature"
+          ],
+          "height": 0.5,
+          "bytes": 15200
+        },
+        {
+          "file": "lib/flower_1.glb",
+          "tags": [
+            "flower",
+            "foliage",
+            "nature"
+          ],
+          "height": 0.5,
+          "bytes": 15196
+        },
+        {
+          "file": "lib/grass_tuft.glb",
+          "tags": [
+            "grass",
+            "foliage",
+            "nature"
+          ],
+          "height": 0.4,
+          "bytes": 14544
+        },
+        {
+          "file": "lib/log.glb",
+          "tags": [
+            "wood",
+            "nature",
+            "prop"
+          ],
+          "height": 0.45,
+          "bytes": 6028
+        },
+        {
+          "file": "lib/stump.glb",
+          "tags": [
+            "wood",
+            "nature",
+            "prop"
+          ],
+          "height": 0.55,
+          "bytes": 5860
+        },
+        {
+          "file": "lib/rock_0.glb",
           "tags": [
             "rock",
             "nature"
           ],
-          "height": 0.7
+          "height": 0.9,
+          "bytes": 3256
         },
         {
-          "file": "wonder/rock_1.glb",
+          "file": "lib/rock_1.glb",
           "tags": [
             "rock",
             "nature"
           ],
-          "height": 0.8
+          "height": 0.9,
+          "bytes": 3256
         },
         {
-          "file": "wonder/rock_2.glb",
+          "file": "lib/rock_2.glb",
           "tags": [
             "rock",
             "nature"
           ],
-          "height": 0.9
+          "height": 0.9,
+          "bytes": 3252
         },
         {
-          "file": "wonder/crystal_0.glb",
+          "file": "lib/rock_flat.glb",
           "tags": [
-            "crystal",
-            "collectable",
-            "emissive",
-            "fantasy"
+            "rock",
+            "nature",
+            "platform"
           ],
-          "height": 1.2
+          "height": 0.3,
+          "bytes": 3260
         },
         {
-          "file": "wonder/crystal_1.glb",
-          "tags": [
-            "crystal",
-            "collectable",
-            "emissive",
-            "fantasy"
-          ],
-          "height": 1.2
-        },
-        {
-          "file": "wonder/crystal_2.glb",
-          "tags": [
-            "crystal",
-            "collectable",
-            "emissive",
-            "fantasy"
-          ],
-          "height": 1.2
-        },
-        {
-          "file": "wonder/mushroom_0.glb",
+          "file": "lib/mushroom_0.glb",
           "tags": [
             "mushroom",
-            "fantasy",
-            "nature"
+            "nature",
+            "fantasy"
           ],
-          "height": 0.6
+          "height": 0.6,
+          "bytes": 6196
         },
         {
-          "file": "wonder/mushroom_1.glb",
+          "file": "lib/mushroom_1.glb",
           "tags": [
             "mushroom",
-            "fantasy",
-            "nature"
+            "nature",
+            "fantasy"
           ],
-          "height": 0.6
+          "height": 0.6,
+          "bytes": 6200
         },
         {
-          "file": "wonder/ruin_pillar.glb",
+          "file": "lib/cactus.glb",
+          "tags": [
+            "cactus",
+            "nature",
+            "desert"
+          ],
+          "height": 1.3,
+          "bytes": 8296
+        },
+        {
+          "file": "lib/crystal_0.glb",
+          "tags": [
+            "crystal",
+            "collectable",
+            "emissive",
+            "fantasy"
+          ],
+          "height": 1.2,
+          "bytes": 7728
+        },
+        {
+          "file": "lib/crystal_1.glb",
+          "tags": [
+            "crystal",
+            "collectable",
+            "emissive",
+            "fantasy"
+          ],
+          "height": 1.2,
+          "bytes": 7720
+        },
+        {
+          "file": "lib/crystal_2.glb",
+          "tags": [
+            "crystal",
+            "collectable",
+            "emissive",
+            "fantasy"
+          ],
+          "height": 1.2,
+          "bytes": 7724
+        },
+        {
+          "file": "lib/ruin_pillar.glb",
           "tags": [
             "ruin",
             "structure",
             "fantasy"
           ],
-          "height": 2.2
+          "height": 2.2,
+          "bytes": 6928
         },
         {
-          "file": "wonder/ruin_pillar_broken.glb",
+          "file": "lib/ruin_pillar_broken.glb",
           "tags": [
             "ruin",
             "structure",
             "fantasy"
           ],
-          "height": 1.1
+          "height": 1.1,
+          "bytes": 5088
         },
         {
-          "file": "wonder/ruin_arch.glb",
+          "file": "lib/ruin_arch.glb",
           "tags": [
             "ruin",
             "structure",
             "fantasy"
           ],
-          "height": 2.7
+          "height": 2.7,
+          "bytes": 7792
         },
         {
-          "file": "wonder/fantasy_tower.glb",
+          "file": "lib/fantasy_tower.glb",
           "tags": [
             "tower",
+            "castle",
             "structure",
-            "fantasy",
-            "emissive-windows"
+            "fantasy"
           ],
-          "height": 4.9
+          "height": 4.9,
+          "bytes": 14856
         },
         {
-          "file": "wonder/lantern.glb",
+          "file": "lib/lantern.glb",
           "tags": [
             "lantern",
             "light",
             "emissive",
             "prop"
           ],
-          "height": 1.8
+          "height": 1.8,
+          "bytes": 6812
         },
         {
-          "file": "wonder/guardian.glb",
+          "file": "lib/castle_wall.glb",
+          "tags": [
+            "castle",
+            "wall",
+            "structure",
+            "fantasy"
+          ],
+          "height": 1.9,
+          "bytes": 9828
+        },
+        {
+          "file": "lib/castle_gate.glb",
+          "tags": [
+            "castle",
+            "gate",
+            "structure",
+            "fantasy"
+          ],
+          "height": 3.1,
+          "bytes": 14848
+        },
+        {
+          "file": "lib/banner.glb",
+          "tags": [
+            "banner",
+            "decor",
+            "fantasy",
+            "castle"
+          ],
+          "height": 2.2,
+          "bytes": 6456
+        },
+        {
+          "file": "lib/well.glb",
+          "tags": [
+            "well",
+            "prop",
+            "fantasy",
+            "village"
+          ],
+          "height": 1.8,
+          "bytes": 11888
+        },
+        {
+          "file": "lib/house_small.glb",
+          "tags": [
+            "building",
+            "house",
+            "structure",
+            "village"
+          ],
+          "height": 2.3,
+          "bytes": 9768
+        },
+        {
+          "file": "lib/house_large.glb",
+          "tags": [
+            "building",
+            "house",
+            "structure",
+            "village"
+          ],
+          "height": 3.6,
+          "bytes": 9712
+        },
+        {
+          "file": "lib/shop.glb",
+          "tags": [
+            "building",
+            "shop",
+            "structure",
+            "town"
+          ],
+          "height": 1.8,
+          "bytes": 9728
+        },
+        {
+          "file": "lib/hut.glb",
+          "tags": [
+            "building",
+            "hut",
+            "structure",
+            "village"
+          ],
+          "height": 2,
+          "bytes": 7548
+        },
+        {
+          "file": "lib/windmill.glb",
+          "tags": [
+            "building",
+            "windmill",
+            "structure",
+            "village"
+          ],
+          "height": 3.2,
+          "bytes": 14012,
+          "animations": [
+            "spin"
+          ]
+        },
+        {
+          "file": "lib/fence.glb",
+          "tags": [
+            "fence",
+            "prop",
+            "structure",
+            "village"
+          ],
+          "height": 0.8,
+          "bytes": 9888
+        },
+        {
+          "file": "lib/bridge.glb",
+          "tags": [
+            "bridge",
+            "structure",
+            "prop"
+          ],
+          "height": 0.85,
+          "bytes": 13656
+        },
+        {
+          "file": "lib/signpost.glb",
+          "tags": [
+            "sign",
+            "prop",
+            "village"
+          ],
+          "height": 1.3,
+          "bytes": 4616
+        },
+        {
+          "file": "lib/chest_closed.glb",
+          "tags": [
+            "container",
+            "chest",
+            "treasure",
+            "prop"
+          ],
+          "height": 0.7,
+          "bytes": 9104
+        },
+        {
+          "file": "lib/chest_open.glb",
+          "tags": [
+            "container",
+            "chest",
+            "treasure",
+            "prop"
+          ],
+          "height": 0.7,
+          "bytes": 7240
+        },
+        {
+          "file": "lib/barrel.glb",
+          "tags": [
+            "container",
+            "barrel",
+            "prop"
+          ],
+          "height": 0.65,
+          "bytes": 9904
+        },
+        {
+          "file": "lib/crate.glb",
+          "tags": [
+            "container",
+            "crate",
+            "prop"
+          ],
+          "height": 0.58,
+          "bytes": 6040
+        },
+        {
+          "file": "lib/torch.glb",
+          "tags": [
+            "torch",
+            "light",
+            "emissive",
+            "prop"
+          ],
+          "height": 1.1,
+          "bytes": 5860
+        },
+        {
+          "file": "lib/campfire.glb",
+          "tags": [
+            "fire",
+            "light",
+            "emissive",
+            "prop"
+          ],
+          "height": 0.6,
+          "bytes": 15904
+        },
+        {
+          "file": "lib/potion.glb",
+          "tags": [
+            "potion",
+            "collectable",
+            "prop"
+          ],
+          "height": 0.5,
+          "bytes": 8448
+        },
+        {
+          "file": "lib/coin.glb",
+          "tags": [
+            "coin",
+            "collectable",
+            "treasure",
+            "prop"
+          ],
+          "height": 0.5,
+          "bytes": 4208
+        },
+        {
+          "file": "lib/key.glb",
+          "tags": [
+            "key",
+            "collectable",
+            "prop"
+          ],
+          "height": 0.45,
+          "bytes": 8460
+        },
+        {
+          "file": "lib/door.glb",
+          "tags": [
+            "door",
+            "prop",
+            "structure"
+          ],
+          "height": 1.7,
+          "bytes": 9000
+        },
+        {
+          "file": "lib/guardian.glb",
           "tags": [
             "character",
             "humanoid",
             "animated",
-            "fantasy"
+            "fantasy",
+            "hero"
           ],
           "height": 1.7,
+          "bytes": 27784,
           "animations": [
             "idle",
             "walk"
           ]
+        },
+        {
+          "file": "lib/hero_knight.glb",
+          "tags": [
+            "character",
+            "humanoid",
+            "animated",
+            "hero",
+            "knight"
+          ],
+          "height": 1.7,
+          "bytes": 27788,
+          "animations": [
+            "idle",
+            "walk"
+          ]
+        },
+        {
+          "file": "lib/mage.glb",
+          "tags": [
+            "character",
+            "humanoid",
+            "animated",
+            "hero",
+            "mage"
+          ],
+          "height": 1.8,
+          "bytes": 28040,
+          "animations": [
+            "idle",
+            "walk"
+          ]
+        },
+        {
+          "file": "lib/villager.glb",
+          "tags": [
+            "character",
+            "humanoid",
+            "animated",
+            "npc",
+            "village"
+          ],
+          "height": 1.7,
+          "bytes": 27732,
+          "animations": [
+            "idle",
+            "walk"
+          ]
+        },
+        {
+          "file": "lib/enemy_goblin.glb",
+          "tags": [
+            "character",
+            "humanoid",
+            "animated",
+            "enemy",
+            "creature"
+          ],
+          "height": 1.7,
+          "bytes": 27752,
+          "animations": [
+            "idle",
+            "walk"
+          ]
+        },
+        {
+          "file": "lib/enemy_slime.glb",
+          "tags": [
+            "enemy",
+            "creature",
+            "animated"
+          ],
+          "height": 0.9,
+          "bytes": 16076,
+          "animations": [
+            "bounce"
+          ]
+        },
+        {
+          "file": "lib/enemy_bat.glb",
+          "tags": [
+            "enemy",
+            "creature",
+            "animated",
+            "flying"
+          ],
+          "height": 1.4,
+          "bytes": 14312,
+          "animations": [
+            "fly"
+          ]
+        },
+        {
+          "file": "lib/animal_deer.glb",
+          "tags": [
+            "animal",
+            "creature",
+            "animated",
+            "nature"
+          ],
+          "height": 1.3,
+          "bytes": 18012,
+          "animations": [
+            "walk"
+          ]
+        },
+        {
+          "file": "lib/car.glb",
+          "tags": [
+            "vehicle",
+            "car"
+          ],
+          "height": 1,
+          "bytes": 20056
+        },
+        {
+          "file": "lib/boat.glb",
+          "tags": [
+            "vehicle",
+            "boat",
+            "water"
+          ],
+          "height": 2.1,
+          "bytes": 8576
+        },
+        {
+          "file": "lib/cart.glb",
+          "tags": [
+            "vehicle",
+            "cart",
+            "village"
+          ],
+          "height": 0.9,
+          "bytes": 11072
+        },
+        {
+          "file": "lib/rocket.glb",
+          "tags": [
+            "vehicle",
+            "rocket",
+            "space",
+            "scifi"
+          ],
+          "height": 2.6,
+          "bytes": 15800
+        },
+        {
+          "file": "lib/asteroid.glb",
+          "tags": [
+            "space",
+            "rock",
+            "scifi"
+          ],
+          "height": 1.2,
+          "bytes": 8988
+        },
+        {
+          "file": "lib/planet.glb",
+          "tags": [
+            "space",
+            "planet",
+            "scifi"
+          ],
+          "height": 1.8,
+          "bytes": 25964
+        },
+        {
+          "file": "lib/satellite.glb",
+          "tags": [
+            "space",
+            "satellite",
+            "scifi"
+          ],
+          "height": 1.5,
+          "bytes": 8432
+        },
+        {
+          "file": "lib/star_collectable.glb",
+          "tags": [
+            "collectable",
+            "emissive",
+            "star",
+            "prop"
+          ],
+          "height": 0.8,
+          "bytes": 2076
         }
       ]
     }

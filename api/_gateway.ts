@@ -21,7 +21,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-02.58";
+export const BUILD_ID = "2026-08-02.59";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -161,15 +161,25 @@ THREE.JS SETUP (the ONLY allowed external resources — include these exact tags
 <script src="https://www.joshrix.com/assets/vendor/three.min.js"><\/script>
 <script src="https://www.joshrix.com/assets/vendor/GLTFLoader.js"><\/script>
 This is three.js r147 UMD: the global THREE, plus THREE.GLTFLoader. NO ES modules, NO import statements, NO other addons (OrbitControls/EffectComposer are NOT available — write your own camera logic).
-JOSHRIX MODEL LIBRARY (professional low-poly GLB assets hosted on the platform — USE THESE for props, structures and characters instead of bare primitives whenever they fit the concept):
-Base: https://www.joshrix.com/assets/models3d/wonder/
-- Nature: tree_round_0.glb tree_round_1.glb tree_round_2.glb (~2 units tall), tree_pine_0.glb tree_pine_1.glb, rock_0.glb rock_1.glb rock_2.glb, mushroom_0.glb mushroom_1.glb
-- Fantasy: crystal_0.glb crystal_1.glb crystal_2.glb (emissive collectables ~1.2), ruin_pillar.glb ruin_pillar_broken.glb ruin_arch.glb, fantasy_tower.glb (~4.9 tall, lit windows), lantern.glb (emissive)
-- Character: guardian.glb (~1.7 tall humanoid, AnimationClips "idle" and "walk" — drive with THREE.AnimationMixer, mixer.clipAction('walk').play(), mixer.update(dt) in the loop)
-USAGE RULES: const loader = new THREE.GLTFLoader(); loader.load(url, ok, undefined, fallback) — the fallback callback MUST build a primitive substitute so the game still works if a model fails to load. After load: gltf.scene.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } }). Use .clone() to place a model many times (models are node-animated; clone is safe). Scale models to fit your world. Terrain, sky and anything not in the library stay procedural.
+JOSHRIX MODEL LIBRARY — 67 hosted low-poly GLB models. USE THESE for props, structures, enemies and characters instead of bare primitives whenever they fit the concept; a world built from these reads as a product, a world of raw spheres and boxes reads as a prototype.
+Base URL: https://www.joshrix.com/assets/models3d/lib/  (append the filename, e.g. .../lib/tree_round_0.glb)
+- TREES/PLANTS: tree_round_0 tree_round_1 tree_round_2 tree_pine_0 tree_pine_1 tree_palm tree_dead bush_0 bush_1 flower_0 flower_1 grass_tuft cactus log stump
+- TERRAIN PROPS: rock_0 rock_1 rock_2 rock_flat mushroom_0 mushroom_1
+- FANTASY: crystal_0 crystal_1 crystal_2 (emissive collectables) ruin_pillar ruin_pillar_broken ruin_arch fantasy_tower castle_wall castle_gate banner well lantern
+- VILLAGE/TOWN: house_small house_large hut shop windmill (anim "spin") fence bridge signpost door
+- PROPS/PICKUPS: chest_closed chest_open barrel crate torch campfire potion coin key star_collectable
+- CHARACTERS (all ~1.7 tall, AnimationClips "idle" + "walk"): guardian hero_knight mage villager enemy_goblin
+- CREATURES: enemy_slime (anim "bounce") enemy_bat (anim "fly") animal_deer (anim "walk")
+- VEHICLES/SPACE: car boat cart rocket asteroid planet satellite
+USAGE RULES:
+1. const loader = new THREE.GLTFLoader(); loader.load(url, onLoad, undefined, onError) — the onError callback MUST build a primitive substitute so a failed download can never break the game.
+2. On load: gltf.scene.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } })
+3. Load each model ONCE, then .clone() it for every placement (safe — these are node-animated, not skinned). Load in parallel and start the game when they settle.
+4. Animated models: const mixer = new THREE.AnimationMixer(obj); mixer.clipAction(THREE.AnimationClip.findByName(gltf.animations, 'walk')).play(); call mixer.update(dt) every frame. One mixer PER CLONE.
+5. Scale/rotate to fit your world. Terrain, sky, water, particles and anything not listed stay procedural.
 VISUAL FIDELITY BAR (all of these — this is what the creator is paying premium for).
 HARD REQUIREMENTS — the gateway REJECTS a 3D file missing any of these three, so they are not suggestions:
-(1) renderer.shadowMap.enabled = true with a shadow-casting directional light, (2) scene.fog = new THREE.Fog(...) or FogExp2 matched to the sky, (3) at least one procedural THREE.CanvasTexture on a material.
+(1) renderer.shadowMap.enabled = true with a shadow-casting directional light, (2) scene.fog = new THREE.Fog(...) or FogExp2 matched to the sky, (3) models from the JOSHRIX library below and/or procedural THREE.CanvasTexture materials — never bare untextured primitives.
 - Full lighting rig: THREE.HemisphereLight (sky/ground colours) + directional key light WITH SHADOWS (renderer.shadowMap.enabled=true, type=THREE.PCFSoftShadowMap; castShadow/receiveShadow on meshes; tune shadow.camera bounds + mapSize 2048) + coloured accent point lights. THREE.Fog or FogExp2 matched to the sky for atmospheric depth.
 - A real SKY: large inverted sphere or scene.background gradient via procedural CanvasTexture — sun/moon disc, stars or clouds as fits the concept. Never a flat colour void.
 - PROCEDURAL TEXTURES: use CanvasTexture (draw noise, stripes, grain, windows, bark, rock mottling onto an offscreen canvas) on MeshStandardMaterial with tuned roughness/metalness — surfaces must look like material, not plastic. Emissive maps for glow (crystals, windows at night, lava).
@@ -281,7 +291,9 @@ export function looksPlayable(html: string): boolean {
 const FLOOR_3D: Array<[string, RegExp]> = [
   ["shadows", /shadowMap\s*\.\s*enabled\s*=\s*true/],
   ["fog", /new\s+THREE\.(Fog|FogExp2)\s*\(/],
-  ["procedural textures", /CanvasTexture/],
+  // a premium world is dressed with real models OR real procedural materials —
+  // one or the other, never bare untextured primitives on a flat plane
+  ["models or procedural textures", /models3d\/lib\/|CanvasTexture/],
 ];
 function missing3dFloor(html: string): string[] {
   return FLOOR_3D.filter(([, re]) => !re.test(html)).map(([n]) => n);
