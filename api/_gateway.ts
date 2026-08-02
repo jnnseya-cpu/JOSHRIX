@@ -5,6 +5,7 @@
  * on a fresh deploy. Full multi-provider fallback chain: backend/ai-gateway/.
  */
 import Anthropic from "@anthropic-ai/sdk";
+import { Script } from "node:vm";
 import { GameBlueprintSchema, type GameBlueprint, ACU } from "../shared/contracts";
 
 const SYSTEM = `You are the JOSHRIX Idea Agent. From the creator's game description, produce a commercial game blueprint.
@@ -20,7 +21,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-02.55";
+export const BUILD_ID = "2026-08-02.56";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -264,6 +265,22 @@ export function looksPlayable(html: string): boolean {
   return html.includes("<canvas") || html.includes("WebGLRenderer") || html.includes("three.min.js");
 }
 
+/** Every inline script in a shipping build must PARSE. A syntax error is a
+ *  guaranteed-dead game — and with three providers on the gateway, broken code
+ *  must burn through to the NEXT provider, not reach a creator's screen.
+ *  vm.Script compiles without executing: safe, fast, and it names the error. */
+function assertScriptsParse(html: string): void {
+  const tags = [...html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)];
+  for (const [, attrs, code] of tags) {
+    if (/\bsrc\s*=/i.test(attrs)) continue;                 // external file (e.g. three.js) — nothing inline to parse
+    if (/type\s*=\s*["']?module/i.test(attrs)) continue;    // module syntax needs a module parser — leave to the runtime watchdog
+    if (!code.trim()) continue;
+    try { new Script(code); } catch (e: any) {
+      throw new Error("generated code fails to parse: " + String(e?.message ?? e).slice(0, 160));
+    }
+  }
+}
+
 /** Pull a complete HTML document out of a model reply (or throw). */
 function extractHtml(text: string): string {
   const start = text.indexOf("<!DOCTYPE");
@@ -275,7 +292,9 @@ function extractHtml(text: string): string {
   // and a dead START button. Treat truncation as a provider failure so the chain
   // falls through to the next provider (or the engine) instead.
   if (end === -1) throw new Error("model reply truncated (no closing </html>)");
-  return out.slice(0, end + 7);
+  out = out.slice(0, end + 7);
+  assertScriptsParse(out);
+  return out;
 }
 
 const PROVIDER_TIMEOUT_MS = 200_000;
