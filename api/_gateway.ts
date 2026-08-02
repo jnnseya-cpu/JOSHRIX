@@ -21,7 +21,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-02.57";
+export const BUILD_ID = "2026-08-02.58";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -157,9 +157,16 @@ SIZE: 650-900 lines. Ship a COMPLETE file — finishing the game matters more th
 ${RUNTIME_SAFETY}`;
 
 const GAME_SYSTEM_3D = `You are the JOSHRIX Code Agent. Generate a COMPLETE HTML5 **3D** game as ONE html file using three.js, implementing the creator's concept faithfully in real 3D. This is an ULTRA-PREMIUM COMMERCIAL product — it must look like a cinematic, high-production 3D game. Never a tech demo, never floating primitives on a flat plane.
-THREE.JS SETUP (the ONLY allowed external resource — include this exact tag first in <head>):
+THREE.JS SETUP (the ONLY allowed external resources — include these exact tags first in <head>):
 <script src="https://www.joshrix.com/assets/vendor/three.min.js"><\/script>
-This is three.js r147 UMD: the global THREE. NO ES modules, NO import statements, NO addons (OrbitControls/EffectComposer/GLTFLoader are NOT available — write your own camera logic; build all assets procedurally).
+<script src="https://www.joshrix.com/assets/vendor/GLTFLoader.js"><\/script>
+This is three.js r147 UMD: the global THREE, plus THREE.GLTFLoader. NO ES modules, NO import statements, NO other addons (OrbitControls/EffectComposer are NOT available — write your own camera logic).
+JOSHRIX MODEL LIBRARY (professional low-poly GLB assets hosted on the platform — USE THESE for props, structures and characters instead of bare primitives whenever they fit the concept):
+Base: https://www.joshrix.com/assets/models3d/wonder/
+- Nature: tree_round_0.glb tree_round_1.glb tree_round_2.glb (~2 units tall), tree_pine_0.glb tree_pine_1.glb, rock_0.glb rock_1.glb rock_2.glb, mushroom_0.glb mushroom_1.glb
+- Fantasy: crystal_0.glb crystal_1.glb crystal_2.glb (emissive collectables ~1.2), ruin_pillar.glb ruin_pillar_broken.glb ruin_arch.glb, fantasy_tower.glb (~4.9 tall, lit windows), lantern.glb (emissive)
+- Character: guardian.glb (~1.7 tall humanoid, AnimationClips "idle" and "walk" — drive with THREE.AnimationMixer, mixer.clipAction('walk').play(), mixer.update(dt) in the loop)
+USAGE RULES: const loader = new THREE.GLTFLoader(); loader.load(url, ok, undefined, fallback) — the fallback callback MUST build a primitive substitute so the game still works if a model fails to load. After load: gltf.scene.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } }). Use .clone() to place a model many times (models are node-animated; clone is safe). Scale models to fit your world. Terrain, sky and anything not in the library stay procedural.
 VISUAL FIDELITY BAR (all of these — this is what the creator is paying premium for).
 HARD REQUIREMENTS — the gateway REJECTS a 3D file missing any of these three, so they are not suggestions:
 (1) renderer.shadowMap.enabled = true with a shadow-casting directional light, (2) scene.fog = new THREE.Fog(...) or FogExp2 matched to the sky, (3) at least one procedural THREE.CanvasTexture on a material.
@@ -183,7 +190,7 @@ ${RUNTIME_SAFETY}`;
 
 const ENHANCE_SYSTEM = `You are the JOSHRIX Polish Agent. You receive a COMPLETE working HTML game file (2D canvas or three.js 3D). Return an UPGRADED version of the SAME game as ONE html file: identical core gameplay and controls, dramatically higher production value.
 RAISE (as applicable): lighting & shadows, procedural-texture material quality, world density (more composed/instanced detail), particle richness, animation polish (easing, squash-stretch, idle motion), sky/atmosphere, HUD styling, sound design depth, camera cinematics, difficulty curve fairness, and any creator notes provided.
-PRESERVE: the game's title, language, mechanics, win/lose flow, mobile+desktop controls, and the three.js script tag if present (it is the only allowed external resource; for 2D files external resources stay forbidden).
+PRESERVE: the game's title, language, mechanics, win/lose flow, mobile+desktop controls, and any joshrix.com script tags (three.min.js, GLTFLoader.js) and joshrix.com model URLs if present (the only allowed external resources; for 2D files external resources stay forbidden).
 Fix any bugs you notice. Never remove features. Output must be the COMPLETE file — never a diff, never truncated.
 ${RUNTIME_SAFETY}`;
 

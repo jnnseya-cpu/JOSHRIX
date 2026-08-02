@@ -1,0 +1,31 @@
+{
+  "base": "https://www.joshrix.com/assets/models3d/",
+  "loader": "https://www.joshrix.com/assets/vendor/GLTFLoader.js",
+  "packs": {
+    "wonder": {
+      "license": "CC0-equivalent — JOSHRIX original, procedurally authored in-house",
+      "style": "stylized low-poly, flat-shaded, vertex colours",
+      "models": [
+        { "file": "wonder/tree_round_0.glb", "tags": ["tree", "nature"], "height": 1.9 },
+        { "file": "wonder/tree_round_1.glb", "tags": ["tree", "nature"], "height": 2.0 },
+        { "file": "wonder/tree_round_2.glb", "tags": ["tree", "nature"], "height": 2.1 },
+        { "file": "wonder/tree_pine_0.glb", "tags": ["tree", "pine", "nature"], "height": 2.0 },
+        { "file": "wonder/tree_pine_1.glb", "tags": ["tree", "pine", "nature"], "height": 2.0 },
+        { "file": "wonder/rock_0.glb", "tags": ["rock", "nature"], "height": 0.7 },
+        { "file": "wonder/rock_1.glb", "tags": ["rock", "nature"], "height": 0.8 },
+        { "file": "wonder/rock_2.glb", "tags": ["rock", "nature"], "height": 0.9 },
+        { "file": "wonder/crystal_0.glb", "tags": ["crystal", "collectable", "emissive", "fantasy"], "height": 1.2 },
+        { "file": "wonder/crystal_1.glb", "tags": ["crystal", "collectable", "emissive", "fantasy"], "height": 1.2 },
+        { "file": "wonder/crystal_2.glb", "tags": ["crystal", "collectable", "emissive", "fantasy"], "height": 1.2 },
+        { "file": "wonder/mushroom_0.glb", "tags": ["mushroom", "fantasy", "nature"], "height": 0.6 },
+        { "file": "wonder/mushroom_1.glb", "tags": ["mushroom", "fantasy", "nature"], "height": 0.6 },
+        { "file": "wonder/ruin_pillar.glb", "tags": ["ruin", "structure", "fantasy"], "height": 2.2 },
+        { "file": "wonder/ruin_pillar_broken.glb", "tags": ["ruin", "structure", "fantasy"], "height": 1.1 },
+        { "file": "wonder/ruin_arch.glb", "tags": ["ruin", "structure", "fantasy"], "height": 2.7 },
+        { "file": "wonder/fantasy_tower.glb", "tags": ["tower", "structure", "fantasy", "emissive-windows"], "height": 4.9 },
+        { "file": "wonder/lantern.glb", "tags": ["lantern", "light", "emissive", "prop"], "height": 1.8 },
+        { "file": "wonder/guardian.glb", "tags": ["character", "humanoid", "animated", "fantasy"], "height": 1.7, "animations": ["idle", "walk"] }
+      ]
+    }
+  }
+}
