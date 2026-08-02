@@ -3,8 +3,8 @@
   "loader": "https://www.joshrix.com/assets/vendor/GLTFLoader.js",
   "packs": {
     "lib": {
-      "license": "JOSHRIX original — procedurally authored in-house, no third-party rights",
-      "style": "stylized low-poly, flat-shaded, vertex colours",
+      "license": "JOSHRIX original — procedurally authored in-house",
+      "style": "stylized low-poly, flat-shaded",
       "models": [
         {
           "file": "lib/tree_round_0.glb",
@@ -736,6 +736,659 @@
           ],
           "height": 0.8,
           "bytes": 2076
+        }
+      ]
+    },
+    "vehicles": {
+      "license": "CC0 1.0 — Quaternius (quaternius.com); OBJ converted to GLB in-house",
+      "style": "low-poly vehicles",
+      "models": [
+        {
+          "file": "vehicles/commercial_airplane.glb",
+          "tags": [
+            "aircraft",
+            "vehicle",
+            "air"
+          ],
+          "height": 1.07,
+          "bytes": 91776
+        },
+        {
+          "file": "vehicles/military_airplane.glb",
+          "tags": [
+            "aircraft",
+            "vehicle",
+            "air"
+          ],
+          "height": 1.78,
+          "bytes": 93820
+        },
+        {
+          "file": "vehicles/militaryairplane2.glb",
+          "tags": [
+            "aircraft",
+            "vehicle",
+            "air"
+          ],
+          "height": 1.5,
+          "bytes": 91520
+        },
+        {
+          "file": "vehicles/private_plane.glb",
+          "tags": [
+            "aircraft",
+            "vehicle",
+            "air"
+          ],
+          "height": 0.94,
+          "bytes": 93840
+        },
+        {
+          "file": "vehicles/smallplane.glb",
+          "tags": [
+            "aircraft",
+            "vehicle",
+            "air"
+          ],
+          "height": 2.37,
+          "bytes": 65676
+        },
+        {
+          "file": "vehicles/basiccar.glb",
+          "tags": [
+            "car",
+            "vehicle"
+          ],
+          "height": 1.58,
+          "bytes": 182708
+        },
+        {
+          "file": "vehicles/copcar.glb",
+          "tags": [
+            "car",
+            "vehicle"
+          ],
+          "height": 1.76,
+          "bytes": 171216
+        },
+        {
+          "file": "vehicles/racecar.glb",
+          "tags": [
+            "car",
+            "vehicle"
+          ],
+          "height": 1.45,
+          "bytes": 183500
+        },
+        {
+          "file": "vehicles/simplecarhigh.glb",
+          "tags": [
+            "vehicle"
+          ],
+          "height": 1.6,
+          "bytes": 148348
+        },
+        {
+          "file": "vehicles/simplecarshort.glb",
+          "tags": [
+            "vehicle"
+          ],
+          "height": 1.57,
+          "bytes": 148344
+        },
+        {
+          "file": "vehicles/taxi.glb",
+          "tags": [
+            "transport",
+            "vehicle"
+          ],
+          "height": 1.69,
+          "bytes": 156792
+        },
+        {
+          "file": "vehicles/car.glb",
+          "tags": [
+            "car",
+            "vehicle"
+          ],
+          "height": 2.42,
+          "bytes": 83668
+        },
+        {
+          "file": "vehicles/simplecar.glb",
+          "tags": [
+            "car",
+            "vehicle"
+          ],
+          "height": 2.24,
+          "bytes": 93604
+        },
+        {
+          "file": "vehicles/truck.glb",
+          "tags": [
+            "transport",
+            "vehicle"
+          ],
+          "height": 2.39,
+          "bytes": 79776
+        },
+        {
+          "file": "vehicles/asteroid1.glb",
+          "tags": [
+            "space",
+            "asteroid",
+            "rock",
+            "scifi"
+          ],
+          "height": 1.67,
+          "bytes": 2624
+        },
+        {
+          "file": "vehicles/asteroid2.glb",
+          "tags": [
+            "space",
+            "asteroid",
+            "rock",
+            "scifi"
+          ],
+          "height": 1.57,
+          "bytes": 2624
+        },
+        {
+          "file": "vehicles/asteroid3.glb",
+          "tags": [
+            "space",
+            "asteroid",
+            "rock",
+            "scifi"
+          ],
+          "height": 2.02,
+          "bytes": 4068
+        },
+        {
+          "file": "vehicles/bigasteroid.glb",
+          "tags": [
+            "space",
+            "asteroid",
+            "rock",
+            "scifi"
+          ],
+          "height": 9.32,
+          "bytes": 6948
+        },
+        {
+          "file": "vehicles/biggerasteroid.glb",
+          "tags": [
+            "space",
+            "asteroid",
+            "rock",
+            "scifi"
+          ],
+          "height": 6.11,
+          "bytes": 6956
+        },
+        {
+          "file": "vehicles/moon.glb",
+          "tags": [
+            "space",
+            "planet",
+            "scifi"
+          ],
+          "height": 2.83,
+          "bytes": 52464
+        },
+        {
+          "file": "vehicles/planet1.glb",
+          "tags": [
+            "space",
+            "planet",
+            "scifi"
+          ],
+          "height": 4,
+          "bytes": 51368
+        },
+        {
+          "file": "vehicles/planet2.glb",
+          "tags": [
+            "space",
+            "planet",
+            "scifi"
+          ],
+          "height": 2,
+          "bytes": 41852
+        },
+        {
+          "file": "vehicles/planet3.glb",
+          "tags": [
+            "space",
+            "planet",
+            "scifi"
+          ],
+          "height": 3.77,
+          "bytes": 50984
+        },
+        {
+          "file": "vehicles/smallmoon.glb",
+          "tags": [
+            "space",
+            "planet",
+            "scifi"
+          ],
+          "height": 3.6,
+          "bytes": 20200
+        },
+        {
+          "file": "vehicles/smallplanet1.glb",
+          "tags": [
+            "space",
+            "planet",
+            "scifi"
+          ],
+          "height": 2.09,
+          "bytes": 14264
+        },
+        {
+          "file": "vehicles/ambulance.glb",
+          "tags": [
+            "transport",
+            "vehicle"
+          ],
+          "height": 2.91,
+          "bytes": 122224
+        },
+        {
+          "file": "vehicles/bicycle.glb",
+          "tags": [
+            "bike",
+            "vehicle"
+          ],
+          "height": 3.15,
+          "bytes": 218736
+        },
+        {
+          "file": "vehicles/bus.glb",
+          "tags": [
+            "transport",
+            "vehicle"
+          ],
+          "height": 1.68,
+          "bytes": 113860
+        },
+        {
+          "file": "vehicles/schoolbus.glb",
+          "tags": [
+            "transport",
+            "vehicle"
+          ],
+          "height": 2.19,
+          "bytes": 131796
+        },
+        {
+          "file": "vehicles/squareframebicycle.glb",
+          "tags": [
+            "bike",
+            "vehicle"
+          ],
+          "height": 3.15,
+          "bytes": 98628
+        },
+        {
+          "file": "vehicles/taxi_2.glb",
+          "tags": [
+            "transport",
+            "vehicle"
+          ],
+          "height": 1.45,
+          "bytes": 158328
+        },
+        {
+          "file": "vehicles/trafficcone.glb",
+          "tags": [
+            "prop",
+            "street"
+          ],
+          "height": 1.26,
+          "bytes": 11404
+        },
+        {
+          "file": "vehicles/trafficlight.glb",
+          "tags": [
+            "prop",
+            "street"
+          ],
+          "height": 1.87,
+          "bytes": 62364
+        },
+        {
+          "file": "vehicles/trafficsign1.glb",
+          "tags": [
+            "prop",
+            "street"
+          ],
+          "height": 1.52,
+          "bytes": 8828
+        },
+        {
+          "file": "vehicles/trafficsign2.glb",
+          "tags": [
+            "prop",
+            "street"
+          ],
+          "height": 1.49,
+          "bytes": 7852
+        },
+        {
+          "file": "vehicles/trafficsign3.glb",
+          "tags": [
+            "prop",
+            "street"
+          ],
+          "height": 1.42,
+          "bytes": 9152
+        },
+        {
+          "file": "vehicles/train.glb",
+          "tags": [
+            "train",
+            "vehicle",
+            "rail"
+          ],
+          "height": 2.2,
+          "bytes": 52984
+        },
+        {
+          "file": "vehicles/cop.glb",
+          "tags": [
+            "car",
+            "vehicle"
+          ],
+          "height": 1.24,
+          "bytes": 238416
+        },
+        {
+          "file": "vehicles/cop_suv.glb",
+          "tags": [
+            "car",
+            "vehicle"
+          ],
+          "height": 1.6,
+          "bytes": 265496
+        },
+        {
+          "file": "vehicles/normalcar1.glb",
+          "tags": [
+            "vehicle"
+          ],
+          "height": 1.18,
+          "bytes": 217988
+        },
+        {
+          "file": "vehicles/normalcar2.glb",
+          "tags": [
+            "vehicle"
+          ],
+          "height": 1.15,
+          "bytes": 230448
+        },
+        {
+          "file": "vehicles/suv.glb",
+          "tags": [
+            "car",
+            "vehicle"
+          ],
+          "height": 1.53,
+          "bytes": 242432
+        },
+        {
+          "file": "vehicles/sportscar.glb",
+          "tags": [
+            "car",
+            "vehicle"
+          ],
+          "height": 1.16,
+          "bytes": 226956
+        },
+        {
+          "file": "vehicles/sportscar2.glb",
+          "tags": [
+            "car",
+            "vehicle"
+          ],
+          "height": 1.2,
+          "bytes": 231772
+        },
+        {
+          "file": "vehicles/taxi_3.glb",
+          "tags": [
+            "transport",
+            "vehicle"
+          ],
+          "height": 1.31,
+          "bytes": 241312
+        },
+        {
+          "file": "vehicles/boat.glb",
+          "tags": [
+            "ship",
+            "vehicle",
+            "water"
+          ],
+          "height": 0.16,
+          "bytes": 13680
+        },
+        {
+          "file": "vehicles/boatwsail.glb",
+          "tags": [
+            "ship",
+            "vehicle",
+            "water"
+          ],
+          "height": 0.85,
+          "bytes": 75972
+        },
+        {
+          "file": "vehicles/cruiseship.glb",
+          "tags": [
+            "ship",
+            "vehicle",
+            "water"
+          ],
+          "height": 6.6,
+          "bytes": 84364
+        },
+        {
+          "file": "vehicles/lifeboat.glb",
+          "tags": [
+            "ship",
+            "vehicle",
+            "water"
+          ],
+          "height": 0.21,
+          "bytes": 46884
+        },
+        {
+          "file": "vehicles/sail_ship.glb",
+          "tags": [
+            "ship",
+            "vehicle",
+            "water"
+          ],
+          "height": 3.85,
+          "bytes": 289248
+        },
+        {
+          "file": "vehicles/viking_boat.glb",
+          "tags": [
+            "ship",
+            "vehicle",
+            "water"
+          ],
+          "height": 2.51,
+          "bytes": 120828
+        },
+        {
+          "file": "vehicles/tank.glb",
+          "tags": [
+            "tank",
+            "vehicle",
+            "military"
+          ],
+          "height": 7.5,
+          "bytes": 441988
+        },
+        {
+          "file": "vehicles/tank2.glb",
+          "tags": [
+            "vehicle"
+          ],
+          "height": 4.62,
+          "bytes": 525288
+        },
+        {
+          "file": "vehicles/tank3.glb",
+          "tags": [
+            "vehicle"
+          ],
+          "height": 6.76,
+          "bytes": 476124
+        },
+        {
+          "file": "vehicles/cargotrain_coalcontainer.glb",
+          "tags": [
+            "train",
+            "vehicle",
+            "rail"
+          ],
+          "height": 2.72,
+          "bytes": 186892
+        },
+        {
+          "file": "vehicles/cargotrain_container.glb",
+          "tags": [
+            "train",
+            "vehicle",
+            "rail"
+          ],
+          "height": 2.58,
+          "bytes": 326728
+        },
+        {
+          "file": "vehicles/cargotrain_front.glb",
+          "tags": [
+            "train",
+            "vehicle",
+            "rail"
+          ],
+          "height": 2.68,
+          "bytes": 683280
+        },
+        {
+          "file": "vehicles/cargotrain_wagon.glb",
+          "tags": [
+            "train",
+            "vehicle",
+            "rail"
+          ],
+          "height": 2.62,
+          "bytes": 588500
+        },
+        {
+          "file": "vehicles/cargotrain_wagonempty.glb",
+          "tags": [
+            "train",
+            "vehicle",
+            "rail"
+          ],
+          "height": 1.02,
+          "bytes": 147716
+        },
+        {
+          "file": "vehicles/cargotrain_wagonopencontainer.glb",
+          "tags": [
+            "train",
+            "vehicle",
+            "rail"
+          ],
+          "height": 2.73,
+          "bytes": 165512
+        },
+        {
+          "file": "vehicles/highspeed_front.glb",
+          "tags": [
+            "vehicle"
+          ],
+          "height": 1.9,
+          "bytes": 366900
+        },
+        {
+          "file": "vehicles/highspeed_wagon.glb",
+          "tags": [
+            "train",
+            "vehicle",
+            "rail"
+          ],
+          "height": 1.9,
+          "bytes": 364288
+        },
+        {
+          "file": "vehicles/locomotive_coaltender.glb",
+          "tags": [
+            "train",
+            "vehicle",
+            "rail"
+          ],
+          "height": 2.35,
+          "bytes": 211144
+        },
+        {
+          "file": "vehicles/locomotive_front.glb",
+          "tags": [
+            "train",
+            "vehicle",
+            "rail"
+          ],
+          "height": 3.58,
+          "bytes": 1130024
+        },
+        {
+          "file": "vehicles/locomotive_passengerwagon.glb",
+          "tags": [
+            "train",
+            "vehicle",
+            "rail"
+          ],
+          "height": 2.95,
+          "bytes": 252348
+        },
+        {
+          "file": "vehicles/locomotive_wagon.glb",
+          "tags": [
+            "train",
+            "vehicle",
+            "rail"
+          ],
+          "height": 2.95,
+          "bytes": 552640
+        },
+        {
+          "file": "vehicles/railwaytrack_curve.glb",
+          "tags": [
+            "train",
+            "vehicle",
+            "rail"
+          ],
+          "height": 0.14,
+          "bytes": 166508
+        },
+        {
+          "file": "vehicles/railwaytrack_straight.glb",
+          "tags": [
+            "train",
+            "vehicle",
+            "rail"
+          ],
+          "height": 0.14,
+          "bytes": 103528
         }
       ]
     }

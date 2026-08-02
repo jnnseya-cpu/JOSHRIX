@@ -21,7 +21,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-02.59";
+export const BUILD_ID = "2026-08-02.60";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -170,7 +170,15 @@ Base URL: https://www.joshrix.com/assets/models3d/lib/  (append the filename, e.
 - PROPS/PICKUPS: chest_closed chest_open barrel crate torch campfire potion coin key star_collectable
 - CHARACTERS (all ~1.7 tall, AnimationClips "idle" + "walk"): guardian hero_knight mage villager enemy_goblin
 - CREATURES: enemy_slime (anim "bounce") enemy_bat (anim "fly") animal_deer (anim "walk")
-- VEHICLES/SPACE: car boat cart rocket asteroid planet satellite
+- VEHICLES/SPACE (stylised): car boat cart rocket asteroid planet satellite
+SECOND LIBRARY — DETAILED VEHICLES at https://www.joshrix.com/assets/models3d/vehicles/ (higher-detail models; use for racing, transport, war, sea, rail, flight and space concepts):
+- CARS: basiccar copcar racecar car simplecar cop cop_suv suv sportscar sportscar2
+- TRANSPORT: bus schoolbus taxi truck ambulance bicycle squareframebicycle · street props: trafficcone trafficlight trafficsign1 trafficsign2 trafficsign3
+- RAIL: locomotive_front locomotive_wagon locomotive_coaltender locomotive_passengerwagon cargotrain_front cargotrain_wagon cargotrain_container highspeed_wagon railwaytrack_straight railwaytrack_curve (build a track from repeated straight/curve pieces)
+- SEA: boat boatwsail sail_ship viking_boat lifeboat cruiseship
+- AIR: smallplane private_plane commercial_airplane military_airplane militaryairplane2
+- SPACE: planet1 planet2 planet3 smallplanet1 moon smallmoon asteroid1 asteroid2 asteroid3 bigasteroid biggerasteroid
+- MILITARY: tank
 USAGE RULES:
 1. const loader = new THREE.GLTFLoader(); loader.load(url, onLoad, undefined, onError) — the onError callback MUST build a primitive substitute so a failed download can never break the game.
 2. On load: gltf.scene.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } })
@@ -293,7 +301,7 @@ const FLOOR_3D: Array<[string, RegExp]> = [
   ["fog", /new\s+THREE\.(Fog|FogExp2)\s*\(/],
   // a premium world is dressed with real models OR real procedural materials —
   // one or the other, never bare untextured primitives on a flat plane
-  ["models or procedural textures", /models3d\/lib\/|CanvasTexture/],
+  ["models or procedural textures", /models3d\/(lib|vehicles)\/|CanvasTexture/],
 ];
 function missing3dFloor(html: string): string[] {
   return FLOOR_3D.filter(([, re]) => !re.test(html)).map(([n]) => n);
