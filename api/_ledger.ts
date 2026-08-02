@@ -291,6 +291,15 @@ export async function getWallet(sql: Sql, id: string) {
   return rows[0] ?? null;
 }
 
+/** Exact, case-insensitive lookup of the funded wallet already issued to an
+ *  email. The free tester grant is capped at ONE wallet per address; without
+ *  this an unauthenticated caller mints unlimited funded wallets (real AI spend). */
+export async function getWalletByEmail(sql: Sql, email: string) {
+  const rows = (await sql`SELECT id, balance, category, email, name, plan FROM wallets
+    WHERE lower(email) = lower(${email}) ORDER BY created_at ASC LIMIT 1`) as any[];
+  return rows[0] ?? null;
+}
+
 /** Admin lookup: find wallets by (partial) email or display name, case-insensitive —
  *  admins know people, not wallet IDs. Exact email matches sort first. */
 export async function findWalletsByIdentity(sql: Sql, q: string, limit = 8) {

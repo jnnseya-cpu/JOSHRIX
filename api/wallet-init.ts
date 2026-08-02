@@ -11,7 +11,7 @@
  * Without DATABASE_URL responds { mode: "no_db" } so the client keeps its local sim.
  */
 import { randomUUID } from "node:crypto";
-import { getDb, ensureGameSchema, createWallet, getWallet, refillTesterWallet, deleteWallet, updateWalletIdentity } from "./_ledger";
+import { getDb, ensureGameSchema, createWallet, getWallet, getWalletByEmail, refillTesterWallet, deleteWallet, updateWalletIdentity } from "./_ledger";
 
 export const TESTER_GRANT_ACU = 2000;
 
@@ -58,8 +58,33 @@ export default async function handler(req: any, res: any) {
       // Unknown id (e.g. DB was reset) — fall through and mint a fresh one.
     }
 
+    // FREE-AI CONTROL. Creating a wallet grants real, spendable AI credit, so the
+    // grant is bound to an identity and issued once per address. Without this an
+    // unauthenticated caller loops this endpoint and mints unlimited funded
+    // wallets — every one of them spending real provider money.
+    const addr = typeof email === "string" ? email.trim().toLowerCase() : "";
+    const validEmail = /^[^@\s]+@[^@\s.]+\.[^@\s]{2,}$/.test(addr) && addr.length <= 254;
+    if (!validEmail) {
+      // anonymous caller: issue an EMPTY wallet so the flow still works, but no
+      // credit until a signed-in identity claims it
+      const id0 = "w-" + randomUUID().replace(/-/g, "").slice(0, 20);
+      await createWallet(sql, id0, 0, "tester", null, name?.slice(0, 80) ?? null);
+      return res.status(200).json({
+        mode: "live", walletId: id0, balance: 0, category: "tester", plan: "explorer", created: true,
+        note: "Sign in with a verified email to claim your starter ACUs.",
+      });
+    }
+    const existing = await getWalletByEmail(sql, addr);
+    if (existing) {
+      // this address already has its one grant — hand back the SAME wallet
+      if (name) { try { await updateWalletIdentity(sql, existing.id, { name: name.slice(0, 80), email: addr }); } catch { /* best-effort */ } }
+      return res.status(200).json({
+        mode: "live", walletId: existing.id, balance: Number(existing.balance),
+        category: existing.category, plan: existing.plan ?? "explorer", created: false,
+      });
+    }
     const id = "w-" + randomUUID().replace(/-/g, "").slice(0, 20);
-    await createWallet(sql, id, TESTER_GRANT_ACU, "tester", email ?? null, name?.slice(0, 80) ?? null);
+    await createWallet(sql, id, TESTER_GRANT_ACU, "tester", addr, name?.slice(0, 80) ?? null);
     return res.status(200).json({ mode: "live", walletId: id, balance: TESTER_GRANT_ACU, category: "tester", plan: "explorer", created: true });
   } catch (err: any) {
     return res.status(502).json({ error: "Wallet init failed", detail: String(err?.message ?? err) });

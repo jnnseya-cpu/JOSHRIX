@@ -89,9 +89,13 @@ export const TopupRequestSchema = z.object({
   /** server-side wallet to credit on webhook settlement (rides Stripe metadata) */
   walletId: z.string().max(80).optional(),
 });
+/** Below this, UK card processing (1.4% + 20p) exceeds the sale and the
+ *  creator's payout goes NEGATIVE — the seller would be charged for selling.
+ *  Break-even is 27p on the card rail; 50p leaves a real margin at every rate. */
+export const MIN_LISTING_PRICE_MINOR = 50;
 export const CheckoutRequestSchema = z.object({
   listingId: z.string().min(1),
-  priceMinor: z.number().int().positive().max(10_000_000),
+  priceMinor: z.number().int().min(MIN_LISTING_PRICE_MINOR).max(10_000_000),
   method: z.enum(PaymentMethods),
   /** seller's plan decides commission; defaults to creator_pro (20%) in demo */
   sellerPlan: z.enum(PLANS.map((p) => p.id) as [PlanId, ...PlanId[]]).optional(),
@@ -128,6 +132,12 @@ export function marketplaceSplit(opts: {
 }) {
   const plan = PLANS.find((p) => p.id === (opts.sellerPlan ?? "creator_pro"))!;
   if (plan.commission === null) throw new Error("This plan cannot sell on the marketplace");
+  // Defence in depth: the schema enforces the floor at the edge, but this is the
+  // money function — refuse outright rather than compute a negative payout for a
+  // caller that bypassed validation.
+  if (!Number.isInteger(opts.grossMinor) || opts.grossMinor < MIN_LISTING_PRICE_MINOR) {
+    throw new Error(`Listing price must be at least ${MIN_LISTING_PRICE_MINOR}p — below that, processing fees exceed the sale`);
+  }
   const commissionMinor = Math.round(opts.grossMinor * plan.commission);
   const processingMinor = processorFeeMinor(opts.method, opts.grossMinor);
   const creatorNetBeforeLineage = opts.grossMinor - commissionMinor - processingMinor;

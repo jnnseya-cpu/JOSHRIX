@@ -10,7 +10,10 @@
 (function () {
   try {
     var p = JSON.parse(localStorage.getItem('jx.profile') || '{}');
-    if (!(p.displayName || p.handle || p.email)) location.replace('login.html?next=studio.html');
+    // require the EMAIL specifically: it is the identity the server binds the ACU
+    // grant to, so a profile without one cannot forge anyway — and accepting a
+    // bare displayName let a hand-written localStorage entry through the gate.
+    if (!p.email || String(p.email).indexOf('@') < 1) location.replace('login.html?next=studio.html');
   } catch (e) { location.replace('login.html?next=studio.html'); }
 })();
 </script>
