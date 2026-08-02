@@ -957,7 +957,7 @@ $('btnRefine').addEventListener('click', () => {
 let enhancing = false;
 $('btnEnhance').addEventListener('click', async () => {
   if (!(realBuild && realBuild.html)) { alert('No real build yet — forge a game first.'); return; }
-  if (realBuild.provider === 'engine') { alert('Enhance needs a bespoke AI build — press Refine Concept to forge one first.'); return; }
+  if (realBuild.provider === 'engine' || realBuild.__swapped) { alert('Enhance needs a bespoke AI build — the game on screen is the engine stand-in (the bespoke build failed and was refunded). Press Refine Concept → Forge to get a bespoke build first.'); return; }
   if (enhancing) return;
   enhancing = true;
   const btn = $('btnEnhance');
