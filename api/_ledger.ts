@@ -51,6 +51,10 @@ export async function ensureSchema(sql: Sql) {
     credited_at timestamptz NOT NULL DEFAULT now(),
     expires_at timestamptz NOT NULL DEFAULT now() + interval '12 months'
   )`;
+  // refund traceability: a charge must be mappable back to the wallet it funded
+  await sql`ALTER TABLE acu_credits ADD COLUMN IF NOT EXISTS payment_intent text`;
+  await sql`ALTER TABLE acu_credits ADD COLUMN IF NOT EXISTS wallet_id text`;
+  await sql`ALTER TABLE acu_credits ADD COLUMN IF NOT EXISTS clawed_back_at timestamptz`;
   await sql`CREATE TABLE IF NOT EXISTS founders (
     stripe_session text PRIMARY KEY,
     pass text NOT NULL,
@@ -100,13 +104,41 @@ export async function unclaimEvent(sql: Sql, eventId: string) {
 
 export async function creditAcu(
   sql: Sql,
-  opts: { stripeSession: string; email?: string | null; packageId: string; acu: number },
+  opts: { stripeSession: string; email?: string | null; packageId: string; acu: number; paymentIntent?: string | null; walletId?: string | null },
 ) {
   await sql`
-    INSERT INTO acu_credits (stripe_session, email, package_id, acu)
-    VALUES (${opts.stripeSession}, ${opts.email ?? null}, ${opts.packageId}, ${opts.acu})
+    INSERT INTO acu_credits (stripe_session, email, package_id, acu, payment_intent, wallet_id)
+    VALUES (${opts.stripeSession}, ${opts.email ?? null}, ${opts.packageId}, ${opts.acu}, ${opts.paymentIntent ?? null}, ${opts.walletId ?? null})
     ON CONFLICT (stripe_session) DO NOTHING
   `;
+}
+
+/**
+ * Refund clawback: find the ACU credit a refunded charge paid for, mark it
+ * clawed back ONCE, and return what must be removed from the buyer's wallet.
+ * Without this a refunded customer keeps spendable AI credit — the platform
+ * pays the provider bill for compute it was never paid for.
+ */
+export async function claimAcuClawback(sql: Sql, opts: { paymentIntent?: string | null; stripeSession?: string | null }) {
+  const rows = (await sql`
+    UPDATE acu_credits SET clawed_back_at = now()
+    WHERE clawed_back_at IS NULL
+      AND ((${opts.paymentIntent ?? null}::text IS NOT NULL AND payment_intent = ${opts.paymentIntent ?? null})
+        OR (${opts.stripeSession ?? null}::text IS NOT NULL AND stripe_session = ${opts.stripeSession ?? null}))
+    RETURNING acu, wallet_id, package_id`) as Array<{ acu: number; wallet_id: string | null; package_id: string }>;
+  return rows[0] ?? null;
+}
+
+/** Remove ACUs from a wallet without allowing a negative balance (clawback). */
+export async function clawbackWallet(sql: Sql, id: string, amount: number): Promise<{ removed: number; balance: number } | null> {
+  // capture the PRE-update balance so `removed` is exact when the wallet has
+  // already spent part of the refunded credit (RETURNING sees post-update values)
+  const rows = (await sql`
+    WITH prev AS (SELECT id, balance FROM wallets WHERE id = ${id})
+    UPDATE wallets w SET balance = GREATEST(0, w.balance - ${amount})
+    FROM prev WHERE w.id = prev.id
+    RETURNING w.balance AS balance, LEAST(${amount}::bigint, prev.balance) AS removed`) as Array<{ balance: number; removed: number }>;
+  return rows.length ? { removed: Number(rows[0].removed), balance: Number(rows[0].balance) } : null;
 }
 
 export async function recordFounder(
@@ -171,6 +203,18 @@ export async function ensureGameSchema(sql: Sql) {
     amount bigint NOT NULL,
     created_at timestamptz NOT NULL DEFAULT now(),
     refunded_at timestamptz
+  )`;
+  // marketplace listings: the PRICE LIVES HERE, never in the buyer's request
+  await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS price_minor bigint`;
+  await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS seller_plan text`;
+  await sql`CREATE TABLE IF NOT EXISTS entitlements (
+    id text PRIMARY KEY,
+    game_id text NOT NULL,
+    buyer_wallet text,
+    buyer_email text,
+    price_minor bigint NOT NULL,
+    stripe_session text UNIQUE,
+    granted_at timestamptz NOT NULL DEFAULT now()
   )`;
   await sql`CREATE TABLE IF NOT EXISTS forge_log (
     id bigserial PRIMARY KEY,
@@ -463,4 +507,108 @@ export async function saveDistRequest(sql: Sql, r: { gameId?: string | null; lan
   const rows = (await sql`INSERT INTO dist_requests (game_id, lane, store, mode, email, wallet_id)
     VALUES (${r.gameId ?? null}, ${r.lane}, ${r.store}, ${r.mode ?? null}, ${r.email ?? null}, ${r.walletId ?? null}) RETURNING id`) as Array<{ id: number }>;
   return Number(rows[0].id);
+}
+
+/* ---------------- marketplace: server-authoritative listings ---------------- */
+
+/** The listing a buyer is trying to purchase. Price and seller come from HERE,
+ *  never from the request body — a client-supplied price is not a price. */
+export async function getListing(sql: Sql, gameId: string) {
+  const rows = (await sql`SELECT id, title, status, price_minor, seller_plan, creator_wallet, creator_email
+    FROM games WHERE id = ${gameId}`) as Array<{ id: string; title: string; status: string; price_minor: number | null; seller_plan: string | null; creator_wallet: string | null; creator_email: string | null }>;
+  return rows[0] ?? null;
+}
+
+/** Creator sets their own listing price (validated against the floor upstream). */
+export async function setListingPrice(sql: Sql, gameId: string, walletId: string, priceMinor: number, sellerPlan: string): Promise<boolean> {
+  const rows = (await sql`UPDATE games SET price_minor = ${priceMinor}, seller_plan = ${sellerPlan}
+    WHERE id = ${gameId} AND creator_wallet = ${walletId} RETURNING id`) as any[];
+  return rows.length > 0;
+}
+
+/** Grant a purchase exactly once per Stripe session (idempotent under retries). */
+export async function grantEntitlement(sql: Sql, e: { id: string; gameId: string; buyerWallet?: string | null; buyerEmail?: string | null; priceMinor: number; stripeSession: string }): Promise<boolean> {
+  const rows = (await sql`INSERT INTO entitlements (id, game_id, buyer_wallet, buyer_email, price_minor, stripe_session)
+    VALUES (${e.id}, ${e.gameId}, ${e.buyerWallet ?? null}, ${e.buyerEmail ?? null}, ${e.priceMinor}, ${e.stripeSession})
+    ON CONFLICT (stripe_session) DO NOTHING RETURNING id`) as any[];
+  return rows.length > 0;
+}
+
+export async function hasEntitlement(sql: Sql, gameId: string, walletId: string): Promise<boolean> {
+  const rows = (await sql`SELECT id FROM entitlements WHERE game_id = ${gameId} AND buyer_wallet = ${walletId} LIMIT 1`) as any[];
+  return rows.length > 0;
+}
+
+/* ---------------- creator earnings + payout requests ------------------------ */
+
+export async function ensurePayoutSchema(sql: Sql) {
+  await sql`CREATE TABLE IF NOT EXISTS payout_requests (
+    id text PRIMARY KEY,
+    wallet_id text NOT NULL,
+    amount_minor bigint NOT NULL,
+    fee_minor bigint NOT NULL,
+    net_minor bigint NOT NULL,
+    rail text NOT NULL,
+    destination_ref text,
+    status text NOT NULL DEFAULT 'requested',
+    kyc_required boolean NOT NULL DEFAULT false,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    decided_at timestamptz,
+    decided_by text,
+    note text
+  )`;
+  await sql`CREATE TABLE IF NOT EXISTS creator_earnings (
+    wallet_id text PRIMARY KEY,
+    available_minor bigint NOT NULL DEFAULT 0,
+    reserved_minor bigint NOT NULL DEFAULT 0,
+    paid_minor bigint NOT NULL DEFAULT 0
+  )`;
+}
+
+/** Credit a creator's withdrawable balance (called on settled marketplace sales). */
+export async function creditEarnings(sql: Sql, walletId: string, amountMinor: number) {
+  await sql`INSERT INTO creator_earnings (wallet_id, available_minor) VALUES (${walletId}, ${amountMinor})
+    ON CONFLICT (wallet_id) DO UPDATE SET available_minor = creator_earnings.available_minor + ${amountMinor}`;
+}
+
+export async function getEarnings(sql: Sql, walletId: string) {
+  const rows = (await sql`SELECT wallet_id, available_minor, reserved_minor, paid_minor FROM creator_earnings WHERE wallet_id = ${walletId}`) as any[];
+  return rows[0] ?? { wallet_id: walletId, available_minor: 0, reserved_minor: 0, paid_minor: 0 };
+}
+
+/**
+ * Reserve funds for a withdrawal ATOMICALLY. Returns false when the creator
+ * cannot cover it — two concurrent requests cannot both succeed, so a creator
+ * can never withdraw the same earnings twice.
+ */
+export async function reserveForPayout(sql: Sql, walletId: string, amountMinor: number): Promise<boolean> {
+  const rows = (await sql`UPDATE creator_earnings
+    SET available_minor = available_minor - ${amountMinor}, reserved_minor = reserved_minor + ${amountMinor}
+    WHERE wallet_id = ${walletId} AND available_minor >= ${amountMinor}
+    RETURNING wallet_id`) as any[];
+  return rows.length > 0;
+}
+
+/** Release a reservation when a payout is rejected or fails. */
+export async function releaseReservation(sql: Sql, walletId: string, amountMinor: number) {
+  await sql`UPDATE creator_earnings
+    SET available_minor = available_minor + ${amountMinor}, reserved_minor = GREATEST(0, reserved_minor - ${amountMinor})
+    WHERE wallet_id = ${walletId}`;
+}
+
+export async function savePayoutRequest(sql: Sql, r: { id: string; walletId: string; amountMinor: number; feeMinor: number; netMinor: number; rail: string; destinationRef: string; kycRequired: boolean }) {
+  await sql`INSERT INTO payout_requests (id, wallet_id, amount_minor, fee_minor, net_minor, rail, destination_ref, kyc_required)
+    VALUES (${r.id}, ${r.walletId}, ${r.amountMinor}, ${r.feeMinor}, ${r.netMinor}, ${r.rail}, ${r.destinationRef}, ${r.kycRequired})`;
+}
+
+export async function listPayoutRequests(sql: Sql, status = "requested", limit = 50) {
+  return (await sql`SELECT id, wallet_id, amount_minor, fee_minor, net_minor, rail, status, kyc_required, created_at
+    FROM payout_requests WHERE status = ${status} ORDER BY created_at ASC LIMIT ${limit}`) as any[];
+}
+
+/** Operator decision. Single-use: a request can only leave 'requested' once. */
+export async function decidePayoutRequest(sql: Sql, id: string, status: "approved" | "rejected" | "paid", by: string, note?: string | null) {
+  const rows = (await sql`UPDATE payout_requests SET status = ${status}, decided_at = now(), decided_by = ${by}, note = ${note ?? null}
+    WHERE id = ${id} AND status = 'requested' RETURNING id, wallet_id, amount_minor`) as any[];
+  return rows[0] ?? null;
 }

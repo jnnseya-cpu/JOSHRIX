@@ -8,8 +8,8 @@
  *   Then copy the signing secret into the STRIPE_WEBHOOK_SECRET env var.
  */
 import Stripe from "stripe";
-import { TOPUP_PACKAGES, topupPostings, PLANS } from "../shared/payments";
-import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet, setWalletPlan, markWalletPurchased, unclaimEvent } from "./_ledger";
+import { TOPUP_PACKAGES, topupPostings, PLANS, marketplaceSplit, salePostings } from "../shared/payments";
+import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet, setWalletPlan, markWalletPurchased, unclaimEvent, claimAcuClawback, clawbackWallet, getListing, grantEntitlement, ensurePayoutSchema, creditEarnings } from "./_ledger";
 import { notify } from "./_notify";
 
 // Vercel: disable body parsing so the raw payload is available for verification
@@ -42,6 +42,16 @@ export function handleStripeEvent(event: Stripe.Event) {
           acu: pkg.acu,
           amountMinor: pkg.priceMinor,
           ledger: { kind: "acu_topup", postings: topupPostings(pkg.priceMinor) },
+        };
+      }
+      if (kind === "marketplace_sale") {
+        // price rode the session metadata from OUR server, never the buyer
+        return {
+          ok: true as const, action: "marketplace_sale", eventId: event.id,
+          gameId: session.metadata?.gameId ?? "",
+          priceMinor: Number(session.metadata?.priceMinor ?? 0),
+          sellerWallet: session.metadata?.sellerWallet ?? "",
+          buyerWalletId: session.metadata?.buyerWalletId ?? "",
         };
       }
       if (kind === "plan_subscription") {
@@ -117,7 +127,11 @@ export default async function handler(req: any, res: any) {
         if (result.ok && (result as any).action === "credit_acu") {
           const r = result as { packageId: string; acu: number; ledger: { postings: Array<{ account: string; deltaMinor: number }> } };
           await postTx(sql, "acu_topup", r.ledger.postings, { eventId: event.id, session: session.id ?? "", packageId: r.packageId });
-          await creditAcu(sql, { stripeSession: session.id ?? event.id, email, packageId: r.packageId, acu: r.acu });
+          await creditAcu(sql, {
+            stripeSession: session.id ?? event.id, email, packageId: r.packageId, acu: r.acu,
+            paymentIntent: typeof (session as any).payment_intent === "string" ? (session as any).payment_intent : null,
+            walletId: session.metadata?.walletId ?? null,
+          });
           // Build 2: land the purchased ACUs on the buyer's server wallet (id rode Checkout metadata)
           const walletId = session.metadata?.walletId;
           if (walletId) {
@@ -126,6 +140,35 @@ export default async function handler(req: any, res: any) {
             await markWalletPurchased(sql, walletId);   // paid wallets leave tester status forever
           }
           await notify("acu.topup.successful", email, { amount: r.acu.toLocaleString() });
+        } else if (result.ok && (result as any).action === "marketplace_sale") {
+          // Grant the purchase and post the split. The amount is re-derived from
+          // the LISTING, so a tampered session cannot change what the seller earns.
+          const r = result as any;
+          await ensureGameSchema(sql);
+          const listing = r.gameId ? await getListing(sql, r.gameId) : null;
+          const priceMinor = Number(listing?.price_minor ?? r.priceMinor ?? 0);
+          if (listing && priceMinor > 0) {
+            const sellerPlan = PLANS.find((p) => p.id === listing.seller_plan)?.id ?? "creator_pro";
+            const split = marketplaceSplit({ grossMinor: priceMinor, method: "card", sellerPlan, hasLineage: false });
+            const granted = await grantEntitlement(sql, {
+              id: (session.id ?? event.id) + ":" + listing.id,
+              gameId: listing.id,
+              buyerWallet: r.buyerWalletId || null,
+              buyerEmail: email,
+              priceMinor,
+              stripeSession: session.id ?? event.id,
+            });
+            if (granted) {
+              await postTx(sql, "marketplace_sale", salePostings(split), { eventId: event.id, gameId: listing.id, session: session.id ?? "" });
+              // the seller's share becomes withdrawable earnings — only ever on a
+              // NEW entitlement, so a replayed webhook cannot pay them twice
+              if (listing.creator_wallet && split.creatorMinor > 0) {
+                await ensurePayoutSchema(sql);
+                await creditEarnings(sql, listing.creator_wallet, split.creatorMinor);
+              }
+            }
+          }
+          await notify("marketplace.purchase", email, { title: listing?.title ?? "your world" });
         } else if (result.ok && (result as any).action === "plan_activated") {
           // subscription settled: set the wallet's plan + credit the month's ACUs
           const planId = (result as any).planId as string;
@@ -161,8 +204,27 @@ export default async function handler(req: any, res: any) {
               { account: "deferred_acu_revenue", deltaMinor: amt },
             ], { eventId: event.id });
           }
-          await notify("executive.alert", process.env.CONTACT_INBOX || process.env.SMTP_USER || null,
-            { item: `Stripe refund £${(amt / 100).toFixed(2)} — review the buyer's wallet for ACU clawback (event ${event.id})` });
+          // AUTOMATIC ACU CLAWBACK: a refunded customer must not keep spendable
+          // AI credit, or the platform pays the provider bill for compute it was
+          // never paid for. Single-use per credit, never drives a balance negative.
+          const ch = (event.data?.object ?? {}) as any;
+          let clawed: { acu: number; removed: number; walletId: string } | null = null;
+          try {
+            await ensureGameSchema(sql);
+            const credit = await claimAcuClawback(sql, {
+              paymentIntent: typeof ch.payment_intent === "string" ? ch.payment_intent : null,
+              stripeSession: null,
+            });
+            if (credit?.wallet_id) {
+              const w = await clawbackWallet(sql, credit.wallet_id, Number(credit.acu));
+              if (w) clawed = { acu: Number(credit.acu), removed: w.removed, walletId: credit.wallet_id };
+            }
+          } catch (e) { console.error(JSON.stringify({ clawbackError: String((e as any)?.message ?? e), eventId: event.id })); }
+          await notify("executive.alert", process.env.CONTACT_INBOX || process.env.SMTP_USER || null, {
+            item: clawed
+              ? `Stripe refund £${(amt / 100).toFixed(2)} — ${clawed.removed} of ${clawed.acu} ACUs clawed back from ${clawed.walletId}${clawed.removed < clawed.acu ? " (rest already spent — shortfall to write off)" : ""} (event ${event.id})`
+              : `Stripe refund £${(amt / 100).toFixed(2)} — no matching ACU credit found; review manually (event ${event.id})`,
+          });
         } else if (result.ok && (result as any).action === "founder_pass") {
           await recordFounder(sql, { stripeSession: session.id ?? event.id, pass: (result as any).pass, email, amountMinor: (session.amount_total as number) ?? null });
         }
