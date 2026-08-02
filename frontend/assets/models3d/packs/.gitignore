@@ -1,0 +1,23 @@
+# Asset packs are dropped in here whole — bundles carry tens of thousands of
+# files a browser game can never use (2D sprites, audio, UI, previews, Blender
+# sources, FBX). Ignore everything, then re-include ONLY 3D model formats, so
+# copying a full bundle in stages just the models instead of 100k+ files.
+#
+# Committed models are converted to GLB by tools/obj-to-glb.mjs and moved out
+# of packs/; nothing here is served to players directly.
+
+# ignore everything...
+*
+
+# ...but descend into directories so nested models are still found
+!*/
+
+# ...and keep the model formats we can load or convert
+!*.glb
+!*.gltf
+!*.bin
+!*.obj
+!*.mtl
+
+!README.md
+!.gitignore
