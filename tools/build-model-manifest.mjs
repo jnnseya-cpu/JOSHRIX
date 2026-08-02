@@ -39,20 +39,15 @@ const TAGWORDS = [
   [/snow|ice|desert|sand|cactus|lava|swamp/i, ["biome", "nature"]],
 ];
 
-/** Packs whose license differs from the repo default — stated per pack, never guessed. */
-const KNOWN_LICENSES = {
-  "kenney-nature": "CC0 1.0 — Kenney (kenney.nl)",
-  "kenney-castle": "CC0 1.0 — Kenney (kenney.nl)",
-  "kenney-survival": "CC0 1.0 — Kenney (kenney.nl)",
-  "kenney-city": "CC0 1.0 — Kenney (kenney.nl)",
-  "kenney-space": "CC0 1.0 — Kenney (kenney.nl)",
-  "kenney-cars": "CC0 1.0 — Kenney (kenney.nl)",
-  "kenney-fantasy-town": "CC0 1.0 — Kenney (kenney.nl)",
-  "quaternius-characters": "CC0 1.0 — Quaternius (quaternius.com)",
-  "quaternius-nature": "CC0 1.0 — Quaternius (quaternius.com)",
-  "kaykit-dungeon": "CC0 1.0 — Kay Lousberg (kaylousberg.itch.io)",
-  "kaykit-characters": "CC0 1.0 — Kay Lousberg (kaylousberg.itch.io)",
-};
+/** Source attribution by pack-name prefix, so any pack named e.g.
+ *  "quaternius-anything" is attributed correctly without editing this list. */
+const LICENSE_PREFIXES = [
+  [/^kenney/i, "CC0 1.0 — Kenney (kenney.nl)"],
+  [/^quaternius|^quat/i, "CC0 1.0 — Quaternius (quaternius.com)"],
+  [/^kaykit|^kay-/i, "CC0 1.0 — Kay Lousberg (kaylousberg.itch.io)"],
+];
+const licenseFor = (pack) =>
+  LICENSE_PREFIXES.find(([re]) => re.test(pack))?.[1] || "CC0 (verify at source before publishing)";
 
 function tagsFor(file) {
   const base = path.basename(file, ".glb");
@@ -80,7 +75,7 @@ function scanPacks() {
     walk(full, "");
     if (!files.length) continue;
     out[dir] = {
-      license: KNOWN_LICENSES[dir] || "CC0 (verify at source before publishing)",
+      license: licenseFor(dir),
       models: files.sort().map((f) => ({
         file: path.posix.join("packs", dir, f),
         tags: tagsFor(f),
