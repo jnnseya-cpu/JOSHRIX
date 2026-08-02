@@ -21,7 +21,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-02.61";
+export const BUILD_ID = "2026-08-02.62";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -180,6 +180,7 @@ SECOND LIBRARY — DETAILED VEHICLES at https://www.joshrix.com/assets/models3d/
 - SPACE: planet1 planet2 planet3 smallplanet1 moon smallmoon asteroid1 asteroid2 asteroid3 bigasteroid biggerasteroid
 - MILITARY: tank
 USAGE RULES:
+0. **CANVAS FIRST — THIS IS THE #1 CAUSE OF DEAD BUILDS.** Create the renderer, append renderer.domElement to the page, and render one frame BEFORE any model loading starts. The animation loop must run from that first frame. Models are decoration that arrive LATER and get added to the scene inside their callbacks. NEVER await/Promise.all model loads before showing the canvas, never build the scene inside a loader callback, never gate the title screen on downloads. A player must see your world within one second even if every model 404s.
 1. const loader = new THREE.GLTFLoader(); loader.load(url, onLoad, undefined, onError) — the onError callback MUST build a primitive substitute so a failed download can never break the game.
 2. On load: gltf.scene.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } })
 3. Load each model ONCE, then .clone() it for every placement (safe — these are node-animated, not skinned). Load in parallel and start the game when they settle.
@@ -429,7 +430,7 @@ export async function fullSizeProbe(): Promise<Record<string, any>> {
 export async function generateGameHtml(
   prompt: string,
   opts: { title?: string; summary?: string; language?: string; mode?: string } = {},
-): Promise<{ html: string; provider: string; usage?: TokenUsage }> {
+): Promise<{ html: string; provider: string; usage?: TokenUsage; attempts?: string[] }> {
   const is3d = opts.mode === "3d";
   const system = is3d ? GAME_SYSTEM_3D : GAME_SYSTEM;
   const userMsg = `Creator's game concept:\n${prompt}\n\nBlueprint title: ${opts.title ?? "(derive from concept)"}\nBlueprint summary: ${opts.summary ?? "(none)"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the concept"}`;
@@ -469,6 +470,14 @@ export async function generateGameHtml(
     try {
       const r = await c.run();
       if (is3d) {
+        // A 3D build that never appends its canvas renders a blank screen no
+        // matter how good the code is. Require the append so the chain can try
+        // the next provider instead of shipping a guaranteed-blank game.
+        if (!/appendChild\s*\(\s*[\w.]*(renderer|\w+)\s*\.\s*domElement\s*\)|appendChild\s*\(\s*canvas\s*\)/.test(r.html)) {
+          errors.push(c.name + ": never appends renderer.domElement — the page would stay blank");
+          if (!subFloor) subFloor = { html: r.html, provider: c.name, usage: r.usage };
+          continue;
+        }
         const miss = missing3dFloor(r.html);
         if (miss.length) {
           // valid and playable but below the premium bar — stash as a backstop
@@ -478,11 +487,11 @@ export async function generateGameHtml(
           continue;
         }
       }
-      return { html: r.html, provider: c.name, usage: r.usage };
+      return { html: r.html, provider: c.name, usage: r.usage, attempts: errors.slice() };
     } catch (e: any) { errors.push(c.name + ": " + String(e?.message ?? e)); }
   }
   // every provider missed the floor — a modest REAL 3D game still beats no game
-  if (subFloor) return subFloor;
+  if (subFloor) return { ...subFloor, attempts: errors.slice() };
   if (process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY) {
     throw new Error(errors.length ? errors.join(" | ") : "all configured AI providers failed this run");
   }

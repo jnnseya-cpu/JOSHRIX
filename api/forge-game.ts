@@ -93,9 +93,11 @@ export default async function handler(req: any, res: any) {
     let fallbackHtml: string | undefined;
     let aiUsage: { inputTokens: number; outputTokens: number } | undefined;
     let bespokeError: string | undefined;
+    let attemptTrail: string[] = [];
     const genStart = Date.now();
     try {
       const ai = await generateGameHtml(prompt, { title, summary, language, mode: is3d ? "3d" : "2d" });
+      attemptTrail = ai.attempts ?? [];
       // any REAL provider build ships as bespoke (claude/gemini/openai); the
       // keyless demo build is weaker than the engine, so the engine wins there.
       // looksPlayable, not a literal <canvas> check — 3D builds create their
@@ -118,7 +120,10 @@ export default async function handler(req: any, res: any) {
     // provider that shipped (or 'engine' + the aggregated error) — diagnosable
     // from one URL, independent of what the creator's browser shows.
     if (sql) {
-      try { await recordForgeLog(sql, { provider, mode: is3d ? "3d" : "2d", ms: Date.now() - genStart, error: bespokeError ?? null }); } catch { /* best-effort */ }
+      // record the rejected providers too, not just total failure: knowing WHY
+      // the first two were skipped is what explains a slow or surprising build
+      const trail = bespokeError ?? (attemptTrail.length ? attemptTrail.join(" | ").slice(0, 600) : null);
+      try { await recordForgeLog(sql, { provider, mode: is3d ? "3d" : "2d", ms: Date.now() - genStart, error: trail }); } catch { /* best-effort */ }
     }
     // METERED SETTLEMENT (business model: charge = 4x the AI provider cost of THIS
     // run, from actual token usage). The upfront debit was only a hold:
