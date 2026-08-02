@@ -518,6 +518,13 @@ let refundedForge = null;
 window.addEventListener('message', async (e) => {
   const d = e && e.data;
   if (!d || d.__jx !== 'renderfail' || !realBuild) return;
+  // keep the crash reason: shown to the creator AND logged server-side, so a
+  // bespoke build that dies on screen names its killer in /api/forge-log
+  const failWhy = (typeof d.reason === 'string' && d.reason) ? d.reason.slice(0, 600) : '';
+  if (failWhy && !realBuild.__failReason) realBuild.__failReason = failWhy;
+  const whyHtml = realBuild.__failReason
+    ? '<br><span style="opacity:.8;font-size:.85em">Why: ' + String(realBuild.__failReason).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>'
+    : '';
   // 1. never leave a broken frame on screen: swap to the guaranteed engine build
   if (realBuild.fallbackHtml && !realBuild.__swapped) {
     realBuild.__swapped = true;
@@ -527,7 +534,7 @@ window.addEventListener('message', async (e) => {
     const note = $('protoNote4');
     if (note) {
       note.style.display = 'block';
-      note.innerHTML = '⚠ <b>The bespoke AI build hit an error</b>, so the JOSHRIX engine build of your concept is playing instead — and your forge charge is being refunded. Refine Concept re-runs the bespoke build.';
+      note.innerHTML = '⚠ <b>The bespoke AI build hit an error</b>, so the JOSHRIX engine build of your concept is playing instead — and your forge charge is being refunded. Refine Concept re-runs the bespoke build.' + whyHtml;
     }
   }
   // 2. money back for the failed bespoke build (single-use, server-verified)
@@ -537,16 +544,16 @@ window.addEventListener('message', async (e) => {
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
     const r = await fetch(base + '/api/forge-refund', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ walletId: serverWalletId || undefined, forgeId: realBuild.forgeId })
+      body: JSON.stringify({ walletId: serverWalletId || undefined, forgeId: realBuild.forgeId, provider: realBuild.provider || undefined, reason: realBuild.__failReason || failWhy || 'render watchdog fired (no detail)' })
     });
     const j = await r.json().catch(() => null);
     if (j && typeof j.balanceAfter === 'number') syncBalance(j.balanceAfter);
     const note = $('protoNote4');
     if (note && j && j.refunded) {
       note.style.display = 'block';
-      note.innerHTML = realBuild.__swapped
+      note.innerHTML = (realBuild.__swapped
         ? '✓ <b>Refunded ' + (j.amount || 300) + ' ACUs.</b> The bespoke AI build failed, so the engine build of your concept is playing instead — free. Refine Concept re-runs the bespoke build.'
-        : '✓ <b>Refunded ' + (j.amount || 300) + ' ACUs</b> — this build failed to render, so you were not charged for it. Press <b>Refine Concept</b> to forge again.';
+        : '✓ <b>Refunded ' + (j.amount || 300) + ' ACUs</b> — this build failed to render, so you were not charged for it. Press <b>Refine Concept</b> to forge again.') + whyHtml;
     }
   } catch (_) { /* refund is best-effort; the charge id stays claimable */ }
 });
