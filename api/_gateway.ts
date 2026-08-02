@@ -21,7 +21,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-02.60";
+export const BUILD_ID = "2026-08-02.61";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -451,7 +451,11 @@ export async function generateGameHtml(
   const claude: Cand = { name: "claude", enabled: !!process.env.ANTHROPIC_API_KEY, run: () => claudeGenerate(system, userMsg, claudeMax) };
   const gemini: Cand = { name: "gemini", enabled: !!process.env.GEMINI_API_KEY, run: () => geminiGenerate(system, userMsg, geminiMax) };
   const openai: Cand = { name: "openai", enabled: !!process.env.OPENAI_API_KEY, run: () => openaiGenerate(system, userMsg, openaiMax) };
-  const chain = is3d ? [claude, gemini, openai] : [gemini, claude, openai];
+  // Gemini leads BOTH lanes. The full-size probe is unambiguous: Gemini returns a
+  // complete game in ~35-40s, Claude takes 120-190s and truncates at this size.
+  // Leading 3D with Claude spent the whole chain budget on one likely failure and
+  // left no time for the fallbacks — the creator got the engine build instead.
+  const chain = [gemini, claude, openai];
   const errors: string[] = [];
   // Whole-chain time budget: the serverless function dies hard at 300s, and a
   // reply must still be built, settled, and persisted after generation. Skip
