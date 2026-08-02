@@ -21,7 +21,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-02.62";
+export const BUILD_ID = "2026-08-02.63";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -265,11 +265,11 @@ export async function enhanceGameHtml(
   // above forge budgets (a truncated reply is treated as a failure, never shipped);
   // Gemini leads because the full-size probe shows it completing fast and whole,
   // and gpt-4o stays under its 16384 output cap.
-  if (process.env.GEMINI_API_KEY) {
+  if (process.env.OPENAI_API_KEY) {
     try {
-      const g = await geminiGenerate(ENHANCE_SYSTEM, userMsg, 20000);
-      return { html: g.html, provider: "gemini", usage: g.usage };
-    } catch (e: any) { errors.push("gemini: " + String(e?.message ?? e)); }
+      const o = await openaiGenerate(ENHANCE_SYSTEM, userMsg, 15000);
+      return { html: o.html, provider: "openai", usage: o.usage };
+    } catch (e: any) { errors.push("openai: " + String(e?.message ?? e)); }
   }
   if (process.env.ANTHROPIC_API_KEY) {
     try {
@@ -277,11 +277,11 @@ export async function enhanceGameHtml(
       return { html: c.html, provider: "claude", usage: c.usage };
     } catch (e: any) { errors.push("claude: " + String(e?.message ?? e)); }
   }
-  if (process.env.OPENAI_API_KEY) {
+  if (process.env.GEMINI_API_KEY) {
     try {
-      const o = await openaiGenerate(ENHANCE_SYSTEM, userMsg, 15000);
-      return { html: o.html, provider: "openai", usage: o.usage };
-    } catch (e: any) { errors.push("openai: " + String(e?.message ?? e)); }
+      const g = await geminiGenerate(ENHANCE_SYSTEM, userMsg, 20000);
+      return { html: g.html, provider: "gemini", usage: g.usage };
+    } catch (e: any) { errors.push("gemini: " + String(e?.message ?? e)); }
   }
   throw new Error(errors.length ? errors.join(" | ") : "no AI provider configured");
 }
@@ -452,11 +452,13 @@ export async function generateGameHtml(
   const claude: Cand = { name: "claude", enabled: !!process.env.ANTHROPIC_API_KEY, run: () => claudeGenerate(system, userMsg, claudeMax) };
   const gemini: Cand = { name: "gemini", enabled: !!process.env.GEMINI_API_KEY, run: () => geminiGenerate(system, userMsg, geminiMax) };
   const openai: Cand = { name: "openai", enabled: !!process.env.OPENAI_API_KEY, run: () => openaiGenerate(system, userMsg, openaiMax) };
-  // Gemini leads BOTH lanes. The full-size probe is unambiguous: Gemini returns a
-  // complete game in ~35-40s, Claude takes 120-190s and truncates at this size.
-  // Leading 3D with Claude spent the whole chain budget on one likely failure and
-  // left no time for the fallbacks — the creator got the engine build instead.
-  const chain = [gemini, claude, openai];
+  // Order comes from the live forge log, not from assumptions about model quality:
+  //   openai  — completed every full-size build recorded, ~40s
+  //   claude  — truncates at this size ("no closing </html>"), ~190s wasted first
+  //   gemini  — currently HTTP 403 "project has been denied access" (account-side)
+  // Leading with anything else spent ~190s failing before the working provider
+  // even started, which is why forges took 220-235s instead of well under a minute.
+  const chain = [openai, claude, gemini];
   const errors: string[] = [];
   // Whole-chain time budget: the serverless function dies hard at 300s, and a
   // reply must still be built, settled, and persisted after generation. Skip
