@@ -12,6 +12,7 @@
  */
 import { randomUUID } from "node:crypto";
 import { getDb, ensureGameSchema, createWallet, getWallet, getWalletByEmail, refillTesterWallet, deleteWallet, updateWalletIdentity } from "./_ledger";
+import { normalizeEmail, clientIp, rateLimit, tooMany } from "./_guard";
 
 export const TESTER_GRANT_ACU = 2000;
 
@@ -24,6 +25,11 @@ export default async function handler(req: any, res: any) {
 
   const sql = getDb();
   if (!sql) return res.status(200).json({ mode: "no_db", note: "Set DATABASE_URL to enable server-side wallets." });
+
+  // 20 wallet operations per IP per hour: enough for real use, far too few to
+  // farm accounts or flood the wallets table
+  const rl = await rateLimit(sql, "wallet-init:" + clientIp(req), 20, 3600);
+  if (!rl.ok) return tooMany(res, rl.retryAfter, "wallet requests");
 
   const { walletId, email, name, action } = (req.body ?? {}) as Record<string, string>;
   try {
@@ -62,7 +68,10 @@ export default async function handler(req: any, res: any) {
     // grant is bound to an identity and issued once per address. Without this an
     // unauthenticated caller loops this endpoint and mints unlimited funded
     // wallets — every one of them spending real provider money.
-    const addr = typeof email === "string" ? email.trim().toLowerCase() : "";
+    // normalizeEmail strips +tags and gmail dots: without it one mailbox mints
+    // unlimited funded wallets via alice+1@, alice+2@, a.l.i.c.e@ ...
+    const raw = typeof email === "string" ? email.trim() : "";
+    const addr = raw ? normalizeEmail(raw) : "";
     const validEmail = /^[^@\s]+@[^@\s.]+\.[^@\s]{2,}$/.test(addr) && addr.length <= 254;
     if (!validEmail) {
       // anonymous caller: issue an EMPTY wallet so the flow still works, but no

@@ -11,7 +11,7 @@
 import Stripe from "stripe";
 import { CheckoutRequestSchema, marketplaceSplit, salePostings, MIN_LISTING_PRICE_MINOR, PLANS } from "../shared/payments";
 import { getDb, ensureGameSchema, getListing } from "./_ledger";
-import { safeOrigin } from "./_guard";
+import { safeOrigin, clientIp, rateLimit, tooMany } from "./_guard";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -19,6 +19,12 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+
+  const _sql = getDb();
+  if (_sql) {
+    const _rl = await rateLimit(_sql, "checkout:" + clientIp(req), 20, 3600);
+    if (!_rl.ok) return tooMany(res, _rl.retryAfter, "purchase attempts");
+  }
 
   const { listingId, method, buyerWalletId, buyerEmail } = (req.body ?? {}) as Record<string, string>;
   if (!listingId || typeof listingId !== "string") {

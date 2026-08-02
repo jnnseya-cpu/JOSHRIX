@@ -10,6 +10,7 @@ import { randomUUID } from "crypto";
 import { generateGameHtml, looksPlayable, acuChargeForUsage, FORGE_GAME_ACU_CHARGE, FORGE_GAME_3D_ACU_CHARGE, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE } from "./_gateway";
 import { buildPlayableGame } from "./_engine";
 import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge, saveForgeResult, recordForgeLog } from "./_ledger";
+import { clientIp, rateLimit, tooMany, forgeDisabled } from "./_guard";
 import type { GameBlueprint } from "../shared/contracts";
 
 /** Coerce whatever the client sends as a blueprint into the shape the engine needs. */
@@ -50,6 +51,9 @@ export default async function handler(req: any, res: any) {
   if (prompt.length > 20000) {
     return res.status(400).json({ error: "Prompt too long (max 20,000 chars)." });
   }
+  const paused = forgeDisabled();
+  if (paused) return res.status(503).json({ error: paused });
+
   const is3d = mode === "3d";
   const CHARGE = is3d ? FORGE_GAME_3D_ACU_CHARGE : FORGE_GAME_ACU_CHARGE;
 
@@ -57,6 +61,15 @@ export default async function handler(req: any, res: any) {
   const sql = getDb();
   let balanceAfter: number | null = null;
   if (sql) {
+    // DENIAL-OF-WALLET GUARD. Every forge spends real provider money, so the
+    // rate limit is per IP *and* per wallet — a stolen wallet id cannot be
+    // driven from many machines, and one machine cannot cycle many wallets.
+    const ipRl = await rateLimit(sql, "forge:ip:" + clientIp(req), 30, 3600);
+    if (!ipRl.ok) return tooMany(res, ipRl.retryAfter, "game builds");
+    if (walletId) {
+      const wRl = await rateLimit(sql, "forge:w:" + String(walletId).slice(0, 80), 20, 3600);
+      if (!wRl.ok) return tooMany(res, wRl.retryAfter, "game builds on this account");
+    }
     if (!walletId) return res.status(402).json({ error: "No wallet — open the Studio to initialise your ACU wallet, or top up at /wallet.html." });
     try {
       await ensureGameSchema(sql);
