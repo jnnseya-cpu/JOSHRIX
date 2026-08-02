@@ -21,7 +21,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-02.56";
+export const BUILD_ID = "2026-08-02.57";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -160,7 +160,9 @@ const GAME_SYSTEM_3D = `You are the JOSHRIX Code Agent. Generate a COMPLETE HTML
 THREE.JS SETUP (the ONLY allowed external resource — include this exact tag first in <head>):
 <script src="https://www.joshrix.com/assets/vendor/three.min.js"><\/script>
 This is three.js r147 UMD: the global THREE. NO ES modules, NO import statements, NO addons (OrbitControls/EffectComposer/GLTFLoader are NOT available — write your own camera logic; build all assets procedurally).
-VISUAL FIDELITY BAR (all of these — this is what the creator is paying premium for):
+VISUAL FIDELITY BAR (all of these — this is what the creator is paying premium for).
+HARD REQUIREMENTS — the gateway REJECTS a 3D file missing any of these three, so they are not suggestions:
+(1) renderer.shadowMap.enabled = true with a shadow-casting directional light, (2) scene.fog = new THREE.Fog(...) or FogExp2 matched to the sky, (3) at least one procedural THREE.CanvasTexture on a material.
 - Full lighting rig: THREE.HemisphereLight (sky/ground colours) + directional key light WITH SHADOWS (renderer.shadowMap.enabled=true, type=THREE.PCFSoftShadowMap; castShadow/receiveShadow on meshes; tune shadow.camera bounds + mapSize 2048) + coloured accent point lights. THREE.Fog or FogExp2 matched to the sky for atmospheric depth.
 - A real SKY: large inverted sphere or scene.background gradient via procedural CanvasTexture — sun/moon disc, stars or clouds as fits the concept. Never a flat colour void.
 - PROCEDURAL TEXTURES: use CanvasTexture (draw noise, stripes, grain, windows, bark, rock mottling onto an offscreen canvas) on MeshStandardMaterial with tuned roughness/metalness — surfaces must look like material, not plastic. Emissive maps for glow (crystals, windows at night, lava).
@@ -263,6 +265,19 @@ export async function enhanceGameHtml(
  *  so demanding the tag alone silently rejects every valid 3D build. */
 export function looksPlayable(html: string): boolean {
   return html.includes("<canvas") || html.includes("WebGLRenderer") || html.includes("three.min.js");
+}
+
+/** The 3D fidelity floor, enforced: a premium 3D build without shadows, fog,
+ *  and procedural textures is a tech demo, not a product. A build missing any
+ *  of these is treated like a provider failure so the next provider gets its
+ *  shot at the full bar (the modest build is kept only as a last resort). */
+const FLOOR_3D: Array<[string, RegExp]> = [
+  ["shadows", /shadowMap\s*\.\s*enabled\s*=\s*true/],
+  ["fog", /new\s+THREE\.(Fog|FogExp2)\s*\(/],
+  ["procedural textures", /CanvasTexture/],
+];
+function missing3dFloor(html: string): string[] {
+  return FLOOR_3D.filter(([, re]) => !re.test(html)).map(([n]) => n);
 }
 
 /** Every inline script in a shipping build must PARSE. A syntax error is a
@@ -416,14 +431,27 @@ export async function generateGameHtml(
   // remaining providers rather than start one that can't finish in time.
   const chainStart = Date.now();
   const CHAIN_BUDGET_MS = 230_000;
+  let subFloor: { html: string; provider: string; usage?: TokenUsage } | null = null;
   for (const c of chain) {
     if (!c.enabled) continue;
     if (Date.now() - chainStart > CHAIN_BUDGET_MS) { errors.push(c.name + ": skipped — forge time budget exhausted"); continue; }
     try {
       const r = await c.run();
+      if (is3d) {
+        const miss = missing3dFloor(r.html);
+        if (miss.length) {
+          // valid and playable but below the premium bar — stash as a backstop
+          // and let the next provider try to hit the full fidelity floor
+          errors.push(c.name + ": below the 3D fidelity floor (missing: " + miss.join(", ") + ")");
+          if (!subFloor) subFloor = { html: r.html, provider: c.name, usage: r.usage };
+          continue;
+        }
+      }
       return { html: r.html, provider: c.name, usage: r.usage };
     } catch (e: any) { errors.push(c.name + ": " + String(e?.message ?? e)); }
   }
+  // every provider missed the floor — a modest REAL 3D game still beats no game
+  if (subFloor) return subFloor;
   if (process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY) {
     throw new Error(errors.length ? errors.join(" | ") : "all configured AI providers failed this run");
   }
