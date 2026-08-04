@@ -21,7 +21,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-02.67";
+export const BUILD_ID = "2026-08-02.68";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -218,6 +218,8 @@ export const FORGE_GAME_3D_ACU_CHARGE = 1200;   // HOLD (3D estimate) — settle
 export const FORGE_MIN_CHARGE = 40;             // metered floor when the Code Agent ran
 export const ENGINE_BUILD_CHARGE = 60;          // flat platform charge when only the engine built
 export const ENHANCE_HOLD = 500;                // HOLD per enhance pass — settled to metered 4x actual
+export const GROWTH_HOLD = 60;                  // HOLD per growth tool — settled to metered 4x actual
+export const GROWTH_MIN_CHARGE = 4;             // metered floor per growth run
 
 /** The serverless function dies hard at 300s — a generation that runs past it
  *  drops the connection and the creator sees "Code Agent unreachable" with no
@@ -515,4 +517,121 @@ function tap(e){const r=cv.getBoundingClientRect(),p=e.touches?e.touches[0]:e;co
 orbs=orbs.filter(o=>{if(Math.hypot(o.x-x,o.y-y)<o.r+8){score++;return false}return true});e.preventDefault()}
 cv.addEventListener('mousedown',tap);cv.addEventListener('touchstart',tap,{passive:false});draw();</script></body></html>`;
   return { html, provider: "demo" };
+}
+
+
+/* ---------------- AI Growth Engine: marketing copy for creators ------------- */
+
+const GROWTH_BRIEFS: Record<string, string> = {
+  social_posts: `Write 5 ready-to-post social messages promoting this game: two for X/Twitter (<=260 chars each, 2-3 hashtags), two for Instagram/Facebook (2-4 short lines, one emoji maximum per line), one for LinkedIn (professional, 400-600 chars, the creator-economy angle). Return JSON: {"posts":[{"platform":"x|instagram|facebook|linkedin","text":"...","hashtags":["..."]}]}`,
+  game_advert: `Write paid-advert copy for this game across three formats. Return JSON: {"ads":[{"format":"search|social|display","headline":"<=40 chars","body":"<=120 chars","cta":"<=20 chars"}],"angles":["the 3 strongest selling angles, one line each"]}`,
+  email_campaign: `Write a 3-email launch sequence: announcement, social-proof follow-up, last-call. Return JSON: {"emails":[{"send":"day 0|day 3|day 7","subject":"<=55 chars","preheader":"<=90 chars","body":"plain text with line breaks, 120-200 words, one clear call to action"}]}`,
+  landing_page: `Write a one-page landing page for this game. Return JSON: {"hero":{"headline":"<=60 chars","subhead":"<=140 chars","cta":"<=24 chars"},"sections":[{"heading":"...","body":"40-70 words"}],"faq":[{"q":"...","a":"..."}],"metaTitle":"<=60 chars","metaDescription":"<=155 chars"}`,
+  hashtags: `Produce hashtag sets for this game. Return JSON: {"sets":[{"platform":"x|instagram|tiktok","broad":["5 high-reach tags"],"niche":["5 lower-competition tags"],"branded":["2-3 tags unique to this game"]}],"avoid":["tags that look spammy or are banned-adjacent"]}`,
+  video_script: `Write two short-video scripts (TikTok/Reels/Shorts) for this game. Return JSON: {"scripts":[{"length":"15s|30s","hook":"the first 2 seconds, spoken","beats":[{"t":"0-3s","visual":"what is on screen","voice":"what is said"}],"cta":"closing line","caption":"posting caption"}]}`,
+  performance: `Analyse the creator's REAL numbers below and recommend what to do next. Use ONLY the figures given — never invent a metric, percentage, benchmark or comparison. If the numbers are too small to support a conclusion, say so. Return JSON: {"headline":"one honest sentence","reading":["3-5 observations, each citing a real figure"],"actions":[{"do":"specific action","why":"tied to their data","effort":"low|medium|high"}]}`,
+  audience: `From the creator's REAL games and play counts below, describe who is actually playing and where to find more of them. Never invent demographics you cannot infer — say what is unknown. Return JSON: {"likelyAudience":"who, in one paragraph, hedged honestly","signals":["what in their data supports this"],"unknowns":["what cannot be known from platform data alone"],"channels":[{"channel":"...","why":"...","firstStep":"..."}]}`,
+  posting_time: `Recommend posting times using the creator's REAL play totals below plus well-established platform norms — and label clearly which is which. Never present a general norm as if it were measured from their audience. Return JSON: {"basis":"what their own data does and does not show","recommendations":[{"platform":"...","window":"e.g. Tue-Thu 18:00-21:00 local","source":"your data|general norm","confidence":"low|medium|high"}],"howToImprove":["how to gather real timing data"]}`,
+};
+
+const GROWTH_SYSTEM = `You are the JOSHRIX Growth Agent, a senior performance marketer writing for an individual game creator on joshrix.com (an AI game-creation platform where creators describe a game, the platform builds it, and it gets a public share link).
+RULES THAT OVERRIDE EVERYTHING:
+- NEVER invent statistics, engagement rates, benchmarks, revenue figures or audience demographics. If a number was not given to you, do not state one.
+- Never promise reach, sales, virality or ranking outcomes.
+- Never write anything a platform would flag as engagement bait ("comment YES", follow-for-follow, fake urgency, fake scarcity).
+- No competitor names, no real brand names, no borrowed celebrity likeness.
+- Use the creator's real game title and URL when given; never invent a URL.
+- Write in the requested language; default to English.
+Respond with ONLY the JSON object described, no markdown fences, no commentary.`;
+
+/** Growth Engine generation — same provider chain and failure discipline as the forge. */
+export async function generateGrowthCopy(
+  tool: string,
+  opts: { brief?: string; audience?: string; tone?: string; language?: string; facts?: Record<string, any> },
+): Promise<{ result: any; provider: string; usage?: TokenUsage }> {
+  const brief = GROWTH_BRIEFS[tool];
+  if (!brief) throw new Error("unknown growth tool");
+
+  const f = opts.facts ?? {};
+  const context = [
+    `TASK: ${brief}`,
+    "",
+    "CREATOR'S REAL CONTEXT (the only figures you may cite):",
+    `- game title: ${f.gameTitle ?? "(not published yet)"}`,
+    `- game summary: ${f.gameSummary ?? "(none)"}`,
+    `- game URL: ${f.gameUrl ?? "(none yet — do not invent one)"}`,
+    `- published games: ${f.publishedGames ?? 0}`,
+    `- total plays across all their games: ${f.totalPlays ?? 0}`,
+    `- most-played game: ${f.bestGame ? `"${f.bestGame.title}" with ${f.bestGame.plays} plays` : "(none)"}`,
+    "",
+    `Creator's brief: ${opts.brief || "(none given — work from the game details above)"}`,
+    `Target audience: ${opts.audience || "(not specified — infer conservatively)"}`,
+    `Tone: ${opts.tone || "confident, concrete, no hype"}`,
+    `Language: ${opts.language && opts.language !== "auto" ? opts.language : "English"}`,
+  ].join("\n");
+
+  const parse = (text: string) => {
+    const a = text.indexOf("{"), b = text.lastIndexOf("}");
+    if (a === -1 || b === -1) throw new Error("Growth Agent returned no JSON");
+    return JSON.parse(text.slice(a, b + 1));
+  };
+
+  const errors: string[] = [];
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      const r = await openaiText(GROWTH_SYSTEM, context, 3000);
+      return { result: parse(r.text), provider: "openai", usage: r.usage };
+    } catch (e: any) { errors.push("openai: " + String(e?.message ?? e)); }
+  }
+  if (process.env.ANTHROPIC_API_KEY) {
+    try {
+      const anthropic = new Anthropic();
+      const msg = await anthropic.messages.create({ model: "claude-sonnet-5", max_tokens: 3000, system: GROWTH_SYSTEM, messages: [{ role: "user", content: context }] });
+      const text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
+      return { result: parse(text), provider: "claude", usage: { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens } };
+    } catch (e: any) { errors.push("claude: " + String(e?.message ?? e)); }
+  }
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const r = await geminiText(GROWTH_SYSTEM, context, 3000);
+      return { result: parse(r.text), provider: "gemini", usage: r.usage };
+    } catch (e: any) { errors.push("gemini: " + String(e?.message ?? e)); }
+  }
+  throw new Error(errors.length ? errors.join(" | ") : "no AI provider configured");
+}
+
+/** Plain-text generation (the game helpers demand HTML; growth copy is JSON). */
+async function openaiText(system: string, user: string, maxTokens: number): Promise<{ text: string; usage?: TokenUsage }> {
+  const model = process.env.OPENAI_MODEL || "gpt-4o";
+  const r = await fetch("https://api.openai.com/v1/chat/completions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+    body: JSON.stringify({ model, messages: [{ role: "system", content: system }, { role: "user", content: user }], max_completion_tokens: maxTokens }),
+    signal: AbortSignal.timeout(90_000),
+  });
+  const j: any = await r.json().catch(() => null);
+  if (!r.ok) throw new Error(`OpenAI HTTP ${r.status}: ${String(j?.error?.message ?? "").slice(0, 160)}`);
+  const text = j?.choices?.[0]?.message?.content || "";
+  if (!text) throw new Error("OpenAI empty reply");
+  const u = j.usage;
+  return { text, usage: u ? { inputTokens: Number(u.prompt_tokens || 0), outputTokens: Number(u.completion_tokens || 0) } : undefined };
+}
+
+async function geminiText(system: string, user: string, maxTokens: number): Promise<{ text: string; usage?: TokenUsage }> {
+  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{ role: "user", parts: [{ text: user }] }],
+      generationConfig: { maxOutputTokens: maxTokens, temperature: 0.8, ...(model.includes("flash") ? { thinkingConfig: { thinkingBudget: 0 } } : {}) },
+    }),
+    signal: AbortSignal.timeout(90_000),
+  });
+  const j: any = await r.json().catch(() => null);
+  if (!r.ok) throw new Error(`Gemini HTTP ${r.status}: ${String(j?.error?.message ?? "").slice(0, 160)}`);
+  const text = (j?.candidates?.[0]?.content?.parts || []).map((p: any) => p.text || "").join("");
+  if (!text) throw new Error("Gemini empty reply");
+  const u = j.usageMetadata;
+  return { text, usage: u ? { inputTokens: Number(u.promptTokenCount || 0), outputTokens: Number(u.candidatesTokenCount || 0) } : undefined };
 }
