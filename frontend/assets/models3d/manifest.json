@@ -2126,6 +2126,36 @@
         }
       ]
     },
+    "kenney-blocky-characters": {
+      "license": "CC0 1.0 — Kenney (kenney.nl)",
+      "models": [
+        {
+          "file": "packs/kenney-blocky-characters/advancedcharacter.glb",
+          "tags": [
+            "character",
+            "humanoid",
+            "vehicle"
+          ],
+          "bytes": 24680,
+          "height": 16,
+          "width": 8,
+          "depth": 4,
+          "tris": 203
+        },
+        {
+          "file": "packs/kenney-blocky-characters/basiccharacter.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 15120,
+          "height": 16,
+          "width": 8,
+          "depth": 4,
+          "tris": 104
+        }
+      ]
+    },
     "kenney-carkit": {
       "license": "CC0 1.0 — Kenney (kenney.nl)",
       "models": [
@@ -11148,6 +11178,792 @@
           "width": 0.554,
           "depth": 0.12,
           "tris": 752
+        }
+      ]
+    },
+    "kenney-medieval-town": {
+      "license": "CC0 1.0 — Kenney (kenney.nl)",
+      "models": [
+        {
+          "file": "packs/kenney-medieval-town/banner_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 6332,
+          "height": 2.7,
+          "width": 1,
+          "depth": 0.2,
+          "tris": 266
+        },
+        {
+          "file": "packs/kenney-medieval-town/castle_wall_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 9404,
+          "height": 1.1,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 380
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_arch_01.glb",
+          "tags": [
+            "ruin",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 6540,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 192
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_border_wall_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 5880,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 132
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_broken_wall_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 8696,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 340
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_corner_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 5872,
+          "height": 2.2,
+          "width": 3,
+          "depth": 3,
+          "tris": 132
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_door_round_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 9852,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 400
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_door_square_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 7936,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 300
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_pole_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2324,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 0.5,
+          "tris": 12
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_short_wall_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 6720,
+          "height": 1.1,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 240
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_slanted_pole_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2348,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 0.5,
+          "tris": 12
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_slanted_wall_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 5880,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 132
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_small_wall_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 6336,
+          "height": 1.1,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 220
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_triangle_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2012,
+          "height": 0.5,
+          "width": 0.5,
+          "depth": 0.5,
+          "tris": 8
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_wall_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 6332,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 220
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_window_narrow_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 9428,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 380
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_window_round_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 9428,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 380
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_window_round_long_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 9436,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 380
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_window_round_sill_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 12460,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 882
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_window_square_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 8260,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 320
+        },
+        {
+          "file": "packs/kenney-medieval-town/grey_window_square_sill_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 11748,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 946
+        },
+        {
+          "file": "packs/kenney-medieval-town/iron_door_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 10748,
+          "height": 1.916,
+          "width": 0.3,
+          "depth": 1.222,
+          "tris": 962
+        },
+        {
+          "file": "packs/kenney-medieval-town/lightpost_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 12120,
+          "height": 3.8,
+          "width": 0.5,
+          "depth": 0.5,
+          "tris": 520
+        },
+        {
+          "file": "packs/kenney-medieval-town/plate_corner_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 5532,
+          "height": 0.3,
+          "width": 3,
+          "depth": 3,
+          "tris": 224
+        },
+        {
+          "file": "packs/kenney-medieval-town/plate_curve_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 4736,
+          "height": 0.3,
+          "width": 3,
+          "depth": 3,
+          "tris": 96
+        },
+        {
+          "file": "packs/kenney-medieval-town/plate_pavement_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2340,
+          "height": 0.3,
+          "width": 3,
+          "depth": 3,
+          "tris": 12
+        },
+        {
+          "file": "packs/kenney-medieval-town/plate_road_01.glb",
+          "tags": [
+            "prop",
+            "structure"
+          ],
+          "bytes": 2320,
+          "height": 0.25,
+          "width": 3,
+          "depth": 3,
+          "tris": 12
+        },
+        {
+          "file": "packs/kenney-medieval-town/plate_sidewalk_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 3584,
+          "height": 0.3,
+          "width": 3,
+          "depth": 3,
+          "tris": 60
+        },
+        {
+          "file": "packs/kenney-medieval-town/plate_wood_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2340,
+          "height": 0.3,
+          "width": 3,
+          "depth": 3,
+          "tris": 12
+        },
+        {
+          "file": "packs/kenney-medieval-town/roof_corner_green_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 10848,
+          "height": 2.566,
+          "width": 3.28,
+          "depth": 3.28,
+          "tris": 900
+        },
+        {
+          "file": "packs/kenney-medieval-town/roof_corner_red_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 11768,
+          "height": 2.566,
+          "width": 3.28,
+          "depth": 3.28,
+          "tris": 1200
+        },
+        {
+          "file": "packs/kenney-medieval-town/roof_inner_corner_green_01.glb",
+          "tags": [
+            "building",
+            "structure"
+          ],
+          "bytes": 13592,
+          "height": 2.448,
+          "width": 3,
+          "depth": 3,
+          "tris": 1584
+        },
+        {
+          "file": "packs/kenney-medieval-town/roof_inner_corner_red_01.glb",
+          "tags": [
+            "building",
+            "structure"
+          ],
+          "bytes": 13572,
+          "height": 2.448,
+          "width": 3,
+          "depth": 3,
+          "tris": 1584
+        },
+        {
+          "file": "packs/kenney-medieval-town/roof_point_green_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 6852,
+          "height": 2.564,
+          "width": 3.341,
+          "depth": 3.341,
+          "tris": 240
+        },
+        {
+          "file": "packs/kenney-medieval-town/roof_point_red_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 6848,
+          "height": 2.564,
+          "width": 3.341,
+          "depth": 3.341,
+          "tris": 240
+        },
+        {
+          "file": "packs/kenney-medieval-town/roof_slant_green_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 13060,
+          "height": 2.566,
+          "width": 3.28,
+          "depth": 3,
+          "tris": 1376
+        },
+        {
+          "file": "packs/kenney-medieval-town/roof_slant_red_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 12812,
+          "height": 2.566,
+          "width": 3.28,
+          "depth": 3,
+          "tris": 1290
+        },
+        {
+          "file": "packs/kenney-medieval-town/roof_straight_green_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 12488,
+          "height": 2.855,
+          "width": 3.4,
+          "depth": 3.556,
+          "tris": 1012
+        },
+        {
+          "file": "packs/kenney-medieval-town/roof_straight_red_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 12252,
+          "height": 2.855,
+          "width": 3.4,
+          "depth": 3.556,
+          "tris": 920
+        },
+        {
+          "file": "packs/kenney-medieval-town/shield_green_01.glb",
+          "tags": [
+            "weapon",
+            "prop"
+          ],
+          "bytes": 5740,
+          "height": 0.762,
+          "width": 0.2,
+          "depth": 0.505,
+          "tris": 224
+        },
+        {
+          "file": "packs/kenney-medieval-town/shield_red_01.glb",
+          "tags": [
+            "weapon",
+            "prop"
+          ],
+          "bytes": 5736,
+          "height": 0.762,
+          "width": 0.2,
+          "depth": 0.505,
+          "tris": 224
+        },
+        {
+          "file": "packs/kenney-medieval-town/stairs_stone_01.glb",
+          "tags": [
+            "rock",
+            "nature",
+            "prop",
+            "structure"
+          ],
+          "bytes": 7764,
+          "height": 2.2,
+          "width": 3,
+          "depth": 1.5,
+          "tris": 68
+        },
+        {
+          "file": "packs/kenney-medieval-town/stairs_wood_01.glb",
+          "tags": [
+            "prop",
+            "structure"
+          ],
+          "bytes": 8144,
+          "height": 2.2,
+          "width": 3,
+          "depth": 1.5,
+          "tris": 72
+        },
+        {
+          "file": "packs/kenney-medieval-town/tree_01.glb",
+          "tags": [
+            "tree",
+            "nature"
+          ],
+          "bytes": 7692,
+          "height": 3.159,
+          "width": 1.18,
+          "depth": 1.18,
+          "tris": 280
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_arch_01.glb",
+          "tags": [
+            "ruin",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 6544,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 192
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_border_wall_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 5884,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 132
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_broken_wall_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 8704,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 340
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_corner_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 5876,
+          "height": 2.2,
+          "width": 3,
+          "depth": 3,
+          "tris": 132
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_door_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 4360,
+          "height": 1.916,
+          "width": 0.3,
+          "depth": 1.222,
+          "tris": 32
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_door_round_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 9860,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 400
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_door_square_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 7944,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 300
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_pole_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2328,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 0.5,
+          "tris": 12
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_railing_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 4700,
+          "height": 2.739,
+          "width": 3,
+          "depth": 0.2,
+          "tris": 36
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_slanted_pole_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2352,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 0.5,
+          "tris": 12
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_slanted_wall_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 5884,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 132
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_small_wall_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 6344,
+          "height": 1.1,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 220
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_tiny_wall_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 6724,
+          "height": 1.1,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 240
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_triangle_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2016,
+          "height": 0.5,
+          "width": 0.5,
+          "depth": 0.5,
+          "tris": 8
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_wall_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 6336,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 220
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_wall_cross_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 10696,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 814
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_wall_double_cross_01.glb",
+          "tags": [
+            "castle",
+            "structure",
+            "fantasy"
+          ],
+          "bytes": 17880,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 2684
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_window_narrow_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 9436,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 380
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_window_round_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 9436,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 380
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_window_round_long_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 9440,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 380
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_window_round_sill_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 12472,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 882
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_window_square_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 8264,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 320
+        },
+        {
+          "file": "packs/kenney-medieval-town/wood_window_square_sill_01.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 11300,
+          "height": 2.2,
+          "width": 0.5,
+          "depth": 3,
+          "tris": 774
         }
       ]
     },
@@ -26046,6 +26862,441 @@
           "width": 1.785,
           "depth": 3.545,
           "tris": 126
+        }
+      ]
+    },
+    "kenney-weapon-pack": {
+      "license": "CC0 1.0 — Kenney (kenney.nl)",
+      "models": [
+        {
+          "file": "packs/kenney-weapon-pack/ammo_machinegun.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 94328,
+          "height": 0.015,
+          "width": 0.005,
+          "depth": 0.005,
+          "tris": 2296
+        },
+        {
+          "file": "packs/kenney-weapon-pack/ammo_machinegunlauncher.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 71140,
+          "height": 0.012,
+          "width": 0.007,
+          "depth": 0.007,
+          "tris": 1992
+        },
+        {
+          "file": "packs/kenney-weapon-pack/ammo_pistol.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 71292,
+          "height": 0.011,
+          "width": 0.005,
+          "depth": 0.005,
+          "tris": 1576
+        },
+        {
+          "file": "packs/kenney-weapon-pack/ammo_rocket.glb",
+          "tags": [
+            "rock",
+            "nature",
+            "vehicle"
+          ],
+          "bytes": 19312,
+          "height": 0.019,
+          "width": 0.019,
+          "depth": 0.065,
+          "tris": 2184
+        },
+        {
+          "file": "packs/kenney-weapon-pack/ammo_rocketmodern.glb",
+          "tags": [
+            "rock",
+            "nature",
+            "vehicle"
+          ],
+          "bytes": 19480,
+          "height": 0.012,
+          "width": 0.012,
+          "depth": 0.034,
+          "tris": 2106
+        },
+        {
+          "file": "packs/kenney-weapon-pack/ammo_shotgun.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 35384,
+          "height": 0.012,
+          "width": 0.005,
+          "depth": 0.005,
+          "tris": 6426
+        },
+        {
+          "file": "packs/kenney-weapon-pack/ammo_sniper.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 92280,
+          "height": 0.021,
+          "width": 0.007,
+          "depth": 0.007,
+          "tris": 3598
+        },
+        {
+          "file": "packs/kenney-weapon-pack/ammo_uzi.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 71284,
+          "height": 0.01,
+          "width": 0.004,
+          "depth": 0.004,
+          "tris": 1576
+        },
+        {
+          "file": "packs/kenney-weapon-pack/flamethrower.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 56932,
+          "height": 0.032,
+          "width": 0.023,
+          "depth": 0.086,
+          "tris": 13126
+        },
+        {
+          "file": "packs/kenney-weapon-pack/flamethrowerhandle.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 64216,
+          "height": 0.032,
+          "width": 0.034,
+          "depth": 0.092,
+          "tris": 19986
+        },
+        {
+          "file": "packs/kenney-weapon-pack/grenade.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 60588,
+          "height": 0.027,
+          "width": 0.016,
+          "depth": 0.018,
+          "tris": 13028
+        },
+        {
+          "file": "packs/kenney-weapon-pack/grenade_vintage.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 86656,
+          "height": 0.06,
+          "width": 0.015,
+          "depth": 0.015,
+          "tris": 20750
+        },
+        {
+          "file": "packs/kenney-weapon-pack/grenadeflash.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 23332,
+          "height": 0.031,
+          "width": 0.012,
+          "depth": 0.014,
+          "tris": 1260
+        },
+        {
+          "file": "packs/kenney-weapon-pack/grenadesmoke.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 62316,
+          "height": 0.031,
+          "width": 0.012,
+          "depth": 0.015,
+          "tris": 6320
+        },
+        {
+          "file": "packs/kenney-weapon-pack/knife_sharp.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 13504,
+          "height": 0.055,
+          "width": 0.009,
+          "depth": 0.014,
+          "tris": 1274
+        },
+        {
+          "file": "packs/kenney-weapon-pack/knife_smooth.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 14428,
+          "height": 0.055,
+          "width": 0.009,
+          "depth": 0.014,
+          "tris": 1320
+        },
+        {
+          "file": "packs/kenney-weapon-pack/kniferound_sharp.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 141756,
+          "height": 0.055,
+          "width": 0.009,
+          "depth": 0.012,
+          "tris": 94024
+        },
+        {
+          "file": "packs/kenney-weapon-pack/kniferound_smooth.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 143144,
+          "height": 0.055,
+          "width": 0.009,
+          "depth": 0.012,
+          "tris": 96200
+        },
+        {
+          "file": "packs/kenney-weapon-pack/machinegun.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 57196,
+          "height": 0.041,
+          "width": 0.009,
+          "depth": 0.094,
+          "tris": 12624
+        },
+        {
+          "file": "packs/kenney-weapon-pack/machinegunlauncher.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 88420,
+          "height": 0.041,
+          "width": 0.013,
+          "depth": 0.094,
+          "tris": 17316
+        },
+        {
+          "file": "packs/kenney-weapon-pack/pistol.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 38696,
+          "height": 0.036,
+          "width": 0.009,
+          "depth": 0.046,
+          "tris": 3782
+        },
+        {
+          "file": "packs/kenney-weapon-pack/pistolsilencer.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 58200,
+          "height": 0.036,
+          "width": 0.009,
+          "depth": 0.064,
+          "tris": 3974
+        },
+        {
+          "file": "packs/kenney-weapon-pack/rocketlauncher.glb",
+          "tags": [
+            "rock",
+            "nature",
+            "vehicle"
+          ],
+          "bytes": 85520,
+          "height": 0.058,
+          "width": 0.034,
+          "depth": 0.161,
+          "tris": 24088
+        },
+        {
+          "file": "packs/kenney-weapon-pack/rocketlaunchermodern.glb",
+          "tags": [
+            "rock",
+            "nature",
+            "vehicle"
+          ],
+          "bytes": 93824,
+          "height": 0.053,
+          "width": 0.042,
+          "depth": 0.124,
+          "tris": 26512
+        },
+        {
+          "file": "packs/kenney-weapon-pack/rocketlaunchermodernrotating.glb",
+          "tags": [
+            "rock",
+            "nature",
+            "vehicle"
+          ],
+          "bytes": 96396,
+          "height": 0.053,
+          "width": 0.042,
+          "depth": 0.124,
+          "tris": 20426
+        },
+        {
+          "file": "packs/kenney-weapon-pack/rocketlauncherside.glb",
+          "tags": [
+            "rock",
+            "nature",
+            "vehicle"
+          ],
+          "bytes": 85912,
+          "height": 0.056,
+          "width": 0.043,
+          "depth": 0.161,
+          "tris": 24236
+        },
+        {
+          "file": "packs/kenney-weapon-pack/shotgun.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 72328,
+          "height": 0.021,
+          "width": 0.009,
+          "depth": 0.079,
+          "tris": 12006
+        },
+        {
+          "file": "packs/kenney-weapon-pack/shotgunshort.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 80680,
+          "height": 0.021,
+          "width": 0.009,
+          "depth": 0.079,
+          "tris": 16752
+        },
+        {
+          "file": "packs/kenney-weapon-pack/sniper.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 105508,
+          "height": 0.044,
+          "width": 0.016,
+          "depth": 0.163,
+          "tris": 28976
+        },
+        {
+          "file": "packs/kenney-weapon-pack/snipercamo.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 105500,
+          "height": 0.044,
+          "width": 0.016,
+          "depth": 0.163,
+          "tris": 28976
+        },
+        {
+          "file": "packs/kenney-weapon-pack/uzi.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 62988,
+          "height": 0.052,
+          "width": 0.01,
+          "depth": 0.042,
+          "tris": 16096
+        },
+        {
+          "file": "packs/kenney-weapon-pack/uzigold.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 62968,
+          "height": 0.052,
+          "width": 0.01,
+          "depth": 0.042,
+          "tris": 16096
+        },
+        {
+          "file": "packs/kenney-weapon-pack/uzigoldlong.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 73340,
+          "height": 0.052,
+          "width": 0.011,
+          "depth": 0.068,
+          "tris": 18112
+        },
+        {
+          "file": "packs/kenney-weapon-pack/uzigoldlongsilencer.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 93248,
+          "height": 0.052,
+          "width": 0.011,
+          "depth": 0.098,
+          "tris": 19332
+        },
+        {
+          "file": "packs/kenney-weapon-pack/uzigoldsilencer.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 82472,
+          "height": 0.052,
+          "width": 0.01,
+          "depth": 0.068,
+          "tris": 16288
+        },
+        {
+          "file": "packs/kenney-weapon-pack/uzilong.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 73292,
+          "height": 0.052,
+          "width": 0.011,
+          "depth": 0.068,
+          "tris": 18112
+        },
+        {
+          "file": "packs/kenney-weapon-pack/uzilongsilencer.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 92796,
+          "height": 0.052,
+          "width": 0.011,
+          "depth": 0.098,
+          "tris": 18304
+        },
+        {
+          "file": "packs/kenney-weapon-pack/uzisilencer.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 82788,
+          "height": 0.052,
+          "width": 0.01,
+          "depth": 0.068,
+          "tris": 17260
         }
       ]
     }

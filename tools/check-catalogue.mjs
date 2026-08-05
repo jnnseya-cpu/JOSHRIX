@@ -62,6 +62,9 @@ for (const rawLine of block.split("\n")) {
   let body = line.replace(/^-\s+[A-Za-z0-9/\- ]+?(\([^)]*\))?\s*:\s*/, "")
                  .replace(/^-\s+kenney-[a-z0-9-]+\s+\(\d+\)\s+[^:]*:\s*/, "");
   if (body === line) body = line.replace(/^-\s+/, "");
+  // drop any inline code sample — a snippet like `new THREE.Mesh…` is not a name list
+  const brace = body.indexOf("{");
+  if (brace >= 0) body = body.slice(0, brace);
   body = body.replace(/\([^)]*\)/g, " ").replace(/·/g, " ");
 
   for (const tok of body.split(/[\s,]+/)) {
