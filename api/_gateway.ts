@@ -21,7 +21,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-02.68";
+export const BUILD_ID = "2026-08-03.69";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -171,6 +171,9 @@ Base URL: https://www.joshrix.com/assets/models3d/lib/  (append the filename, e.
 - CHARACTERS (all ~1.7 tall, AnimationClips "idle" + "walk"): guardian hero_knight mage villager enemy_goblin
 - CREATURES: enemy_slime (anim "bounce") enemy_bat (anim "fly") animal_deer (anim "walk")
 - VEHICLES/SPACE (stylised): car boat cart rocket asteroid planet satellite
+- FOOTBALL/SPORT: football goal stadium_stands pitch_tile corner_flag trophy scoreboard
+- DINOSAURS (anim "idle" + "walk"): dino_trex dino_raptor dino_stego dino_bronto dino_trike · dino_egg dino_nest volcano fern_tree
+- TERRAIN/DECOR: ground_tile stone_platform water_pool cloud_puff
 SECOND LIBRARY — DETAILED VEHICLES at https://www.joshrix.com/assets/models3d/vehicles/ (higher-detail models; use for racing, transport, war, sea, rail, flight and space concepts):
 - CARS: basiccar copcar racecar car simplecar cop cop_suv suv sportscar sportscar2
 - TRANSPORT: bus schoolbus taxi truck ambulance bicycle squareframebicycle · street props: trafficcone trafficlight trafficsign1 trafficsign2 trafficsign3

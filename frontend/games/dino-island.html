@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Dino Island — Guardian of the Nest | JOSHRIX Studio</title>
+<meta name="description" content="A free 3D browser game: guard your nest from raptors, a T-Rex and a triceratops. Plays instantly on phone or desktop — no download, no account. Built on JOSHRIX Studio.">
+<link rel="canonical" href="https://www.joshrix.com/games/dino-island">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Dino Island — Guardian of the Nest">
+<meta property="og:description" content="Guard your nest from dinosaurs in this free 3D browser game. No download, no account.">
+<meta property="og:url" content="https://www.joshrix.com/games/dino-island">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0b1622">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"VideoGame","name":"Dino Island — Guardian of the Nest",
+"description":"A free 3D browser game: guard your nest from raptors, a T-Rex and a triceratops.",
+"url":"https://www.joshrix.com/games/dino-island","genre":["Action","Arcade"],
+"gamePlatform":["Web browser","Android","iOS"],"applicationCategory":"Game","inLanguage":"en",
+"playMode":"SinglePlayer","publisher":{"@type":"Organization","name":"JOSHRIX Studio","url":"https://www.joshrix.com"},
+"offers":{"@type":"Offer","price":"0","priceCurrency":"GBP","availability":"https://schema.org/InStock"}}
+</script>
+<script src="/assets/vendor/three.min.js"></script>
+<script src="/assets/vendor/GLTFLoader.js"></script>
+<style>
+  html,body{height:100%;margin:0;background:#0b1622;overflow:hidden;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+  canvas{display:block}
+  .hud{position:fixed;top:0;left:0;right:0;padding:12px 16px;display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.7);z-index:5}
+  .hud .l,.hud .r{display:flex;flex-direction:column;gap:4px}
+  .hud .r{align-items:flex-end}
+  .big{font-size:26px;font-weight:800;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+  .lbl{font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.75}
+  .eggs{font-size:22px;letter-spacing:2px}
+  /* proportional, not a fixed 200px inset — that swallowed a third of a phone screen */
+  .vig{position:fixed;inset:0;pointer-events:none;z-index:4;background:radial-gradient(ellipse at 50% 48%,transparent 52%,rgba(4,14,22,.5) 100%)}
+  .ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;z-index:10;color:#fff;background:radial-gradient(ellipse at 50% 40%,rgba(24,58,74,.86),rgba(6,14,22,.96))}
+  .ov h1{font-size:clamp(28px,7vw,54px);margin:0 0 8px;letter-spacing:-.01em;text-shadow:0 4px 24px rgba(0,0,0,.6)}
+  .ov h1 span{color:#ffd166}
+  .ov p{max-width:520px;line-height:1.65;opacity:.9;margin:.3rem 0;font-size:15px}
+  .btn{margin-top:22px;background:linear-gradient(135deg,#ffd166,#f4a23c);color:#2a1a05;border:0;border-radius:999px;padding:16px 44px;font-size:19px;font-weight:800;cursor:pointer;box-shadow:0 10px 30px rgba(244,162,60,.4);transition:transform .12s}
+  .btn:active{transform:scale(.96)}
+  .tip{margin-top:16px;font-size:12.5px;opacity:.65;letter-spacing:.04em}
+  .flash{position:fixed;inset:0;background:#ff3b3b;opacity:0;pointer-events:none;z-index:6;transition:opacity .12s}
+  .load{position:fixed;left:0;right:0;bottom:0;height:3px;background:rgba(255,255,255,.12);z-index:11}
+  .load i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ffd166,#7ce0a0);transition:width .25s}
+  .mute{position:fixed;right:14px;bottom:14px;z-index:7;background:rgba(0,0,0,.45);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:8px 12px;font-size:13px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="hud" aria-hidden="true">
+  <div class="l"><span class="lbl">Score</span><span class="big" id="hScore">0</span></div>
+  <div class="r"><span class="lbl">Nest</span><span class="eggs" id="hLives">🥚🥚🥚</span><span class="lbl" id="hWave" style="margin-top:6px">Wave 1</span></div>
+</div>
+<div class="vig" aria-hidden="true"></div>
+<div class="flash" id="flash" aria-hidden="true"></div>
+<button class="mute" id="mute" aria-label="Mute">🔊</button>
+<div class="load" id="loadBar" aria-hidden="true"><i id="loadFill"></i></div>
+
+<div class="ov" id="title">
+  <h1>Dino <span>Island</span></h1>
+  <p><b>Guardian of the Nest.</b> Dinosaurs are coming for your eggs. Collect the glowing crystals to power your barrier — and keep them away from the nest.</p>
+  <p style="opacity:.7">Drag, or use the arrow keys / WASD, to move. Your aura drives off any dinosaur you reach — every one that gets past you costs an egg.</p>
+  <button class="btn" id="startBtn">▶ Start</button>
+  <div class="tip">Tap · click · press Space to begin</div>
+</div>
+
+<div class="ov" id="over" style="display:none">
+  <h1 id="overTitle">Nest Lost</h1>
+  <p id="overMsg"></p>
+  <button class="btn" id="againBtn">↻ Play again</button>
+  <div class="tip">Built on JOSHRIX Studio</div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var BASE = "/assets/models3d/lib/";
+  var $ = function (id) { return document.getElementById(id); };
+  var state = "title", score = 0, lives = 3, wave = 1, elapsed = 0;
+
+  /* engine missing is the one failure we cannot render our way out of — say so and stop */
+  if (typeof THREE === "undefined" || !THREE.WebGLRenderer) {
+    document.body.innerHTML = "<p style='color:#fff;padding:2rem;font-family:system-ui'>The 3D engine could not load. Please refresh the page.</p>";
+    return;
+  }
+
+  /* ---------- renderer, scene, camera: CANVAS FIRST, always ---------- */
+  // phones get a lighter budget: full-fat antialias + 2x pixel ratio + a 2048 shadow map
+  // is a slideshow on mid-range mobile GPUs
+  var LIGHT = Math.min(window.innerWidth, window.innerHeight) < 700;
+  var renderer = new THREE.WebGLRenderer({ antialias: !LIGHT, powerPreference: "high-performance" });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, LIGHT ? 1.5 : 2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = LIGHT ? THREE.PCFShadowMap : THREE.PCFSoftShadowMap;
+  document.body.appendChild(renderer.domElement);
+
+  var scene = new THREE.Scene();
+  var camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 400);
+  camera.position.set(0, 14, 18);
+  camera.lookAt(0, 0, 0);
+
+  /* A tall phone in portrait sees a narrow slice of the arena and half a screen of
+     empty grass. Pull the camera back and widen the lens in proportion to how tall
+     the viewport is, and aim lower so the guardian sits off-centre, not dead middle. */
+  var camPull = 1, camDrop = -2.5;
+  function fitCamera() {
+    var aspect = window.innerWidth / window.innerHeight;
+    camera.aspect = aspect;
+    camera.fov = aspect < 1 ? Math.min(64, 52 + (1 - aspect) * 26) : 52;
+    camPull = aspect < 1 ? 1 + (1 - aspect) * 0.6 : 1;
+    camDrop = aspect < 1 ? -6 : -2.5;
+    camera.updateProjectionMatrix();
+  }
+  fitCamera();
+
+  /* One arena constant. The models are ~2m tall, so the island is sized in the
+     same units — 24 across reads as a place, 46 read as an empty field. */
+  var R = 24;          // island radius
+  var PLAY_R = 18;     // how far out the guardian may go — inside the treeline, so nothing occludes them
+
+  /* ---------- sky: procedural CanvasTexture dome ---------- */
+  function skyTexture() {
+    var c = document.createElement("canvas"); c.width = 16; c.height = 256;
+    var g = c.getContext("2d").createLinearGradient(0, 0, 0, 256);
+    // v=0.5 is the sphere's equator, i.e. the visible horizon — it MUST equal HAZE,
+    // or the fogged sea meets the dome in a hard seam across the screen
+    g.addColorStop(0, "#1d3b57"); g.addColorStop(0.34, "#3f7ba6");
+    g.addColorStop(0.5, "#7fb0c8"); g.addColorStop(0.72, "#a9d2e0"); g.addColorStop(1, "#f0c9a0");
+    var x = c.getContext("2d"); x.fillStyle = g; x.fillRect(0, 0, 16, 256);
+    return new THREE.CanvasTexture(c);
+  }
+  // fog:false — otherwise the fog flattens the whole dome to one colour
+  var sky = new THREE.Mesh(new THREE.SphereGeometry(140, 24, 16), new THREE.MeshBasicMaterial({ map: skyTexture(), side: THREE.BackSide, fog: false }));
+  scene.add(sky);
+  var HAZE = 0x7fb0c8;
+  scene.fog = new THREE.Fog(HAZE, 34, 110);
+
+  /* ---------- ground: procedural texture, receives shadow ---------- */
+  function groundTexture() {
+    var c = document.createElement("canvas"); c.width = c.height = 256;
+    var x = c.getContext("2d");
+    x.fillStyle = "#4e8a45"; x.fillRect(0, 0, 256, 256);
+    for (var i = 0; i < 2600; i++) {
+      x.fillStyle = ["#5c9c50", "#437a3c", "#6aa85c", "#3d6f38"][i % 4];
+      x.fillRect(Math.random() * 256, Math.random() * 256, 2 + Math.random() * 3, 2 + Math.random() * 3);
+    }
+    var t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(7, 7);
+    return t;
+  }
+  var island = new THREE.Mesh(new THREE.CircleGeometry(R, 56), new THREE.MeshStandardMaterial({ map: groundTexture(), roughness: 1 }));
+  island.rotation.x = -Math.PI / 2; island.receiveShadow = true; scene.add(island);
+  // sea runs to the horizon so distant landmarks sit on water, not on the sky
+  var sea = new THREE.Mesh(new THREE.CircleGeometry(130, 64), new THREE.MeshStandardMaterial({ color: 0x2f7fa8, roughness: .28 }));
+  sea.rotation.x = -Math.PI / 2; sea.position.y = -0.4; scene.add(sea);
+  var shallows = new THREE.Mesh(new THREE.RingGeometry(R - 0.5, R + 7, 64), new THREE.MeshStandardMaterial({ color: 0x63c4d8, roughness: .35, transparent: true, opacity: .8 }));
+  shallows.rotation.x = -Math.PI / 2; shallows.position.y = -0.2; scene.add(shallows);
+
+  /* ---------- lighting rig ---------- */
+  scene.add(new THREE.HemisphereLight(0xcfe6ff, 0x4a6b3a, 0.95));
+  var sun = new THREE.DirectionalLight(0xfff0d4, 1.35);
+  sun.position.set(18, 34, 14); sun.castShadow = true;
+  sun.shadow.mapSize.set(LIGHT ? 1024 : 2048, LIGHT ? 1024 : 2048);
+  sun.shadow.camera.left = -R - 4; sun.shadow.camera.right = R + 4;
+  sun.shadow.camera.top = R + 4; sun.shadow.camera.bottom = -R - 4;
+  sun.shadow.camera.near = 1; sun.shadow.camera.far = 90;
+  sun.shadow.camera.updateProjectionMatrix();
+  scene.add(sun);
+  var warm = new THREE.PointLight(0xff8a3a, 1.1, 30); warm.position.set(0, 7, 0); scene.add(warm);
+
+  /* ---------- player: visible IMMEDIATELY as a primitive, upgraded when the model lands ---------- */
+  var player = new THREE.Group();
+  var stand = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.62, 0.25, 12), new THREE.MeshStandardMaterial({ color: 0x2b6fd8, roughness: .6 }));
+  stand.position.y = 0.12; stand.castShadow = true; player.add(stand);
+  var proxy = new THREE.Mesh(new THREE.CapsuleGeometry(0.36, 0.9, 4, 10), new THREE.MeshStandardMaterial({ color: 0x8fd6c7 }));
+  proxy.position.y = 1.05; proxy.castShadow = true; player.add(proxy);
+  player.position.set(0, 0, 6); scene.add(player);
+
+  var aura = new THREE.Mesh(new THREE.TorusGeometry(1.7, 0.08, 8, 28), new THREE.MeshStandardMaterial({ color: 0x7ce0a0, emissive: 0x2ad07a, emissiveIntensity: 1.2 }));
+  aura.rotation.x = -Math.PI / 2; aura.position.y = 0.1; player.add(aura);
+
+  /* ---------- nest ---------- */
+  var nest = new THREE.Group(); nest.position.set(0, 0, -7); scene.add(nest);
+  var nestRing = new THREE.Mesh(new THREE.TorusGeometry(2.2, 0.32, 8, 22), new THREE.MeshStandardMaterial({ color: 0xb99a5f, roughness: .95 }));
+  nestRing.rotation.x = -Math.PI / 2; nestRing.position.y = 0.3; nestRing.castShadow = true; nestRing.receiveShadow = true; nest.add(nestRing);
+
+  /* ---------- particles ---------- */
+  var pGeo = new THREE.BufferGeometry(), pCount = 160, pPos = new Float32Array(pCount * 3), pLife = new Float32Array(pCount);
+  for (var i = 0; i < pCount; i++) { pPos[i * 3 + 1] = -99; pLife[i] = 0; }
+  pGeo.setAttribute("position", new THREE.BufferAttribute(pPos, 3));
+  var particles = new THREE.Points(pGeo, new THREE.PointsMaterial({ color: 0xffe9a8, size: 0.42, transparent: true, opacity: .9, blending: THREE.AdditiveBlending, depthWrite: false }));
+  scene.add(particles);
+  var pVel = [];
+  for (var j = 0; j < pCount; j++) pVel.push(new THREE.Vector3());
+  function burst(pos, colorHint) {
+    particles.material.color.setHex(colorHint || 0xffe9a8);
+    var made = 0;
+    for (var k = 0; k < pCount && made < 22; k++) {
+      if (pLife[k] > 0) continue;
+      pPos[k * 3] = pos.x; pPos[k * 3 + 1] = pos.y + 0.8; pPos[k * 3 + 2] = pos.z;
+      pVel[k].set((Math.random() - .5) * 7, 3 + Math.random() * 5, (Math.random() - .5) * 7);
+      pLife[k] = 0.8; made++;
+    }
+  }
+
+  /* ---------- audio (created on first gesture only) ---------- */
+  var actx = null, muted = false;
+  function beep(freq, dur, type, gain) {
+    if (!actx || muted) return;
+    try {
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = type || "sine"; o.frequency.value = freq;
+      g.gain.setValueAtTime(gain || 0.12, actx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + dur);
+      o.connect(g); g.connect(actx.destination); o.start(); o.stop(actx.currentTime + dur);
+    } catch (e) {}
+  }
+  $("mute").addEventListener("click", function () { muted = !muted; $("mute").textContent = muted ? "🔇" : "🔊"; });
+
+  /* ---------- model loading: NEVER blocks the game ---------- */
+  var loader = new THREE.GLTFLoader();
+  var models = {}, animClips = {}, loadedCount = 0;
+  var WANT = ["dino_trex", "dino_raptor", "dino_trike", "guardian", "dino_nest", "dino_egg",
+              "tree_palm", "fern_tree", "tree_round_0", "rock_0", "rock_1", "crystal_0", "volcano", "bush_0"];
+  function shadowise(o) { o.traverse(function (n) { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } }); return o; }
+  WANT.forEach(function (name) {
+    loader.load(BASE + name + ".glb",
+      function (g) {
+        models[name] = shadowise(g.scene);
+        if (g.animations && g.animations.length) animClips[name] = g.animations;
+        loadedCount++; onModel(name);
+        var pct = Math.round(loadedCount / WANT.length * 100);
+        $("loadFill").style.width = pct + "%";
+        if (loadedCount === WANT.length) setTimeout(function () { $("loadBar").style.display = "none"; }, 400);
+      },
+      undefined,
+      function () { loadedCount++; $("loadFill").style.width = Math.round(loadedCount / WANT.length * 100) + "%"; }
+    );
+  });
+
+  var scenery = [], crystals = [], dinos = [], mixers = [];
+  function onModel(name) {
+    if (name === "guardian" && models.guardian) {
+      player.remove(proxy);
+      var hero = models.guardian.clone(); hero.scale.setScalar(1.05); player.add(hero);
+      if (animClips.guardian) {
+        var mx = new THREE.AnimationMixer(hero);
+        var clip = THREE.AnimationClip.findByName(animClips.guardian, "walk") || animClips.guardian[0];
+        var act = mx.clipAction(clip); act.play();
+        player.userData.mixer = mx; mixers.push(mx);
+      }
+    }
+    if (name === "dino_nest" && models.dino_nest) { var n = models.dino_nest.clone(); n.scale.setScalar(2.4); nest.add(n); }
+    if (name === "dino_egg" && models.dino_egg) {
+      for (var e = 0; e < 3; e++) {
+        var eg = models.dino_egg.clone(); eg.scale.setScalar(1.6);
+        var a = e / 3 * Math.PI * 2 + 0.4;
+        eg.position.set(Math.cos(a) * 1.15, 0.5, Math.sin(a) * 1.15);
+        eg.rotation.z = 0.22; eg.rotation.y = a;
+        eg.name = "egg" + e; nest.add(eg);
+      }
+    }
+    if (["tree_palm", "fern_tree", "tree_round_0", "rock_0", "rock_1", "bush_0"].indexOf(name) !== -1) {
+      // tall things ring the arena outside PLAY_R so they can never hide the guardian;
+      // low things scatter anywhere and stop the middle reading as empty grass
+      var tall = name.indexOf("tree") === 0 || name === "fern_tree";
+      var count = tall ? 9 : name === "bush_0" ? 14 : 10;
+      for (var i2 = 0; i2 < count; i2++) {
+        var c = models[name].clone();
+        var ang = Math.random() * Math.PI * 2;
+        var rad = tall ? PLAY_R + 2 + Math.random() * (R - PLAY_R) : 4 + Math.random() * (R - 5);
+        c.position.set(Math.cos(ang) * rad, 0, Math.sin(ang) * rad);
+        if (c.position.distanceTo(nest.position) < 5) continue;   // keep the nest clear
+        c.rotation.y = Math.random() * Math.PI * 2;
+        c.scale.setScalar(0.85 + Math.random() * 0.7);
+        scene.add(c); scenery.push(c);
+      }
+    }
+    if (name === "volcano" && models.volcano) {
+      // a distant landmark beyond the shore, not an obstacle on the island
+      var v = models.volcano.clone(); v.scale.setScalar(2.6); v.position.set(-34, 0, -48); scene.add(v);
+      var glow = new THREE.PointLight(0xff5a1a, 2.6, 40); glow.position.set(-34, 10, -48); scene.add(glow);
+    }
+  }
+
+  /* ---------- crystals ---------- */
+  function spawnCrystal() {
+    var g;
+    if (models.crystal_0) { g = models.crystal_0.clone(); g.scale.setScalar(1.15); }
+    else {
+      g = new THREE.Mesh(new THREE.OctahedronGeometry(0.5), new THREE.MeshStandardMaterial({ color: 0x7ee0ff, emissive: 0x2aa8d8, emissiveIntensity: .9, roughness: .25 }));
+      g.scale.y = 1.8; g.castShadow = true;
+    }
+    var a = Math.random() * Math.PI * 2, r = 4 + Math.random() * (PLAY_R - 5);
+    g.position.set(Math.cos(a) * r, 0.4, Math.sin(a) * r);
+    scene.add(g); crystals.push(g);
+  }
+
+  /* ---------- dinosaurs ---------- */
+  var DINO_KINDS = ["dino_raptor", "dino_trex", "dino_trike"];
+  function spawnDino() {
+    var kind = DINO_KINDS[Math.floor(Math.random() * DINO_KINDS.length)];
+    var mesh;
+    if (models[kind]) { mesh = models[kind].clone(); }
+    else {
+      mesh = new THREE.Group();
+      var b = new THREE.Mesh(new THREE.CapsuleGeometry(0.5, 1.1, 4, 8), new THREE.MeshStandardMaterial({ color: 0x7a9c4a }));
+      b.rotation.z = Math.PI / 2; b.position.y = 1; b.castShadow = true; mesh.add(b);
+    }
+    var speed = 0.028 + wave * 0.006 + Math.random() * 0.012;
+    if (kind === "dino_raptor") speed *= 1.4;
+    if (kind === "dino_trex") speed *= 0.75;
+    if (kind === "dino_trex") mesh.scale.setScalar(1.35);
+    var ang = Math.random() * Math.PI * 2, r = PLAY_R + 3;
+    mesh.position.set(Math.cos(ang) * r, 0, Math.sin(ang) * r);
+    scene.add(mesh);
+    var d = { obj: mesh, speed: speed, kind: kind, mixer: null };
+    if (animClips[kind]) {
+      var mx = new THREE.AnimationMixer(mesh);
+      var clip = THREE.AnimationClip.findByName(animClips[kind], "walk") || animClips[kind][0];
+      mx.clipAction(clip).play(); d.mixer = mx; mixers.push(mx);
+    }
+    dinos.push(d);
+  }
+
+  /* ---------- input ---------- */
+  var keys = {}, target = new THREE.Vector3(0, 0, 6), dragging = false;
+  addEventListener("keydown", function (e) { keys[e.key.toLowerCase()] = true; if ([" ", "arrowup", "arrowdown", "arrowleft", "arrowright"].indexOf(e.key.toLowerCase()) !== -1) e.preventDefault(); });
+  addEventListener("keyup", function (e) { keys[e.key.toLowerCase()] = false; });
+  var ray = new THREE.Raycaster(), plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0), hit = new THREE.Vector3();
+  function pointTo(cx, cy) {
+    var v = new THREE.Vector2((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1);
+    ray.setFromCamera(v, camera);
+    if (ray.ray.intersectPlane(plane, hit)) { target.copy(hit); target.y = 0; }
+  }
+  renderer.domElement.addEventListener("pointerdown", function (e) { dragging = true; pointTo(e.clientX, e.clientY); });
+  renderer.domElement.addEventListener("pointermove", function (e) { if (dragging) pointTo(e.clientX, e.clientY); });
+  addEventListener("pointerup", function () { dragging = false; });
+
+  /* ---------- game flow ---------- */
+  function reset() {
+    score = 0; lives = 3; wave = 1; elapsed = 0;
+    dinos.forEach(function (d) { scene.remove(d.obj); }); dinos.length = 0;
+    crystals.forEach(function (c) { scene.remove(c); }); crystals.length = 0;
+    player.position.set(0, 0, 6); target.set(0, 0, 6);
+    for (var i = 0; i < 5; i++) spawnCrystal();
+    spawnDino();
+    nest.children.forEach(function (c) { if (c.name && c.name.indexOf("egg") === 0) c.visible = true; });
+    updateHud();
+  }
+  function updateHud() {
+    $("hScore").textContent = score;
+    $("hLives").textContent = lives > 0 ? new Array(lives + 1).join("🥚") : "—";
+    $("hWave").textContent = "Wave " + wave;
+  }
+  function start() {
+    if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+    reset(); state = "play";
+    $("title").style.display = "none"; $("over").style.display = "none";
+    beep(660, .12, "triangle", .16); setTimeout(function () { beep(880, .18, "triangle", .16); }, 130);
+  }
+  var best = 0;
+  try { best = Number(localStorage.getItem("dinoIslandBest")) || 0; } catch (e) {}
+  function rank(s) {
+    if (s >= 400) return "Elder Guardian";
+    if (s >= 220) return "Island Warden";
+    if (s >= 120) return "Nest Keeper";
+    if (s >= 50) return "Scout";
+    return "Fledgling";
+  }
+  function gameOver() {
+    state = "over";
+    var isBest = score > best;
+    if (isBest) { best = score; try { localStorage.setItem("dinoIslandBest", String(best)); } catch (e) {} }
+    $("overTitle").textContent = "Nest Lost";
+    $("overMsg").textContent = "You held out " + wave + (wave === 1 ? " wave" : " waves") +
+      " and scored " + score + " — " + rank(score) + "." +
+      (isBest ? " That is your best yet." : " Your best is " + best + ".");
+    $("over").style.display = "flex";
+    beep(220, .5, "sawtooth", .14);
+  }
+  $("startBtn").addEventListener("click", start);
+  $("startBtn").addEventListener("touchstart", function (e) { e.preventDefault(); start(); }, { passive: false });
+  $("againBtn").addEventListener("click", start);
+  $("againBtn").addEventListener("touchstart", function (e) { e.preventDefault(); start(); }, { passive: false });
+  addEventListener("keydown", function (e) {
+    if ((e.key === " " || e.key === "Enter") && state !== "play") { e.preventDefault(); start(); }
+  });
+
+  function hurt() {
+    lives--; updateHud();
+    var f = $("flash"); f.style.opacity = ".55"; setTimeout(function () { f.style.opacity = "0"; }, 130);
+    beep(160, .3, "square", .18);
+    var eggs = nest.children.filter(function (c) { return c.name && c.name.indexOf("egg") === 0 && c.visible; });
+    if (eggs.length) eggs[eggs.length - 1].visible = false;
+    burst(nest.position, 0xff6a6a);
+    if (lives <= 0) gameOver();
+  }
+
+  /* ---------- loop ---------- */
+  var clock = new THREE.Clock(), spawnT = 0;
+  function loop() {
+    requestAnimationFrame(loop);
+    var dt = Math.min(clock.getDelta(), 0.05);
+    try {
+      if (state === "play") {
+        elapsed += dt;
+        var sp = 11 * dt;
+        if (keys.arrowleft || keys.a) target.x -= sp;
+        if (keys.arrowright || keys.d) target.x += sp;
+        if (keys.arrowup || keys.w) target.z -= sp;
+        if (keys.arrowdown || keys.s) target.z += sp;
+        // keep the guardian inside the treeline
+        if (target.length() > PLAY_R) target.setLength(PLAY_R);
+        var prev = player.position.clone();
+        player.position.lerp(target, 0.14);
+        var moved = player.position.distanceTo(prev);
+        if (moved > 0.004) player.rotation.y = Math.atan2(player.position.x - prev.x, player.position.z - prev.z);
+        aura.rotation.z += dt * 1.6;
+        aura.scale.setScalar(1 + Math.sin(elapsed * 3) * 0.06);
+
+        for (var ci = crystals.length - 1; ci >= 0; ci--) {
+          var c = crystals[ci];
+          c.rotation.y += dt * 2.2;
+          c.position.y = 0.45 + Math.sin(elapsed * 2.4 + ci) * 0.16;
+          if (c.position.distanceTo(player.position) < 1.8) {
+            burst(c.position, 0x7ee0ff); scene.remove(c); crystals.splice(ci, 1);
+            score += 5; updateHud(); beep(880 + Math.random() * 200, .1, "triangle", .13);
+            spawnCrystal();
+          }
+        }
+
+        for (var di = dinos.length - 1; di >= 0; di--) {
+          var d = dinos[di], o = d.obj;
+          var dir = new THREE.Vector3().subVectors(nest.position, o.position); dir.y = 0;
+          var toPlayer = new THREE.Vector3().subVectors(player.position, o.position); toPlayer.y = 0;
+          if (toPlayer.length() < 7) dir.copy(toPlayer);          // chase the guardian when close
+          dir.normalize();
+          o.position.addScaledVector(dir, d.speed * 60 * dt);
+          o.rotation.y = Math.atan2(dir.x, dir.z);
+          if (d.mixer) d.mixer.update(dt);
+
+          if (o.position.distanceTo(player.position) < 2.6) {
+            burst(o.position, 0xffd166); scene.remove(o); dinos.splice(di, 1);
+            score += 12; updateHud(); beep(300, .16, "square", .14);
+            continue;
+          }
+          if (o.position.distanceTo(nest.position) < 2.8) {
+            scene.remove(o); dinos.splice(di, 1); hurt();
+            continue;
+          }
+        }
+
+        spawnT += dt;
+        var interval = Math.max(1.5, 4.8 - wave * 0.32);
+        if (spawnT > interval) { spawnT = 0; spawnDino(); }
+        var newWave = 1 + Math.floor(elapsed / 22);
+        if (newWave !== wave) { wave = newWave; updateHud(); beep(520, .22, "triangle", .15); }
+
+        if (player.userData.mixer) player.userData.mixer.update(moved > 0.02 ? dt : dt * 0.25);
+      }
+
+      // particles always animate
+      for (var pi = 0; pi < pCount; pi++) {
+        if (pLife[pi] <= 0) continue;
+        pLife[pi] -= dt;
+        pVel[pi].y -= 12 * dt;
+        pPos[pi * 3] += pVel[pi].x * dt; pPos[pi * 3 + 1] += pVel[pi].y * dt; pPos[pi * 3 + 2] += pVel[pi].z * dt;
+        if (pLife[pi] <= 0) pPos[pi * 3 + 1] = -99;
+      }
+      pGeo.attributes.position.needsUpdate = true;
+
+      // cinematic camera: slow orbit on menus, lagged follow in play
+      if (state === "play") {
+        var camT = new THREE.Vector3(player.position.x * 0.5, 15 * camPull, player.position.z * 0.5 + 19 * camPull);
+        camera.position.lerp(camT, 0.05);
+        camera.lookAt(player.position.x * 0.4, 1.4, player.position.z * 0.4 + camDrop);
+      } else {
+        var a2 = elapsed * 0.11 + 1.2; elapsed += dt;
+        camera.position.set(Math.sin(a2) * 19 * camPull, 10.5 * camPull, Math.cos(a2) * 19 * camPull);
+        camera.lookAt(0, 1.8, -3);
+      }
+      renderer.render(scene, camera);
+    } catch (err) {
+      // never let one bad frame kill the loop
+      try { renderer.render(scene, camera); } catch (e2) {}
+    }
+  }
+
+  addEventListener("resize", function () {
+    fitCamera();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+
+  for (var s0 = 0; s0 < 6; s0++) spawnCrystal();
+  loop();                         // renders the title world from frame one
+})();
+</script>
+</body>
+</html>

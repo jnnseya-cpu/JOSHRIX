@@ -62,14 +62,34 @@
   var grid = document.getElementById('arcGrid');
   var ICONS = ['🕹️','👾','🐉','🚀','⚔️','🏰','🌌','🎯','🧩','🏎️'];
   function esc(s){ return String(s == null ? '' : s).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); }
+
+  // The house build ships with the site, so the shelf is never bare and there is
+  // always something to play before the first creator game clears moderation.
+  function houseCard(){
+    var a = document.createElement('a');
+    a.className = 'arc-card';
+    a.href = 'games/dino-island.html';
+    a.style.textDecoration = 'none'; a.style.color = 'inherit';
+    a.innerHTML = '<div class="arc-art">🦖</div>'
+      + '<div class="arc-body"><h3>Dino Island</h3>'
+      + '<p>Guardian of the Nest — a 3D wave-defence built on the JOSHRIX model library.</p>'
+      + '<div class="arc-meta"><i>3D</i><i>English</i>'
+      + '<i style="color:#a78bfa;border-color:rgba(167,139,250,.4)">◆ Studio build</i></div></div>';
+    return a;
+  }
+
   grid.innerHTML = '<div class="arc-empty">Loading the arcade…</div>';
   fetch(API + '/api/arcade').then(function(r){ return r.json(); }).then(function(j){
     var games = j.games || [];
+    grid.innerHTML = '';
+    grid.appendChild(houseCard());
     if (!games.length) {
-      grid.innerHTML = '<div class="arc-empty"><p style="font-size:1.05rem"><b>The shelves are being stocked.</b></p><p>The first approved worlds land here the moment moderation clears them.<br>Want yours on this shelf? <a href="studio.html" style="color:var(--cyan)">Forge it now</a>.</p></div>';
+      var note = document.createElement('div');
+      note.className = 'arc-empty';
+      note.innerHTML = '<p style="font-size:1.05rem"><b>More shelves are being stocked.</b></p><p>Creator worlds land here the moment moderation clears them.<br>Want yours on this shelf? <a href="studio.html" style="color:var(--cyan)">Forge it now</a>.</p>';
+      grid.appendChild(note);
       return;
     }
-    grid.innerHTML = '';
     games.forEach(function(g, i){
       var a = document.createElement('a');
       a.className = 'arc-card';
@@ -84,7 +104,13 @@
       grid.appendChild(a);
     });
   }).catch(function(){
-    grid.innerHTML = '<div class="arc-empty">Could not reach the Arcade — check your connection and refresh.</div>';
+    // the API being down must not take the house build down with it
+    grid.innerHTML = '';
+    grid.appendChild(houseCard());
+    var note = document.createElement('div');
+    note.className = 'arc-empty';
+    note.textContent = 'Could not reach the Arcade listing — check your connection and refresh.';
+    grid.appendChild(note);
   });
 })();
 </script>

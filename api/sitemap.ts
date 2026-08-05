@@ -11,6 +11,7 @@ const STATIC_PAGES = [
   "docs.html", "showcase.html", "worlds.html", "agent-fleet.html", "enterprise.html",
   "about.html", "press.html", "contact.html", "careers.html", "referrals.html",
   "ip-registry.html", "terms.html", "privacy.html", "refunds.html",
+  "games/dino-island.html",
 ];
 
 export default async function handler(_req: any, res: any) {
