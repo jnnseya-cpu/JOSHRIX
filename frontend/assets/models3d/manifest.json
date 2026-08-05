@@ -3204,6 +3204,143 @@
         }
       ]
     },
+    "kenney-characters": {
+      "license": "CC0 1.0 — Kenney (kenney.nl)",
+      "models": [
+        {
+          "file": "packs/kenney-characters/criminal_male_a.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 791016,
+          "height": 1.85,
+          "width": 1.778,
+          "depth": 0.515,
+          "tris": 1604,
+          "clips": [
+            "idle",
+            "run",
+            "jump"
+          ]
+        },
+        {
+          "file": "packs/kenney-characters/cyborg_female_a.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 807552,
+          "height": 1.85,
+          "width": 1.778,
+          "depth": 0.515,
+          "tris": 1604,
+          "clips": [
+            "idle",
+            "run",
+            "jump"
+          ]
+        },
+        {
+          "file": "packs/kenney-characters/skater_female_a.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 796056,
+          "height": 1.85,
+          "width": 1.778,
+          "depth": 0.515,
+          "tris": 1604,
+          "clips": [
+            "idle",
+            "run",
+            "jump"
+          ]
+        },
+        {
+          "file": "packs/kenney-characters/skater_male_a.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 797688,
+          "height": 1.85,
+          "width": 1.778,
+          "depth": 0.515,
+          "tris": 1604,
+          "clips": [
+            "idle",
+            "run",
+            "jump"
+          ]
+        },
+        {
+          "file": "packs/kenney-characters/survivor_female_a.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 810820,
+          "height": 1.85,
+          "width": 1.778,
+          "depth": 0.515,
+          "tris": 1604,
+          "clips": [
+            "idle",
+            "run",
+            "jump"
+          ]
+        },
+        {
+          "file": "packs/kenney-characters/survivor_male_b.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 808292,
+          "height": 1.85,
+          "width": 1.778,
+          "depth": 0.515,
+          "tris": 1604,
+          "clips": [
+            "idle",
+            "run",
+            "jump"
+          ]
+        },
+        {
+          "file": "packs/kenney-characters/zombie_a.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 829328,
+          "height": 1.85,
+          "width": 1.778,
+          "depth": 0.515,
+          "tris": 1604,
+          "clips": [
+            "idle",
+            "run",
+            "jump"
+          ]
+        },
+        {
+          "file": "packs/kenney-characters/zombie_c.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 810024,
+          "height": 1.85,
+          "width": 1.778,
+          "depth": 0.515,
+          "tris": 1604,
+          "clips": [
+            "idle",
+            "run",
+            "jump"
+          ]
+        }
+      ]
+    },
     "kenney-fantasy-town-kit": {
       "license": "CC0 1.0 — Kenney (kenney.nl)",
       "models": [
