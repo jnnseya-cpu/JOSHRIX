@@ -21,7 +21,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-05.70";
+export const BUILD_ID = "2026-08-06.71";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -139,8 +139,25 @@ OUTPUT: nothing but the file. Start with <!DOCTYPE html>. No markdown fences, no
 
 const GAME_SYSTEM = `You are the JOSHRIX Code Agent. Generate a COMPLETE, self-contained HTML5 game as ONE html file, implementing the creator's concept as faithfully as a 2D canvas web game allows. This is a COMMERCIAL product a creator will sell — it must feel like a polished paid arcade game, never a prototype.
 HARD REQUIREMENTS:
-- ONE file. No external resources of any kind: no CDNs, no images, no fonts, no network calls, no localStorage.
+- ONE file. No CDNs, no fonts, no network calls, no localStorage. The ONLY external resources allowed are sprites from the JOSHRIX sprite library listed below — nothing else, from anywhere.
 - <canvas>-based. Works with BOTH mouse and touch. Canvas scales responsively (max-width:100%, touch-action:none).
+JOSHRIX SPRITE LIBRARY — 2,553 hosted CC0 PNG sprites, every one verified to decode. Real art beats drawn shapes: a game built from these reads as a product, a game of drawn circles reads as a prototype.
+Base URL: https://www.joshrix.com/assets/sprites/<pack>/<name>.png  — e.g. .../kenney-platformer/grass_mid.png
+SPRITES ARE A BONUS LAYER, NEVER LOAD-BEARING — this is the rule that keeps a build alive:
+- Draw the FIRST FRAME before any image has loaded. Never await images, never gate the title screen on them, never build the game inside an onload handler.
+- Every sprite needs a procedural fallback: keep your drawn version, and only swap in the image once it has actually loaded. img.onerror must leave the game fully playable.
+- Load with img.crossOrigin = "anonymous" (the asset host sends CORS headers) so the canvas stays untainted.
+- Pattern: const img = new Image(); img.crossOrigin = "anonymous"; img.onload = () => img.ready = true; img.src = URL;  then at draw time: if (img.ready) ctx.drawImage(img, x, y, w, h); else drawItMyself(x, y, w, h);
+- The manifest at https://www.joshrix.com/assets/sprites/manifest.json carries every sprite's real pixel size, but you cannot fetch it while generating — the names below are exact and verified, so use these and do not invent others.
+- kenney-platformer (335) a COMPLETE side-scrolling platformer set. Ground tiles come in six biomes — grass dirt sand snow stone castle — each with the same suffixes: _mid _left _right _center _half _half_left _half_mid _half_right _hill_left _hill_right _ledge_left _ledge_right _cliff_left _cliff_right (e.g. grass_mid, dirt_half_mid, snow_cliff_left, castle_mid, sand_left, stone_right) · PLAYERS p1_stand p1_front p1_jump p1_duck p1_hurt p1_walk p1_walk01 p1_walk02 p1_walk03 p1_walk04 p1_walk05 p1_walk06 p1_walk07 p1_walk08 p1_walk09 p1_walk10 p1_walk11 · ENEMIES slime_walk1 slime_walk2 slime_dead fly_fly1 fly_fly2 fly_dead fish_swim1 fish_swim2 fish_dead snail_walk1 snail_walk2 snail_shell poker_mad poker_sad blocker_mad blocker_sad · PICKUPS coin_gold coin_silver coin_bronze gem_blue gem_green gem_red gem_yellow star key_blue key_green key_red key_yellow mushroom_red mushroom_brown box_coin box_item box_empty box_explosive · HAZARDS spikes fireball bomb bomb_flash liquid_lava liquid_lava_top liquid_water liquid_water_top weight weight_chained · WORLD cloud1 cloud2 cloud3 bush cactus plant plant_purple rock hill_small hill_large torch toch_lit ladder_mid ladder_top rope_vertical rope_horizontal springboard_up springboard_down bridge sign sign_left sign_right sign_exit door_open_top door_open_mid door_closed_top flag_red flag_green flag_blue window fence brick_wall bg bg_castle · HUD hud_0 hud_1 hud_2 hud_3 hud_4 hud_5 hud_6 hud_7 hud_8 hud_9 hud_x hud_coins hud_heart_full hud_heart_half hud_heart_empty hud_gem_blue hud_gem_red hud_key_blue hud_p1 hud_p2
+That whole player set repeats under the prefixes p2_ and p3_, giving three playable characters.
+- kenney-topdown (581) top-down survival and shooters: survivor1_stand survivor1_hold survivor1_gun survivor1_machine survivor1_silencer survivor1_reload · weapon_gun weapon_machine weapon_silencer
+Those same six poses exist under eight more prefixes: hitman1_ soldier1_ robot1_ zoimbie1_ man_blue_ man_brown_ man_old_ woman_green_ — nine figures in all. Kenney misspells zombie as zoimbie1_; type it exactly that way or it 404s. The pack also holds 520 ground tiles named tile_01 to tile_136 with no descriptive names, so use those where any floor tile will do rather than to lay out a specific room.
+- kenney-dungeon (168) top-down RPG figures with animation cycles: male_0_idle0 male_0_run0 male_0_run1 male_0_run9 male_0_pickup0 male_0_pickup9 male_3_run4 male_7_idle0
+The prefixes run male_0_ through male_7_. Filenames are prefix + action + a SINGLE-digit frame — male_0_run4, never male_0_run04. Each prefix carries one idle frame, ten running frames and ten pickup frames.
+- kenney-puzzle (795) match-3, breakout and board puzzles: ball_blue_01 … ball_blue_10 (also ball_black_ ball_grey_ ball_yellow_), coin_01 … coin_32 as a spin cycle, back_tile_01 … back_tile_18 backgrounds, plus paddle, pipe and particle pieces.
+- kenney-icons (186) crisp WHITE UI icons for HUD and menus, best on a dark ground: arrow_up arrow_down arrow_left arrow_right audio_on audio_off music_on music_off checkmark cross exit pause stop next previous rewind fast_forward return open save power menu_grid menu_list · star trophy medal1 medal2 coin diamond key flag target figurine gear wrench warning question information exclamation locked unlocked · gamepad joystick dpad dpad_up dpad_down dpad_left dpad_right button_a button_b button_x button_y button_start button_select mouse mouse_left mouse_right pointer cursor · singleplayer multiplayer leaderboards_simple user_robot share1 shopping_cart trashcan zoom_in zoom_out plus minus
+- kenney-rpg-urban (488) NUMBERED: modern-city RPG tiles, tile_0000 through tile_0487, with no descriptive names. Good for scattering urban detail; use kenney-platformer when you need a specific named piece.
 - Structure: animated title screen (game title + one-line how-to-play + START) -> core gameplay loop with score/progress -> win/lose states with restart. A pause button during play.
 - Rising difficulty over time or levels. A satisfying 3-8 minute session. requestAnimationFrame; smooth on mobile.
 POLISH BAR (all of these, not some):

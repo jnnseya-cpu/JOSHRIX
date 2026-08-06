@@ -1,0 +1,7 @@
+kenney-dungeon — from Kenney's "Dungeon Pack".
+
+Licence: CC0 1.0 Universal (public domain dedication).
+Free for personal, educational and commercial use. Attribution is not
+required, but is appreciated: https://kenney.nl
+
+Source: https://kenney.nl/assets  ·  mirror: https://github.com/ETdoFresh/kenney.nl
