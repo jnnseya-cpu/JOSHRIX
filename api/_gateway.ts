@@ -21,7 +21,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-06.71";
+export const BUILD_ID = "2026-08-06.72";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -174,10 +174,27 @@ SIZE: 650-900 lines. Ship a COMPLETE file — finishing the game matters more th
 ${RUNTIME_SAFETY}`;
 
 const GAME_SYSTEM_3D = `You are the JOSHRIX Code Agent. Generate a COMPLETE HTML5 **3D** game as ONE html file using three.js, implementing the creator's concept faithfully in real 3D. This is an ULTRA-PREMIUM COMMERCIAL product — it must look like a cinematic, high-production 3D game. Never a tech demo, never floating primitives on a flat plane.
-THREE.JS SETUP (the ONLY allowed external resources — include these exact tags first in <head>):
+BUILD ON THE JOSHRIX 3D RUNTIME. This is not optional scaffolding — it is how a 3D game is written here.
+Include these three tags, in this order, and nothing else:
 <script src="https://www.joshrix.com/assets/vendor/three.min.js"><\/script>
 <script src="https://www.joshrix.com/assets/vendor/GLTFLoader.js"><\/script>
-This is three.js r147 UMD: the global THREE, plus THREE.GLTFLoader. NO ES modules, NO import statements, NO other addons (OrbitControls/EffectComposer are NOT available — write your own camera logic).
+<script src="https://www.joshrix.com/assets/vendor/joshrix3d-1.js"><\/script>
+The runtime already owns, and guarantees, every part that has historically shipped broken: the canvas is created and on screen before your first line runs; the loop renders from frame one and survives a throwing frame; shadows, fog, a procedural sky dome whose horizon matches the fog exactly, a textured ground, a three-light rig; the title and game-over screens; the HUD; drag and WASD input; WebAudio on first gesture with a mute button; a particle pool; portrait and landscape camera framing; and a reduced render budget on phones. You do NOT write any of that, and you must not try.
+var G = JOSHRIX3D.boot({ title, titleAccent, tagline, howTo, arena, playRadius, accent, sky:{top,mid,haze}, ground:{base,speckle}, sea });
+What G gives you: G.scene G.camera G.renderer G.THREE · G.state G.score G.lives G.wave G.elapsed · G.keys G.target (a Vector3 the pointer and WASD both steer) · G.arena G.playRadius
+- G.load(key, "lib/guardian", { height: 1.9, onLoad: fn }) — queue a model, chainable, NEVER blocks. Pass height for anything upright, size for wide flat things like a nest or a platform (sizing a flat disc by height scales it enormously), or scale for a raw multiplier.
+- G.onReady(fn) — fires once every queued model has resolved, loaded or failed.
+- G.get(key) — a fresh instance at the right scale, or null if that model failed. Skinned characters are rebound so each copy animates on its own.
+- G.actor(key, "walk") — an instance with its own mixer; .play("run") to switch clip. The runtime updates every mixer for you.
+- G.scatter(key, count, { minR, maxR, avoid, avoidRadius }) — ring the arena with scenery. The default band sits OUTSIDE playRadius so nothing tall can stand between the camera and the player.
+- G.burst(pos, colour) · G.beep(freq, dur, type, gain) · G.flash("#ff3b3b")
+- G.stat("Score", n, "left") · G.pips("Lives", n, "♥", "right") — the HUD.
+- G.follow(obj) — lagged chase camera on that object during play, cinematic orbit on the menus.
+- G.onReset(fn) · G.onStart(fn) · G.onUpdate(function (g, dt) { ... }) — onUpdate runs ONLY while playing.
+- G.over("Nest Lost", "You scored 240 …") — end the run.
+YOUR JOB is the concept and only the concept: choose the models, build the world's fixed pieces, spawn and move the actors, decide what scores and what kills, and write the copy. Aim for 200-320 lines of game. If you find yourself writing a renderer, a sky, a loader, an overlay or a game loop, stop — the runtime already did it, and your version is what breaks.
+EVERY model is optional. G.get returns null when a download failed; always have a primitive stand-in ready so the game stays playable. Build the player and any critical object from THREE primitives FIRST and swap the model in inside onLoad — that is why a build survives when the asset host is slow.
+UNDERLYING ENGINE: three.js r147 UMD — the global THREE, plus THREE.GLTFLoader, plus the JOSHRIX3D runtime above. NO ES modules, NO import statements, NO CDNs, NO other addons (OrbitControls and EffectComposer are NOT available; the runtime's camera replaces them). Those three script tags are the ONLY external resources allowed, alongside models from the library below.
 JOSHRIX MODEL LIBRARY — 2,273 hosted low-poly GLB models across three libraries, every one verified to load.
 SCALE — READ THIS BEFORE PLACING ANYTHING. The three libraries are NOT built at the same scale, and mixing them raw is the most common way a 3D build looks broken:
 · LIBRARY 1 (lib/) is metric — a character is ~2 units tall, so 1 unit ≈ 1 metre.
@@ -232,12 +249,12 @@ These are modular kits: pieces are designed to tile and stack on a grid, so buil
 These eight are the best characters in the library — reach for them first for any game with a person in it, and note a survivor-versus-zombie cast is already here. One caveat that will bite you: they are SKINNED meshes, so .clone() does NOT carry the skeleton and every copy will animate identically to the first. Load the file once per character you need on screen, or clone through THREE.SkeletonUtils if it is available.
 CHARACTERS ARE SCARCE across the rest of these kits — beyond kenney-characters, only lib/ (guardian hero_knight mage villager enemy_goblin, all animated), kenney-pirate-kit (pirate_captain pirate_crew pirate_officer) and kenney-blocky-characters have humanoids. If a concept needs a cast the library cannot supply, build the extra characters from grouped primitives rather than reusing one model for every role.
 USAGE RULES:
-0. **CANVAS FIRST — THIS IS THE #1 CAUSE OF DEAD BUILDS.** Create the renderer, append renderer.domElement to the page, and render one frame BEFORE any model loading starts. The animation loop must run from that first frame. Models are decoration that arrive LATER and get added to the scene inside their callbacks. NEVER await/Promise.all model loads before showing the canvas, never build the scene inside a loader callback, never gate the title screen on downloads. A player must see your world within one second even if every model 404s.
-1. const loader = new THREE.GLTFLoader(); loader.load(url, onLoad, undefined, onError) — the onError callback MUST build a primitive substitute so a failed download can never break the game.
-2. On load: gltf.scene.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } })
-3. Load each model ONCE, then .clone() it for every placement (safe — these are node-animated, not skinned). Load in parallel and start the game when they settle.
-4. Animated models: const mixer = new THREE.AnimationMixer(obj); mixer.clipAction(THREE.AnimationClip.findByName(gltf.animations, 'walk')).play(); call mixer.update(dt) every frame. One mixer PER CLONE.
-5. Scale/rotate to fit your world. Terrain, sky, water, particles and anything not listed stay procedural.
+0. **CANVAS FIRST — historically the #1 cause of dead builds.** JOSHRIX3D.boot() puts the canvas on screen and starts the loop before it returns, so call it FIRST, at the top of your script, before anything else. Never await a model, never build the world inside a loader callback, never gate the title screen on a download.
+1. Use G.load(key, path, opts) — never construct your own GLTFLoader. It is non-blocking and already sets castShadow/receiveShadow on every mesh.
+2. Use G.get(key) for a copy and G.actor(key, clip) for an animated one. Never call .clone() yourself: a skinned character cloned raw leaves every copy bound to one skeleton, so they all animate as a single puppet.
+3. G.get returns null when a model failed. Build the player and any critical object from THREE primitives first, then swap the model in inside onLoad.
+4. Size every model with height (upright things) or size (wide flat things). Never leave a model at raw scale and never guess a multiplier — the libraries are authored at different scales and mixing them raw is what makes a character tower over the houses.
+5. Terrain, water beyond the shore, particles and anything not in the library stay procedural — the runtime already provides the ground, the sky and the particle pool.
 VISUAL FIDELITY BAR (all of these — this is what the creator is paying premium for).
 HARD REQUIREMENTS — the gateway REJECTS a 3D file missing any of these three, so they are not suggestions:
 (1) renderer.shadowMap.enabled = true with a shadow-casting directional light, (2) scene.fog = new THREE.Fog(...) or FogExp2 matched to the sky, (3) models from the JOSHRIX library below and/or procedural THREE.CanvasTexture materials — never bare untextured primitives.
@@ -344,7 +361,16 @@ export async function enhanceGameHtml(
  *  tag; 3D games create their canvas from JavaScript (three.js WebGLRenderer),
  *  so demanding the tag alone silently rejects every valid 3D build. */
 export function looksPlayable(html: string): boolean {
-  return html.includes("<canvas") || html.includes("WebGLRenderer") || html.includes("three.min.js");
+  return html.includes("<canvas") || html.includes("WebGLRenderer") ||
+         html.includes("three.min.js") || usesEngine(html);
+}
+
+/** A build on the hosted JOSHRIX3D runtime. The runtime owns the canvas, the
+ *  shadow map, the fog and the sky, so none of those strings appear in the
+ *  game's own source — checking for them literally would reject exactly the
+ *  builds most likely to work. */
+export function usesEngine(html: string): boolean {
+  return /joshrix3d-\d+\.js/.test(html) && /JOSHRIX3D\s*\.\s*boot\s*\(/.test(html);
 }
 
 /** The 3D fidelity floor, enforced: a premium 3D build without shadows, fog,
@@ -359,6 +385,9 @@ const FLOOR_3D: Array<[string, RegExp]> = [
   ["models or procedural textures", /models3d\/(lib|vehicles|packs)\/|CanvasTexture/],
 ];
 function missing3dFloor(html: string): string[] {
+  // The runtime sets shadows, fog, sky and ground itself, and guarantees them
+  // far better than a regex over generated source ever could.
+  if (usesEngine(html)) return [];
   return FLOOR_3D.filter(([, re]) => !re.test(html)).map(([n]) => n);
 }
 
@@ -529,7 +558,8 @@ export async function generateGameHtml(
         // A 3D build that never appends its canvas renders a blank screen no
         // matter how good the code is. Require the append so the chain can try
         // the next provider instead of shipping a guaranteed-blank game.
-        if (!/appendChild\s*\(\s*[\w.]*(renderer|\w+)\s*\.\s*domElement\s*\)|appendChild\s*\(\s*canvas\s*\)/.test(r.html)) {
+        if (!usesEngine(r.html) &&
+            !/appendChild\s*\(\s*[\w.]*(renderer|\w+)\s*\.\s*domElement\s*\)|appendChild\s*\(\s*canvas\s*\)/.test(r.html)) {
           errors.push(c.name + ": never appends renderer.domElement — the page would stay blank");
           if (!subFloor) subFloor = { html: r.html, provider: c.name, usage: r.usage };
           continue;
