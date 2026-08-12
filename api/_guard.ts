@@ -95,3 +95,53 @@ export function forgeDisabled(): string | null {
   }
   return null;
 }
+
+/* ---------------- single-use nonces and the security event log ------------- */
+
+/**
+ * Claim a nonce. Returns true if it had ALREADY been claimed, which is the
+ * caller's signal to reject a replay. One statement, so two serverless
+ * instances racing the same nonce cannot both win.
+ *
+ * Fails CLOSED (reports "already seen") on a database error: a proof-of-work
+ * solve that cannot be recorded must not be accepted, or the replay protection
+ * is only as strong as an attacker's ability to make the database blink.
+ */
+export async function claimNonce(sql: any, nonce: string, ttlSeconds = 3600): Promise<boolean> {
+  try {
+    await sql`CREATE TABLE IF NOT EXISTS used_nonces (
+      nonce text PRIMARY KEY,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )`;
+    const rows = await sql`
+      INSERT INTO used_nonces (nonce) VALUES (${nonce})
+      ON CONFLICT (nonce) DO NOTHING
+      RETURNING nonce`;
+    // opportunistic cleanup so the table cannot grow without bound
+    await sql`DELETE FROM used_nonces WHERE created_at < now() - make_interval(secs => ${ttlSeconds * 24})`;
+    return rows.length === 0;
+  } catch {
+    return true;
+  }
+}
+
+/** Record something worth a human's attention. Never throws: a security log
+ *  that can break the request it is observing would be its own vulnerability. */
+export async function recordSecurityEvent(
+  sql: any,
+  kind: string,
+  severity: "info" | "warn" | "block",
+  detail: Record<string, unknown>,
+): Promise<void> {
+  try {
+    await sql`CREATE TABLE IF NOT EXISTS security_events (
+      id bigserial PRIMARY KEY,
+      kind text NOT NULL,
+      severity text NOT NULL,
+      detail jsonb NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT now()
+    )`;
+    await sql`INSERT INTO security_events (kind, severity, detail)
+              VALUES (${kind}, ${severity}, ${JSON.stringify(detail)}::jsonb)`;
+  } catch { /* observation must never break the thing observed */ }
+}

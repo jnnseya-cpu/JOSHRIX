@@ -12,7 +12,8 @@
  */
 import { randomUUID } from "node:crypto";
 import { getDb, ensureGameSchema, createWallet, getWallet, getWalletByEmail, refillTesterWallet, deleteWallet, updateWalletIdentity } from "./_ledger";
-import { normalizeEmail, clientIp, rateLimit, tooMany } from "./_guard";
+import { normalizeEmail, clientIp, rateLimit, tooMany, claimNonce, recordSecurityEvent } from "./_guard";
+import { verifyHuman, isDisposableEmail, humanVerifyConfigured } from "./_human";
 
 export const TESTER_GRANT_ACU = 2000;
 
@@ -31,7 +32,8 @@ export default async function handler(req: any, res: any) {
   const rl = await rateLimit(sql, "wallet-init:" + clientIp(req), 20, 3600);
   if (!rl.ok) return tooMany(res, rl.retryAfter, "wallet requests");
 
-  const { walletId, email, name, action } = (req.body ?? {}) as Record<string, string>;
+  const { walletId, email, name, action, human } = (req.body ?? {}) as Record<string, any>;
+
   try {
     await ensureGameSchema(sql);
 
@@ -92,6 +94,31 @@ export default async function handler(req: any, res: any) {
         category: existing.category, plan: existing.plan ?? "explorer", created: false,
       });
     }
+    /* THE FUNDED GRANT. Everything above this line either returns an existing
+       wallet or an empty one, and neither is worth automating. This is the only
+       branch that mints real, spendable AI credit from nothing, so this is where
+       the human check belongs — not on every balance refresh, which would charge
+       ordinary users a second of CPU for no security gain. */
+    if (isDisposableEmail(addr)) {
+      await recordSecurityEvent(sql, "disposable_email_blocked", "warn", { ip: clientIp(req), email: addr });
+      return res.status(403).json({
+        error: "That looks like a temporary mailbox. Please use an address you can receive mail at — starter credits are one per person.",
+      });
+    }
+    if (humanVerifyConfigured()) {
+      const v = await verifyHuman((human ?? {}) as any, clientIp(req), (n) => claimNonce(sql, n));
+      if (!v.ok) {
+        await recordSecurityEvent(sql, "human_verification_failed", "block", {
+          ip: clientIp(req), reason: v.reason, email: addr,
+        });
+        return res.status(403).json({
+          error: "We could not verify this signup came from a person.",
+          detail: v.reason,
+          retry: "Reload the page and try again — the check runs automatically in your browser.",
+        });
+      }
+    }
+
     const id = "w-" + randomUUID().replace(/-/g, "").slice(0, 20);
     await createWallet(sql, id, TESTER_GRANT_ACU, "tester", addr, name?.slice(0, 80) ?? null);
     return res.status(200).json({ mode: "live", walletId: id, balance: TESTER_GRANT_ACU, category: "tester", plan: "explorer", created: true });

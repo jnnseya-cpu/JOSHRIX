@@ -7,6 +7,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { Script } from "node:vm";
 import { GameBlueprintSchema, type GameBlueprint, ACU } from "../shared/contracts";
+import { wrapUntrusted, scanGeneratedHtml, describeVerdict } from "./_security";
 
 const SYSTEM = `You are the JOSHRIX Idea Agent. From the creator's game description, produce a commercial game blueprint.
 The creator may write in ANY language. Detect their language (or honour an explicitly requested one) and write ALL
@@ -21,7 +22,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-06.72";
+export const BUILD_ID = "2026-08-06.73";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -516,7 +517,9 @@ export async function generateGameHtml(
 ): Promise<{ html: string; provider: string; usage?: TokenUsage; attempts?: string[] }> {
   const is3d = opts.mode === "3d";
   const system = is3d ? GAME_SYSTEM_3D : GAME_SYSTEM;
-  const userMsg = `Creator's game concept:\n${prompt}\n\nBlueprint title: ${opts.title ?? "(derive from concept)"}\nBlueprint summary: ${opts.summary ?? "(none)"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the concept"}`;
+  // The concept is arbitrary text from the public internet. Fence it so the
+  // model reads it as DATA, and never as instructions addressed to itself.
+  const userMsg = `${wrapUntrusted(prompt)}\n\nBlueprint title: ${opts.title ?? "(derive from concept)"}\nBlueprint summary: ${opts.summary ?? "(none)"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the concept"}`;
 
   // Per-provider output budgets, sized from the full-size diagnostic probe:
   // Claude writes past 12k tokens and truncates (= broken game), so it gets the
@@ -554,6 +557,19 @@ export async function generateGameHtml(
     if (Date.now() - chainStart > CHAIN_BUDGET_MS) { errors.push(c.name + ": skipped — forge time budget exhausted"); continue; }
     try {
       const r = await c.run();
+
+      // SECURITY GATE — applies to every build, 2D and 3D. This file gets hosted
+      // on joshrix.com and played by other people, so a build that phones home,
+      // asks for a password, hides itself behind eval, or embeds another site
+      // must never be stored. Treated exactly like a provider failure: burn to
+      // the next provider rather than shipping it, and never keep it as the
+      // last-resort sub-floor build either.
+      const sec = scanGeneratedHtml(r.html);
+      if (!sec.safe) {
+        errors.push(c.name + ": rejected by the security scan — " + describeVerdict(sec));
+        continue;
+      }
+
       if (is3d) {
         // A 3D build that never appends its canvas renders a blank screen no
         // matter how good the code is. Require the append so the chain can try

@@ -10,6 +10,8 @@ import { randomUUID } from "crypto";
 import { generateGameHtml, looksPlayable, acuChargeForUsage, FORGE_GAME_ACU_CHARGE, FORGE_GAME_3D_ACU_CHARGE, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE } from "./_gateway";
 import { buildPlayableGame } from "./_engine";
 import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge, saveForgeResult, recordForgeLog } from "./_ledger";
+import { recordSecurityEvent } from "./_guard";
+import { scanConcept, sanitiseConcept } from "./_security";
 import { clientIp, rateLimit, tooMany, forgeDisabled } from "./_guard";
 import type { GameBlueprint } from "../shared/contracts";
 
@@ -53,6 +55,29 @@ export default async function handler(req: any, res: any) {
   }
   const paused = forgeDisabled();
   if (paused) return res.status(503).json({ error: paused });
+
+  /* The concept is arbitrary public text. Strip the characters that hide it
+     from a human reviewer, then judge its SHAPE — never its subject. A horror
+     game about hackers is a game; text addressed to the model is not. */
+  const concept = sanitiseConcept(prompt);
+  const verdict = scanConcept(concept);
+  if (verdict.action !== "allow") {
+    const sqlEarly = getDb();
+    if (sqlEarly) {
+      await recordSecurityEvent(sqlEarly, "concept_flagged", verdict.action === "block" ? "block" : "warn", {
+        ip: clientIp(req), risk: verdict.risk, reasons: verdict.reasons,
+        excerpt: concept.slice(0, 400), walletId: walletId ?? null,
+      });
+    }
+    if (verdict.action === "block") {
+      // No charge is taken: nothing was generated, so nothing is owed.
+      return res.status(400).json({
+        error: "That description reads as instructions aimed at the AI rather than a game concept, so it was not run.",
+        reasons: verdict.reasons,
+        help: "Describe the game you want — the world, the player, what they do, how they win. Your ACUs are untouched.",
+      });
+    }
+  }
 
   const is3d = mode === "3d";
   const CHARGE = is3d ? FORGE_GAME_3D_ACU_CHARGE : FORGE_GAME_ACU_CHARGE;
@@ -109,8 +134,19 @@ export default async function handler(req: any, res: any) {
     let attemptTrail: string[] = [];
     const genStart = Date.now();
     try {
-      const ai = await generateGameHtml(prompt, { title, summary, language, mode: is3d ? "3d" : "2d" });
+      const ai = await generateGameHtml(concept, { title, summary, language, mode: is3d ? "3d" : "2d" });
       attemptTrail = ai.attempts ?? [];
+      // A build rejected by the security scan is the loudest signal this
+      // platform can produce: someone got a model to write hostile code that
+      // would have been hosted here. Record it whether or not a later provider
+      // then succeeded, because the attempt is the finding.
+      const blocked = attemptTrail.filter((a) => a.indexOf("rejected by the security scan") !== -1);
+      if (blocked.length && sql) {
+        await recordSecurityEvent(sql, "malicious_build_blocked", "block", {
+          ip: clientIp(req), walletId: walletId ?? null, mode: is3d ? "3d" : "2d",
+          rejections: blocked, conceptExcerpt: concept.slice(0, 400),
+        });
+      }
       // any REAL provider build ships as bespoke (claude/gemini/openai); the
       // keyless demo build is weaker than the engine, so the engine wins there.
       // looksPlayable, not a literal <canvas> check — 3D builds create their

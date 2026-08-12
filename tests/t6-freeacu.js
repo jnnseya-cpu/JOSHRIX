@@ -7,6 +7,14 @@ const fake = (strings, ...vals) => {
   if (/^CREATE TABLE|^ALTER TABLE/i.test(q)) return Promise.resolve([]);
   if (/^INSERT INTO wallets/i.test(q)) { const [id,bal,cat,email,name]=vals; if(!wallets.has(id)) wallets.set(id,{id,balance:bal,category:cat,email,name}); return Promise.resolve([]); }
   if (/^SELECT id, balance, category, email, name, plan FROM wallets WHERE id/i.test(q)) { const w=wallets.get(vals[0]); return Promise.resolve(w?[w]:[]); }
+  // The email lookup is the ENTIRE free-credit dedupe. Without it modelled here
+  // this test reports "NO DEDUPE" forever, including after the fix landed — a
+  // security check that always cries wolf is one people learn to ignore.
+  if (/FROM wallets\s+WHERE lower\(email\)/i.test(q)) {
+    const want = String(vals[0] ?? '').toLowerCase();
+    const hit = [...wallets.values()].find(w => String(w.email ?? '').toLowerCase() === want);
+    return Promise.resolve(hit ? [hit] : []);
+  }
   if (/^UPDATE wallets SET balance = balance -/i.test(q)) { const [cost,id,cost2]=vals; const w=wallets.get(id); if(w&&w.balance>=cost){w.balance-=cost;return Promise.resolve([{balance:w.balance}]);} return Promise.resolve([]); }
   return Promise.resolve([]);
 };
@@ -35,6 +43,8 @@ const mkRes=()=>{const r={code:null,body:null};r.setHeader=()=>{};r.status=c=>{r
   wallets.clear(); const ids2=[];
   for (let i=0;i<5;i++){ const res=mkRes(); await handler({method:'POST',headers:{},body:{email:'same@attacker.test'},query:{}},res); if(res.body?.walletId) ids2.push(res.body.walletId); }
   console.log(`  5 requests, same email -> ${new Set(ids2).size} distinct funded wallets`);
-  console.log(`  VERDICT: ${new Set(ids2).size>1 ? 'NO DEDUPE — one email can farm unlimited wallets' : 'deduped'}`);
+  const deduped = new Set(ids2).size <= 1;
+  console.log(`  VERDICT: ${deduped ? 'deduped — one address, one funded wallet' : 'NO DEDUPE — one email can farm unlimited wallets'}`);
+  if (!deduped) { console.log('\n  FAIL: the free-credit dedupe is not holding.'); process.exit(1); }
   process.exit(0);
 })();
