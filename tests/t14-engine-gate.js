@@ -76,5 +76,45 @@ t('good hand-written build still satisfies the old bar',
   /new\s+THREE\.Fog/.test(HANDWRITTEN_GOOD) &&
   /models3d\/(lib|vehicles|packs)\/|CanvasTexture/.test(HANDWRITTEN_GOOD));
 
+/* ------------------------------------------------------------------ *
+ * The engine floor.
+ *
+ * Exempting engine builds from the fidelity floor entirely — the first
+ * version of this change — meant a build that called boot() and then did
+ * nothing passed every gate and shipped. The runtime rendered its empty
+ * default world forever and the player got a green field and a button.
+ * That reached a real user. These assertions exist so it cannot again.
+ * ------------------------------------------------------------------ */
+console.log('\n== engine floor: booting the runtime is not the same as building a game ==');
+
+const BARE_BOOT = `<html><head>
+<script src="https://www.joshrix.com/assets/vendor/joshrix3d-1.js"></script>
+</head><body><script>
+var G = JOSHRIX3D.boot({ title: "WonderVerse", tagline: "Restore the colours" });
+</script></body></html>`;
+
+// The reference game lives in the repo, not next to the compiled test output.
+// JOSHRIX_ROOT lets the audit workspace point at it; default is the repo layout.
+const REPO = process.env.JOSHRIX_ROOT || require('node:path').join(__dirname, '..');
+const REAL_GAME = require('node:fs')
+  .readFileSync(require('node:path').join(REPO, 'frontend', 'games', 'dino-island.html'), 'utf8');
+
+const bareMissing = G.missing3dFloor(BARE_BOOT);
+t('a bare boot() with no game is REJECTED', bareMissing.length > 0, 'this is exactly what shipped to a user');
+t('and the rejection says what is missing', /update/.test(bareMissing.join(' ')), bareMissing.join(' | '));
+
+t('the real reference game PASSES the engine floor',
+  G.missing3dFloor(REAL_GAME).length === 0,
+  G.missing3dFloor(REAL_GAME).join(' | '));
+
+t('a build with a world but no update loop is rejected',
+  G.missing3dFloor(BARE_BOOT.replace('var G =', 'var G2 = 0; var G =')
+    .replace('});', '}); G.load("h","lib/guardian",{height:1.9}); G.follow(x);')).length > 0,
+  'scenery without a loop is a diorama, not a game');
+
+t('a hand-written 3D build still faces the ORIGINAL floor',
+  G.missing3dFloor(HANDWRITTEN_BARE).length > 0,
+  'the engine exemption must not leak to non-engine builds');
+
 console.log(`\n  ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

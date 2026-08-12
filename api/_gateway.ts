@@ -22,7 +22,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-12.74";
+export const BUILD_ID = "2026-08-12.75";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -386,10 +386,26 @@ const FLOOR_3D: Array<[string, RegExp]> = [
   // one or the other, never bare untextured primitives on a flat plane
   ["models or procedural textures", /models3d\/(lib|vehicles|packs)\/|CanvasTexture/],
 ];
-function missing3dFloor(html: string): string[] {
-  // The runtime sets shadows, fog, sky and ground itself, and guarantees them
-  // far better than a regex over generated source ever could.
-  if (usesEngine(html)) return [];
+/** The floor for a build on the JOSHRIX3D runtime.
+ *
+ *  The runtime supplies shadows, fog, sky, ground, a camera and a title screen,
+ *  so those strings never appear in a game's own source and the FLOOR_3D regexes
+ *  cannot see them. Exempting engine builds from the floor entirely — which is
+ *  what this did at first — meant a build that called boot() and then did
+ *  NOTHING passed every gate and shipped: the runtime dutifully rendered its
+ *  empty default world, forever, and the player got a green field and a button.
+ *
+ *  So an engine build has to prove it actually put a game inside the runtime.
+ *  These are the minimum signs of one, and none of them can be satisfied by
+ *  boilerplate. */
+const FLOOR_ENGINE: Array<[string, RegExp]> = [
+  ["a per-frame update — nothing can happen without one", /\.\s*onUpdate\s*\(/],
+  ["anything in the world at all (load/get/actor/scatter)", /\.\s*(load|get|actor|scatter)\s*\(/],
+  ["something for the player to reach or avoid", /\.\s*(burst|over|stat|pips|follow)\s*\(/],
+];
+
+export function missing3dFloor(html: string): string[] {
+  if (usesEngine(html)) return FLOOR_ENGINE.filter(([, re]) => !re.test(html)).map(([n]) => n);
   return FLOOR_3D.filter(([, re]) => !re.test(html)).map(([n]) => n);
 }
 
@@ -583,10 +599,14 @@ export async function generateGameHtml(
         }
         const miss = missing3dFloor(r.html);
         if (miss.length) {
-          // valid and playable but below the premium bar — stash as a backstop
-          // and let the next provider try to hit the full fidelity floor
           errors.push(c.name + ": below the 3D fidelity floor (missing: " + miss.join(", ") + ")");
-          if (!subFloor) subFloor = { html: r.html, provider: c.name, usage: r.usage };
+          // The backstop is for a build that IS a game but looks cheap. A build
+          // on the runtime that failed this floor is not a game at all — it boots
+          // the runtime and leaves its empty default world on screen. Keeping
+          // that as the fallback is how a player ends up staring at a green field
+          // with a button, which is worse than the deterministic engine build we
+          // would otherwise ship. So it is discarded outright.
+          if (!subFloor && !usesEngine(r.html)) subFloor = { html: r.html, provider: c.name, usage: r.usage };
           continue;
         }
       }
