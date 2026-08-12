@@ -22,7 +22,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-06.73";
+export const BUILD_ID = "2026-08-12.74";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -142,6 +142,19 @@ const GAME_SYSTEM = `You are the JOSHRIX Code Agent. Generate a COMPLETE, self-c
 HARD REQUIREMENTS:
 - ONE file. No CDNs, no fonts, no network calls, no localStorage. The ONLY external resources allowed are sprites from the JOSHRIX sprite library listed below — nothing else, from anywhere.
 - <canvas>-based. Works with BOTH mouse and touch. Canvas scales responsively (max-width:100%, touch-action:none).
+- Structure: animated title screen (game title + one-line how-to-play + START) -> core gameplay loop with score/progress -> win/lose states with restart. A pause button during play.
+- Rising difficulty over time or levels. A satisfying 3-8 minute session. requestAnimationFrame; smooth on mobile.
+POLISH BAR (all of these, not some):
+- Particle effects on every important event (collect, hit, death, level-up).
+- Eased motion (no linear teleports): smooth lerps, springy UI, screen shake on impacts.
+- Multi-layer parallax background that evokes the concept's WORLD (its places, not abstract stars — a forest concept gets trees and fireflies, a city concept gets skyline layers).
+- Distinct visual identity per entity: the player, each enemy/hazard type and each collectable must be DRAWN as recognisable shapes of the concept (a keeper is a figure with arms, a crystal is a faceted gem, a shadow sprite has eyes) — never plain circles for everything.
+- Juice: score pops, combo counters, flash on damage, glow effects (shadowBlur), animated HUD.
+- Premium palette fitting the concept (JOSHRIX default: #050508 ground, violet #7C3AED, cyan #22D3EE) unless the concept demands another (bright children's world -> vivid colours).
+- Procedural WebAudio sound design (no files): distinct SFX per event + a simple ambient loop + a mute button; create the AudioContext only on the first user gesture.
+- All player-facing text in the creator's language (use the provided language, else detect from the concept).
+- Age-appropriate for the stated audience. No real brands, clubs, celebrities or licensed characters.
+ART — OPTIONAL, AND ONLY AFTER THE GAME ABOVE IS COMPLETE. Everything above is what makes it a game; the list below is what makes it look good. If you have to choose, choose the game. A finished game drawn in plain shapes beats a beautiful empty field, and an empty field is the single most common way a build fails.
 JOSHRIX SPRITE LIBRARY — 2,553 hosted CC0 PNG sprites, every one verified to decode. Real art beats drawn shapes: a game built from these reads as a product, a game of drawn circles reads as a prototype.
 Base URL: https://www.joshrix.com/assets/sprites/<pack>/<name>.png  — e.g. .../kenney-platformer/grass_mid.png
 SPRITES ARE A BONUS LAYER, NEVER LOAD-BEARING — this is the rule that keeps a build alive:
@@ -159,18 +172,6 @@ The prefixes run male_0_ through male_7_. Filenames are prefix + action + a SING
 - kenney-puzzle (795) match-3, breakout and board puzzles: ball_blue_01 … ball_blue_10 (also ball_black_ ball_grey_ ball_yellow_), coin_01 … coin_32 as a spin cycle, back_tile_01 … back_tile_18 backgrounds, plus paddle, pipe and particle pieces.
 - kenney-icons (186) crisp WHITE UI icons for HUD and menus, best on a dark ground: arrow_up arrow_down arrow_left arrow_right audio_on audio_off music_on music_off checkmark cross exit pause stop next previous rewind fast_forward return open save power menu_grid menu_list · star trophy medal1 medal2 coin diamond key flag target figurine gear wrench warning question information exclamation locked unlocked · gamepad joystick dpad dpad_up dpad_down dpad_left dpad_right button_a button_b button_x button_y button_start button_select mouse mouse_left mouse_right pointer cursor · singleplayer multiplayer leaderboards_simple user_robot share1 shopping_cart trashcan zoom_in zoom_out plus minus
 - kenney-rpg-urban (488) NUMBERED: modern-city RPG tiles, tile_0000 through tile_0487, with no descriptive names. Good for scattering urban detail; use kenney-platformer when you need a specific named piece.
-- Structure: animated title screen (game title + one-line how-to-play + START) -> core gameplay loop with score/progress -> win/lose states with restart. A pause button during play.
-- Rising difficulty over time or levels. A satisfying 3-8 minute session. requestAnimationFrame; smooth on mobile.
-POLISH BAR (all of these, not some):
-- Particle effects on every important event (collect, hit, death, level-up).
-- Eased motion (no linear teleports): smooth lerps, springy UI, screen shake on impacts.
-- Multi-layer parallax background that evokes the concept's WORLD (its places, not abstract stars — a forest concept gets trees and fireflies, a city concept gets skyline layers).
-- Distinct visual identity per entity: the player, each enemy/hazard type and each collectable must be DRAWN as recognisable shapes of the concept (a keeper is a figure with arms, a crystal is a faceted gem, a shadow sprite has eyes) — never plain circles for everything.
-- Juice: score pops, combo counters, flash on damage, glow effects (shadowBlur), animated HUD.
-- Premium palette fitting the concept (JOSHRIX default: #050508 ground, violet #7C3AED, cyan #22D3EE) unless the concept demands another (bright children's world -> vivid colours).
-- Procedural WebAudio sound design (no files): distinct SFX per event + a simple ambient loop + a mute button; create the AudioContext only on the first user gesture.
-- All player-facing text in the creator's language (use the provided language, else detect from the concept).
-- Age-appropriate for the stated audience. No real brands, clubs, celebrities or licensed characters.
 SIZE: 650-900 lines. Ship a COMPLETE file — finishing the game matters more than length; depth comes from Enhance passes. Never pad; never truncate.
 ${RUNTIME_SAFETY}`;
 

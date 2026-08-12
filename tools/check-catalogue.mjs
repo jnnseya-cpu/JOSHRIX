@@ -60,7 +60,9 @@ const blocks = [];
 {
   const start = SRC.indexOf("JOSHRIX SPRITE LIBRARY");
   if (start < 0) { console.error("could not locate the 2D sprite catalogue"); process.exit(1); }
-  const end = SRC.indexOf("POLISH BAR", start);
+  // the sprite catalogue sits between the ART header and the SIZE rule; anchoring
+  // on anything earlier lets the scan run past it into the 3D catalogue
+  const end = SRC.indexOf("SIZE: 650-900 lines", start);
   blocks.push({
     label: "2D sprites", ext: ".png", text: SRC.slice(start, end > 0 ? end : undefined),
     // Unlike the 3D block, every 2D name list lives on its own pack line, so a
