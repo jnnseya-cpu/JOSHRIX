@@ -454,6 +454,23 @@ footer{
 .lang-strip .langs span{font-weight:600;font-size:.95rem;color:var(--text);border:1px solid var(--stroke);border-radius:999px;
   padding:.4rem 1rem;background:rgba(5,5,8,.45)}
 .lang-strip p{color:var(--muted);font-weight:500;max-width:64ch;margin:0 auto;line-height:1.6}
+
+.jx-try{max-width:1000px;margin:0 auto;padding:4.5rem 1rem 1rem;text-align:center}
+.try-frame{position:relative;margin:2rem auto 0;border-radius:18px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.14);background:#0b1622;aspect-ratio:16/10;max-width:900px;
+  box-shadow:0 24px 70px rgba(0,0,0,.5)}
+.try-frame iframe{width:100%;height:100%;border:0;display:block}
+.try-poster{position:absolute;inset:0;width:100%;height:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:.7rem;cursor:pointer;color:#fff;border:0;
+  background:radial-gradient(ellipse at 50% 40%,#1d3b57,#0b1622);font:inherit}
+.try-emoji{font-size:3.4rem;line-height:1}
+.try-name{font-size:1.15rem;font-weight:700}
+.try-meta{font-size:.85rem;opacity:.7}
+.try-go{margin-top:.6rem;background:linear-gradient(135deg,#ffd166,#f4a23c);color:#2a1a05;
+  font-weight:800;border-radius:999px;padding:.75rem 2.2rem;font-size:1.05rem}
+.try-poster:hover .try-go{transform:translateY(-2px)}
+.try-foot{margin-top:1.2rem;font-size:.92rem;color:var(--muted,#9d9db3)}
+@media(max-width:640px){.try-frame{aspect-ratio:3/4}}
 </style>
 </head>
 <body>
@@ -507,8 +524,8 @@ footer{
     and publishes your game. <b>You own every pixel of the IP. Forever.</b>
   </p>
   <div class="hero-ctas">
-    <a class="btn btn-primary" href="studio.html">▶&nbsp; Start Forging</a>
-    <a class="btn btn-ghost" href="#worlds">Explore Worlds</a>
+    <a class="btn btn-primary" href="#try">▶&nbsp; Play One Now — No Account</a>
+    <a class="btn btn-ghost" href="studio.html">Start Forging</a>
   </div>
   <div class="hero-stats">
     <div class="stat"><div class="num" data-count="90" data-suffix="%">0</div><div class="lbl">Cost Reduction</div></div>
@@ -518,6 +535,21 @@ footer{
   </div>
   <div class="scroll-hint" aria-hidden="true">Scroll<span class="bar"></span></div>
 </header>
+
+<section id="try" class="jx-try">
+  <h2 class="reveal">Don't take our word for it. <span class="grad">Play one.</span></h2>
+  <p class="sec-sub reveal">Built on JOSHRIX, with the same model library and the same rules every forge here has to meet. No account, no download, no payment — it runs in this page.</p>
+  <div class="try-frame reveal" id="tryFrame">
+    <button class="try-poster" id="tryPoster" type="button" aria-label="Play Dino Island">
+      <span class="try-emoji" aria-hidden="true">🦖</span>
+      <span class="try-name">Dino Island — Guardian of the Nest</span>
+      <span class="try-meta">3D · plays on phone and desktop · loads in seconds</span>
+      <span class="try-go">▶ Play</span>
+    </button>
+  </div>
+  <p class="try-foot reveal">Made something better? <a href="studio.html">Forge yours</a> — the first one is free.</p>
+</section>
+
 
 <div class="marquee" aria-hidden="true">
   <div class="track">
@@ -884,5 +916,20 @@ footer{
 <script src="assets/install.js" defer></script>
 <script src="assets/identity.js" defer></script>
 <script src="assets/appnav.js"></script>
+<script src="assets/track.js"></script>
+
+<script>
+(function(){
+  var b=document.getElementById('tryPoster'), f=document.getElementById('tryFrame');
+  if(!b||!f) return;
+  b.addEventListener('click', function(){
+    var i=document.createElement('iframe');
+    i.src='games/dino-island.html';
+    i.title='Dino Island — a game built on JOSHRIX';
+    i.allow='autoplay; fullscreen';
+    f.innerHTML=''; f.appendChild(i);
+  });
+})();
+</script>
 </body>
 </html>
