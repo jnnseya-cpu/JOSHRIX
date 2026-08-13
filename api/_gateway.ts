@@ -22,7 +22,7 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-12.76";
+export const BUILD_ID = "2026-08-12.77";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -197,6 +197,79 @@ What G gives you: G.scene G.camera G.renderer G.THREE · G.state G.score G.lives
 YOUR JOB is the concept and only the concept: choose the models, build the world's fixed pieces, spawn and move the actors, decide what scores and what kills, and write the copy. Aim for 200-320 lines of game. If you find yourself writing a renderer, a sky, a loader, an overlay or a game loop, stop — the runtime already did it, and your version is what breaks.
 EVERY model is optional. G.get returns null when a download failed; always have a primitive stand-in ready so the game stays playable. Build the player and any critical object from THREE primitives FIRST and swap the model in inside onLoad — that is why a build survives when the asset host is slow.
 UNDERLYING ENGINE: three.js r147 UMD — the global THREE, plus THREE.GLTFLoader, plus the JOSHRIX3D runtime above. NO ES modules, NO import statements, NO CDNs, NO other addons (OrbitControls and EffectComposer are NOT available; the runtime's camera replaces them). Those three script tags are the ONLY external resources allowed, alongside models from the library below.
+WORKED EXAMPLE — a complete, finished game on the runtime. Yours will differ in concept; this is the SHAPE of done. Note how short it is: the runtime is doing the engine work, so every line here is about the game.
+var G = JOSHRIX3D.boot({ title: "Reef Runner", titleAccent: "Runner", tagline: "Outswim the tide.",
+  howTo: "Drag or use WASD. Collect pearls, dodge the eels.", arena: 22, playRadius: 16, accent: "#5ee0d0",
+  sky: { top: "#08283f", mid: "#1f6f8f", haze: "#7fc9d8" }, ground: { base: "#2e6b6b", speckle: ["#37807d","#255c5c"] } });
+var T = G.THREE, player = new T.Group(), pearls = [], eels = [];
+var body = new T.Mesh(new T.CapsuleGeometry(0.35, 0.9, 4, 10), new T.MeshStandardMaterial({ color: 0x8fd6c7 }));
+body.position.y = 1; body.castShadow = true; player.add(body);      // visible BEFORE any model lands
+player.position.set(0, 0, 6); G.scene.add(player); G.follow(player); G.target.set(0, 0, 6);
+G.load("hero", "lib/guardian", { height: 1.9, onLoad: function () {
+  player.remove(body); var a = G.actor("hero", "walk"); if (a) player.add(a.obj); } })
+ .load("eel", "lib/enemy_slime", { height: 1.2 })
+ .load("pearl", "lib/crystal_0", { height: 0.9 })
+ .load("weed", "lib/bush_0", { height: 0.8 });
+G.onReady(function () { G.scatter("weed", 14, { minR: 4, maxR: 20 }); });
+function spawnPearl() { var o = G.get("pearl") || new T.Mesh(new T.OctahedronGeometry(0.4), new T.MeshStandardMaterial({ color: 0xfff0a0 }));
+  var a = Math.random() * 6.28, r = 4 + Math.random() * 10; o.position.set(Math.cos(a) * r, 0.6, Math.sin(a) * r); G.scene.add(o); pearls.push(o); }
+function spawnEel() { var e = G.actor("eel"), o = e ? e.obj : new T.Mesh(new T.SphereGeometry(0.6), new T.MeshStandardMaterial({ color: 0x9b4dca }));
+  var a = Math.random() * 6.28; o.position.set(Math.cos(a) * 18, 0, Math.sin(a) * 18); G.scene.add(o); eels.push(o); }
+G.onReset(function (g) { pearls.forEach(function (p) { g.scene.remove(p); }); pearls.length = 0;
+  eels.forEach(function (e) { g.scene.remove(e); }); eels.length = 0;
+  player.position.set(0, 0, 6); g.target.set(0, 0, 6); g.lives = 3;
+  for (var i = 0; i < 6; i++) spawnPearl(); spawnEel(); hud(); });
+function hud() { G.stat("Score", G.score, "left"); G.pips("Air", G.lives, "O", "right"); }
+var t = 0;
+G.onUpdate(function (g, dt) {
+  var sp = 10 * dt;                                            // keyboard steers the same target the pointer does
+  if (g.keys.a || g.keys.arrowleft) g.target.x -= sp;   if (g.keys.d || g.keys.arrowright) g.target.x += sp;
+  if (g.keys.w || g.keys.arrowup) g.target.z -= sp;     if (g.keys.s || g.keys.arrowdown) g.target.z += sp;
+  if (g.target.length() > g.playRadius) g.target.setLength(g.playRadius);
+  player.position.lerp(g.target, 0.15);
+  for (var i = pearls.length - 1; i >= 0; i--) { pearls[i].rotation.y += dt * 2;
+    if (pearls[i].position.distanceTo(player.position) < 1.6) {
+      g.burst(pearls[i].position, 0xfff0a0); g.scene.remove(pearls[i]); pearls.splice(i, 1);
+      g.score += 10; hud(); g.beep(900, 0.1, "triangle", 0.12); spawnPearl(); } }
+  for (var k = eels.length - 1; k >= 0; k--) { var e = eels[k];
+    var d = new T.Vector3().subVectors(player.position, e.position); d.y = 0; d.normalize();
+    e.position.addScaledVector(d, 3.2 * dt); e.rotation.y = Math.atan2(d.x, d.z);
+    if (e.position.distanceTo(player.position) < 1.3) {
+      g.scene.remove(e); eels.splice(k, 1); g.lives--; hud(); g.flash("#ff3b3b"); g.beep(150, 0.3, "square", 0.16);
+      if (g.lives <= 0) g.over("Caught", "You gathered " + g.score + " pearls."); } }
+  t += dt; if (t > Math.max(1.4, 4 - g.elapsed / 20)) { t = 0; spawnEel(); }
+});
+hud();
+That is a finished game: a player you steer, something to collect, something that hunts you, a HUD, escalation, and an ending. If your file does not have all six, it is not finished — no amount of scenery substitutes for any of them.
+USAGE RULES:
+0. **CANVAS FIRST — historically the #1 cause of dead builds.** JOSHRIX3D.boot() puts the canvas on screen and starts the loop before it returns, so call it FIRST, at the top of your script, before anything else. Never await a model, never build the world inside a loader callback, never gate the title screen on a download.
+1. Use G.load(key, path, opts) — never construct your own GLTFLoader. It is non-blocking and already sets castShadow/receiveShadow on every mesh.
+2. Use G.get(key) for a copy and G.actor(key, clip) for an animated one. Never call .clone() yourself: a skinned character cloned raw leaves every copy bound to one skeleton, so they all animate as a single puppet.
+3. G.get returns null when a model failed. Build the player and any critical object from THREE primitives first, then swap the model in inside onLoad.
+4. Size every model with height (upright things) or size (wide flat things). Never leave a model at raw scale and never guess a multiplier — the libraries are authored at different scales and mixing them raw is what makes a character tower over the houses.
+5. Terrain, water beyond the shore, particles and anything not in the library stay procedural — the runtime already provides the ground, the sky and the particle pool.
+VISUAL FIDELITY BAR (all of these — this is what the creator is paying premium for).
+HARD REQUIREMENTS — the gateway REJECTS a 3D file missing any of these three, so they are not suggestions:
+(1) renderer.shadowMap.enabled = true with a shadow-casting directional light, (2) scene.fog = new THREE.Fog(...) or FogExp2 matched to the sky, (3) models from the JOSHRIX library below and/or procedural THREE.CanvasTexture materials — never bare untextured primitives.
+- Full lighting rig: THREE.HemisphereLight (sky/ground colours) + directional key light WITH SHADOWS (renderer.shadowMap.enabled=true, type=THREE.PCFSoftShadowMap; castShadow/receiveShadow on meshes; tune shadow.camera bounds + mapSize 2048) + coloured accent point lights. THREE.Fog or FogExp2 matched to the sky for atmospheric depth.
+- A real SKY: large inverted sphere or scene.background gradient via procedural CanvasTexture — sun/moon disc, stars or clouds as fits the concept. Never a flat colour void.
+- PROCEDURAL TEXTURES: use CanvasTexture (draw noise, stripes, grain, windows, bark, rock mottling onto an offscreen canvas) on MeshStandardMaterial with tuned roughness/metalness — surfaces must look like material, not plastic. Emissive maps for glow (crystals, windows at night, lava).
+- A COMPOSED WORLD with density: build recognisable structures from grouped primitives (THREE.Group) — trees with layered canopies, buildings with window textures, rocks from distorted geometry (displace vertices with noise), terrain from a displaced PlaneGeometry. Scatter background detail with THREE.InstancedMesh (hundreds of grass tufts/trees/rubble instances) so the world feels FULL to the horizon.
+- MOTION EVERYWHERE: idle bobbing, foliage sway, water shimmer (animated vertex displacement), rotating/pulsing collectables, particle systems (THREE.Points with additive blending) for magic/dust/rain/sparks, squash-and-stretch or tilt on the player.
+- CINEMATIC CAMERA: slow orbit or dolly on the title screen; smooth lagged follow with lookAt during play; subtle screen shake on impacts; a brief victory orbit on win.
+- Colour grading feel: choose a cohesive palette, use fog + light colours together, add a subtle CSS vignette overlay div for depth.
+GAME REQUIREMENTS:
+- Player-controlled entity with smooth eased movement; collisions via distance checks. Works with BOTH touch (drag) and mouse + arrow/WASD keys. window resize handler; renderer.setPixelRatio(Math.min(devicePixelRatio,2)); antialias:true.
+- HUD as styled DOM overlay divs (position:fixed) over the WebGL canvas: score, lives/health, level name — styled to match the game's identity. Animated title overlay with START -> gameplay -> win/lose overlay with restart. A pause button.
+- Rising difficulty across the blueprint's levels. 3-8 minute session. Distinct enemy behaviours (patrol, chase, ambush — not one clone).
+- Procedural WebAudio sound design: distinct SFX per event + ambient bed + mute button; AudioContext only on first user gesture.
+- All player-facing text in the creator's language. Age-appropriate. No real brands or licensed characters.
+- If typeof THREE === "undefined" after the script tag, write a visible message into the page and stop cleanly (no throw loop).
+PERFORMANCE: target 60fps on mobile — InstancedMesh over many meshes, cap shadow casters, reuse geometries/materials, no per-frame allocations in the loop.
+SIZE: 260-420 lines of GAME. The runtime is the engine, so a finished 3D game on it is short — the worked example above is a complete one, and the reference build shipping on this platform is 227 lines. Padding toward a bigger number by rebuilding the renderer, the sky or the loader is the failure mode, not the goal. Ship a COMPLETE file; depth grows through Enhance passes. Never truncate.
+${RUNTIME_SAFETY}
+
+MODEL LIBRARY — reference list, below. It is a parts catalogue, not a brief. Pick the handful your concept needs and move on; a build that lists beautiful models and forgets the gameplay above has failed.
 JOSHRIX MODEL LIBRARY — 2,273 hosted low-poly GLB models across three libraries, every one verified to load.
 SCALE — READ THIS BEFORE PLACING ANYTHING. The three libraries are NOT built at the same scale, and mixing them raw is the most common way a 3D build looks broken:
 · LIBRARY 1 (lib/) is metric — a character is ~2 units tall, so 1 unit ≈ 1 metre.
@@ -249,34 +322,7 @@ These are modular kits: pieces are designed to tile and stack on a grid, so buil
 - kenney-blocky-characters (2) basiccharacter advancedcharacter — humanoid CHARACTERS, but untextured plain grey (their colour lived in a texture that does not survive conversion). Useful only if you tint the materials yourself: obj.traverse(n => { if (n.isMesh) n.material = new THREE.MeshStandardMaterial({ color: 0x3b82f6 }); }).
 - kenney-characters (8) RIGGED TEXTURED ANIMATED HUMANS, all 1.85 units tall, each with skeletal clips "idle" 1.07s, "run" 0.67s and "jump" 0.50s: survivor_male_b survivor_female_a zombie_a zombie_c criminal_male_a cyborg_female_a skater_male_a skater_female_a
 These eight are the best characters in the library — reach for them first for any game with a person in it, and note a survivor-versus-zombie cast is already here. One caveat that will bite you: they are SKINNED meshes, so .clone() does NOT carry the skeleton and every copy will animate identically to the first. Load the file once per character you need on screen, or clone through THREE.SkeletonUtils if it is available.
-CHARACTERS ARE SCARCE across the rest of these kits — beyond kenney-characters, only lib/ (guardian hero_knight mage villager enemy_goblin, all animated), kenney-pirate-kit (pirate_captain pirate_crew pirate_officer) and kenney-blocky-characters have humanoids. If a concept needs a cast the library cannot supply, build the extra characters from grouped primitives rather than reusing one model for every role.
-USAGE RULES:
-0. **CANVAS FIRST — historically the #1 cause of dead builds.** JOSHRIX3D.boot() puts the canvas on screen and starts the loop before it returns, so call it FIRST, at the top of your script, before anything else. Never await a model, never build the world inside a loader callback, never gate the title screen on a download.
-1. Use G.load(key, path, opts) — never construct your own GLTFLoader. It is non-blocking and already sets castShadow/receiveShadow on every mesh.
-2. Use G.get(key) for a copy and G.actor(key, clip) for an animated one. Never call .clone() yourself: a skinned character cloned raw leaves every copy bound to one skeleton, so they all animate as a single puppet.
-3. G.get returns null when a model failed. Build the player and any critical object from THREE primitives first, then swap the model in inside onLoad.
-4. Size every model with height (upright things) or size (wide flat things). Never leave a model at raw scale and never guess a multiplier — the libraries are authored at different scales and mixing them raw is what makes a character tower over the houses.
-5. Terrain, water beyond the shore, particles and anything not in the library stay procedural — the runtime already provides the ground, the sky and the particle pool.
-VISUAL FIDELITY BAR (all of these — this is what the creator is paying premium for).
-HARD REQUIREMENTS — the gateway REJECTS a 3D file missing any of these three, so they are not suggestions:
-(1) renderer.shadowMap.enabled = true with a shadow-casting directional light, (2) scene.fog = new THREE.Fog(...) or FogExp2 matched to the sky, (3) models from the JOSHRIX library below and/or procedural THREE.CanvasTexture materials — never bare untextured primitives.
-- Full lighting rig: THREE.HemisphereLight (sky/ground colours) + directional key light WITH SHADOWS (renderer.shadowMap.enabled=true, type=THREE.PCFSoftShadowMap; castShadow/receiveShadow on meshes; tune shadow.camera bounds + mapSize 2048) + coloured accent point lights. THREE.Fog or FogExp2 matched to the sky for atmospheric depth.
-- A real SKY: large inverted sphere or scene.background gradient via procedural CanvasTexture — sun/moon disc, stars or clouds as fits the concept. Never a flat colour void.
-- PROCEDURAL TEXTURES: use CanvasTexture (draw noise, stripes, grain, windows, bark, rock mottling onto an offscreen canvas) on MeshStandardMaterial with tuned roughness/metalness — surfaces must look like material, not plastic. Emissive maps for glow (crystals, windows at night, lava).
-- A COMPOSED WORLD with density: build recognisable structures from grouped primitives (THREE.Group) — trees with layered canopies, buildings with window textures, rocks from distorted geometry (displace vertices with noise), terrain from a displaced PlaneGeometry. Scatter background detail with THREE.InstancedMesh (hundreds of grass tufts/trees/rubble instances) so the world feels FULL to the horizon.
-- MOTION EVERYWHERE: idle bobbing, foliage sway, water shimmer (animated vertex displacement), rotating/pulsing collectables, particle systems (THREE.Points with additive blending) for magic/dust/rain/sparks, squash-and-stretch or tilt on the player.
-- CINEMATIC CAMERA: slow orbit or dolly on the title screen; smooth lagged follow with lookAt during play; subtle screen shake on impacts; a brief victory orbit on win.
-- Colour grading feel: choose a cohesive palette, use fog + light colours together, add a subtle CSS vignette overlay div for depth.
-GAME REQUIREMENTS:
-- Player-controlled entity with smooth eased movement; collisions via distance checks. Works with BOTH touch (drag) and mouse + arrow/WASD keys. window resize handler; renderer.setPixelRatio(Math.min(devicePixelRatio,2)); antialias:true.
-- HUD as styled DOM overlay divs (position:fixed) over the WebGL canvas: score, lives/health, level name — styled to match the game's identity. Animated title overlay with START -> gameplay -> win/lose overlay with restart. A pause button.
-- Rising difficulty across the blueprint's levels. 3-8 minute session. Distinct enemy behaviours (patrol, chase, ambush — not one clone).
-- Procedural WebAudio sound design: distinct SFX per event + ambient bed + mute button; AudioContext only on first user gesture.
-- All player-facing text in the creator's language. Age-appropriate. No real brands or licensed characters.
-- If typeof THREE === "undefined" after the script tag, write a visible message into the page and stop cleanly (no throw loop).
-PERFORMANCE: target 60fps on mobile — InstancedMesh over many meshes, cap shadow casters, reuse geometries/materials, no per-frame allocations in the loop.
-SIZE: 800-1100 lines. Ship a COMPLETE file — a finished world at this size beats a truncated epic; density grows through Enhance passes. Never truncate.
-${RUNTIME_SAFETY}`;
+CHARACTERS ARE SCARCE across the rest of these kits — beyond kenney-characters, only lib/ (guardian hero_knight mage villager enemy_goblin, all animated), kenney-pirate-kit (pirate_captain pirate_crew pirate_officer) and kenney-blocky-characters have humanoids. If a concept needs a cast the library cannot supply, build the extra characters from grouped primitives rather than reusing one model for every role.`;
 
 const ENHANCE_SYSTEM = `You are the JOSHRIX Polish Agent. You receive a COMPLETE working HTML game file (2D canvas or three.js 3D). Return an UPGRADED version of the SAME game as ONE html file: identical core gameplay and controls, dramatically higher production value.
 RAISE (as applicable): lighting & shadows, procedural-texture material quality, world density (more composed/instanced detail), particle richness, animation polish (easing, squash-stretch, idle motion), sky/atmosphere, HUD styling, sound design depth, camera cinematics, difficulty curve fairness, and any creator notes provided.

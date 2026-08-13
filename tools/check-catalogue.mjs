@@ -40,8 +40,11 @@ const blocks = [];
 
 /* ---- 3D: from the LIBRARY 1 header to USAGE RULES ---- */
 {
+  // The catalogue was moved BELOW the build instructions so the model reads how
+  // to make a game before it reads a 15k-character parts list — so it now runs
+  // from its own header to the end of the prompt, not up to "USAGE RULES".
   const start = SRC.indexOf("LIBRARY 1 — JOSHRIX house models");
-  const end = SRC.indexOf("USAGE RULES:", start);
+  const end = start >= 0 ? SRC.indexOf("`;", start) : -1;
   if (start < 0 || end < 0) { console.error("could not locate the 3D catalogue"); process.exit(1); }
   blocks.push({
     label: "3D models", ext: ".glb", text: SRC.slice(start, end),
