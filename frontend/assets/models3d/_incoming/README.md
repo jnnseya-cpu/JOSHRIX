@@ -1,5 +1,9 @@
 # Drop asset-pack zips here
 
+**Animated characters do not go here** — they need their skeleton and clips kept,
+which this ingest discards. Put those in `_incoming/characters/`, which has its
+own README.
+
 Upload zips of GLB model folders into this folder (GitHub → Add file →
 Upload files). Each zip becomes one pack, named after the zip file:
 
