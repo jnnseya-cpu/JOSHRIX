@@ -15,6 +15,14 @@
  * Versioned in the filename on purpose — published games pin this URL forever,
  * so v1 must keep behaving like v1. Ship changes as joshrix3d-2.js.
  *
+ * EXCEPTION, recorded deliberately: the sky-gradient and opt-in-sea fixes below
+ * were applied to v1 in place rather than forked to v2. They correct behaviour
+ * no game ever asked for — an ocean nobody requested, painted over sky colours
+ * the creator did choose. Forking would have frozen every existing game with the
+ * bug and fixed only future ones. A game that genuinely wants water passes
+ * sea:true and is unaffected. If v1 ever has a real installed base, this is the
+ * last change that gets to work this way.
+ *
  * Requires three.js r147 UMD and GLTFLoader to be loaded first.
  */
 (function (global) {
@@ -80,10 +88,19 @@
     c.width = 16; c.height = 256;
     var x = c.getContext("2d");
     var g = x.createLinearGradient(0, 0, 0, 256);
+    // Stop 0 is the zenith, stop 0.5 the horizon, stop 1 the nadir.
+    //
+    // The ramp is deliberately squeezed against the horizon. The chase camera
+    // sits above the player and pitches DOWN at it, so the sky occupies only the
+    // top slice of the frame — measured, the visible dome spans uv.y 0.509 to
+    // 0.533, about three degrees above the horizon. Spreading top -> mid -> haze
+    // evenly across the full 90 degrees put both `top` and `mid` outside that
+    // slice entirely, so every game rendered a flat wash of `haze` and two of the
+    // three sky colours a creator picked did nothing at all.
     g.addColorStop(0, top);
-    g.addColorStop(0.34, mid);
-    g.addColorStop(0.5, haze);      // v=0.5 is the sphere's equator = the horizon
-    g.addColorStop(0.72, haze);
+    g.addColorStop(0.40, top);
+    g.addColorStop(0.465, mid);     // lands inside the band the camera actually sees
+    g.addColorStop(0.5, haze);      // the horizon; MUST equal the fog or a seam appears
     g.addColorStop(1, haze);
     x.fillStyle = g; x.fillRect(0, 0, 16, 256);
     return new THREE.CanvasTexture(c);
@@ -203,7 +220,13 @@
     ground.receiveShadow = true;
     scene.add(ground);
 
-    if (cfg.sea !== false) {
+    // OPT-IN. This used to be `cfg.sea !== false`, so every game that did not
+    // explicitly refuse got an ocean: a 5.4x-arena blue disc that becomes the
+    // horizon and hides the sky dome behind it. An island wants that; a forest,
+    // a desert, a dungeon and a space station do not, and none of them were
+    // asking for it. It also silently overrode whatever sky colours the creator
+    // chose, because the disc — not the dome — was what filled the frame.
+    if (cfg.sea) {
       var sea = new THREE.Mesh(new THREE.CircleGeometry(arena * 5.4, 64),
         new THREE.MeshStandardMaterial({ color: new THREE.Color(cfg.seaColor || "#2f7fa8"), roughness: 0.28 }));
       sea.rotation.x = -Math.PI / 2; sea.position.y = -0.4; scene.add(sea);
@@ -270,9 +293,14 @@
 
     /* ---------------------------- audio ------------------------------ */
     var actx = null, muted = false;
+    // Defaults to the page's own language, which the forge sets from the
+    // creator's concept — so a game written in French speaks French unprompted.
+    var voiceLang = document.documentElement.getAttribute("lang") || "en";
     mute.addEventListener("click", function () {
       muted = !muted;
       mute.innerHTML = muted ? "&#128263;" : "&#128266;";
+      // Mute has to silence a line already being spoken, not just the next one.
+      try { if (muted && window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
     });
 
     /* ---------------------------- particles -------------------------- */
@@ -443,6 +471,51 @@
           pLife[k] = 0.8; made++;
         }
       },
+
+      /** Speak a line out loud.
+       *
+       *  Some concepts want an arcade blip and nothing else; others have a
+       *  narrator, a coach, a boss who taunts you, a tutorial that talks. Beeps
+       *  cannot carry any of that, and a recorded voice track cannot ship here —
+       *  it would be a download from an outside host, which the security scan
+       *  rejects, and it would be locked to one language.
+       *
+       *  The browser's own speech engine solves all three: nothing to download,
+       *  no outside request, and it speaks whatever language the text is in —
+       *  which matters because a creator can describe a game in any language and
+       *  every player-facing string comes back in it.
+       *
+       *    G.say("The gate is waking.")
+       *    G.say("Attention !", { lang: "fr-FR", rate: 1.1, interrupt: true })
+       *
+       *  Honours the mute button. Never throws, and never blocks the frame. */
+      say: function (text, opts) {
+        opts = opts || {};
+        if (muted || !text) return this;
+        try {
+          var S = window.speechSynthesis;
+          if (!S || typeof SpeechSynthesisUtterance === "undefined") return this;
+          // A queue that outruns the game turns into a backlog of stale lines,
+          // so an urgent line clears what is waiting rather than joining it.
+          if (opts.interrupt) S.cancel();
+          else if (S.speaking && opts.skipIfBusy !== false) return this;
+          var u = new SpeechSynthesisUtterance(String(text));
+          u.lang = opts.lang || voiceLang;
+          u.rate = opts.rate == null ? 1 : opts.rate;
+          u.pitch = opts.pitch == null ? 1 : opts.pitch;
+          u.volume = opts.volume == null ? 1 : opts.volume;
+          var want = (u.lang || "").slice(0, 2).toLowerCase();
+          var vs = S.getVoices() || [];
+          for (var i = 0; i < vs.length; i++) {
+            if ((vs[i].lang || "").slice(0, 2).toLowerCase() === want) { u.voice = vs[i]; break; }
+          }
+          S.speak(u);
+        } catch (e) {}
+        return this;
+      },
+
+      /** The language G.say() defaults to. Set it once from the game's own copy. */
+      voice: function (lang) { voiceLang = lang || voiceLang; return this; },
 
       beep: function (freq, dur, type, gain) {
         if (!actx || muted) return;

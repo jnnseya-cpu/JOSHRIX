@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>WonderVerse — Light the Wonder Gate | JOSHRIX Studio</title>
+<meta name="description" content="WonderVerse is a free 3D browser game: gather wonders in a twilight glade, dodge slimes, bats and goblins, and light the Wonder Gate. No download, no account — plays on phone and desktop.">
+<link rel="canonical" href="https://www.joshrix.com/games/wonderverse">
+<meta property="og:type" content="website">
+<meta property="og:title" content="WonderVerse — a free 3D game you play in a tab">
+<meta property="og:description" content="Gather the wonders, light the gate, survive the waves. Made on JOSHRIX Studio.">
+<meta property="og:url" content="https://www.joshrix.com/games/wonderverse">
+<meta name="theme-color" content="#1a1040">
+<link rel="manifest" href="/manifest.webmanifest">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"VideoGame","name":"WonderVerse",
+"url":"https://www.joshrix.com/games/wonderverse",
+"description":"A 3D browser game: gather wonders in a twilight glade and light the Wonder Gate before the shadows reach you.",
+"genre":["Arcade","Action"],"playMode":"SinglePlayer",
+"applicationCategory":"Game","operatingSystem":"Any",
+"gamePlatform":["Web browser","Mobile web"],
+"publisher":{"@type":"Organization","name":"JOSHRIX Studio","url":"https://www.joshrix.com"},
+"offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"}}
+</script>
+</head>
+<body>
+<script src="https://www.joshrix.com/assets/vendor/three.min.js"></script>
+<script src="https://www.joshrix.com/assets/vendor/GLTFLoader.js"></script>
+<script src="https://www.joshrix.com/assets/vendor/joshrix3d-1.js"></script>
+<script>
+/* WonderVerse — built on the JOSHRIX 3D runtime.
+   The runtime owns the canvas, loop, sky, ground, lights, shadows, overlays,
+   HUD, input, audio and particles. Everything below is the game. */
+
+var G = JOSHRIX3D.boot({
+  title: "WonderVerse", titleAccent: "Verse",
+  tagline: "The glade forgot its light. Bring it back.",
+  howTo: "Drag, or use WASD. Gather the wonders to feed the Gate. Do not let the shadows touch you.",
+  /* 21 across for a ~1.8-unit mage: big enough to run in, small enough that the
+     character still reads as a character rather than a speck on a field. */
+  arena: 21, playRadius: 13, accent: "#c9a3ff",
+  sky: { top: "#120a2c", mid: "#3f2570", haze: "#b79ada" },
+  ground: { base: "#2c4436", speckle: ["#3a5943", "#213229", "#42345c"] }
+});
+
+var T = G.THREE;
+var WONDER = 0xffe27a, SHADOW = 0xb44dff;
+
+/* ---------- the player: primitives first, so the game is playable even if
+              every download fails, then the mage swaps in on arrival ---------- */
+var player = new T.Group(), anim = null, bob = 0, hurtT = 0;
+var stand = new T.Group();
+var robe = new T.Mesh(new T.ConeGeometry(0.52, 1.35, 12),
+  new T.MeshStandardMaterial({ color: 0x6b4fa8, roughness: 0.75 }));
+robe.position.y = 0.68; robe.castShadow = true; stand.add(robe);
+var head = new T.Mesh(new T.SphereGeometry(0.27, 14, 12),
+  new T.MeshStandardMaterial({ color: 0xf0d3b0, roughness: 0.9 }));
+head.position.y = 1.5; head.castShadow = true; stand.add(head);
+player.add(stand);
+player.position.set(0, 0, 8);
+G.scene.add(player);
+G.follow(player);
+
+/* the lantern the mage carries — also the game's readable "you are here" light */
+var lantern = new T.PointLight(0xffd9a0, 1.5, 9, 2);
+lantern.position.set(0, 1.6, 0); player.add(lantern);
+var lanternOrb = new T.Mesh(new T.SphereGeometry(0.15, 10, 8),
+  new T.MeshBasicMaterial({ color: 0xffe9c0 }));
+lanternOrb.position.set(0.45, 1.25, 0.2); player.add(lanternOrb);
+
+/* ---------- the Wonder Gate: the thing the whole run is about ---------- */
+var gate = new T.Group(); gate.position.set(0, 0, -9.5); G.scene.add(gate);
+var gateGlow = new T.PointLight(WONDER, 0.6, 16, 2);
+gateGlow.position.set(0, 3, 0); gate.add(gateGlow);
+var gateCore = new T.Mesh(new T.TorusGeometry(1.5, 0.16, 10, 28),
+  new T.MeshStandardMaterial({ color: 0x8a6fc0, emissive: WONDER, emissiveIntensity: 0.15, roughness: 0.4 }));
+gateCore.position.y = 2.4; gateCore.castShadow = true; gate.add(gateCore);
+/* The veil inside the arch is what makes it read as a gate rather than masonry.
+   Additive and double-sided so it glows from either approach. */
+var veil = new T.Mesh(new T.PlaneGeometry(2.6, 3.4),
+  new T.MeshBasicMaterial({ color: WONDER, transparent: true, opacity: 0.12,
+    blending: T.AdditiveBlending, side: T.DoubleSide, depthWrite: false }));
+veil.position.y = 1.9; gate.add(veil);
+
+/* ---------- models: every one optional, sized by height ---------- */
+G.load("mage", "lib/mage", { height: 1.8, onLoad: function () {
+    var a = G.actor("mage", "idle");
+    if (a) { player.remove(stand); player.add(a.obj); anim = a; }
+  } })
+ .load("wonder", "lib/star_collectable", { height: 1.05 })
+ .load("shard", "lib/crystal_0", { height: 1.3 })
+ .load("slime", "lib/enemy_slime", { height: 1.0 })
+ .load("bat", "lib/enemy_bat", { height: 0.8 })
+ .load("goblin", "lib/enemy_goblin", { height: 1.6 })
+ .load("arch", "lib/ruin_arch", { height: 5.0, onLoad: function () {
+     var a = G.get("arch"); if (a) { gate.add(a); gateCore.visible = false; }
+   } })
+ .load("tree", "lib/tree_round_0", { height: 4.2 })
+ .load("pine", "lib/tree_pine_0", { height: 5.0 })
+ .load("shroom", "lib/mushroom_0", { height: 0.65 })
+ .load("pillar", "lib/ruin_pillar", { height: 3.4 })
+ .load("rock", "lib/rock_0", { height: 1.2 });
+
+/* Scenery rings the arena OUTSIDE playRadius so nothing tall can stand between
+   the camera and the mage. Only a light dusting of mushrooms comes inside — the
+   play area has to stay readable, because everything in it is either a wonder to
+   grab or a shadow to dodge, and decoration that competes with those reads as a
+   bug rather than as atmosphere. */
+G.onReady(function () {
+  G.scatter("tree", 14, { minR: 15, maxR: 21 });
+  G.scatter("pine", 11, { minR: 16, maxR: 21 });
+  G.scatter("pillar", 6, { minR: 14, maxR: 19 });
+  G.scatter("rock", 12, { minR: 14, maxR: 21 });
+  G.scatter("shroom", 7, { minR: 7, maxR: 12, avoid: gate.position, avoidRadius: 5 });
+  /* crystals cluster at the gate, so the eye is pulled to the objective */
+  var shards = G.scatter("shard", 6, { minR: 2.2, maxR: 4, avoid: player.position, avoidRadius: 0 });
+  shards.forEach(function (s) {
+    s.position.x += gate.position.x; s.position.z += gate.position.z;
+    s.traverse(function (n) {
+      if (n.isMesh && n.material) {
+        n.material = n.material.clone();
+        n.material.emissive = new T.Color(WONDER);
+        n.material.emissiveIntensity = 0.5;
+      }
+    });
+  });
+});
+
+/* ---------- wonders ---------- */
+var wonders = [];
+function spawnWonder() {
+  var o = G.get("wonder") || new T.Mesh(new T.OctahedronGeometry(0.42),
+    new T.MeshStandardMaterial({ color: WONDER, emissive: WONDER, emissiveIntensity: 0.6 }));
+  /* The library star is lit like ordinary scenery. A collectable has to be the
+     brightest thing in the glade or it disappears against the ground. */
+  o.traverse(function (n) {
+    if (n.isMesh && n.material) {
+      n.material = n.material.clone();
+      /* Tint the base colour as well as the emissive. Emissive alone on a white
+         material blows out to a flat white card that reads as a missing texture. */
+      n.material.color = new T.Color(WONDER);
+      n.material.emissive = new T.Color(0xffb020);
+      n.material.emissiveIntensity = 0.55;
+      n.material.roughness = 0.35;
+      n.material.metalness = 0.1;
+    }
+  });
+  var a = Math.random() * 6.283, r = 4 + Math.random() * 8;
+  o.position.set(Math.cos(a) * r, 0.9, Math.sin(a) * r);
+  /* The star is a flat shape; spinning it on Y alone turns it edge-on and it
+     vanishes for half the rotation. The tilt keeps a face toward the camera. */
+  o.rotation.x = -0.45;
+  o.userData.phase = Math.random() * 6.283;
+  G.scene.add(o); wonders.push(o);
+}
+
+/* ---------- enemies: three genuinely different behaviours ----------
+   slime  — steady, honest pursuit. The pressure that never stops.
+   bat    — fast and weaving, overshoots, comes back. Hard to outrun, easy to bait.
+   goblin — patrols a ring and ignores you until you enter its range, then charges. */
+var foes = [];
+function spawnFoe(kind) {
+  var a = G.actor(kind === "slime" ? "slime" : kind === "bat" ? "bat" : "goblin",
+                  kind === "slime" ? "bounce" : kind === "bat" ? "fly" : "walk");
+  var o = a ? a.obj : new T.Mesh(new T.SphereGeometry(0.5, 12, 10),
+    new T.MeshStandardMaterial({ color: kind === "bat" ? 0x8a4fd0 : kind === "goblin" ? 0x4f8a3d : 0x9b4dca }));
+  var ang = Math.random() * 6.283, r = G.playRadius + 1;
+  o.position.set(Math.cos(ang) * r, kind === "bat" ? 2.2 : 0, Math.sin(ang) * r);
+  o.userData = { kind: kind, phase: Math.random() * 6.283, ang: ang, charging: false };
+  G.scene.add(o); foes.push(o);
+}
+
+/* ---------- run state ---------- */
+var quota = 0, collected = 0, spawnT = 0, warned = false;
+
+function hud() {
+  G.stat("Wonders", G.score, "left");
+  G.stat("Gate", collected + " / " + quota, "left");
+  G.stat("Wave", G.wave, "right");
+  G.pips("Life", G.lives, "♥", "right");
+}
+
+function clearAll(g) {
+  wonders.forEach(function (w) { g.scene.remove(w); }); wonders.length = 0;
+  foes.forEach(function (f) { g.scene.remove(f); }); foes.length = 0;
+}
+
+function beginWave(g) {
+  collected = 0;
+  quota = 4 + g.wave;
+  for (var i = 0; i < Math.min(6, quota); i++) spawnWonder();
+  spawnFoe("slime");
+  if (g.wave >= 2) spawnFoe("bat");
+  if (g.wave >= 3) spawnFoe("goblin");
+  gateGlow.intensity = 0.6; veil.material.opacity = 0.12;
+  hud();
+}
+
+/* Voice. The glade has a narrator, so the game speaks — beeps alone cannot
+   carry "the gate is waking". Every line is short: a player who hears the same
+   sentence on every wave stops hearing it. */
+G.onStart(function (g) {
+  g.say("The glade forgot its light. Gather the wonders, and wake the gate.", { rate: 0.96 });
+});
+
+G.onReset(function (g) {
+  clearAll(g);
+  player.position.set(0, 0, 8); g.target.set(0, 0, 8);
+  g.lives = 3; hurtT = 0; warned = false;
+  beginWave(g);
+});
+
+/* ---------- the loop ---------- */
+G.onUpdate(function (g, dt) {
+  /* steering — keyboard moves the same target the pointer drags */
+  var sp = 11 * dt;
+  if (g.keys.a || g.keys.arrowleft) g.target.x -= sp;
+  if (g.keys.d || g.keys.arrowright) g.target.x += sp;
+  if (g.keys.w || g.keys.arrowup) g.target.z -= sp;
+  if (g.keys.s || g.keys.arrowdown) g.target.z += sp;
+  g.target.y = 0;
+  if (g.target.length() > g.playRadius) g.target.setLength(g.playRadius);
+
+  var prev = player.position.x, prevZ = player.position.z;
+  player.position.lerp(g.target, 0.14);
+  var dx = player.position.x - prev, dz = player.position.z - prevZ;
+  var moving = dx * dx + dz * dz > 0.00002;
+  if (moving) player.rotation.y = Math.atan2(dx, dz);
+
+  /* idle bob and a lean into the turn — cheap, and it stops the mage reading as a statue */
+  bob += dt * (moving ? 9 : 3);
+  player.position.y = Math.sin(bob) * (moving ? 0.06 : 0.03);
+  stand.rotation.z = Math.sin(bob) * (moving ? 0.05 : 0.02);
+
+  if (anim && anim.mixer) { /* the runtime advances every mixer */ }
+  lanternOrb.position.y = 1.25 + Math.sin(bob * 0.7) * 0.05;
+
+  if (hurtT > 0) {
+    hurtT -= dt;
+    player.visible = Math.floor(hurtT * 14) % 2 === 0;   /* i-frames, made visible */
+    if (hurtT <= 0) player.visible = true;
+  }
+
+  /* ---- wonders ---- */
+  for (var i = wonders.length - 1; i >= 0; i--) {
+    var w = wonders[i];
+    w.rotation.y += dt * 1.8;
+    w.position.y = 0.9 + Math.sin(g.elapsed * 2 + w.userData.phase) * 0.18;
+    if (w.position.distanceTo(player.position) < 1.5) {
+      g.burst(w.position, WONDER, 26);
+      g.scene.remove(w); wonders.splice(i, 1);
+      g.score += 10; collected++;
+      var fill = collected / quota;
+      gateGlow.intensity = 0.6 + fill * 2.6;
+      veil.material.opacity = 0.12 + fill * 0.5;
+      g.beep(760 + collected * 40, 0.09, "triangle", 0.12);
+      hud();
+      if (collected >= quota) { advance(g); }
+      else if (wonders.length < 5) spawnWonder();
+    }
+  }
+
+  /* ---- the gate breathes brighter as it fills ---- */
+  gateCore.rotation.z += dt * 0.4;
+  veil.material.opacity += Math.sin(g.elapsed * 3) * 0.012;
+  gateGlow.position.y = 3 + Math.sin(g.elapsed * 1.6) * 0.25;
+
+  /* ---- enemies ---- */
+  for (var k = foes.length - 1; k >= 0; k--) {
+    var f = foes[k], u = f.userData;
+    var to = new T.Vector3().subVectors(player.position, f.position);
+    var dist = to.length(); to.y = 0; to.normalize();
+    var speed = 2.4 + g.wave * 0.35;
+
+    if (u.kind === "slime") {
+      f.position.addScaledVector(to, speed * dt);
+      f.position.y = Math.abs(Math.sin(g.elapsed * 5 + u.phase)) * 0.3;
+      f.rotation.y = Math.atan2(to.x, to.z);
+    } else if (u.kind === "bat") {
+      /* weaves across its own approach line, so it overshoots and swings back */
+      var side = new T.Vector3(-to.z, 0, to.x);
+      f.position.addScaledVector(to, speed * 1.5 * dt);
+      f.position.addScaledVector(side, Math.sin(g.elapsed * 3 + u.phase) * 3.4 * dt);
+      f.position.y = 1.9 + Math.sin(g.elapsed * 4 + u.phase) * 0.5;
+      f.rotation.y = Math.atan2(to.x, to.z);
+    } else {
+      /* patrols its ring until you come close, then commits to a charge */
+      if (!u.charging && dist < 7) {
+        u.charging = true; g.beep(320, 0.14, "square", 0.1);
+        if (!warned) { warned = true; g.say("It has seen you.", { rate: 1.15 }); }
+      }
+      if (u.charging) {
+        f.position.addScaledVector(to, speed * 1.25 * dt);
+        if (dist > 12) u.charging = false;
+      } else {
+        u.ang += dt * 0.5;
+        var pr = 11;
+        f.position.x += (Math.cos(u.ang) * pr - f.position.x) * 2 * dt;
+        f.position.z += (Math.sin(u.ang) * pr - f.position.z) * 2 * dt;
+      }
+      f.rotation.y = Math.atan2(to.x, to.z);
+    }
+
+    if (dist < 1.4 && hurtT <= 0) {
+      hurtT = 1.4;
+      g.lives--; hud();
+      g.flash("#ff4d6d"); g.beep(140, 0.32, "square", 0.16);
+      g.burst(player.position, SHADOW, 20);
+      /* knocked back toward the middle, so a hit is survivable rather than a death spiral */
+      var away = new T.Vector3().subVectors(player.position, f.position).setY(0).normalize().multiplyScalar(3.5);
+      g.target.copy(player.position).add(away);
+      if (g.target.length() > g.playRadius) g.target.setLength(g.playRadius);
+      if (g.lives <= 0) {
+        g.say("The glade went dark.", { interrupt: true, rate: 0.9, pitch: 0.85 });
+        g.over("The glade went dark",
+          "You gathered " + g.score + " wonders and reached wave " + g.wave + ".");
+      }
+    }
+  }
+
+  /* ---- pressure rises within the wave, not only between waves ---- */
+  spawnT += dt;
+  if (spawnT > Math.max(2.6, 7 - g.wave * 0.6) && foes.length < 4 + g.wave) {
+    spawnT = 0;
+    var roll = Math.random();
+    spawnFoe(g.wave >= 3 && roll > 0.66 ? "goblin" : g.wave >= 2 && roll > 0.33 ? "bat" : "slime");
+  }
+});
+
+function advance(g) {
+  g.wave++;
+  g.score += 25;
+  gateGlow.intensity = 5;
+  g.say(g.wave > 4 ? "The gate burns bright. Do not stop."
+      : "The gate wakes. Wave " + g.wave + ".", { interrupt: true, rate: 1.02 });
+  g.burst(new T.Vector3(0, 3, -9.5), WONDER, 40);
+  g.flash("#ffe27a");
+  g.beep(880, 0.16, "triangle", 0.16);
+  setTimeout(function () { g.beep(1180, 0.22, "triangle", 0.14); }, 150);
+  /* the glade is cleared for a breath — the reward is a moment of safety */
+  foes.forEach(function (f) { g.burst(f.position, SHADOW, 10); g.scene.remove(f); });
+  foes.length = 0;
+  wonders.forEach(function (w) { g.scene.remove(w); }); wonders.length = 0;
+  if (g.wave % 3 === 0 && g.lives < 5) g.lives++;
+  beginWave(g);
+}
+
+hud();
+</script>
+</body>
+</html>

@@ -182,7 +182,8 @@ Include these three tags, in this order, and nothing else:
 <script src="https://www.joshrix.com/assets/vendor/GLTFLoader.js"><\/script>
 <script src="https://www.joshrix.com/assets/vendor/joshrix3d-1.js"><\/script>
 The runtime already owns, and guarantees, every part that has historically shipped broken: the canvas is created and on screen before your first line runs; the loop renders from frame one and survives a throwing frame; shadows, fog, a procedural sky dome whose horizon matches the fog exactly, a textured ground, a three-light rig; the title and game-over screens; the HUD; drag and WASD input; WebAudio on first gesture with a mute button; a particle pool; portrait and landscape camera framing; and a reduced render budget on phones. You do NOT write any of that, and you must not try.
-var G = JOSHRIX3D.boot({ title, titleAccent, tagline, howTo, arena, playRadius, accent, sky:{top,mid,haze}, ground:{base,speckle}, sea });
+var G = JOSHRIX3D.boot({ title, titleAccent, tagline, howTo, arena, playRadius, accent, sky:{top,mid,haze}, ground:{base,speckle} });
+sky.haze is the horizon and the fog, so it is the colour that fills most of the frame — pick THAT one for the mood, and use sky.mid/sky.top for the band above it. Add sea:true ONLY for an island, coast or ocean concept: it lays a wide water disc that becomes the horizon and hides the sky, which is wrong for a forest, a desert, a city or space.
 What G gives you: G.scene G.camera G.renderer G.THREE · G.state G.score G.lives G.wave G.elapsed · G.keys G.target (a Vector3 the pointer and WASD both steer) · G.arena G.playRadius
 - G.load(key, "lib/guardian", { height: 1.9, onLoad: fn }) — queue a model, chainable, NEVER blocks. Pass height for anything upright, size for wide flat things like a nest or a platform (sizing a flat disc by height scales it enormously), or scale for a raw multiplier.
 - G.onReady(fn) — fires once every queued model has resolved, loaded or failed.
@@ -190,6 +191,7 @@ What G gives you: G.scene G.camera G.renderer G.THREE · G.state G.score G.lives
 - G.actor(key, "walk") — an instance with its own mixer; .play("run") to switch clip. The runtime updates every mixer for you.
 - G.scatter(key, count, { minR, maxR, avoid, avoidRadius }) — ring the arena with scenery. The default band sits OUTSIDE playRadius so nothing tall can stand between the camera and the player.
 - G.burst(pos, colour) · G.beep(freq, dur, type, gain) · G.flash("#ff3b3b")
+- G.say("The gate is waking.", { rate, pitch, interrupt:true }) — the game SPEAKS, out loud, in the creator's language. Use it when the concept has anyone who would talk: a narrator, a guide, a boss who taunts, a tutorial, a coach, a story beat. Beeps cannot carry a sentence. Keep lines short, write them in the creator's language, and do not narrate every pickup — a line the player hears on every collect stops being heard. An arcade concept with no speaking character should stay on beeps.
 - G.stat("Score", n, "left") · G.pips("Lives", n, "♥", "right") — the HUD.
 - G.follow(obj) — lagged chase camera on that object during play, cinematic orbit on the menus.
 - G.onReset(fn) · G.onStart(fn) · G.onUpdate(function (g, dt) { ... }) — onUpdate runs ONLY while playing.
