@@ -134,6 +134,76 @@ function injectTexture(glb, image) {
   return Buffer.concat([header, jh, jsonChunk, bh, newBin]);
 }
 
+
+/* ---------- pack a .gltf (+ .bin + loose textures) into a single .glb ----------
+ * The runtime loads "<name>.glb" — it appends the extension itself — so a pack
+ * that ships .gltf + .bin + a textures folder cannot be used as-is no matter how
+ * correct it is. Converting it by loading it into three and re-exporting would
+ * work, but every re-export is a chance to lose a bone, a clip or a UV set.
+ *
+ * This instead does the one thing glTF was designed to allow: it MOVES the bytes
+ * without decoding them. Buffers are concatenated, bufferView offsets rebased,
+ * external images appended and pointed at by bufferView instead of by URI. The
+ * mesh, the skeleton and the animations are copied verbatim, so a rig that
+ * worked before is byte-identical after. */
+function packGltf(gltfPath) {
+  const dir = path.dirname(gltfPath);
+  const json = JSON.parse(fs.readFileSync(gltfPath, "utf8"));
+
+  const readUri = (uri) => {
+    if (/^data:/i.test(uri)) return Buffer.from(uri.slice(uri.indexOf(",") + 1), "base64");
+    return fs.readFileSync(path.join(dir, decodeURIComponent(uri)));
+  };
+
+  const chunks = [];
+  let total = 0;
+  const push = (buf) => {
+    const at = total;
+    chunks.push(buf);
+    total += buf.length;
+    const pad = pad4(total) - total;
+    if (pad) { chunks.push(Buffer.alloc(pad)); total += pad; }
+    return at;
+  };
+
+  // 1. every buffer becomes one buffer, and each remembers where it landed
+  const base = (json.buffers || []).map((b) => push(b.uri ? readUri(b.uri) : Buffer.alloc(0)));
+
+  // 2. rebase every view onto the merged buffer
+  for (const v of json.bufferViews || []) {
+    v.byteOffset = (v.byteOffset || 0) + base[v.buffer || 0];
+    v.buffer = 0;
+  }
+
+  // 3. external images move in as views; a GLB may not reference a file
+  const MIME = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg" };
+  for (const img of json.images || []) {
+    if (img.bufferView !== undefined || !img.uri) continue;
+    let data, mime;
+    try { data = readUri(img.uri); } catch { continue; }        // a missing texture must not sink the model
+    mime = /^data:/i.test(img.uri)
+      ? (img.uri.slice(5, img.uri.indexOf(";")) || "image/png")
+      : (MIME[path.extname(img.uri).toLowerCase()] || "image/png");
+    const at = push(data);
+    (json.bufferViews ||= []).push({ buffer: 0, byteOffset: at, byteLength: data.length });
+    img.bufferView = json.bufferViews.length - 1;
+    img.mimeType = mime;
+    delete img.uri;
+  }
+
+  const bin = Buffer.concat(chunks, total);
+  json.buffers = [{ byteLength: bin.length }];
+
+  const jsonBuf = Buffer.from(JSON.stringify(json), "utf8");
+  const jsonChunk = Buffer.concat([jsonBuf, Buffer.alloc(pad4(jsonBuf.length) - jsonBuf.length, 0x20)]);
+  const header = Buffer.alloc(12);
+  header.writeUInt32LE(0x46546c67, 0); header.writeUInt32LE(2, 4);
+  header.writeUInt32LE(12 + 8 + jsonChunk.length + 8 + bin.length, 8);
+  const jh = Buffer.alloc(8); jh.writeUInt32LE(jsonChunk.length, 0); jh.writeUInt32LE(0x4e4f534a, 4);
+  const bh = Buffer.alloc(8); bh.writeUInt32LE(bin.length, 0); bh.writeUInt32LE(0x004e4942, 4);
+  return Buffer.concat([header, jh, jsonChunk, bh, bin]);
+}
+
 /* --------------------------------- walk ---------------------------------- */
 function walk(dir, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -149,7 +219,7 @@ const slug = (s) => path.basename(s).replace(/\.[^.]+$/, "")
 
 /* Exported so tests can exercise the fiddly parts — clip naming, the embedded
    image scan and the GLB surgery — without running an ingest. */
-export { clipName, embeddedImage, injectTexture, slug };
+export { clipName, embeddedImage, injectTexture, slug, packGltf };
 
 /* ---------------------------------- run ----------------------------------- */
 const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
@@ -162,6 +232,7 @@ fs.mkdirSync(OUT, { recursive: true });
 
 const files = walk(SRC);
 const glbs = files.filter((f) => /\.glb$/i.test(f));
+const gltfs = files.filter((f) => /\.gltf$/i.test(f));
 const fbxs = files.filter((f) => /\.fbx$/i.test(f));
 const made = [], skipped = [];
 
@@ -170,6 +241,16 @@ for (const f of glbs) {
   const name = slug(f) + ".glb";
   fs.copyFileSync(f, path.join(OUT, name));
   made.push({ name, bytes: fs.statSync(f).size, how: "copied", clips: ["(as authored)"] });
+}
+
+/* ---- 1b. .gltf + .bin + loose textures: packed, not re-encoded ---- */
+for (const f of gltfs) {
+  const name = slug(f) + ".glb";
+  try {
+    const out = packGltf(f);
+    fs.writeFileSync(path.join(OUT, name), out);
+    made.push({ name, bytes: out.length, how: "packed", clips: ["(as authored)"] });
+  } catch (e) { skipped.push(`${path.basename(f)}: ${e.message.slice(0, 90)}`); }
 }
 
 /* ---- 2/3. FBX path ---- */

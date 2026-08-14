@@ -12,7 +12,10 @@
  *   npm i three@0.160.0
  *   node tests/t17-characters.mjs
  */
-import { clipName, embeddedImage, injectTexture, slug } from "../tools/ingest-characters.mjs";
+import { clipName, embeddedImage, injectTexture, slug, packGltf } from "../tools/ingest-characters.mjs";
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os";
 import * as THREE from "three";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
 import zlib from "node:zlib";
@@ -101,6 +104,62 @@ const rawNoUv = Buffer.from(await new Promise((res, rej) =>
 let threw = false;
 try { injectTexture(rawNoUv, { data: realPng, mime: "image/png" }); } catch { threw = true; }
 t("a mesh with no UVs throws rather than shipping a blank skin", threw);
+
+
+console.log("\n== .gltf + .bin + loose texture packs into one .glb ==");
+{
+  // Round-trip a REAL library model: split a shipped .glb into the .gltf/.bin/.png
+  // layout a bought pack arrives in, pack it back, and check nothing moved.
+  const src = path.join(process.env.JOSHRIX_ROOT || ".", "frontend/assets/models3d/packs/kenney-characters/zombie_a.glb");
+  const glb = fs.readFileSync(src);
+  const jsonLen = glb.readUInt32LE(12);
+  const doc = JSON.parse(glb.toString("utf8", 20, 20 + jsonLen));
+  const bin = glb.subarray(20 + jsonLen + 8, 20 + jsonLen + 8 + glb.readUInt32LE(20 + jsonLen));
+
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "gltf-"));
+  fs.writeFileSync(path.join(dir, "model.bin"), bin);
+  const ext = JSON.parse(JSON.stringify(doc));
+  ext.buffers = [{ uri: "model.bin", byteLength: bin.length }];
+  // move any embedded image out to a loose file, the way a real pack ships it
+  let loose = 0;
+  for (const img of ext.images || []) {
+    if (img.bufferView === undefined) continue;
+    const v = ext.bufferViews[img.bufferView];
+    fs.writeFileSync(path.join(dir, `tex${loose}.png`), bin.subarray(v.byteOffset || 0, (v.byteOffset || 0) + v.byteLength));
+    img.uri = `tex${loose}.png`; delete img.bufferView; delete img.mimeType; loose++;
+  }
+  fs.writeFileSync(path.join(dir, "model.gltf"), JSON.stringify(ext));
+
+  const packed = packGltf(path.join(dir, "model.gltf"));
+  const pl = packed.readUInt32LE(12);
+  const pd = JSON.parse(packed.toString("utf8", 20, 20 + pl));
+
+  t("packs to a valid GLB", packed.readUInt32LE(0) === 0x46546c67);
+  t("declared length matches real length", packed.readUInt32LE(8) === packed.length);
+  t("collapses to exactly one buffer", pd.buffers.length === 1);
+  t("no bufferView still points at another buffer", pd.bufferViews.every((v) => (v.buffer || 0) === 0));
+  t("every bufferView stays inside the buffer",
+    pd.bufferViews.every((v) => (v.byteOffset || 0) + v.byteLength <= pd.buffers[0].byteLength));
+  t("no image is left referencing a file — a GLB may not",
+    (pd.images || []).every((i) => !i.uri && i.bufferView !== undefined));
+  t(`all ${loose} loose texture(s) came back in`, (pd.images || []).length === (doc.images || []).length);
+  t("mesh count is unchanged", (pd.meshes || []).length === (doc.meshes || []).length);
+  t("accessor count is unchanged", (pd.accessors || []).length === (doc.accessors || []).length);
+  t("the skin (rig) survived", JSON.stringify(pd.skins || []) === JSON.stringify(doc.skins || []));
+  t("animation clips survived",
+    (pd.animations || []).length === (doc.animations || []).length);
+
+  // the real proof: an accessor's bytes must be identical, not merely present
+  const a = doc.accessors.find((x) => x.bufferView !== undefined);
+  if (a) {
+    const ov = doc.bufferViews[a.bufferView], nv = pd.bufferViews[a.bufferView];
+    const pbin = packed.subarray(20 + pl + 8);
+    t("vertex bytes are byte-identical after packing",
+      Buffer.compare(bin.subarray(ov.byteOffset || 0, (ov.byteOffset || 0) + ov.byteLength),
+                     pbin.subarray(nv.byteOffset || 0, (nv.byteOffset || 0) + nv.byteLength)) === 0);
+  }
+  fs.rmSync(dir, { recursive: true, force: true });
+}
 
 console.log(`\n  ${pass} passed, ${fail} failed`);
 console.log("  NOT COVERED: parsing a real FBX. That needs a real file and stays");
