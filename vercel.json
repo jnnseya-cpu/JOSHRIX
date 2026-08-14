@@ -4,6 +4,10 @@
   "outputDirectory": "frontend",
   "rewrites": [
     {
+      "source": "/features",
+      "destination": "/api/features-hub"
+    },
+    {
       "source": "/play/:id",
       "destination": "/play.html?id=:id"
     },

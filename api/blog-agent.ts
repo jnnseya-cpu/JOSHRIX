@@ -15,6 +15,23 @@ import { getDb, ensureBlogSchema, ensureGameSchema, saveBlogPost, getBlogPost, l
 const SITE = "https://www.joshrix.com";
 
 /** Rotating editorial calendar — high-intent queries for the AI game-creation market. */
+import { FEATURES, featureById } from "./_features";
+
+/** Every capability gets its own article. Interleaving them with the broader
+ *  editorial pieces means the calendar alternates "what this does" with "why it
+ *  matters", which is the shape a topic cluster wants: depth and breadth, not
+ *  twenty consecutive product pages. */
+export function allTopics(): string[] {
+  const feature = FEATURES.map((f) => `FEATURE:${f.id}`);
+  const out: string[] = [];
+  const n = Math.max(feature.length, EDITORIAL_TOPICS.length);
+  for (let i = 0; i < n; i++) {
+    if (i < feature.length) out.push(feature[i]);
+    if (i < EDITORIAL_TOPICS.length) out.push(EDITORIAL_TOPICS[i]);
+  }
+  return out;
+}
+
 export const EDITORIAL_TOPICS = [
   "How to create your own video game with AI — no coding required",
   "Can you really make money selling AI-created games? The honest economics",
@@ -61,7 +78,23 @@ function demoArticle(topic: string) {
 }
 
 async function generateArticle(topic: string, liveGames: Array<{ id: string; title: string }>, priorPosts: Array<{ slug: string; title: string }> = []) {
-  if (!process.env.ANTHROPIC_API_KEY) return { article: demoArticle(topic), provider: "demo" as const };
+  // A FEATURE: topic carries a verified fact sheet. Handing the writer real
+  // specifics is the difference between an article a technical buyer trusts and
+  // one that reads like every other AI-generated product page — and it removes
+  // the temptation to invent a statistic in order to sound confident.
+  let brief = topic;
+  const f = topic.startsWith("FEATURE:") ? featureById(topic.slice(8)) : undefined;
+  if (f) {
+    brief = [
+      `Write the definitive article on this capability: "${f.name}".`,
+      `Search intent to satisfy: ${f.keywords.join("; ")}.`,
+      `These are the ONLY specifics you may state as fact — build the article on them, and do not add figures of your own:`,
+      ...f.proof.map((p) => `  - ${p}`),
+      `Link to ${f.href} where the capability itself is described, and to /features at least once.`,
+      `Explain what it means for a creator in practice, not what it is called.`,
+    ].join("\n");
+  }
+  if (!process.env.ANTHROPIC_API_KEY) return { article: demoArticle(f ? f.name : topic), provider: "demo" as const };
   const anthropic = new Anthropic();
   // A wide, real link inventory: platform pages, live player games, and every
   // previously published article. Deep interlinking between posts is what builds
@@ -81,7 +114,7 @@ async function generateArticle(topic: string, liveGames: Array<{ id: string; tit
     model: "claude-sonnet-5",
     max_tokens: 6000,
     system: CONTENT_SYSTEM,
-    messages: [{ role: "user", content: `Topic: ${topic}\n\nInternal links available (use 3-6, exact URLs):\n${links.join("\n")}` }],
+    messages: [{ role: "user", content: `${brief}\n\nInternal links available (use 3-6, exact URLs):\n${links.join("\n")}` }],
   });
   const text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
   const start = text.indexOf("{"); const end = text.lastIndexOf("}");
@@ -127,7 +160,8 @@ export default async function handler(req: any, res: any) {
     await ensureGameSchema(sql);
     const customTopic = req.method === "POST" ? String((req.body ?? {}).topic ?? "").trim() : "";
     const n = await countBlogPosts(sql);
-    const topic = customTopic || EDITORIAL_TOPICS[n % EDITORIAL_TOPICS.length];
+    const all = allTopics();
+    const topic = customTopic || all[n % all.length];
     const liveGames = (await listApprovedGames(sql, 5)) as Array<{ id: string; title: string }>;
     // prior posts feed the interlinking: each new article links back into the archive
     const priorPosts = (await listBlogPosts(sql, 12)) as Array<{ slug: string; title: string }>;
@@ -140,7 +174,7 @@ export default async function handler(req: any, res: any) {
       slug, title: article.title, description: article.metaDescription,
       keywords: (article.keywords || []).join(", "), excerpt: article.excerpt ?? null, html: article.html,
       social: { x: article.socialX, linkedin: article.socialLinkedIn, facebook: article.socialFacebook, hashtags: article.hashtags },
-      topic, provider,
+      topic: topic.startsWith("FEATURE:") ? (featureById(topic.slice(8))?.name ?? topic) : topic, provider,
     });
     return res.status(200).json({ ok: true, slug, url: `/blog/${slug}`, title: article.title, provider, topic });
   } catch (err: any) {

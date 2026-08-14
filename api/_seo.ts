@@ -21,7 +21,13 @@ const rx = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
  * Anchor targets for automatic in-body linking, most specific phrase first so
  * "JOSHRIX Studio" wins over "studio". Only pages that genuinely exist.
  */
+import { featureLinkTargets } from "./_features";
+
+/** The hub is the pillar of the feature cluster, so it earns a link target of
+ *  its own — every article that mentions what the platform does can point at it. */
 export const LINK_TARGETS: Array<{ phrase: RegExp; href: string; title: string }> = [
+  { phrase: /\bwhat JOSHRIX does\b/i, href: "/features", title: "what JOSHRIX does" },
+  { phrase: /\bplatform features\b/i, href: "/features", title: "platform features" },
   { phrase: /\bJOSHRIX Studio\b/i, href: "/studio.html", title: "JOSHRIX Studio" },
   { phrase: /\bthe Studio\b/i, href: "/studio.html", title: "the Studio" },
   { phrase: /\bJOSHRIX Arcade\b/i, href: "/arcade.html", title: "JOSHRIX Arcade" },

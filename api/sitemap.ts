@@ -11,6 +11,7 @@ const STATIC_PAGES = [
   "docs.html", "showcase.html", "worlds.html", "agent-fleet.html", "enterprise.html",
   "about.html", "press.html", "contact.html", "careers.html", "referrals.html",
   "ip-registry.html", "terms.html", "privacy.html", "refunds.html",
+  "features",
   "games/dino-island.html",
 ];
 
