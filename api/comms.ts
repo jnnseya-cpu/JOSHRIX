@@ -131,3 +131,68 @@ export default async function handler(req: any, res: any) {
 
   return res.status(405).json({ error: "GET or POST only" });
 }
+
+/* ---------------------------- the weekly newsletter ------------------------ */
+
+export type NewsletterLink = { href: string; label: string; note?: string };
+export type NewsletterSection = { heading: string; blurb?: string; links: NewsletterLink[] };
+
+/**
+ * The weekly mailing. Shares the brand shell with renderEmail() above, but is a
+ * separate renderer because it carries a body of many links rather than one
+ * notice and one call to action — squeezing it through the notice template
+ * would have meant making that template do two jobs badly.
+ *
+ * Every link is absolute and carries ?ref=newsletter, because an email client
+ * sends no referrer: without the tag the traffic this generates is
+ * indistinguishable from people typing the address, and we would have no way to
+ * tell whether the mailing works.
+ *
+ * The unsubscribe link is not decoration. Marketing email to a UK audience must
+ * carry a working opt-out, and bulk senders that omit one get their domain
+ * filtered — which would take the transactional mail down with it.
+ */
+export function renderNewsletter(opts: {
+  issue: string;
+  headline: string;
+  intro: string;
+  sections: NewsletterSection[];
+  unsubscribeUrl: string;
+}): string {
+  const SITE = "https://www.joshrix.com";
+  const tag = (href: string) => {
+    const abs = href.startsWith("http") ? href : SITE + href;
+    return abs + (abs.includes("?") ? "&" : "?") + "ref=newsletter";
+  };
+
+  const sections = opts.sections.map((s) => `
+  <h2 style="font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#22D3EE;margin:30px 0 8px">${esc(s.heading)}</h2>
+  ${s.blurb ? `<p style="color:#c9c9d6;line-height:1.65;font-size:14.5px;margin:0 0 12px">${esc(s.blurb)}</p>` : ""}
+  <table role="presentation" style="width:100%;border-collapse:collapse">
+    ${s.links.map((l) => `<tr><td style="padding:7px 0;border-bottom:1px solid #23233a">
+      <a href="${esc(tag(l.href))}" style="color:#ececf4;text-decoration:none;font-weight:650;font-size:15px">${esc(l.label)}</a>
+      ${l.note ? `<div style="color:#9d9db3;font-size:13px;line-height:1.55;margin-top:3px">${esc(l.note)}</div>` : ""}
+    </td></tr>`).join("")}
+  </table>`).join("");
+
+  return `<!DOCTYPE html><html><body style="margin:0;background:#0b0b14;font-family:system-ui,-apple-system,sans-serif;color:#ececf4">
+<div style="max-width:600px;margin:0 auto;padding:28px 20px">
+  <table role="presentation" style="width:100%"><tr>
+    <td style="width:42px"><div style="width:34px;height:34px;background:linear-gradient(135deg,#7C3AED,#22D3EE);border-radius:8px;text-align:center;line-height:34px;font-weight:800;color:#fff">JX</div></td>
+    <td style="font-weight:800;letter-spacing:.08em">JOSHRIX <span style="color:#22D3EE">STUDIO</span></td>
+    <td style="text-align:right;color:#6b6b80;font-size:12px">${esc(opts.issue)}</td>
+  </tr></table>
+  <div style="height:3px;background:linear-gradient(90deg,#7C3AED,#22D3EE);border-radius:2px;margin:16px 0 22px"></div>
+
+  <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">${esc(opts.headline)}</h1>
+  <p style="color:#c9c9d6;line-height:1.7;font-size:15px;margin:0 0 20px">${esc(opts.intro)}</p>
+  <a href="${esc(tag("/studio"))}" style="display:inline-block;background:linear-gradient(135deg,#7C3AED,#22D3EE);color:#fff;text-decoration:none;font-weight:700;padding:11px 22px;border-radius:10px">Open the Studio</a>
+  ${sections}
+
+  <p style="color:#6b6b80;font-size:12px;line-height:1.7;margin:30px 0 0;border-top:1px solid #23233a;padding-top:16px">
+  © 2026 JOSHRIX Studio · Create Worlds. Build Games. Own the Future.<br>
+  You are receiving this because you have a JOSHRIX account.
+  <a href="${esc(opts.unsubscribeUrl)}" style="color:#22D3EE">Unsubscribe</a> ·
+  <a href="${esc(tag("/privacy.html"))}" style="color:#22D3EE">Privacy</a></p>
+</div></body></html>`;
+}

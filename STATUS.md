@@ -3,7 +3,7 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-08-14
+Last updated: 2026-08-17
 
 ---
 
@@ -13,7 +13,9 @@ Last updated: 2026-08-14
 |---|---|---|
 | 1 | **Upload the asset packs** | Kenney City Kit → `_incoming/` as a zip. Quaternius Characters/Monsters/Animals → `_incoming/characters/<pack>/` as folders, taking the **glTF** folder. Full steps in `frontend/assets/models3d/_incoming/characters/README.md`. |
 | 2 | **Forge WonderVerse in 3D on the live site** | The sea and sky bugs are fixed and deployed. I cannot run a forge — no provider keys here, and the proxy blocks joshrix.com. |
-| 3 | **Rotate the Neon password** | `npg_fK1p7jxceMgo` was pasted into chat earlier. Still outstanding. |
+| 3 | **Set `NEWSLETTER_SECRET` in Vercel** | Any long random string. Without it the unsubscribe link still works, but the token is not signed, so anyone could unsubscribe another address. |
+| 4 | **Confirm the newsletter send** | It is live but has never sent to a real inbox. Run `GET /api/newsletter?dry=1` with `x-moderation-key` first — it reports the audience size and sends nothing. |
+| 5 | **Rotate the Neon password** | `npg_fK1p7jxceMgo` was pasted into chat earlier. Still outstanding. |
 
 ## Waiting on me — nothing
 
@@ -30,6 +32,11 @@ Everything asked for is committed and pushed. Nothing half-finished.
 - **2,273 models / 2,553 sprites**, every one load-tested in a browser before shipping.
 - **`/features`** pillar page + 36 blog topics (22 feature-driven, 14 editorial).
 - **Cookieless analytics** + a funnel endpoint that says in plain words where acquisition breaks.
+  Campaign clicks are tagged `?ref=newsletter` so email traffic is not counted as direct.
+- **Weekly newsletter** (`/api/newsletter`, cron Tue 10:00 UTC) to every registered account:
+  4 rotating capabilities + fresh blog posts + new arcade games, ~14 links per issue.
+  One-click unsubscribe at `/unsubscribe`. Sends are claimed per address per ISO week,
+  so a retried cron cannot mail anyone twice.
 - **PWA menu** on all 32 pages.
 
 ## Known gaps, stated plainly

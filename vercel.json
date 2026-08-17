@@ -26,6 +26,10 @@
     {
       "source": "/feed.xml",
       "destination": "/api/rss"
+    },
+    {
+      "source": "/unsubscribe",
+      "destination": "/api/unsubscribe"
     }
   ],
   "crons": [
@@ -36,6 +40,10 @@
     {
       "path": "/api/security-agent",
       "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/newsletter",
+      "schedule": "0 10 * * 2"
     }
   ],
   "functions": {

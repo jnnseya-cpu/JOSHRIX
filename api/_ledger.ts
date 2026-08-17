@@ -612,3 +612,81 @@ export async function decidePayoutRequest(sql: Sql, id: string, status: "approve
     WHERE id = ${id} AND status = 'requested' RETURNING id, wallet_id, amount_minor`) as any[];
   return rows[0] ?? null;
 }
+
+/* ---------------- newsletter: subscription state + send idempotency --------- */
+
+/**
+ * Marketing email is legally different from service email. Under UK GDPR/PECR a
+ * recipient must be able to stop it, and that decision has to survive
+ * everything — so it lives in its own table keyed by address, not on the wallet
+ * row. An address that unsubscribed while holding one wallet must stay
+ * unsubscribed if it later holds another.
+ *
+ * newsletter_sends exists for idempotency. Vercel can retry a cron, and a
+ * mailing that goes out twice is worse than one that does not go out at all:
+ * it burns the sending domain's reputation, which is not recoverable by
+ * shipping a fix. The unique constraint on (email, issue) makes a repeat send
+ * impossible rather than unlikely.
+ */
+export async function ensureNewsletterSchema(sql: Sql) {
+  await sql`CREATE TABLE IF NOT EXISTS email_prefs (
+    email text PRIMARY KEY,
+    unsubscribed_at timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`;
+  await sql`CREATE TABLE IF NOT EXISTS newsletter_sends (
+    id bigserial PRIMARY KEY,
+    email text NOT NULL,
+    issue text NOT NULL,
+    status text NOT NULL,
+    provider text,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    UNIQUE (email, issue)
+  )`;
+}
+
+/** Every registered address that has not opted out. One row per address: a
+ *  person with two wallets must not receive the mailing twice. */
+export async function newsletterAudience(sql: Sql, issue: string, limit = 500): Promise<string[]> {
+  const rows = (await sql`
+    SELECT DISTINCT lower(w.email) AS email
+      FROM wallets w
+      LEFT JOIN email_prefs p ON p.email = lower(w.email)
+      LEFT JOIN newsletter_sends s ON s.email = lower(w.email) AND s.issue = ${issue}
+     WHERE w.email IS NOT NULL AND w.email <> ''
+       AND p.unsubscribed_at IS NULL
+       AND s.id IS NULL
+     LIMIT ${limit}`) as Array<{ email: string }>;
+  return rows.map((r) => r.email);
+}
+
+/** Claim an address for this issue BEFORE sending. Returns false if another
+ *  run already claimed it, which is what makes a retried cron safe. */
+export async function claimNewsletterSend(sql: Sql, email: string, issue: string): Promise<boolean> {
+  const rows = (await sql`
+    INSERT INTO newsletter_sends (email, issue, status)
+    VALUES (${email.toLowerCase()}, ${issue}, 'claimed')
+    ON CONFLICT (email, issue) DO NOTHING
+    RETURNING id`) as Array<{ id: number }>;
+  return rows.length > 0;
+}
+
+export async function recordNewsletterSend(sql: Sql, email: string, issue: string, status: string, provider: string) {
+  await sql`UPDATE newsletter_sends SET status = ${status}, provider = ${provider}
+    WHERE email = ${email.toLowerCase()} AND issue = ${issue}`;
+}
+
+export async function unsubscribeEmail(sql: Sql, email: string) {
+  await sql`INSERT INTO email_prefs (email, unsubscribed_at) VALUES (${email.toLowerCase()}, now())
+    ON CONFLICT (email) DO UPDATE SET unsubscribed_at = now()`;
+}
+
+export async function resubscribeEmail(sql: Sql, email: string) {
+  await sql`INSERT INTO email_prefs (email, unsubscribed_at) VALUES (${email.toLowerCase()}, NULL)
+    ON CONFLICT (email) DO UPDATE SET unsubscribed_at = NULL`;
+}
+
+export async function isUnsubscribed(sql: Sql, email: string): Promise<boolean> {
+  const rows = (await sql`SELECT unsubscribed_at FROM email_prefs WHERE email = ${email.toLowerCase()}`) as Array<{ unsubscribed_at: string | null }>;
+  return !!rows[0]?.unsubscribed_at;
+}

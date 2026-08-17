@@ -31,8 +31,15 @@ function safePath(p: string): string | null {
 }
 
 function refHost(r: string): string {
+  const raw = String(r ?? "").trim();
+  // A campaign token (e.g. "newsletter.campaign") is not a URL and never will
+  // be: an email client sends no referrer, so the source has to be declared.
+  // Accept only this narrow shape so the column still holds host-like tokens
+  // and can never be used to smuggle a full URL, which is the whole point of
+  // keeping hosts rather than referrers.
+  if (/^[a-z0-9_-]{1,32}\.campaign$/i.test(raw)) return raw.toLowerCase();
   try {
-    const h = new URL(String(r)).hostname.toLowerCase();
+    const h = new URL(raw).hostname.toLowerCase();
     if (!h || h.endsWith("joshrix.com")) return "direct";
     return h.slice(0, 80);
   } catch { return "direct"; }
