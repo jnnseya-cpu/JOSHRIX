@@ -38,6 +38,10 @@ Everything asked for is committed and pushed. Nothing half-finished.
   One-click unsubscribe at `/unsubscribe`. Sends are claimed per address per ISO week,
   so a retried cron cannot mail anyone twice.
 - **PWA menu** on all 32 pages.
+- **Launch screens** on every installable page (34 incl. both games and `/play/<id>`):
+  32 iOS images across 16 devices x 2 orientations, injected from `frontend/assets/splash.js`.
+  Android uses the manifest's `background_color` + 512 icon and needs no images.
+  Regenerate with `node tools/make-splash.mjs` after changing the device table.
 
 ## Known gaps, stated plainly
 
