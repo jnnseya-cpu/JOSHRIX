@@ -12,6 +12,16 @@ Last updated: 2026-08-18 (forge diagnosis)
 `GO-TO-MARKET.md` is the launch plan: **Nairobi**, 18 Aug – 15 Nov 2026, £2,650 lean /
 £6,100 with an agency. It is gated on the forge working — items 1 and 2 below.
 
+## Blueprint blocker — FIXED 18 Aug
+
+"Blueprint generation failed — Expected ',' or ']' after array element in JSON at
+position 6220". Not a malformed model reply: a TRUNCATED one, cut in the wrong place
+by us. Extraction ran `indexOf("{")` to `lastIndexOf("}")`, so a reply that stopped
+mid-array ended on a nested object's brace, leaving an unclosed array. Three causes,
+all fixed: balanced-brace extraction that returns null rather than a broken slice,
+max_tokens 4000 -> 8000, and a claude -> gemini -> openai chain (the blueprint had ONE
+provider while the game path had three). 20 assertions in `tests/t20-blueprint-json.js`.
+
 ## The forge diagnosis — 18 Aug, from /api/forge-log + /api/provider-selftest
 
 - **No forge has run since 12 Aug 16:03.** The sea/sky fixes landed 14 Aug, so the

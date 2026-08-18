@@ -54,36 +54,99 @@ export function acuChargeForUsage(model: string, usage: TokenUsage): number {
 export const BLUEPRINT_ACU_CHARGE = 40;      // HOLD (estimate) — settled to metered 4x actual
 export const BLUEPRINT_MIN_CHARGE = 6;       // metered floor per blueprint run
 
+/**
+ * Pull the first COMPLETE top-level JSON object out of a model reply.
+ *
+ * Every JSON path here used to do `text.indexOf("{")` to `text.lastIndexOf("}")`.
+ * That is wrong in the exact case that matters: when a reply is TRUNCATED
+ * mid-array, lastIndexOf lands on the closing brace of some nested object, so
+ * the slice ends inside an array that was never closed. JSON.parse then reports
+ * "Expected ',' or ']' after array element at position N" — which reads like a
+ * malformed model reply and is really a truncated one, cut in the wrong place by
+ * us. That is the error the Studio showed at position 6220.
+ *
+ * This scans with a depth counter and skips over string literals and their
+ * escapes, so a brace inside "a }" cannot end the object early. It returns null
+ * rather than a broken slice when no complete object exists, so the caller can
+ * fall through to the next provider instead of parsing rubbish.
+ */
+export function extractJsonObject(text: string): string | null {
+  const start = text.indexOf("{");
+  if (start === -1) return null;
+  let depth = 0, inStr = false, esc = false;
+  for (let i = start; i < text.length; i++) {
+    const ch = text[i];
+    if (esc) { esc = false; continue; }
+    if (inStr) {
+      if (ch === "\\") esc = true;
+      else if (ch === '"') inStr = false;
+      continue;
+    }
+    if (ch === '"') { inStr = true; continue; }
+    if (ch === "{") depth++;
+    else if (ch === "}") {
+      depth--;
+      if (depth === 0) return text.slice(start, i + 1);   // first balanced object
+    }
+  }
+  return null;                                            // truncated — never guess
+}
+
 export async function generateBlueprint(
   prompt: string,
   opts: { type?: string; platform?: string; scope?: string; language?: string } = {},
 ): Promise<{ blueprint: GameBlueprint; provider: string; usage?: TokenUsage }> {
+  const user = `Game description: ${prompt}\nGame type: ${!opts.type || opts.type === "auto" ? "infer the best-fit genre from the description" : opts.type}\nTarget platform: ${opts.platform ?? "all"}\nScope package: ${opts.scope ?? "commercial starter"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the description"}`;
+
+  // 8000, not 4000. A blueprint that truncates is a dead forge: the creator
+  // cannot proceed at all, and the failure surfaces as an unreadable JSON
+  // position error. Headroom is far cheaper than a blocked creator.
+  const MAX = 8000;
+
+  const parse = (text: string, who: string) => {
+    const json = extractJsonObject(text);
+    if (!json) throw new Error(`${who} returned no complete JSON object (reply likely truncated)`);
+    return GameBlueprintSchema.parse(JSON.parse(json));
+  };
+
+  // The game chain has had three providers for weeks; the blueprint had ONE, so
+  // a single Anthropic hiccup or one over-long reply blocked the whole platform
+  // before a forge could even start. Same principle, same order of preference.
+  const errors: string[] = [];
+
   if (process.env.ANTHROPIC_API_KEY) {
-    const anthropic = new Anthropic();
-    const msg = await anthropic.messages.create({
-      model: "claude-opus-5",
-      max_tokens: 4000,
-      system: SYSTEM,
-      messages: [
-        {
-          role: "user",
-          content: `Game description: ${prompt}\nGame type: ${!opts.type || opts.type === "auto" ? "infer the best-fit genre from the description" : opts.type}\nTarget platform: ${opts.platform ?? "all"}\nScope package: ${opts.scope ?? "commercial starter"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the description"}`,
-        },
-      ],
-    });
-    const text = msg.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("");
-    const start = text.indexOf("{");
-    const end = text.lastIndexOf("}");
-    if (start === -1 || end === -1) throw new Error("Idea Agent returned no JSON blueprint");
-    const blueprint = GameBlueprintSchema.parse(JSON.parse(text.slice(start, end + 1)));
-    return {
-      blueprint, provider: "claude",
-      usage: { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens },
-    };
+    try {
+      const anthropic = new Anthropic();
+      const msg = await anthropic.messages.create({
+        model: "claude-opus-5", max_tokens: MAX, system: SYSTEM,
+        messages: [{ role: "user", content: user }],
+      });
+      const text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
+      return {
+        blueprint: parse(text, "Idea Agent"), provider: "claude",
+        usage: { inputTokens: msg.usage.input_tokens, outputTokens: msg.usage.output_tokens },
+      };
+    } catch (e: any) { errors.push("claude: " + String(e?.message ?? e)); }
   }
+
+  if (process.env.GEMINI_API_KEY) {
+    try {
+      const r = await geminiText(SYSTEM, user, MAX);
+      return { blueprint: parse(r.text, "Idea Agent (gemini)"), provider: "gemini", usage: r.usage };
+    } catch (e: any) { errors.push("gemini: " + String(e?.message ?? e)); }
+  }
+
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      const r = await openaiText(SYSTEM, user, Math.min(MAX, 12000));
+      return { blueprint: parse(r.text, "Idea Agent (openai)"), provider: "openai", usage: r.usage };
+    } catch (e: any) { errors.push("openai: " + String(e?.message ?? e)); }
+  }
+
+  // Only when a key exists and EVERY provider failed. With no keys at all we
+  // fall through to the deterministic blueprint below, as before.
+  if (errors.length) throw new Error("Blueprint generation failed — " + errors.join(" | "));
+
   return { blueprint: demoBlueprint(prompt, opts.language), provider: "demo" };
 }
 
@@ -778,9 +841,9 @@ export async function generateGrowthCopy(
   ].join("\n");
 
   const parse = (text: string) => {
-    const a = text.indexOf("{"), b = text.lastIndexOf("}");
-    if (a === -1 || b === -1) throw new Error("Growth Agent returned no JSON");
-    return JSON.parse(text.slice(a, b + 1));
+    const json = extractJsonObject(text);   // same truncation trap as the blueprint had
+    if (!json) throw new Error("Growth Agent returned no complete JSON object");
+    return JSON.parse(json);
   };
 
   const errors: string[] = [];
