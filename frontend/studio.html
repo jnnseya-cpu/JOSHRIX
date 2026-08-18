@@ -299,7 +299,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
       <div class="actions" id="approveRow" style="display:none">
         <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.5rem .8rem">
           <input type="checkbox" id="chk3d" style="accent-color:#7C3AED;width:18px;height:18px">
-          <span><b style="color:var(--cyan,#22D3EE)">⬢ 3D Build</b> — real three.js 3D world. Metered pricing: you pay only for the compute your build actually uses — 3D holds 1,200 ACUs, 2D holds 300, and the unused hold refunds the moment your build settles (typical final: 40–200 ACUs).</span>
+          <span><b style="color:var(--cyan,#22D3EE)">⬢ 3D Build</b> — real three.js 3D world. You are charged only if you keep the build. A forge holds 250 ACUs for 3D and 150 for 2D; the hold returns in full if you refine, discard or walk away. Only publishing it — or spending an Enhance pass on it — collects what the run actually cost, typically 40–95 ACUs, and refunds the rest.</span>
         </label>
         <button class="btn btn-primary" id="btnForge">▶ Approve &amp; Initiate Forge</button>
         <span class="hint">Approval gate 1 of 3 — you stay in control</span>
@@ -980,7 +980,7 @@ $('btnEnhance').addEventListener('click', async () => {
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
     const r = await fetch(base + '/api/forge-enhance', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ html: realBuild.html, walletId: serverWalletId || undefined, notes: (fixNote ? fixNote + ' — original concept: ' : '') + $('prompt').value, language: $('selLang').value }),
+      body: JSON.stringify({ html: realBuild.html, walletId: serverWalletId || undefined, notes: (fixNote ? fixNote + ' — original concept: ' : '') + $('prompt').value, language: $('selLang').value, baseForgeId: (realBuild && realBuild.forgeId) || undefined }),
       signal: AbortSignal.timeout(295000)
     });
     const j = await r.json().catch(() => null);
@@ -1045,7 +1045,11 @@ $('btnPub').addEventListener('click', async () => {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: lastBp.title || 'Untitled World', summary: lastBp.summary, language: $('selLang').value,
-        html: realBuild.html, walletId: serverWalletId || undefined, email: prof.email || undefined
+        html: realBuild.html, walletId: serverWalletId || undefined, email: prof.email || undefined,
+        // Publishing is the creator KEEPING the build, so it is the moment the
+        // forge is paid for. Without this id the server cannot settle the hold
+        // and the creator would be left holding ACUs they had already earned back.
+        forgeId: (realBuild && realBuild.forgeId) || undefined
       }),
       signal: AbortSignal.timeout(30000)
     });

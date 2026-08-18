@@ -88,11 +88,12 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "failed-builds-refund",
-    name: "A failed build refunds itself",
+    name: "You pay only for builds you keep",
     group: "Economics",
     keywords: ["AI credits refund", "do AI game generators charge for failures"],
     proof: [
-      "If generation fails, the hold is released automatically — the creator is not charged for a build they cannot play.",
+      "You are charged only if you keep the build. Publishing it, or spending an Enhance pass on it, is the only thing that collects payment.",
+      "Refine it, discard it or walk away and the entire hold returns — a build you would not play costs you nothing.",
       "No competitor in this category refunds anything.",
     ],
     href: "/refunds",

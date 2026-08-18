@@ -204,6 +204,12 @@ export async function ensureGameSchema(sql: Sql) {
     created_at timestamptz NOT NULL DEFAULT now(),
     refunded_at timestamptz
   )`;
+  // CHARGE ON ACCEPT. `amount` is the HOLD taken before generating; settle_amount
+  // is what the run actually cost and is only ever collected if the creator keeps
+  // the build. Until then the hold is fully refundable, so a creator who is handed
+  // something unplayable pays nothing at all.
+  await sql`ALTER TABLE forge_charges ADD COLUMN IF NOT EXISTS settle_amount bigint`;
+  await sql`ALTER TABLE forge_charges ADD COLUMN IF NOT EXISTS accepted_at timestamptz`;
   // marketplace listings: the PRICE LIVES HERE, never in the buyer's request
   await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS price_minor bigint`;
   await sql`ALTER TABLE games ADD COLUMN IF NOT EXISTS seller_plan text`;
@@ -322,10 +328,71 @@ export async function recordForgeCharge(sql: Sql, id: string, walletId: string, 
  * charge id is only ever issued after a real 300-ACU debit, the refund can never
  * exceed what was paid — there is no farming path (net cost is always >= 0).
  */
-export async function claimForgeRefund(sql: Sql, id: string, walletId: string): Promise<number | null> {
+/**
+ * CHARGE ON ACCEPT — the platform's core promise about money.
+ *
+ * A forge takes a HOLD before generating (so the run cannot be farmed for free)
+ * but the hold is not a payment. Nothing is collected unless the creator keeps
+ * the build: publishing it or spending an Enhance pass on it. Refine, discard or
+ * simply walk away and the entire hold comes back.
+ *
+ * This exists because the failure that matters is not a build that crashes — the
+ * render watchdog already refunds those — it is a build that renders and is
+ * worthless. Under the old flow that was charged in full, which is exactly the
+ * case a creator would rightly dispute.
+ *
+ * Every transition is a single conditional UPDATE, so a double-click, a retried
+ * request and a race all resolve to one outcome: money moves once or not at all.
+ */
+export async function recordForgeHold(sql: Sql, id: string, walletId: string, hold: number, settle: number) {
+  await sql`INSERT INTO forge_charges (id, wallet_id, amount, settle_amount)
+    VALUES (${id}, ${walletId}, ${hold}, ${settle}) ON CONFLICT (id) DO NOTHING`;
+}
+
+/** The creator kept it. Collect settle_amount, hand back the rest. Returns the
+ *  amount to credit, or null if this hold was already resolved. */
+export async function acceptForgeCharge(sql: Sql, id: string, walletId: string): Promise<{ refund: number; charged: number } | null> {
+  const rows = (await sql`
+    UPDATE forge_charges SET accepted_at = now()
+    WHERE id = ${id} AND wallet_id = ${walletId} AND accepted_at IS NULL AND refunded_at IS NULL
+    RETURNING amount, COALESCE(settle_amount, amount) AS settle_amount`) as Array<{ amount: number; settle_amount: number }>;
+  if (!rows.length) return null;
+  const hold = Number(rows[0].amount), charged = Math.min(Number(rows[0].settle_amount), hold);
+  return { refund: hold - charged, charged };
+}
+
+/** The creator did not keep it. The WHOLE hold goes back — they pay nothing. */
+export async function releaseForgeHold(sql: Sql, id: string, walletId: string): Promise<number | null> {
   const rows = (await sql`
     UPDATE forge_charges SET refunded_at = now()
-    WHERE id = ${id} AND wallet_id = ${walletId} AND refunded_at IS NULL
+    WHERE id = ${id} AND wallet_id = ${walletId} AND refunded_at IS NULL AND accepted_at IS NULL
+    RETURNING amount`) as Array<{ amount: number }>;
+  return rows.length ? Number(rows[0].amount) : null;
+}
+
+/**
+ * A creator who forges and never comes back must not be left short. Any hold
+ * still undecided after `hours` is released in full. Run lazily whenever a
+ * wallet is read, so this needs no cron and the balance a creator sees is
+ * always the balance they actually have.
+ */
+export async function releaseExpiredForgeHolds(sql: Sql, walletId: string, hours = 24): Promise<number> {
+  const rows = (await sql`
+    UPDATE forge_charges SET refunded_at = now()
+    WHERE wallet_id = ${walletId} AND refunded_at IS NULL AND accepted_at IS NULL
+      AND created_at < now() - make_interval(hours => ${hours})
+    RETURNING amount`) as Array<{ amount: number }>;
+  const total = rows.reduce((n, r) => n + Number(r.amount), 0);
+  if (total > 0) await creditWallet(sql, walletId, total);
+  return total;
+}
+
+export async function claimForgeRefund(sql: Sql, id: string, walletId: string): Promise<number | null> {
+  // A build that failed to render is never accepted, so this releases the whole
+  // hold — and the accepted_at guard stops it double-refunding one already kept.
+  const rows = (await sql`
+    UPDATE forge_charges SET refunded_at = now()
+    WHERE id = ${id} AND wallet_id = ${walletId} AND refunded_at IS NULL AND accepted_at IS NULL
     RETURNING amount`) as Array<{ amount: number }>;
   return rows.length ? Number(rows[0].amount) : null;
 }

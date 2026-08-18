@@ -12,6 +12,16 @@ Last updated: 2026-08-18 (forge diagnosis)
 `GO-TO-MARKET.md` is the launch plan: **Nairobi**, 18 Aug – 15 Nov 2026, £2,650 lean /
 £6,100 with an agency. It is gated on the forge working — items 1 and 2 below.
 
+## Charge on accept — shipped 18 Aug
+
+A creator is no longer charged for a build they do not keep. The forge takes a HOLD
+(250 3D / 150 2D) but collects nothing. Publishing the game, or spending an Enhance
+pass on it, settles it to what the run actually cost (~40-95) and refunds the rest.
+Refine, discard or walk away and the whole hold returns; an undecided hold is swept
+back after 24 hours. This closes the case that mattered: a build that RENDERS but is
+worthless used to be charged in full, and the render watchdog only covered builds
+that drew nothing. 25 assertions in `tests/t21-charge-on-accept.js`.
+
 ## Forge holds were blocking paying work — FIXED 18 Aug
 
 "Not enough ACUs" on a 1,068 balance, with the platform demo game shown instead of

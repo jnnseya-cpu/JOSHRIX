@@ -9,7 +9,7 @@
 import { randomUUID } from "crypto";
 import { generateGameHtml, looksPlayable, acuChargeForUsage, FORGE_GAME_ACU_CHARGE, FORGE_GAME_3D_ACU_CHARGE, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE } from "./_gateway";
 import { buildPlayableGame } from "./_engine";
-import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge, saveForgeResult, recordForgeLog } from "./_ledger";
+import { releaseExpiredForgeHolds, getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeHold, saveForgeResult, recordForgeLog } from "./_ledger";
 import { recordSecurityEvent } from "./_guard";
 import { scanConcept, sanitiseConcept } from "./_security";
 import { clientIp, rateLimit, tooMany, forgeDisabled } from "./_guard";
@@ -98,6 +98,9 @@ export default async function handler(req: any, res: any) {
     if (!walletId) return res.status(402).json({ error: "No wallet — open the Studio to initialise your ACU wallet, or top up at /wallet.html." });
     try {
       await ensureGameSchema(sql);
+      // Hand back any hold the creator left undecided before taking a new one,
+      // so an abandoned forge can never make the next one unaffordable.
+      try { await releaseExpiredForgeHolds(sql, walletId); } catch { /* best-effort */ }
       balanceAfter = await debitWallet(sql, walletId, CHARGE);
     } catch (err: any) {
       return res.status(502).json({ error: "Wallet check failed", detail: String(err?.message ?? err) });
@@ -183,26 +186,30 @@ export default async function handler(req: any, res: any) {
     const settledCharge = provider !== "engine"
       ? Math.max(FORGE_MIN_CHARGE, aiUsage ? acuChargeForUsage(meterKey, aiUsage) : FORGE_MIN_CHARGE * 2)
       : ENGINE_BUILD_CHARGE;
-    if (sql && walletId && balanceAfter !== null && settledCharge !== CHARGE) {
-      try {
-        if (settledCharge < CHARGE) {
-          const nb = await creditWallet(sql, walletId, CHARGE - settledCharge);
-          if (nb !== null) balanceAfter = nb;
-        } else {
-          const nb = await debitWallet(sql, walletId, settledCharge - CHARGE);
-          if (nb !== null) balanceAfter = nb; // insufficient extra -> hold stands; reconciliation
-        }
-      } catch { /* settlement best-effort; ledger reconciliation catches strays */ }
-    }
+    // CHARGE ON ACCEPT: the hold STAYS debited while the creator decides, but it
+    // is not a payment. Nothing is collected here. Publishing or spending an
+    // Enhance pass collects settledCharge and refunds the rest; refining,
+    // discarding or walking away refunds all of it (see api/_ledger.ts).
+    //
+    // The old code settled here, so a build that rendered but was worthless was
+    // charged in full — the one case a creator would rightly dispute, and the
+    // reason this changed.
     // Single-use forge id so a build that fails to RENDER on the client can
     // auto-refund. Recorded only after a real charge, so a refund can't exceed the pay.
     let forgeId: string | undefined;
     if (sql && walletId && balanceAfter !== null) {
       forgeId = randomUUID();
-      try { await recordForgeCharge(sql, forgeId, walletId, settledCharge); } catch { forgeId = undefined; }
+      try { await recordForgeHold(sql, forgeId, walletId, CHARGE, settledCharge); } catch { forgeId = undefined; }
     }
     const body = {
-      html, provider, acuCharge: settledCharge,
+      html, provider,
+      // acuCharge stays for older Studio builds, but it is what WOULD be charged
+      // on accept — not what has been taken. acuHeld is what actually left the
+      // balance and comes back if the creator does not keep this build.
+      acuCharge: settledCharge,
+      acuHeld: CHARGE,
+      acuOnAccept: settledCharge,
+      chargedOnAccept: true,
       ...(bespokeError ? { bespokeError } : {}),
       ...(fallbackHtml ? { fallbackHtml } : {}),
       ...(forgeId ? { forgeId } : {}),
