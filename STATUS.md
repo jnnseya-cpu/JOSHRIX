@@ -3,9 +3,14 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-08-17
+Last updated: 2026-08-18
 
 ---
+
+## Go-to-market
+
+`GO-TO-MARKET.md` is the launch plan: **Nairobi**, 18 Aug – 15 Nov 2026, £2,650 lean /
+£6,100 with an agency. It is gated on the forge working — items 1 and 2 below.
 
 ## Waiting on Justin
 
