@@ -403,8 +403,26 @@ PRESERVE: the game's title, language, mechanics, win/lose flow, mobile+desktop c
 Fix any bugs you notice. Never remove features. Output must be the COMPLETE file — never a diff, never truncated.
 ${RUNTIME_SAFETY}`;
 
-export const FORGE_GAME_ACU_CHARGE = 300;       // HOLD (2D estimate) — settled to metered 4x actual
-export const FORGE_GAME_3D_ACU_CHARGE = 1200;   // HOLD (3D estimate) — settled to metered 4x actual
+/* HOLDS. Reserved before a run and settled DOWN to metered 4x actual cost, with
+ * the unused part credited back in the same request. A hold is therefore not a
+ * price — nobody is ever charged it — it only decides who is allowed to START.
+ *
+ * Measured 18 Aug 2026 from /api/forge-selftest, a real full-size 3D build:
+ *   gemini  9,520 output tokens ->  51 ACU settled
+ *   openai  1,809 output tokens ->  40 ACU settled (the metered floor)
+ * The theoretical worst case is the 18,000-token cap, about 96 ACU.
+ *
+ * The 3D hold was 1,200 — TWENTY-THREE TIMES the real cost. A creator holding
+ * 1,068 ACU, enough for roughly twenty 3D games, was refused with "Not enough
+ * ACUs" and shown the demo game instead. That is the whole bug: the reservation,
+ * not the price, was blocking paying work.
+ *
+ * 250 leaves ~2.6x headroom over the theoretical maximum and ~5x over anything
+ * observed, while still admitting anyone who can genuinely afford several runs.
+ * Raise it only if a real settlement is ever seen above it — and record the
+ * settlement here when you do. */
+export const FORGE_GAME_ACU_CHARGE = 150;       // HOLD (2D) — settles to ~32-40
+export const FORGE_GAME_3D_ACU_CHARGE = 250;    // HOLD (3D) — settles to ~51
 export const FORGE_MIN_CHARGE = 40;             // metered floor when the Code Agent ran
 /** A 3D build smaller than this is a stub, however well-formed. Dino Island,
  *  the leanest complete game on the runtime, is 10,975 bytes. */

@@ -12,6 +12,14 @@ Last updated: 2026-08-18 (forge diagnosis)
 `GO-TO-MARKET.md` is the launch plan: **Nairobi**, 18 Aug – 15 Nov 2026, £2,650 lean /
 £6,100 with an agency. It is gated on the forge working — items 1 and 2 below.
 
+## Forge holds were blocking paying work — FIXED 18 Aug
+
+"Not enough ACUs" on a 1,068 balance, with the platform demo game shown instead of
+the build. The 3D forge RESERVED 1,200 ACU up front, but a real 3D build settles at
+40-51 — the hold was 23x the cost, so a creator with enough for ~20 games could not
+start one. A hold is not a price: it is refunded in the same request, so no charge
+changes. Now 250 for 3D and 150 for 2D, against a worst measured settle of 93.
+
 ## Blueprint blocker — FIXED 18 Aug
 
 "Blueprint generation failed — Expected ',' or ']' after array element in JSON at
