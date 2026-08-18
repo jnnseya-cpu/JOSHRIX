@@ -22,8 +22,14 @@ Last updated: 2026-08-18 (forge diagnosis)
   openai because on 2 Aug Claude truncated and Gemini was 403 — but Claude truncated
   because there was no runtime yet and the prompt asked for 800-1100 lines. The runtime
   landed 9 Aug; the target is now 260-420. That evidence was stale.
-- **3D now leads with claude-sonnet-5.** openai stays first for 2D and is the immediate
-  3D fallback.
+- **The real defect: openai's 3D build is a STUB.** /api/forge-selftest, full size:
+  gemini 39.2s / 35,973 bytes / 9,520 tokens OK · openai 24.6s / **8,411 bytes** / 1,809
+  tokens OK · claude 159.1s TRUNCATED. openai's build is smaller than Dino Island
+  (10,975 bytes), the leanest complete game on the runtime — it boots the engine, passes
+  every structural gate, and is nothing to play. That is what shipped from every recorded
+  forge. **3D now leads with gemini**, the only provider producing a complete build.
+- **A substance floor rejects sub-9,500-byte 3D builds** (demoted to fallback, not
+  discarded), so a stub can never ship again while a fuller build exists.
 - **BUILD_ID now comes from the deployed commit.** It read `2026-08-12.77` on 18 Aug, so
   it could not answer whether a push was live.
 

@@ -343,6 +343,9 @@ ${RUNTIME_SAFETY}`;
 export const FORGE_GAME_ACU_CHARGE = 300;       // HOLD (2D estimate) — settled to metered 4x actual
 export const FORGE_GAME_3D_ACU_CHARGE = 1200;   // HOLD (3D estimate) — settled to metered 4x actual
 export const FORGE_MIN_CHARGE = 40;             // metered floor when the Code Agent ran
+/** A 3D build smaller than this is a stub, however well-formed. Dino Island,
+ *  the leanest complete game on the runtime, is 10,975 bytes. */
+export const MIN_3D_BYTES = 9_500;
 export const ENGINE_BUILD_CHARGE = 60;          // flat platform charge when only the engine built
 export const ENHANCE_HOLD = 500;                // HOLD per enhance pass — settled to metered 4x actual
 export const GROWTH_HOLD = 60;                  // HOLD per growth tool — settled to metered 4x actual
@@ -611,32 +614,29 @@ export async function generateGameHtml(
   const claude: Cand = { name: "claude", enabled: !!process.env.ANTHROPIC_API_KEY, run: () => claudeGenerate(system, userMsg, claudeMax) };
   const gemini: Cand = { name: "gemini", enabled: !!process.env.GEMINI_API_KEY, run: () => geminiGenerate(system, userMsg, geminiMax) };
   const openai: Cand = { name: "openai", enabled: !!process.env.OPENAI_API_KEY, run: () => openaiGenerate(system, userMsg, openaiMax) };
-  // Order comes from the live forge log, not from assumptions about model quality.
+  // Order comes from the live forge log and the full-size probe, never from
+  // assumptions about model quality. Measured by /api/forge-selftest, 18 Aug 2026,
+  // one full-size 3D generation per provider:
   //
-  // It was [openai, claude, gemini] on this evidence, recorded 2 Aug 2026:
-  //   openai  — completed every full-size build, ~40s
-  //   claude  — truncated at this size ("no closing </html>"), ~190s wasted first
-  //   gemini  — HTTP 403 "project has been denied access" (account-side)
+  //   gemini  — 39.2s, 35,973 bytes, 9,520 output tokens, canvas present  OK
+  //   openai  — 24.6s,  8,411 bytes, 1,809 output tokens, canvas present  OK
+  //   claude  — 159.1s, truncated ("no closing </html>")                  FAIL
   //
-  // BOTH of those failures have since been invalidated, and re-checked 18 Aug:
+  // openai "succeeds" but writes 8,411 bytes. The two hand-built reference games
+  // on this runtime are 10,975 (Dino Island) and 15,862 (WonderVerse), so its
+  // build is smaller than the leanest complete game the platform has — a stub
+  // that boots the engine, passes every structural gate, and gives the player
+  // almost nothing. That is what shipped from every recorded forge, and it is
+  // what "the forge produces empty games" actually was.
   //
-  // 1. Claude truncated because on 2 Aug there was NO JOSHRIX3D runtime: the
-  //    prompt asked for 800-1100 lines and the model had to write the whole
-  //    renderer, which overran even 18k output tokens. The runtime landed 9 Aug
-  //    and the target is now 260-420 lines — roughly a third of the output for
-  //    the same game. The condition that demoted Claude no longer exists.
-  // 2. Gemini's 403 is resolved; /api/provider-selftest reports all three
-  //    healthy (anthropic 2.2s, gemini 3.9s, openai 2.0s).
+  // So 3D leads with GEMINI: the only provider producing a complete full-size
+  // build. openai follows as a fast fallback, claude last because it still
+  // overruns 18k output tokens on a prompt Gemini answers in 9.5k.
   //
-  // So 3D — the premium lane, and the hardest generation — now leads with
-  // claude-sonnet-5, the strongest coder available here, which is what the
-  // comment above always claimed and the code never did. openai (gpt-4o) stays
-  // first for 2D, where it has completed every recorded build, and remains the
-  // immediate fallback for 3D so a Claude failure costs one retry, not a forge.
-  //
-  // If 3D forges start truncating again, move openai back to the front and say
-  // so here with the date and the log entry that showed it.
-  const chain = is3d ? [claude, openai, gemini] : [openai, claude, gemini];
+  // (An earlier commit today put claude first, reasoning that the JOSHRIX3D
+  // runtime had made games short enough to stop the truncation. The probe above
+  // disproved that within the hour. Evidence, then order — not the reverse.)
+  const chain = is3d ? [gemini, openai, claude] : [openai, gemini, claude];
   const errors: string[] = [];
   // Whole-chain time budget: the serverless function dies hard at 300s, and a
   // reply must still be built, settled, and persisted after generation. Skip
@@ -669,6 +669,19 @@ export async function generateGameHtml(
         if (!usesEngine(r.html) &&
             !/appendChild\s*\(\s*[\w.]*(renderer|\w+)\s*\.\s*domElement\s*\)|appendChild\s*\(\s*canvas\s*\)/.test(r.html)) {
           errors.push(c.name + ": never appends renderer.domElement — the page would stay blank");
+          if (!subFloor) subFloor = { html: r.html, provider: c.name, usage: r.usage };
+          continue;
+        }
+        // SUBSTANCE FLOOR. Every structural gate below is satisfiable by a stub:
+        // openai's probe build appended a canvas, booted the runtime and called
+        // the required methods in 8,411 bytes — and was still nothing to play.
+        // Calibrated against the leanest complete game on this runtime, Dino
+        // Island at 10,975 bytes; 9,500 keeps a genuinely concise build while
+        // rejecting one that is a third the size of a real game.
+        // Demoted, not discarded: it becomes the sub-floor fallback, so if every
+        // provider comes in short the best of them still ships.
+        if (r.html.length < MIN_3D_BYTES) {
+          errors.push(c.name + `: only ${r.html.length} bytes — below the ${MIN_3D_BYTES}-byte substance floor for a 3D game`);
           if (!subFloor) subFloor = { html: r.html, provider: c.name, usage: r.usage };
           continue;
         }
