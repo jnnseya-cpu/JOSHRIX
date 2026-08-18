@@ -1,25 +1,21 @@
 /**
  * POST /api/wallet-init — server-side wallet bootstrap (Build 2: real ACU enforcement).
  * Body: { walletId?, email?, name?, action? }
- *  - no walletId          → creates a fresh TESTER wallet funded with FREE_GRANT_ACU
+ *  - no walletId          → creates a fresh TESTER wallet funded with 2,000 ACUs
  *  - walletId             → returns that wallet's live balance (+refreshes identity)
- *  - action: "refill"     → tester wallets only, hardened: only below FREE_REFILL_FLOOR,
- *                           max once per 6 hours, a LIFETIME cap of
- *                           FREE_REFILL_LIFETIME_MAX, never lowers a balance, and
- *                           never on a wallet that has ever purchased
+ *  - action: "refill"     → tester wallets only, hardened: only when balance < 1500,
+ *                           max once per 6 hours, never lowers a balance, and never
+ *                           on a wallet that has ever purchased
  *  - action: "delete"     → tester wallets only; purchased accounts must contact
  *                           support (refund flow first — see refunds policy)
  * Without DATABASE_URL responds { mode: "no_db" } so the client keeps its local sim.
  */
 import { randomUUID } from "node:crypto";
-import { getDb, ensureGameSchema, createWallet, getWallet, getWalletByEmail, refillTesterWallet, refillState, deleteWallet, updateWalletIdentity } from "./_ledger";
+import { getDb, ensureGameSchema, createWallet, getWallet, getWalletByEmail, refillTesterWallet, deleteWallet, updateWalletIdentity } from "./_ledger";
 import { normalizeEmail, clientIp, rateLimit, tooMany, claimNonce, recordSecurityEvent } from "./_guard";
 import { verifyHuman, isDisposableEmail, humanVerifyConfigured } from "./_human";
-import { FREE_GRANT_ACU, FREE_REFILL_FLOOR, FREE_REFILL_LIFETIME_MAX } from "../shared/payments";
 
-/** Kept as a named re-export so existing callers and tests do not break, but the
- *  value now has ONE definition, next to the plans it has to stay consistent with. */
-export const TESTER_GRANT_ACU = FREE_GRANT_ACU;
+export const TESTER_GRANT_ACU = 2000;
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -54,25 +50,9 @@ export default async function handler(req: any, res: any) {
 
     if (action === "refill") {
       if (!walletId) return res.status(400).json({ error: "walletId required for refill" });
-      const balance = await refillTesterWallet(
-        sql, walletId, FREE_GRANT_ACU, FREE_REFILL_FLOOR, FREE_REFILL_LIFETIME_MAX);
+      const balance = await refillTesterWallet(sql, walletId, TESTER_GRANT_ACU);
       if (balance === null) {
-        // Say WHICH limit was hit. "Refused" with no reason reads as a bug, and
-        // a creator who has simply exhausted the trial needs to be told that
-        // plainly so they can decide to pay.
-        const st = await refillState(sql, walletId);
-        const why = !st ? "That wallet does not exist."
-          : st.category !== "tester" ? "Refill is for free trial wallets only."
-          : st.refill_count >= FREE_REFILL_LIFETIME_MAX
-            ? `The free trial is finished — it includes ${FREE_REFILL_LIFETIME_MAX} refills and all of them have been used. Choose a plan or top up at /pricing.`
-          : st.balance >= FREE_REFILL_FLOOR
-            ? `Refill unlocks below ${FREE_REFILL_FLOOR.toLocaleString()} ACUs; this wallet still holds ${Number(st.balance).toLocaleString()}.`
-          : "Refill is available at most once every 6 hours.";
-        return res.status(403).json({
-          error: why,
-          refillsUsed: st?.refill_count ?? null,
-          refillsAllowed: FREE_REFILL_LIFETIME_MAX,
-        });
+        return res.status(403).json({ error: "Refill is for tester wallets only, when the balance is under 1,500, at most once every 6 hours." });
       }
       return res.status(200).json({ mode: "live", walletId, balance, category: "tester", refilled: true });
     }

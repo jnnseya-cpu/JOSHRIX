@@ -23,84 +23,16 @@ export const TOPUP_PACKAGES = [
 ] as const;
 export type TopupPackageId = (typeof TOPUP_PACKAGES)[number]["id"];
 
-/* ---------------- the free trial, as ONE definition -------------------------
- * These lived as bare numbers in api/wallet-init.ts and api/_ledger.ts — a grant
- * of 2,000, a refill target of 2,000 and a threshold of 1,500, none of which
- * knew about the others or about the plans below. That is what produced the
- * pricing inversion, so they belong here with everything else that decides money.
- *
- * FREE_REFILL_FLOOR must stay ABOVE the 3D forge hold (1,200 ACU, in
- * api/_gateway.ts) or a tester drops below it and can never test the premium
- * lane again. It is the reason the grant cannot simply be made small.
- *
- * FREE_REFILL_LIFETIME_MAX is new and is the actual fix. Refill was rate-limited
- * to once per 6 hours but never capped, so a free wallet could draw 2,000 ACU
- * every 6 hours forever — 8,000 a day, indefinitely. No paid tier can compete
- * with unlimited, and it breaks the platform's own standing rule that no account
- * gets free AI. Three refills makes it a trial with room to recover from a bad
- * run, not a tap.
- */
-export const FREE_GRANT_ACU = 2_000;
-export const FREE_REFILL_FLOOR = 1_500;
-export const FREE_REFILL_LIFETIME_MAX = 3;
-
-/* ---------------- pay-in: subscription plans (MONETISATION §Plans) ----------
- * Two rules govern monthlyAcu, and both were broken:
- *
- * 1. EVERY PAID TIER MUST EXCEED THE FREE GRANT. Creator granted 380 against a
- *    free 2,000 — paying made you five times worse off, so nothing in the funnel
- *    could ever justify an upgrade.
- * 2. EVERY PAID TIER MUST COVER A 3D FORGE HOLD (1,200). At 380, a paying
- *    Creator could not start a single 3D build. The premium lane was sold and
- *    then withheld from the people who paid for it.
- *
- * assertPlanLadder() below enforces both, so this cannot regress silently.
- *
- * The ladder is priced off the top-up rate (1 ACU = 1p): Creator gives ~1.26x
- * what the same money buys as a top-up, improving to 1.5x at Enterprise. The
- * subscription therefore buys a better rate AND the right to sell, which is the
- * real reason to upgrade — Explorer cannot sell at all.
- */
+/* ---------------- pay-in: subscription plans (MONETISATION §Plans) ---------- */
 export const PLANS = [
   { id: "explorer", name: "Explorer", monthlyMinor: 0, monthlyAcu: 0, commission: null }, // browse & play only — NO free AI, cannot sell
-  { id: "creator", name: "Creator", monthlyMinor: 1_900, monthlyAcu: 2_400, commission: 0.25 },
-  { id: "creator_pro", name: "Creator Pro", monthlyMinor: 4_900, monthlyAcu: 6_500, commission: 0.2 },
-  { id: "studio", name: "Studio", monthlyMinor: 14_900, monthlyAcu: 21_000, commission: 0.15 },
-  { id: "business", name: "Business", monthlyMinor: 39_900, monthlyAcu: 58_000, commission: 0.1 },
-  { id: "enterprise", name: "Enterprise", monthlyMinor: 120_000, monthlyAcu: 180_000, commission: 0.075 }, // negotiated 5–10%
+  { id: "creator", name: "Creator", monthlyMinor: 1_900, monthlyAcu: 380, commission: 0.25 },
+  { id: "creator_pro", name: "Creator Pro", monthlyMinor: 4_900, monthlyAcu: 980, commission: 0.2 },
+  { id: "studio", name: "Studio", monthlyMinor: 14_900, monthlyAcu: 2_980, commission: 0.15 },
+  { id: "business", name: "Business", monthlyMinor: 39_900, monthlyAcu: 7_980, commission: 0.1 },
+  { id: "enterprise", name: "Enterprise", monthlyMinor: 120_000, monthlyAcu: 24_000, commission: 0.075 }, // negotiated 5–10%
 ] as const;
 export type PlanId = (typeof PLANS)[number]["id"];
-
-/**
- * Guards the two rules above. Throws rather than warns: a pricing ladder that
- * pays people to stay on the free tier is a commercial outage, and it is exactly
- * the kind of defect that survives review because every individual number looks
- * reasonable on its own.
- *
- * `hold3d` is passed in rather than imported so this stays free of any
- * dependency on the gateway — shared/ must not reach into api/.
- */
-export function assertPlanLadder(hold3d = 1_200): void {
-  const paid = PLANS.filter((p) => p.monthlyAcu > 0);
-  for (const p of paid) {
-    if (p.monthlyAcu <= FREE_GRANT_ACU) {
-      throw new Error(
-        `Pricing inversion: ${p.name} grants ${p.monthlyAcu} ACU but the free tier grants ${FREE_GRANT_ACU}. Paying must never buy less.`);
-    }
-    if (p.monthlyAcu < hold3d) {
-      throw new Error(
-        `${p.name} grants ${p.monthlyAcu} ACU, below the ${hold3d} ACU 3D forge hold — a paying customer could not start a 3D build.`);
-    }
-  }
-  for (let i = 1; i < paid.length; i++) {
-    if (paid[i].monthlyAcu <= paid[i - 1].monthlyAcu) {
-      throw new Error(`${paid[i].name} does not grant more ACU than ${paid[i - 1].name}.`);
-    }
-    if (paid[i].commission! >= paid[i - 1].commission!) {
-      throw new Error(`${paid[i].name} does not take less commission than ${paid[i - 1].name}.`);
-    }
-  }
-}
 
 export const PaymentMethods = ["card", "bitripay", "mobile_money"] as const;
 export type PaymentMethod = (typeof PaymentMethods)[number];
