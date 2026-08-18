@@ -184,10 +184,16 @@ export async function ensureGameSchema(sql: Sql) {
   await sql`CREATE TABLE IF NOT EXISTS wallets (
     id text PRIMARY KEY,
     balance bigint NOT NULL DEFAULT 0,
-    category text NOT NULL DEFAULT 'tester',
+    category text NOT NULL DEFAULT 'standard',
     email text,
     created_at timestamptz NOT NULL DEFAULT now()
   )`;
+  // NO FREE AI. The column default used to be 'tester', which made every public
+  // signup a tester — the one category entitled to free refills. Existing rows
+  // are left exactly as they are (reclassifying live wallets is an admin
+  // decision, not a migration's), but nothing new is born entitled. Keep this
+  // literal in step with DEFAULT_WALLET_CATEGORY in shared/payments.ts.
+  await sql`ALTER TABLE wallets ALTER COLUMN category SET DEFAULT 'standard'`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT 'explorer'`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS name text`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS last_refill_at timestamptz`;
@@ -253,21 +259,37 @@ export async function updateWalletIdentity(sql: Sql, id: string, opts: { name?: 
 }
 
 /**
- * Refill: TESTER wallets only, and hardened against free-AI farming —
- * only when below a 3D forge hold (< 1500, so a tester is never trapped
- * unable to test the premium lane), at most once per 6 hours, never lowers
- * a balance (GREATEST), and never touches wallets that have ever purchased.
- * The abuse cap is unchanged by the threshold: a refill only tops UP to
- * 2000, so a tester wallet can never spend more than 2000 ACUs per 6 hours.
+ * Refill: TESTER wallets only — and a tester is designated by an admin holding
+ * MODERATION_KEY, never by signing up, which is what keeps free AI closed to
+ * everyone else. Tops UP to `to`, never lowers a balance (GREATEST), refuses a
+ * wallet already at the ceiling, and can never touch one that has purchased.
  * Returns the new balance, or null when refused.
+ *
+ * Persistence only — the ceiling and cooldown are POLICY, passed in from
+ * shared/payments, so this layer never becomes a second place money rules live.
  */
-export async function refillTesterWallet(sql: Sql, id: string, to = 2000): Promise<number | null> {
+export async function refillTesterWallet(sql: Sql, id: string, to: number, cooldownSeconds: number): Promise<number | null> {
+  // Every guard is in the WHERE clause, so the category check and the top-up are
+  // one atomic statement — two concurrent refills cannot both see 'tester' and
+  // both credit. GREATEST means a refill can only ever raise a balance.
   const rows = (await sql`
     UPDATE wallets SET balance = GREATEST(balance, ${to}), last_refill_at = now()
-    WHERE id = ${id} AND category = 'tester' AND balance < 1500
-      AND (last_refill_at IS NULL OR last_refill_at < now() - interval '6 hours')
+    WHERE id = ${id} AND category = 'tester' AND balance < ${to}
+      AND (last_refill_at IS NULL OR last_refill_at < now() - make_interval(secs => ${cooldownSeconds}))
     RETURNING balance`) as Array<{ balance: number }>;
   return rows.length ? Number(rows[0].balance) : null;
+}
+
+/** Designate (or gate) an account; `category` is validated at the endpoint, as
+ *  with setWalletPlan. Returns the new category, or null if the wallet is missing
+ *  or PURCHASED — a wallet that has paid is terminal, so no admin action can turn
+ *  a real customer into a free-refill tester. */
+export async function setWalletCategory(sql: Sql, id: string, category: string): Promise<string | null> {
+  const rows = (await sql`
+    UPDATE wallets SET category = ${category}
+    WHERE id = ${id} AND category <> 'purchased'
+    RETURNING category`) as Array<{ category: string }>;
+  return rows.length ? String(rows[0].category) : null;
 }
 
 /** Stripe settlement marks a wallet as purchased — refill/delete lock out forever. */

@@ -55,19 +55,21 @@ delete process.env.FORGE_DISABLED;
 res=mkRes(); await forge({method:'POST',headers:{'x-forwarded-for':'7.7.7.7'},body:{prompt:'a game about testing',walletId:'w1'},query:{}},res);
 t('unsetting it restores service', res.code!==503, `code ${res.code}`);
 
-console.log('\n== PHASE 20: +TAG / GMAIL-DOT FREE-ACU BYPASS ==');
+console.log('\n== PHASE 20: +TAG / GMAIL-DOT IDENTITY BYPASS ==');
 store.clear(); wallets.clear();
 const wi=require('./build/api/wallet-init.js').default;
 const post=async b=>{const r=mkRes();await wi({method:'POST',headers:{'x-forwarded-for':'8.8.8.8'},body:b,query:{}},r);return r.body;};
 const first=await post({email:'alice@gmail.com'});
-t('first grant funded', first.balance===2000);
-let extra=0;
+// Signups are unfunded now, so the thing worth farming is WALLETS, not credit:
+// duplicates would split one creator's games, balance and receipts in two.
+t('a public signup is created unfunded', first.balance===0, JSON.stringify(first));
+let minted=0;
 for(const v of ['alice+1@gmail.com','alice+spam@gmail.com','a.l.i.c.e@gmail.com','ALICE@GMAIL.COM','alice+9@googlemail.com']){
   const b=await post({email:v});
-  if(b.created && b.balance>0) extra+=b.balance;
-  t(`${v.padEnd(26)} -> same wallet, no new grant`, b.walletId===first.walletId, `got ${b.walletId} bal ${b.balance}`);
+  if(b.created) minted++;
+  t(`${v.padEnd(26)} -> same wallet, no new account`, b.walletId===first.walletId, `got ${b.walletId} bal ${b.balance}`);
 }
-t('total extra ACUs farmed via tag variants = 0', extra===0, 'farmed '+extra);
+t('total extra wallets minted via tag variants = 0', minted===0, 'minted '+minted);
 console.log(`\n  ${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);
 })();

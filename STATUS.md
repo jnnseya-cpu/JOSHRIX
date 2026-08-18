@@ -3,7 +3,7 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-08-18 (forge diagnosis)
+Last updated: 2026-08-18 (tester accounts vs. gated accounts)
 
 ---
 
@@ -11,6 +11,31 @@ Last updated: 2026-08-18 (forge diagnosis)
 
 `GO-TO-MARKET.md` is the launch plan: **Nairobi**, 18 Aug – 15 Nov 2026, £2,650 lean /
 £6,100 with an agency. It is gated on the forge working — items 1 and 2 below.
+
+## Testers are funded, everyone else is gated — shipped 18 Aug
+
+Signup used to hand every verified email **2,000 real ACUs** — £20 of spendable AI
+credit per address, with a self-serve refill on top. That was a free tier nobody
+decided to build, and it contradicted the standing rule. Wallets now carry one of
+three categories, defined once in `shared/payments.ts`:
+
+| | who sets it | credit |
+|---|---|---|
+| `standard` | public signup | **zero** — tops up to forge |
+| `tester` | an admin, via `/admin` → "Make tester" | refills itself to `TESTER_CEILING_ACU` (20,000) |
+| `purchased` | verified Stripe settlement | **terminal** — can never be reclassified |
+
+The point of the terminal rule: nobody turns a paying customer into a free-refill
+account, by accident or otherwise. The refill's guards are all in one conditional
+UPDATE (tester · below the ceiling · past the cooldown), so two concurrent refills
+cannot both credit. 29 assertions in `tests/t6-freeacu.js`, plus 10 in a real
+browser in `tests/t22-tester-designation.mjs`.
+
+**Existing wallets were deliberately NOT migrated.** Every row created before this
+is still `tester`, because reclassifying live accounts is a decision, not a
+migration. Open `/admin`, load the wallet list, and press "Revoke tester" on
+everyone who is not actually a tester — the column default now creates gated
+accounts, so this is a one-time pass.
 
 ## Charge on accept — shipped 18 Aug
 
@@ -66,7 +91,8 @@ provider while the game path had three). 20 assertions in `tests/t20-blueprint-j
 | # | Thing | Detail |
 |---|---|---|
 | 1 | **Upload the asset packs** | Kenney City Kit → `_incoming/` as a zip. Quaternius Characters/Monsters/Animals → `_incoming/characters/<pack>/` as folders, taking the **glTF** folder. Full steps in `frontend/assets/models3d/_incoming/characters/README.md`. |
-| 2 | **Forge WonderVerse in 3D on the live site** | The sea and sky bugs are fixed and deployed. I cannot run a forge — no provider keys here, and the proxy blocks joshrix.com. |
+| 2 | **Forge WonderVerse in 3D on the live site** | The sea and sky bugs are fixed and deployed. I cannot run a forge — no provider keys here, and the proxy blocks joshrix.com. Your own wallet predates the category change so it is still `tester`: press **refill** on `/wallet` for 20,000 ACUs, no admin key needed. Then send the `/api/forge-log` line — `build`, `provider`, `bytes`. |
+| 2b | **Gate the legacy wallets** | Every account created before 18 Aug is still `tester` and can refill itself for free. One pass through `/admin` → "Revoke tester" on everyone who is not a real tester. |
 | 3 | **Set `NEWSLETTER_SECRET` in Vercel** | Any long random string. Without it the unsubscribe link still works, but the token is not signed, so anyone could unsubscribe another address. |
 | 4 | **Confirm the newsletter send** | It is live but has never sent to a real inbox. Run `GET /api/newsletter?dry=1` with `x-moderation-key` first — it reports the audience size and sends nothing. |
 | 5 | **Rotate the Neon password** | `npg_fK1p7jxceMgo` was pasted into chat earlier. Still outstanding. |

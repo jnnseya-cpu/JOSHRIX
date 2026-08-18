@@ -177,7 +177,7 @@
 <div class="reveal" id="grantPanel" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
   <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">
     <button class="btn btn-primary btn-sm" id="btnLoadWallets">⟳ Load Wallets</button>
-    <span id="walletsHint" style="font-size:.85rem;color:var(--muted,#9d9db3)">Every tester gets a wallet automatically when they open the Studio — their wallet ID is shown on their Wallet page.</span>
+    <span id="walletsHint" style="font-size:.85rem;color:var(--muted,#9d9db3)">Everyone gets a wallet when they open the Studio, and it starts empty — public accounts top up to forge. "Make tester" is the only way to grant free refills; a wallet that has purchased is locked and cannot be reclassified.</span>
   </div>
   <input id="walletFilter" placeholder="🔍 Filter loaded wallets by name, email, or ID…" style="display:none;width:100%;max-width:420px;margin-top:1rem;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.55rem .8rem;color:inherit;font-size:.85rem">
   <div id="walletsList" style="display:grid;gap:.6rem;margin-top:1rem"></div>
@@ -215,7 +215,10 @@
           row.style.cssText = 'display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.6rem .9rem';
           var PLAN_IDS = ['explorer','creator','creator_pro','studio','business','enterprise'];
           row.innerHTML = '<b style="min-width:110px">' + esc(w.name || (w.email ? w.email.split('@')[0] : 'Unnamed')) + '</b>'
-            + '<span style="font-size:.78rem;color:var(--muted,#9d9db3)">' + esc(w.category) + (w.email ? ' · ' + esc(w.email) : '') + ' · <code style="color:var(--cyan,#22D3EE)">' + esc(w.id) + '</code></span>'
+            + '<span style="font-size:.78rem;color:var(--muted,#9d9db3)"><b class="wcatname">' + esc(w.category) + '</b>' + (w.email ? ' · ' + esc(w.email) : '') + ' · <code style="color:var(--cyan,#22D3EE)">' + esc(w.id) + '</code></span>'
+            + (w.category === 'purchased'
+                ? '<span style="font-size:.72rem;color:var(--muted,#9d9db3);border:1px solid var(--stroke,#26263a);border-radius:999px;padding:.28rem .6rem">💳 paid · locked</span>'
+                : '<button class="btn btn-ghost btn-sm wcat">' + (w.category === 'tester' ? 'Revoke tester' : 'Make tester') + '</button>')
             + '<select class="wplan" style="background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.35rem .5rem;color:inherit;font-size:.78rem">'
             + PLAN_IDS.map(function(p){ return '<option value="' + p + '"' + ((w.plan || 'explorer') === p ? ' selected' : '') + '>' + p.replace('_', ' ') + '</option>'; }).join('') + '</select>'
             + '<button class="btn btn-ghost btn-sm wsetplan">Set plan</button>'
@@ -228,6 +231,26 @@
               row.querySelector('.wbal').textContent = Number(j.balance).toLocaleString() + ' ACU';
               b.textContent = '✓ granted'; setTimeout(function(){ b.textContent = '＋2,000'; b.disabled = false; }, 1500);
             });
+          });
+          // Tester designation is the ONLY door to free AI credit, so it is an
+          // explicit decision per account, never a side effect of signing up.
+          var catBtn = row.querySelector('.wcat');
+          if (catBtn) catBtn.addEventListener('click', function(){
+            var isTester = row.querySelector('.wcatname').textContent === 'tester';
+            var next = isTester ? 'standard' : 'tester';
+            if (!confirm(isTester
+              ? 'Gate this account?\n\nIt loses free refills and must top up like every other customer.'
+              : 'Make this account a tester?\n\nIt can refill itself to the tester ceiling for free, spending real provider money, until you revoke it.')) return;
+            catBtn.disabled = true;
+            fetch(API + '/api/admin-wallets', { method:'POST', headers: Object.assign({ 'Content-Type':'application/json' }, keyHdr()),
+              body: JSON.stringify({ walletId: w.id, category: next }) })
+              .then(function(r){ return r.json().then(function(j){ return { ok:r.ok, j:j }; }); })
+              .then(function(res2){
+                catBtn.disabled = false;
+                if (!res2.ok) { alert(res2.j.error || 'failed'); return; }
+                row.querySelector('.wcatname').textContent = res2.j.category;
+                catBtn.textContent = res2.j.category === 'tester' ? 'Revoke tester' : 'Make tester';
+              }).catch(function(){ catBtn.disabled = false; alert('Could not reach the server'); });
           });
           row.querySelector('.wsetplan').addEventListener('click', function(){
             var b = row.querySelector('.wsetplan');

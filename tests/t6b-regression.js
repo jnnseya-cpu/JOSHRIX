@@ -23,11 +23,11 @@ t('anonymous wallets are still issued (flow unbroken)', new Set(ids).size===20);
 
 wallets.clear();
 const first=await post({email:'creator@example.com', name:'Creator'});
-t('first signed-in request funds the wallet', first.balance===2000, JSON.stringify(first));
-let ids2=[first.walletId], tot2=0;
-for(let i=0;i<20;i++){const b=await post({email:'creator@example.com'}); ids2.push(b.walletId); tot2+=b.created?b.balance:0;}
-t('20 repeats on the SAME email create no new funded wallets', new Set(ids2).size===1, 'distinct wallets: '+new Set(ids2).size);
-t('no extra ACUs granted on repeat', tot2===0, 'extra granted '+tot2);
+t('first signed-in request creates a wallet with NO credit', first.balance===0 && !!first.walletId, JSON.stringify(first));
+let ids2=[first.walletId], minted=0;
+for(let i=0;i<20;i++){const b=await post({email:'creator@example.com'}); ids2.push(b.walletId); if(b.created) minted++;}
+t('20 repeats on the SAME email create no second wallet', new Set(ids2).size===1, 'distinct wallets: '+new Set(ids2).size);
+t('no repeat mints a new account', minted===0, 'minted '+minted);
 
 console.log('\n  case/whitespace variants must not bypass the cap:');
 for (const v of ['Creator@Example.com','  creator@example.com  ','CREATOR@EXAMPLE.COM']) {
@@ -39,9 +39,10 @@ for (const bad of ['notanemail','a@b','@x.com','x@.com','','   ', 'a@b.c'.repeat
   const b=await post({email:bad});
   t(`${JSON.stringify(String(bad).slice(0,18))} -> 0 ACUs`, b.balance===0, 'granted '+b.balance);
 }
-console.log('\n  a genuinely different creator still gets their grant:');
+console.log('\n  a genuinely different creator still gets their own account:');
 const other=await post({email:'second@example.com'});
-t('distinct email funded', other.balance===2000 && other.walletId!==first.walletId);
+t('distinct email -> distinct wallet, also unfunded',
+  other.balance===0 && !!other.walletId && other.walletId!==first.walletId, JSON.stringify(other));
 console.log(`\n  ${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);
 })();

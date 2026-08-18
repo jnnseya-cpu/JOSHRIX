@@ -214,7 +214,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
     <span class="word">JOSHRIX<em>STUDIO</em></span>
   </a>
   <div class="nav-right">
-    <span class="acu">ACU <b id="acuBal">2,000</b></span>
+    <span class="acu">ACU <b id="acuBal">0</b></span>
     <a class="back" href="index.html">← Home</a>
   </div>
 </nav>
@@ -482,13 +482,17 @@ const jxTrack = (event, props) => {
     }).catch(() => {});
   } catch (e) { /* telemetry must never break the studio */ }
 };
-/* account wallet: tester accounts forge with their REAL balance — spends persist
-   to the wallet and hard-stop at zero (never a negative balance) */
+/* account wallet: a device-mode profile forges against its local balance — spends
+   persist to the wallet and hard-stop at zero (never a negative balance). Once a
+   server wallet answers below, the server balance replaces this entirely. */
 const WALLET = (() => {
   try { const p = JSON.parse(localStorage.getItem('jx.profile') || '{}'); return p.testerAcuGranted ? p : null; }
   catch (e) { return null; }
 })();
-let acu = WALLET ? (WALLET.acu || 0) : 2000;
+/* Start at ZERO, never at an assumed balance. The server answers a moment later
+   with the real figure; showing a number first would promise credit the account
+   may not have, and the forge would refuse it anyway. */
+let acu = WALLET ? (WALLET.acu || 0) : 0;
 $('acuBal').textContent = acu.toLocaleString();
 /* server wallet (Build 2): once DATABASE_URL is live, the REAL balance lives on the
    server — every AI call is debited there and returns balanceAfter. The local sim
@@ -507,7 +511,7 @@ walletReady = (async () => {
     const r = await fetch(base + '/api/wallet-init', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ walletId: prof.serverWalletId || undefined, email: prof.email || undefined, name: prof.displayName || prof.handle || undefined,
-        // only a brand-new wallet carries the free grant, so only that path pays the CPU cost
+        // only wallet CREATION runs the human check, so only that path pays the CPU cost
         human: prof.serverWalletId ? undefined : (window.joshrixHuman ? await window.joshrixHuman(base) : undefined) }),
       signal: AbortSignal.timeout(10000)
     });
@@ -577,7 +581,7 @@ const needAcu = (cost, hintEl) => {
 
 /* ---------- Stage 1: blueprint ---------- */
 let refining = false;   // refine passes are delta-priced, never a full re-charge
-let forgeAcu0 = 2000;   // ACU balance when the current forge run started
+let forgeAcu0 = 0;      // ACU balance when the current forge run started (set at launch)
 let lastBp = { title: 'Penalty King', summary: null, genre: [] };  // the user's generated blueprint follows them through the flow
 let realBuild = null, realBuildPromise = null, realBuildErr = null;  // the Code Agent's actual generated game
 

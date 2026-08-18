@@ -263,18 +263,11 @@ export const FEATURES: Feature[] = [
     ],
     href: "/studio",
   },
-  {
-    id: "free-to-start",
-    name: "Start free, and the free tier is real",
-    group: "Economics",
-    keywords: ["free AI game maker", "make a game free no credit card"],
-    proof: [
-      "A verified account starts with 2,000 ACUs — roughly 60 complete 2D games — with no card required.",
-      "One grant per person, which is why the starter credit can be that large.",
-    ],
-    href: "/pricing",
-  },
 ];
+// REMOVED: "Start free, and the free tier is real". Signup no longer grants
+// 2,000 ACUs — public accounts are gated and top up, and free credit exists only
+// for accounts an admin designates as testers. The honest version of the claim
+// people search for ("do I pay for a bad build?") is `failed-builds-refund`.
 
 /** Blog topics derived from real capabilities, so an article always has
  *  something true and specific to say. */

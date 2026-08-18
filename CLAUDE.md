@@ -22,6 +22,7 @@ Update it when something lands.
 | Concern | Lives in |
 |---|---|
 | Plans, prices, commission | `shared/payments.ts` (`PLANS`, `commission` as a fraction) |
+| Who may hold unpaid AI credit | `shared/payments.ts` (`WALLET_CATEGORIES`, `TESTER_CEILING_ACU`) |
 | Ledger, wallets, schema | `api/_ledger.ts` |
 | AI calls, prompts, quality gates | `api/_gateway.ts` |
 | Content security | `api/_security.ts` |
@@ -52,9 +53,13 @@ quaternius.com, poly.pizza or mixamo.com (proxy policy). It **can**: clone/push
 GitHub, and run Playwright + Chromium, so anything servable locally can be rendered
 and screenshotted. State these limits plainly instead of implying verification.
 
-**Standing rules.** No free AI — every account pays · `MODERATION_KEY` is the only
-admin credential and is never shared or exposed · never commit secrets · branch is
-`claude/joshrix-studio-branding-hzl94h`.
+**Standing rules.** **No free AI, with one carve-out.** A public signup is
+`standard` and starts at **zero ACUs** — it tops up to forge. Free credit exists only
+for wallets an admin designates `tester` (`/admin` → "Make tester", or
+`POST /api/admin-wallets {walletId, category}`); a tester refills itself to
+`TESTER_CEILING_ACU`. `purchased` is terminal — a wallet that has paid can never be
+reclassified. · `MODERATION_KEY` is the only admin credential and is never shared or
+exposed · never commit secrets · branch is `claude/joshrix-studio-branding-hzl94h`.
 
 ---
 

@@ -34,6 +34,38 @@ export const PLANS = [
 ] as const;
 export type PlanId = (typeof PLANS)[number]["id"];
 
+/* ---------------- who may hold AI credit without paying for it -------------
+ * NO FREE AI is the standing rule, with exactly one carve-out: accounts WE
+ * designate as testers. The distinction is the wallet category, and it is why
+ * the category must never be self-selected:
+ *
+ *   standard   public signup. Gated — zero credit until the account tops up.
+ *   tester     designated by an admin holding MODERATION_KEY. Funded freely,
+ *              because the only way to become one is for us to say so.
+ *   purchased  set by verified Stripe settlement. TERMINAL: a wallet that has
+ *              ever paid can never be moved back, so nobody converts a real
+ *              account into a free-refill account.
+ */
+export const WALLET_CATEGORIES = ["standard", "tester", "purchased"] as const;
+export type WalletCategory = (typeof WALLET_CATEGORIES)[number];
+
+/** What a public signup gets. Gated by design — see WALLET_CATEGORIES. */
+export const DEFAULT_WALLET_CATEGORY: WalletCategory = "standard";
+
+/** Categories an admin may assign. `purchased` is deliberately absent: it is
+ *  Stripe's to set, and hand-assigning it would let an admin silently strip a
+ *  tester of their refill, or fake a payment that never happened. */
+export const ASSIGNABLE_WALLET_CATEGORIES = ["standard", "tester"] as const;
+
+/** A tester must never stop mid-session for credit, so the ceiling is generous:
+ *  20,000 ACUs is ~80 3D forges at the 250-ACU hold. It costs nothing to raise
+ *  because testers are admin-designated, not self-served. */
+export const TESTER_CEILING_ACU = 20_000;
+
+/** Anti-runaway only — a looping client must not hammer the refill endpoint.
+ *  A tester who genuinely spends the ceiling tops back up a minute later. */
+export const TESTER_REFILL_COOLDOWN_SECONDS = 60;
+
 export const PaymentMethods = ["card", "bitripay", "mobile_money"] as const;
 export type PaymentMethod = (typeof PaymentMethods)[number];
 
