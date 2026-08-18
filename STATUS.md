@@ -3,7 +3,7 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-08-18
+Last updated: 2026-08-18 (forge diagnosis)
 
 ---
 
@@ -11,6 +11,21 @@ Last updated: 2026-08-18
 
 `GO-TO-MARKET.md` is the launch plan: **Nairobi**, 18 Aug – 15 Nov 2026, £2,650 lean /
 £6,100 with an agency. It is gated on the forge working — items 1 and 2 below.
+
+## The forge diagnosis — 18 Aug, from /api/forge-log + /api/provider-selftest
+
+- **No forge has run since 12 Aug 16:03.** The sea/sky fixes landed 14 Aug, so the
+  runtime that painted an ocean over every sky was live for every build Justin ever judged.
+- **All three providers are healthy** (anthropic 2.2s, gemini 3.9s, openai 2.0s). The
+  Gemini 403 is resolved.
+- **Every successful build in the log shipped from openai/gpt-4o.** The chain led with
+  openai because on 2 Aug Claude truncated and Gemini was 403 — but Claude truncated
+  because there was no runtime yet and the prompt asked for 800-1100 lines. The runtime
+  landed 9 Aug; the target is now 260-420. That evidence was stale.
+- **3D now leads with claude-sonnet-5.** openai stays first for 2D and is the immediate
+  3D fallback.
+- **BUILD_ID now comes from the deployed commit.** It read `2026-08-12.77` on 18 Aug, so
+  it could not answer whether a push was live.
 
 ## Waiting on Justin
 

@@ -22,7 +22,15 @@ riskScore (integer 0-100), marketplaceCategory (string).
 Rules: no real club/brand/celebrity names (rights screening), no paid random rewards for minors,
 design a stand-out hook free clones would not ship.`;
 
-export const BUILD_ID = "2026-08-12.77";
+/**
+ * What is actually deployed. Derived from the commit Vercel built, because a
+ * hand-maintained string goes stale silently: this read "2026-08-12.77" on
+ * 18 Aug, six days and several fixes later, so it could not answer the one
+ * question it exists for — is the running code the code I just pushed?
+ * Falls back to a literal for local runs, where there is no commit to read.
+ */
+export const BUILD_ID =
+  (process.env.VERCEL_GIT_COMMIT_SHA || "").slice(0, 7) || "local-dev";
 
 /* ---------------- metered 4x billing (MONETISATION: charge = 4x provider cost) ----
    The business model: every AI charge is ACU.providerMarkupFloor (4x) the attributable
@@ -603,13 +611,32 @@ export async function generateGameHtml(
   const claude: Cand = { name: "claude", enabled: !!process.env.ANTHROPIC_API_KEY, run: () => claudeGenerate(system, userMsg, claudeMax) };
   const gemini: Cand = { name: "gemini", enabled: !!process.env.GEMINI_API_KEY, run: () => geminiGenerate(system, userMsg, geminiMax) };
   const openai: Cand = { name: "openai", enabled: !!process.env.OPENAI_API_KEY, run: () => openaiGenerate(system, userMsg, openaiMax) };
-  // Order comes from the live forge log, not from assumptions about model quality:
-  //   openai  — completed every full-size build recorded, ~40s
-  //   claude  — truncates at this size ("no closing </html>"), ~190s wasted first
-  //   gemini  — currently HTTP 403 "project has been denied access" (account-side)
-  // Leading with anything else spent ~190s failing before the working provider
-  // even started, which is why forges took 220-235s instead of well under a minute.
-  const chain = [openai, claude, gemini];
+  // Order comes from the live forge log, not from assumptions about model quality.
+  //
+  // It was [openai, claude, gemini] on this evidence, recorded 2 Aug 2026:
+  //   openai  — completed every full-size build, ~40s
+  //   claude  — truncated at this size ("no closing </html>"), ~190s wasted first
+  //   gemini  — HTTP 403 "project has been denied access" (account-side)
+  //
+  // BOTH of those failures have since been invalidated, and re-checked 18 Aug:
+  //
+  // 1. Claude truncated because on 2 Aug there was NO JOSHRIX3D runtime: the
+  //    prompt asked for 800-1100 lines and the model had to write the whole
+  //    renderer, which overran even 18k output tokens. The runtime landed 9 Aug
+  //    and the target is now 260-420 lines — roughly a third of the output for
+  //    the same game. The condition that demoted Claude no longer exists.
+  // 2. Gemini's 403 is resolved; /api/provider-selftest reports all three
+  //    healthy (anthropic 2.2s, gemini 3.9s, openai 2.0s).
+  //
+  // So 3D — the premium lane, and the hardest generation — now leads with
+  // claude-sonnet-5, the strongest coder available here, which is what the
+  // comment above always claimed and the code never did. openai (gpt-4o) stays
+  // first for 2D, where it has completed every recorded build, and remains the
+  // immediate fallback for 3D so a Claude failure costs one retry, not a forge.
+  //
+  // If 3D forges start truncating again, move openai back to the front and say
+  // so here with the date and the log entry that showed it.
+  const chain = is3d ? [claude, openai, gemini] : [openai, claude, gemini];
   const errors: string[] = [];
   // Whole-chain time budget: the serverless function dies hard at 300s, and a
   // reply must still be built, settled, and persisted after generation. Skip
