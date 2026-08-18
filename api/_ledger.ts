@@ -191,6 +191,10 @@ export async function ensureGameSchema(sql: Sql) {
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT 'explorer'`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS name text`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS last_refill_at timestamptz`;
+  // Lifetime counter, not a window: the 6-hour gap rate-limited refills but never
+  // ended them, so a free wallet was an unlimited AI tap. Existing wallets default
+  // to 0 and keep whatever they already hold — this caps the future, not the past.
+  await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS refill_count integer NOT NULL DEFAULT 0`;
   await sql`CREATE TABLE IF NOT EXISTS forge_results (
     ticket text PRIMARY KEY,
     wallet_id text,
@@ -248,20 +252,41 @@ export async function updateWalletIdentity(sql: Sql, id: string, opts: { name?: 
 
 /**
  * Refill: TESTER wallets only, and hardened against free-AI farming —
- * only when below a 3D forge hold (< 1500, so a tester is never trapped
- * unable to test the premium lane), at most once per 6 hours, never lowers
- * a balance (GREATEST), and never touches wallets that have ever purchased.
- * The abuse cap is unchanged by the threshold: a refill only tops UP to
- * 2000, so a tester wallet can never spend more than 2000 ACUs per 6 hours.
+ * only when below a 3D forge hold (so a tester is never trapped unable to test
+ * the premium lane), at most once per 6 hours, a LIFETIME CAP on the number of
+ * refills, never lowers a balance (GREATEST), and never touches a wallet that
+ * has ever purchased.
+ *
+ * The lifetime cap is the load-bearing part. Without it the 6-hour gap only
+ * paced the giveaway — 2,000 ACU every 6 hours, forever, is unlimited free AI,
+ * which no paid tier can compete with and which the platform's own rules forbid.
+ *
+ * Every limit is applied in the WHERE clause, so a refused refill cannot race a
+ * granted one: the row is either updated once or not at all.
+ *
  * Returns the new balance, or null when refused.
  */
-export async function refillTesterWallet(sql: Sql, id: string, to = 2000): Promise<number | null> {
+export async function refillTesterWallet(
+  sql: Sql, id: string,
+  to = 2000, floor = 1500, lifetimeMax = 3,
+): Promise<number | null> {
   const rows = (await sql`
-    UPDATE wallets SET balance = GREATEST(balance, ${to}), last_refill_at = now()
-    WHERE id = ${id} AND category = 'tester' AND balance < 1500
+    UPDATE wallets SET balance = GREATEST(balance, ${to}),
+                       last_refill_at = now(),
+                       refill_count = refill_count + 1
+    WHERE id = ${id} AND category = 'tester' AND balance < ${floor}
+      AND refill_count < ${lifetimeMax}
       AND (last_refill_at IS NULL OR last_refill_at < now() - interval '6 hours')
-    RETURNING balance`) as Array<{ balance: number }>;
+    RETURNING balance, refill_count`) as Array<{ balance: number; refill_count: number }>;
   return rows.length ? Number(rows[0].balance) : null;
+}
+
+/** Why a refill was refused, so the caller can say something useful instead of
+ *  a generic denial. Read-only; never used to decide the grant itself. */
+export async function refillState(sql: Sql, id: string) {
+  const rows = (await sql`SELECT balance, category, refill_count, last_refill_at FROM wallets WHERE id = ${id}`) as
+    Array<{ balance: number; category: string; refill_count: number; last_refill_at: string | null }>;
+  return rows[0] ?? null;
 }
 
 /** Stripe settlement marks a wallet as purchased — refill/delete lock out forever. */

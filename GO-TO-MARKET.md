@@ -43,20 +43,40 @@ ocean painted over every sky, and two of three sky colours never rendering — w
 Acquisition against a disappointing product is worse than none. You burn the audience once,
 publicly, and in a community as tight as Nairobi's you do not get a second introduction.
 
-### 2.2 The free tier destroys the paid tier — FIX IN WEEK 1
+### 2.2 The pricing inversion — FIXED 18 Aug 2026
 
-| Tier | ACU granted | 2D games (~32 ACU each) |
+Two defects, both worse than first reported:
+
+| | Was | Now |
 |---|---|---|
-| Free grant | **2,000** | **~62** |
-| Creator, £19/mo | **380** | **~11** |
+| Free grant | 2,000 ACU | 2,000 ACU (unchanged) |
+| Creator £19/mo | **380 ACU** | **2,400 ACU** |
+| Creator Pro £49 | 980 | 6,500 |
+| Studio £149 | 2,980 | 21,000 |
+| Business £399 | 7,980 | 58,000 |
+| Enterprise £1,200 | 24,000 | 180,000 |
 
-**The free tier is five times more generous than the first paid tier.** No funnel, no agency
-and no ad spend fixes this — there is currently no rational reason to upgrade. You could
-acquire 10,000 users and earn nothing.
+**Defect 1 — paying bought less.** Free granted 2,000 against Creator's 380. Nothing
+in a funnel can justify an upgrade that makes you five times worse off.
 
-**Fix:** one line in `shared/payments.ts`. Either cut the grant to **400 ACU** (~12 games, a
-real trial) or raise Creator to **1,500 ACU** (~47 games). **Recommendation: cut the grant to
-400 and raise Creator to 1,000.** Highest commercial leverage available today, and it is free.
+**Defect 2 — worse, and missed on the first pass. A 3D forge places a 1,200 ACU
+hold.** At 380 ACU a paying Creator **could not start a single 3D build.** The
+premium lane was sold and then withheld from the people who paid for it.
+
+**Defect 3 — the actual leak. Refill was uncapped.** A free wallet could draw
+2,000 ACU every 6 hours *forever* — 8,000 a day, indefinitely. The free tier was
+not "2,000 ACU", it was **unlimited**, which no paid tier can compete with and
+which breaks the platform's own rule that no account gets free AI. Now capped at
+three lifetime refills.
+
+The grant was **not** cut, contrary to the earlier recommendation in this
+document: at 400 ACU a free user could not start a 3D build either, so the trial
+would never demonstrate the premium lane. Paid tiers were raised instead.
+
+All three limits now live in `shared/payments.ts` with `assertPlanLadder()`
+enforcing that every paid tier beats the free grant, covers a 3D hold, and
+improves monotonically. Six new assertions in `tests/t2-payments.js` fail the
+build if it ever regresses.
 
 ---
 
@@ -306,7 +326,7 @@ for the paid, brand and B2B work that founder-led outreach cannot cover.
 
 | Week | Dates | Actions |
 |---|---|---|
-| 1 | 18–24 Aug | Forge WonderVerse in 3D live. Forge 5 more concepts. **Fix the pricing inversion (§2.2).** Rotate the Neon password, set `NEWSLETTER_SECRET`. |
+| 1 | 18–24 Aug | Forge WonderVerse in 3D live. Forge 5 more concepts. ~~Fix the pricing inversion~~ (done, §2.2). Rotate the Neon password, set `NEWSLETTER_SECRET`. |
 | 2 | 25–31 Aug | **Upload the Quaternius character packs.** Run one real mobile-money payout. Run the Neon backup/restore drill. |
 | 3 | 1–7 Sep | **Recruit the Nairobi champion.** 10 hand-built games for 10 named people. Write the school lesson plan. |
 | 4 | 8–14 Sep | Champion joins 10 communities and posts nothing. Analytics baseline set. |
@@ -361,7 +381,7 @@ tagged, so email traffic is never miscounted as direct.
 | # | Risk | Severity | Mitigation |
 |---|---|---|---|
 | 1 | **The forge stays mediocre** | Fatal | Phase 1 exists solely for this. Phase 2 does not begin until it clears. |
-| 2 | **Free tier cannibalises paid** | Severe | One-line fix, Week 1 (§2.2). |
+| 2 | ~~Free tier cannibalises paid~~ | **Closed** | Fixed 18 Aug; guarded by `assertPlanLadder()` and 7 assertions. |
 | 3 | **Mobile-money payout does not actually work** | Fatal to the city choice | Run one real £5 payout in Week 2, before any Nairobi promise. |
 | 4 | **No local champion hired** | Severe | Nairobi cannot be run remotely from the UK. If nobody is hired by Week 4, switch the launch city to London and re-plan. |
 | 5 | **FX and cost assumptions wrong** | Moderate | All Kenyan figures marked **[VERIFY]**. Confirm before committing. |
@@ -373,7 +393,7 @@ tagged, so email traffic is never miscounted as direct.
 ## 13. Monday morning — the first five things
 
 1. **Forge WonderVerse in 3D on the live site.** Everything waits on the answer.
-2. **Fix the pricing inversion.** One line. Highest commercial leverage available today.
+2. ~~Fix the pricing inversion.~~ **Done 18 Aug** — paid tiers raised, free refills capped at three.
 3. **Upload the Quaternius character packs.** You own them. Biggest quality jump, zero cost.
 4. **Rotate the Neon password** and set `NEWSLETTER_SECRET`.
 5. **Run one real £5 mobile-money payout** and watch it land.
