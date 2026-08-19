@@ -27,7 +27,10 @@ export default async function handler(req: any, res: any) {
   }
 
   const { listingId, method, buyerWalletId, buyerEmail } = (req.body ?? {}) as Record<string, string>;
-  if (!listingId || typeof listingId !== "string") {
+  // Game ids are minted by us as "g-<slug>-<10 hex>", so anything outside that
+  // alphabet is not a listing anyone could be buying. Rejecting on shape keeps
+  // hostile input out of the lookup, the logs and the response entirely.
+  if (!listingId || typeof listingId !== "string" || !/^[a-z0-9-]{1,120}$/.test(listingId)) {
     return res.status(400).json({ error: "listingId required" });
   }
 

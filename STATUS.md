@@ -3,7 +3,7 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-08-18 (tester accounts vs. gated accounts)
+Last updated: 2026-08-19 (20-day audit: everything unfinished, cleared)
 
 ---
 
@@ -11,6 +11,50 @@ Last updated: 2026-08-18 (tester accounts vs. gated accounts)
 
 `GO-TO-MARKET.md` is the launch plan: **Nairobi**, 18 Aug – 15 Nov 2026, £2,650 lean /
 £6,100 with an agency. It is gated on the forge working — items 1 and 2 below.
+
+## The 20-day audit — 19 Aug
+
+Seventy-seven commits reviewed against the code that actually shipped. What it
+found was not half-written features; it was **finished work with nothing calling
+it**, which is worse, because a test suite can pass over it forever.
+
+**The marketplace was a dead limb.** `/api/checkout` was complete — Stripe
+session, server-authoritative price, splits, webhook entitlement, creator
+earnings credited, 11 passing assertions — and **no page called it**.
+`setListingPrice()` sat in the ledger with **zero callers**, so no game ever had
+a price, so checkout answered *"This world has no valid sale price set by its
+creator"* for every game on the platform. `studio.html` told creators "You set
+the price" next to a disabled button. Now: `POST /api/listing` sets or clears a
+price (ownership enforced in the same UPDATE that performs it, commission read
+from the wallet and never from the request), a **Price** column on the dashboard
+quotes the split before saving, and `/marketplace` has a For Sale grid with a
+Buy button. 39 server assertions + 19 in a real browser, including the negative
+that matters: the Buy button transmits an id and never a price.
+
+**Payouts could be requested but never paid.** `/api/admin-payouts` was complete
+and `/admin` never called it — a creator could request a withdrawal nobody could
+action. Worse, the ledger's decision predicate was `status = 'requested'` alone,
+so the *approved → paid* step the endpoint tells you to take could never
+succeed: an approved withdrawal was stuck, and only a hand-edit of the database
+could record that money had left. Both fixed; the desk is in `/admin`.
+
+**`/api/economy` was public.** It answers "what does each SKU cost us against
+what we charge" — provider cost per top-up, per subscription month, per 3D
+forge, plus fixed overhead and the price floors. No key, no rate limit. Anyone
+with the URL could read the commercial position of the business. Now behind
+`MODERATION_KEY` like `/api/traffic`, failing closed, with a regression test.
+
+**`npm test` now exists.** The suite was only runnable by someone who already
+knew an undocumented ritual, which is exactly how `tests/t2b.js` sat permanently
+red and `tests/t6` reported a passing narrative while asserting nothing. One
+command builds and runs all 27 files — **578 assertions** — and a file that
+prints failures while exiting 0 is now counted as failing.
+
+Also cleared: a GitHub Pages workflow that had failed **125 times** deploying a
+copy of the site with no API (deleted — Vercel is the deployment); `t2b`
+(superseded and permanently throwing — removed); `/api/checkout` reflecting raw
+input in an error body; and the thirteen documents that exist twice, in `docs/`
+and `frontend/specs/`, with nothing detecting drift (`t23`, 54 assertions).
 
 ## Testers are funded, everyone else is gated — shipped 18 Aug
 
@@ -135,10 +179,16 @@ Everything asked for is committed and pushed. Nothing half-finished.
 - **Zero customers.** SEO on a new domain is months, not weeks. The fast organic channel is
   shareable game links, which depends on the forge working.
 
-## Still open from earlier, not started
+## Still open, and honestly named
 
-Stripe Connect onboarding · Gemini 403 at aistudio.google.com · backup/restore drill ·
-live payment cycle test · 2D port of the runtime · 705 sound files in the mirror.
+| Thing | Why it is still open |
+|---|---|
+| **Stripe Connect onboarding** | Until this is done, payouts leave by hand: the desk records the decision, you move the money, then mark it paid. Needs your Stripe account, not code. |
+| **Backup / restore drill** | Neon snapshots have never been restored. Take one manual snapshot before announcing. |
+| **Live payment cycle test** | `tests/live-payment-cycle.md` has never been run against real Stripe. Needs live keys. |
+| **No sound library at all** | There are **zero** audio files in `frontend/assets`. The runtime synthesises with an oscillator and speaks with the Web Speech API — which is why the games beep. The "705 sound files" were never ingested and there is no ingest tool for audio. |
+| **2D port of the runtime** | The 3D runtime owns canvas, loop, lights, HUD, input. The 2D lane still has the model write all of that each time. |
+| **`GAP-ANALYSIS.md` is published at `/docs`** | It is a forensic list of the platform's own weaknesses, served publicly. Not a defect — a decision. Say if you want it unpublished. |
 
 ---
 

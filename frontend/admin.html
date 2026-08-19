@@ -173,7 +173,7 @@
   });
 })();
 </script>
-<h2 class="jx reveal">Tester Wallets <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— GRANT ACUs FOR REAL AI TESTING</span></h2>
+<h2 class="jx reveal">Wallets <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— DESIGNATE TESTERS · GRANT ACUs · SET PLANS</span></h2>
 <div class="reveal" id="grantPanel" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
   <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">
     <button class="btn btn-primary btn-sm" id="btnLoadWallets">⟳ Load Wallets</button>
@@ -302,6 +302,94 @@
   });
 })();
 </script>
+<h2 class="jx reveal">Payout Desk <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— CREATOR WITHDRAWALS AWAITING A DECISION</span></h2>
+<div class="reveal" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
+  <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">
+    <button class="btn btn-primary btn-sm" id="btnLoadPayouts">⟳ Load Requests</button>
+    <select id="payoutStatus" style="background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.5rem .7rem;color:inherit;font-size:.85rem">
+      <option value="requested">awaiting decision</option>
+      <option value="approved">approved · not yet paid</option>
+      <option value="paid">paid</option>
+      <option value="rejected">rejected</option>
+    </select>
+    <span id="payoutHint" style="font-size:.85rem;color:var(--muted,#9d9db3)">A creator's earnings are reserved the moment they request a withdrawal. Rejecting returns the reservation to their available balance; approving keeps it reserved until you mark it paid. Every decision is single-use.</span>
+  </div>
+  <div id="payoutList" style="display:grid;gap:.6rem;margin-top:1rem"></div>
+</div>
+<script>
+(function(){
+  var API = (window.JOSHRIX_API_BASE || '');
+  var $p = function(x){ return document.getElementById(x); };
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
+  var keyHdr = function(){ var k = ''; try { k = sessionStorage.getItem('jx.modKey') || ''; } catch(e){} return { 'x-admin-key': k }; };
+  var money = function(m){ return '£' + (Number(m || 0) / 100).toFixed(2); };
+
+  function load(){
+    var status = $p('payoutStatus').value;
+    $p('payoutHint').textContent = 'Loading…';
+    fetch(API + '/api/admin-payouts?status=' + encodeURIComponent(status), { headers: keyHdr() })
+      .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+      .then(function(res){
+        var list = $p('payoutList'); list.innerHTML = '';
+        if (!res.ok) { $p('payoutHint').textContent = '⚠ ' + (res.j.error || 'failed'); return; }
+        var rows = res.j.requests || [];
+        var owed = rows.reduce(function(s, r){ return s + Number(r.netMinor || 0); }, 0);
+        $p('payoutHint').textContent = rows.length
+          ? rows.length + ' request' + (rows.length === 1 ? '' : 's') + ' · ' + money(owed) + ' net'
+          : 'Nothing in this state.';
+        rows.forEach(function(r){
+          var row = document.createElement('div');
+          row.style.cssText = 'display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.6rem .9rem';
+          row.innerHTML = '<b style="min-width:96px;font-family:var(--mono,monospace)">' + money(r.amountMinor) + '</b>'
+            + '<span style="font-size:.78rem;color:var(--muted,#9d9db3)">fee ' + money(r.feeMinor) + ' → net <b>' + money(r.netMinor) + '</b> · '
+            + esc(r.rail) + (r.kycRequired ? ' · <b style="color:#fbbf24">KYC REQUIRED</b>' : '')
+            + ' · <code style="color:var(--cyan,#22D3EE)">' + esc(r.walletId) + '</code></span>'
+            + '<span class="pAct" style="margin-left:auto;display:flex;gap:.4rem"></span>'
+            + '<span class="pMsg" style="font-size:.78rem;color:var(--muted,#9d9db3)"></span>';
+          // Only offer transitions the ledger will actually accept:
+          //   requested -> approved | rejected | paid      approved -> paid
+          var offer = status === 'requested' ? ['approved', 'rejected', 'paid'] : status === 'approved' ? ['paid'] : [];
+          var act = row.querySelector('.pAct');
+          offer.forEach(function(d){
+            var b = document.createElement('button');
+            b.className = 'btn btn-ghost btn-sm';
+            b.textContent = d === 'approved' ? 'Approve' : d === 'rejected' ? 'Reject' : 'Mark paid';
+            b.addEventListener('click', function(){
+              var warn = d === 'paid'
+                ? 'Mark ' + money(r.netMinor) + ' as PAID?\n\nOnly do this once the money has actually left the payout rail. This is not reversible from here.'
+                : d === 'rejected'
+                  ? 'Reject this withdrawal?\n\n' + money(r.amountMinor) + ' returns to the creator’s available balance.'
+                  : 'Approve ' + money(r.netMinor) + '?\n\nThe amount stays reserved until you mark it paid.';
+              if (!confirm(warn)) return;
+              act.querySelectorAll('button').forEach(function(x){ x.disabled = true; });
+              fetch(API + '/api/admin-payouts', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, keyHdr()),
+                body: JSON.stringify({ id: r.id, decision: d }) })
+                .then(function(rr){ return rr.json().then(function(j){ return { ok: rr.ok, j: j }; }); })
+                .then(function(res2){
+                  if (!res2.ok) {
+                    act.querySelectorAll('button').forEach(function(x){ x.disabled = false; });
+                    row.querySelector('.pMsg').textContent = '⚠ ' + (res2.j.error || 'failed');
+                    return;
+                  }
+                  act.innerHTML = '';
+                  row.querySelector('.pMsg').textContent = '✓ ' + res2.j.note;
+                })
+                .catch(function(){
+                  act.querySelectorAll('button').forEach(function(x){ x.disabled = false; });
+                  row.querySelector('.pMsg').textContent = '⚠ Could not reach the server';
+                });
+            });
+            act.appendChild(b);
+          });
+          list.appendChild(row);
+        });
+      })
+      .catch(function(){ $p('payoutHint').textContent = '⚠ Could not reach the payout desk'; });
+  }
+  $p('btnLoadPayouts').addEventListener('click', load);
+  $p('payoutStatus').addEventListener('change', load);
+})();
+</script>
 <h2 class="jx reveal">Communication Engine <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— ONE EVENT ENGINE, EVERY MESSAGE</span></h2>
 <div class="reveal" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
   <div id="commStats" style="display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1rem"></div>
@@ -374,6 +462,65 @@
           return '<div style="display:flex;gap:.8rem;flex-wrap:wrap;color:var(--muted,#9d9db3)"><code style="color:var(--cyan,#22D3EE)">' + esc(d.channel) + '</code><span>' + esc(d.event) + '</span><b style="color:' + (d.status === 'sent' ? '#4ade80' : '#9d9db3') + '">' + esc(d.status) + '</b><span>' + esc(d.provider || '') + ' · ' + new Date(d.created_at).toLocaleTimeString() + '</span></div>';
         }).join('') : '<span style="color:var(--muted,#9d9db3)">No deliveries yet — fire a test above.</span>';
       }).catch(function(){ $c('commLog').textContent = '⚠ Could not load deliveries'; });
+  });
+})();
+</script>
+<h2 class="jx reveal">Operator Diagnostics <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— MARGIN · ACQUISITION · SEO</span></h2>
+<div class="reveal" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
+  <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">
+    <button class="btn btn-primary btn-sm" id="btnDiag">⟳ Run All</button>
+    <span style="font-size:.85rem;color:var(--muted,#9d9db3)">Three endpoints that existed with nothing calling them. Margin and acquisition are operator-only; SEO health is aggregate-safe.</span>
+  </div>
+  <div id="diagOut" style="display:grid;gap:.8rem;margin-top:1rem"></div>
+</div>
+<script>
+(function(){
+  var API = (window.JOSHRIX_API_BASE || '');
+  var keyHdr = function(){ var k = ''; try { k = sessionStorage.getItem('jx.modKey') || ''; } catch(e){} return { 'x-moderation-key': k }; };
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
+  var money = function(m){ return '£' + (Number(m || 0) / 100).toFixed(2); };
+
+  function panel(title, bodyHtml){
+    return '<div style="border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.7rem .9rem">'
+      + '<b style="font-family:var(--mono,monospace);font-size:.8rem;letter-spacing:.08em">' + esc(title) + '</b>'
+      + '<div style="font-size:.85rem;color:var(--muted,#9d9db3);margin-top:.4rem">' + bodyHtml + '</div></div>';
+  }
+  function get(url, headers){
+    return fetch(API + url, { headers: headers || {} })
+      .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, code: r.status, j: j }; }); })
+      .catch(function(){ return { ok: false, code: 0, j: { error: 'could not reach the server' } }; });
+  }
+
+  document.getElementById('btnDiag').addEventListener('click', function(){
+    var out = document.getElementById('diagOut');
+    out.innerHTML = '<p style="color:var(--muted,#9d9db3)">Running…</p>';
+    Promise.all([
+      get('/api/economy', keyHdr()),
+      get('/api/traffic?days=30', keyHdr()),
+      get('/api/seo-health'),
+    ]).then(function(res){
+      var html = '';
+
+      var e = res[0];
+      html += panel('MARGIN — /api/economy', !e.ok
+        ? '⚠ ' + esc(e.j.error || ('HTTP ' + e.code))
+        : 'worst alert <b>' + esc(e.j.summary.worstAlert) + '</b> · price floors '
+          + (e.j.summary.floorsHolding ? 'holding' : '<b style="color:#f87171">BREACHED</b>')
+          + ' · fixed overhead ' + money(e.j.summary.fixedMonthlyOverheadMinor) + '/mo'
+          + (e.j.summary.repricesNeeded.length ? ' · reprice: <b>' + esc(e.j.summary.repricesNeeded.join(', ')) + '</b>' : ' · no reprice needed'));
+
+      var tr = res[1];
+      html += panel('ACQUISITION — /api/traffic (30d)', !tr.ok
+        ? '⚠ ' + esc(tr.j.error || ('HTTP ' + tr.code))
+        : esc(JSON.stringify(tr.j).slice(0, 400)));
+
+      var s = res[2];
+      html += panel('SEO — /api/seo-health', !s.ok
+        ? '⚠ ' + esc(s.j.error || ('HTTP ' + s.code))
+        : esc(JSON.stringify(s.j).slice(0, 400)));
+
+      out.innerHTML = html;
+    });
   });
 })();
 </script>

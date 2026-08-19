@@ -20,13 +20,26 @@ for (const mod of ['admin-wallets','admin-stats','moderation']) {
 let r = await call('admin-wallets', {method:'POST', headers:{}, body:{walletId:'w-victim', amount:100000}, query:{}});
 t('P5-04','admin-wallets: ACU grant without key refused', r.code===401||r.code===403, 'P0', `got ${r.code} ${JSON.stringify(r.body).slice(0,90)}`);
 
+console.log('\n== PHASE 5: OPERATOR-ONLY ENDPOINTS MUST REFUSE STRANGERS ==');
+// /api/economy answers "what does each SKU cost us against what we charge" —
+// provider cost per top-up, per subscription month, per 3D forge, plus fixed
+// overhead and the price floors. It shipped with NO auth at all, so the
+// commercial position of the business was one unauthenticated GET away.
+for (const mod of ['economy','traffic']) {
+  const rr = await call(mod, {method:'GET', headers:{}, query:{}});
+  t('P5-04b', `${mod}: no key -> refused`, rr.code===401||rr.code===403||rr.code===503, 'P1',
+    `got ${rr.code} ${JSON.stringify(rr.body).slice(0,90)}`);
+}
+
 console.log('\n== PHASE 5: MODERATION_KEY unset must FAIL CLOSED, not open ==');
 const saved = process.env.MODERATION_KEY; delete process.env.MODERATION_KEY;
-for (const mod of ['admin-wallets','admin-stats','moderation']) {
-  const rr = await call(mod, {method:'GET', headers:{'x-admin-key':'anything'}, query:{}});
+const savedCron = process.env.CRON_SECRET; delete process.env.CRON_SECRET;
+for (const mod of ['admin-wallets','admin-stats','moderation','economy','traffic']) {
+  const rr = await call(mod, {method:'GET', headers:{'x-admin-key':'anything','x-moderation-key':'anything'}, query:{}});
   t('P5-05', `${mod}: unset MODERATION_KEY fails closed`, rr.code!==200, 'P0', `got ${rr.code} — endpoint OPEN when key unset`);
 }
 process.env.MODERATION_KEY = saved;
+if (savedCron === undefined) delete process.env.CRON_SECRET; else process.env.CRON_SECRET = savedCron;
 
 console.log('\n== PHASE 6: INPUT VALIDATION (forge-game) ==');
 const badPrompts = [

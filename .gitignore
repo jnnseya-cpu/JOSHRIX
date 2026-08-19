@@ -9,3 +9,6 @@ serviceAccount*.json
 functions/node_modules/
 functions/lib/
 functions/src/shared/
+
+# test workspace built by tools/run-tests.mjs
+.testbuild/

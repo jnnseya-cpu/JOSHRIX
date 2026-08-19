@@ -22,8 +22,11 @@ export default async function handler(req: any, res: any) {
       language: g.language,
       plays: Number(g.plays ?? 0),
       playUrl: `/play/${g.id}`,
+      // A priced world is a marketplace listing; the arcade still lists it,
+      // because a buyer has to be able to see the thing before buying it.
+      priceMinor: g.price_minor == null ? null : Number(g.price_minor),
     }));
-    return res.status(200).json({ games, count: games.length });
+    return res.status(200).json({ games, count: games.length, forSale: games.filter((g) => g.priceMinor).length });
   } catch (err: any) {
     return res.status(502).json({ error: "Arcade feed failed", detail: String(err?.message ?? err) });
   }

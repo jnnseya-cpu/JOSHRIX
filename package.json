@@ -13,5 +13,14 @@
     "nodemailer": "^9.0.3",
     "stripe": "^22.3.2",
     "zod": "^3.25.76"
+  },
+  "scripts": {
+    "test": "node tools/run-tests.mjs",
+    "test:build": "node tools/run-tests.mjs --build-only"
+  },
+  "devDependencies": {
+    "playwright": "^1.62.0",
+    "three": "^0.160.0",
+    "typescript": "^5.9.3"
   }
 }

@@ -9,8 +9,10 @@ const fake=(st,...v)=>{const q=st.join('?').replace(/\s+/g,' ').trim();
     if(e&&e.available_minor>=amt3){e.available_minor-=amt;e.reserved_minor+=amt2;return Promise.resolve([{wallet_id:w}]);}return Promise.resolve([]);}
   if(/UPDATE creator_earnings SET available_minor = available_minor \+/i.test(q)){const[amt,amt2,w]=v;const e=earn.get(w);if(e){e.available_minor+=amt;e.reserved_minor=Math.max(0,e.reserved_minor-amt2);}return Promise.resolve([]);}
   if(/^INSERT INTO payout_requests/i.test(q)){const[id,w,amt]=v;reqs.set(id,{id,wallet_id:w,amount_minor:amt,status:'requested'});return Promise.resolve([]);}
-  if(/UPDATE payout_requests SET status/i.test(q)){const[st,by,note,id]=v;const r=reqs.get(id);
-    if(r&&r.status==='requested'){r.status=st;return Promise.resolve([{id:r.id,wallet_id:r.wallet_id,amount_minor:r.amount_minor}]);}return Promise.resolve([]);}
+  // the transition is `status = ANY(${from})`, so the fake must honour `from` —
+  // hardcoding 'requested' here would hide the very bug this now covers
+  if(/UPDATE payout_requests SET status/i.test(q)){const[st,by,note,id,from]=v;const r=reqs.get(id);
+    if(r&&(from||['requested']).indexOf(r.status)!==-1){r.status=st;return Promise.resolve([{id:r.id,wallet_id:r.wallet_id,amount_minor:r.amount_minor,status:st}]);}return Promise.resolve([]);}
   return Promise.resolve([]);};
 led.__setDbForTests(fake);
 const handler=require('./build/api/payout.js').default;
@@ -54,6 +56,26 @@ const d1=await led.decidePayoutRequest(fake,anyId,'approved','admin@joshrix','ok
 const d2=await led.decidePayoutRequest(fake,anyId,'approved','admin@joshrix','ok again');
 t('first approval succeeds', !!d1);
 t('re-approving the same request does nothing', d2===null);
+
+console.log('\n== PHASE 21b: APPROVING IS NOT PAYING ==');
+// The desk tells the operator "approved — mark paid once the rail has executed",
+// but the predicate was `status = 'requested'` alone, so that second step could
+// never succeed and an approved withdrawal was stuck forever.
+const d3=await led.decidePayoutRequest(fake,anyId,'paid','admin@joshrix',null);
+t('an APPROVED withdrawal can then be marked paid', !!d3,
+  'without this the only way to record that money left was to edit the database by hand');
+t('the row really moved to paid', reqs.get(anyId).status==='paid');
+const d4=await led.decidePayoutRequest(fake,anyId,'paid','admin@joshrix',null);
+t('but marking paid twice does nothing', d4===null, 'a repeated click must not double-record a payment');
+
+const rejId='pr-reject-test';
+reqs.set(rejId,{id:rejId,wallet_id:'w-x',amount_minor:5000,status:'requested'});
+await led.decidePayoutRequest(fake,rejId,'rejected','admin@joshrix',null);
+t('a REJECTED withdrawal can never be paid',
+  (await led.decidePayoutRequest(fake,rejId,'paid','admin@joshrix',null))===null,
+  'the reservation was already returned to the creator — paying it too pays twice');
+t('nor re-rejected (which would release the reservation again)',
+  (await led.decidePayoutRequest(fake,rejId,'rejected','admin@joshrix',null))===null);
 console.log(`\n  ${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);
 })();

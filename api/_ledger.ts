@@ -484,7 +484,7 @@ export async function setGameStatus(sql: Sql, id: string, status: "approved" | "
 
 /** A creator's own games (dashboard "My Games") — newest first. */
 export async function listGamesByWallet(sql: Sql, walletId: string, limit = 50) {
-  return (await sql`SELECT id, title, status, plays, created_at FROM games WHERE creator_wallet = ${walletId} ORDER BY created_at DESC LIMIT ${limit}`) as any[];
+  return (await sql`SELECT id, title, status, plays, price_minor, seller_plan, created_at FROM games WHERE creator_wallet = ${walletId} ORDER BY created_at DESC LIMIT ${limit}`) as any[];
 }
 
 /** GDPR delete: removes the wallet row; the creator's published games stay hosted. */
@@ -588,7 +588,7 @@ export async function adminStats(sql: Sql) {
 
 /** Lane 1 — the Arcade: every approved game, most-played first. */
 export async function listApprovedGames(sql: Sql, limit = 60) {
-  return (await sql`SELECT id, title, summary, language, plays, created_at FROM games WHERE status = 'approved' ORDER BY plays DESC, created_at DESC LIMIT ${limit}`) as any[];
+  return (await sql`SELECT id, title, summary, language, plays, price_minor, seller_plan, created_at FROM games WHERE status = 'approved' ORDER BY plays DESC, created_at DESC LIMIT ${limit}`) as any[];
 }
 
 /** Lanes 2 & 3 — store-distribution requests join a queue the team works through. */
@@ -608,8 +608,12 @@ export async function getListing(sql: Sql, gameId: string) {
   return rows[0] ?? null;
 }
 
-/** Creator sets their own listing price (validated against the floor upstream). */
-export async function setListingPrice(sql: Sql, gameId: string, walletId: string, priceMinor: number, sellerPlan: string): Promise<boolean> {
+/** Creator sets their own listing price (validated against the floor upstream).
+ *  `priceMinor` null UNLISTS the game — checkout refuses a listing with no price,
+ *  so clearing it is how a creator takes a world off sale without deleting it.
+ *  The `creator_wallet` predicate is the authorisation: a wallet can only ever
+ *  price a game it created, so no id guess reaches another creator's listing. */
+export async function setListingPrice(sql: Sql, gameId: string, walletId: string, priceMinor: number | null, sellerPlan: string): Promise<boolean> {
   const rows = (await sql`UPDATE games SET price_minor = ${priceMinor}, seller_plan = ${sellerPlan}
     WHERE id = ${gameId} AND creator_wallet = ${walletId} RETURNING id`) as any[];
   return rows.length > 0;
@@ -695,10 +699,27 @@ export async function listPayoutRequests(sql: Sql, status = "requested", limit =
     FROM payout_requests WHERE status = ${status} ORDER BY created_at ASC LIMIT ${limit}`) as any[];
 }
 
-/** Operator decision. Single-use: a request can only leave 'requested' once. */
+/**
+ * Operator decision, as a state machine in the WHERE clause:
+ *
+ *   requested -> approved | rejected | paid
+ *   approved  -> paid
+ *
+ * The endpoint has always told the operator "Approved — mark 'paid' once the
+ * rail has executed", but the predicate was `status = 'requested'` alone, so
+ * that second step could never succeed: an approved withdrawal was stuck, and
+ * the only way to record that money had actually left was to edit the database
+ * by hand. Approving is not paying, so both steps have to exist.
+ *
+ * Everything else about the guard is unchanged and load-bearing: a decision is
+ * still atomic and single-use, so two operators clicking at once produce one
+ * transition, and a rejected request can never be rejected twice (which would
+ * release the creator's reservation twice and pay them for nothing).
+ */
 export async function decidePayoutRequest(sql: Sql, id: string, status: "approved" | "rejected" | "paid", by: string, note?: string | null) {
+  const from = status === "paid" ? ["requested", "approved"] : ["requested"];
   const rows = (await sql`UPDATE payout_requests SET status = ${status}, decided_at = now(), decided_by = ${by}, note = ${note ?? null}
-    WHERE id = ${id} AND status = 'requested' RETURNING id, wallet_id, amount_minor`) as any[];
+    WHERE id = ${id} AND status = ANY(${from}) RETURNING id, wallet_id, amount_minor, status`) as any[];
   return rows[0] ?? null;
 }
 
