@@ -3,7 +3,7 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-08-19 (20-day audit: everything unfinished, cleared)
+Last updated: 2026-08-20 (third reference game, played end to end by a test)
 
 ---
 
@@ -11,6 +11,43 @@ Last updated: 2026-08-19 (20-day audit: everything unfinished, cleared)
 
 `GO-TO-MARKET.md` is the launch plan: **Nairobi**, 18 Aug – 15 Nov 2026, £2,650 lean /
 £6,100 with an agency. It is gated on the forge working — items 1 and 2 below.
+
+## A third reference game, and the first automated proof one is playable — 20 Aug
+
+**`/games/midnight-post`** — drive the night post van through a sleeping village,
+reach each lit doorstep before dawn, stay off the parked cars. Dispatch speaks the
+address, so it also answers "some games need to talk". Built on the runtime: the
+game file supplies the concept and nothing else.
+
+It leads with a **vehicle rather than a character on purpose.** The character
+library is ten blocky humans; a game whose hero is the weakest asset in the
+library looks like the library. The cars and buildings are the best-looking things
+we have, and a van never has to animate.
+
+**`tests/t26-midnight-post.mjs` plays it.** Not "the file loads" — it presses
+Start, holds the throttle, steers, drives all eight drops, and reads the parcel
+count off the HUD. 21 assertions. This is the first thing on the platform that
+can distinguish a game from an 8,411-byte stub without a human looking at it.
+
+Writing that test found four real defects nothing else would have:
+
+| Found by playing it | What it was |
+|---|---|
+| The van drove off on its own at the start | The pointer target was seeded with a sentinel, so frame one looked like a fresh touch |
+| The van "barely moved" | Parked cars could spawn on top of it — a collision loop charging 6s every 1.2s that no input escapes |
+| A crash could re-trigger forever | Nothing pushed the van clear of the car it hit |
+| The world ended at a visible edge | The runtime's ground is a disc of radius `arena` but fog starts at `arena * 1.4`, so the rim always meets the sky unfogged. **Every game on this runtime has this.** Fixed here with a skirt the game lays itself, rather than changing a pinned v1 under already-published games |
+
+Measured, not guessed: 349 meshes against WonderVerse's 193 and Dino Island's 262,
+which is why the scenery is thin and concentrated at the rim. Frame rate in this
+environment is 2.7fps at 1280x800 and 9.7fps at 640x400 for the *same scene* — it
+is a software rasteriser with no GPU, so those numbers say nothing about a phone
+and are not quoted as if they do.
+
+Also closed while wiring it up: **WonderVerse was never in the sitemap and never on
+the arcade shelf.** It shipped, the newsletter linked it, and search engines were
+never told it existed. The arcade had one hardcoded card. `t12-seo` now fails if any
+game in `frontend/games/` is missing from the sitemap, the newsletter or the arcade.
 
 ## The 20-day audit — 19 Aug
 
@@ -134,7 +171,7 @@ provider while the game path had three). 20 assertions in `tests/t20-blueprint-j
 
 | # | Thing | Detail |
 |---|---|---|
-| 1 | **Upload the asset packs** | Kenney City Kit → `_incoming/` as a zip. Quaternius Characters/Monsters/Animals → `_incoming/characters/<pack>/` as folders, taking the **glTF** folder. Full steps in `frontend/assets/models3d/_incoming/characters/README.md`. |
+| 1 | **Upload the asset packs** | Still empty as of 20 Aug — `_incoming/` contains only its two READMEs. I cannot fetch them: quaternius.com, poly.pizza and mixamo.com are all blocked by the proxy (re-checked, all return 000). Kenney City Kit → `_incoming/` as a zip. Quaternius Characters/Monsters/Animals → `_incoming/characters/<pack>/` as folders, taking the **glTF** folder. Full steps in `frontend/assets/models3d/_incoming/characters/README.md`. **This is the only thing standing between the library and characters that do not look like Lego** — no code change fixes it. |
 | 2 | **Forge WonderVerse in 3D on the live site** | The sea and sky bugs are fixed and deployed. I cannot run a forge — no provider keys here, and the proxy blocks joshrix.com. Your own wallet predates the category change so it is still `tester`: press **refill** on `/wallet` for 20,000 ACUs, no admin key needed. Then send the `/api/forge-log` line — `build`, `provider`, `bytes`. |
 | 2b | **Gate the legacy wallets** | Every account created before 18 Aug is still `tester` and can refill itself for free. One pass through `/admin` → "Revoke tester" on everyone who is not a real tester. |
 | 3 | **Set `NEWSLETTER_SECRET` in Vercel** | Any long random string. Without it the unsubscribe link still works, but the token is not signed, so anyone could unsubscribe another address. |
@@ -149,8 +186,9 @@ Everything asked for is committed and pushed. Nothing half-finished.
 
 ## Live
 
-- **2 reference games**: `/games/dino-island`, `/games/wonderverse` — both verified in a real
-  browser at desktop and phone size.
+- **3 reference games**: `/games/midnight-post`, `/games/wonderverse`, `/games/dino-island` —
+  all verified in a real browser at desktop and phone size; Midnight Post is played
+  start-to-finish by `tests/t26`. All three are on the arcade shelf and in the sitemap.
 - **JOSHRIX 3D runtime** (`assets/vendor/joshrix3d-1.js`) — owns canvas, loop, sky, ground,
   lights, shadows, overlays, HUD, input, audio, particles. Games write only the concept.
 - **2,273 models / 2,553 sprites**, every one load-tested in a browser before shipping.

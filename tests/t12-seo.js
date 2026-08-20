@@ -51,5 +51,38 @@ t('game url is canonical', g['@graph'][0].url.includes('/play/g1'));
 console.log('\n  reading time:');
 t('reads ~1 min for a short post', seo.readingMinutes('<p>'+'word '.repeat(200)+'</p>')===1);
 t('scales with length', seo.readingMinutes('<p>'+'word '.repeat(2250)+'</p>')===10);
+console.log('\n== EVERY REFERENCE GAME IS DISCOVERABLE ==');
+/* WonderVerse shipped, was linked from the newsletter, and was never in the
+   sitemap — so the strongest organic entry point on the site (a stranger can
+   play it with no account) was invisible to search for weeks. A game that
+   exists on disk and not in the sitemap is a game nobody finds. */
+{
+  const fs = require('fs'), path = require('path');
+  const ROOT = process.env.JOSHRIX_ROOT || process.cwd();
+  const sitemap = fs.readFileSync(path.join(ROOT, 'api', 'sitemap.ts'), 'utf8');
+  const newsletter = fs.readFileSync(path.join(ROOT, 'api', 'newsletter.ts'), 'utf8');
+  const arcade = fs.readFileSync(path.join(ROOT, 'frontend', 'arcade.html'), 'utf8');
+  const games = fs.readdirSync(path.join(ROOT, 'frontend', 'games'))
+    .filter((f) => f.endsWith('.html')).map((f) => f.replace(/\.html$/, ''));
+
+  t('there are reference games at all', games.length > 0);
+  for (const g of games) {
+    const html = fs.readFileSync(path.join(ROOT, 'frontend', 'games', g + '.html'), 'utf8');
+    t(`${g}: in the sitemap`, sitemap.includes(`games/${g}`),
+      'add it to STATIC_PAGES or search engines never learn it exists');
+    t(`${g}: linked from the newsletter`, newsletter.includes(`/games/${g}`),
+      'the weekly mail is the one channel that reaches every registered account');
+    t(`${g}: on the arcade shelf`, arcade.includes(`games/${g}.html`),
+      'the arcade is where a visitor goes to find something to play');
+    t(`${g}: declares a canonical URL`, html.includes(`rel="canonical" href="https://www.joshrix.com/games/${g}"`));
+    t(`${g}: has a meta description`, /<meta name="description" content="[^"]{60,}"/.test(html));
+    t(`${g}: carries VideoGame structured data`, html.includes('"@type":"VideoGame"'));
+  }
+  /* cleanUrls is on and the games canonicalise to the extensionless form, so the
+     sitemap must not also offer the .html spelling competing with it. */
+  t('the sitemap does not list both spellings of a game',
+    !/games\/[a-z0-9-]+\.html/.test(sitemap), (sitemap.match(/games\/[a-z0-9-]+\.html/) || [''])[0]);
+}
+
 console.log(`\n  ${pass} passed, ${fail} failed`);
 process.exit(fail?1:0);

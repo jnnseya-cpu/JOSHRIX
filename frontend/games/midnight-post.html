@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Midnight Post — the last delivery round | JOSHRIX Studio</title>
+<meta name="description" content="Midnight Post is a free 3D driving game in your browser: run the night post van through a sleeping village, hit every lit doorstep before dawn, and stay off the parked cars. No download, no account — plays on phone and desktop.">
+<link rel="canonical" href="https://www.joshrix.com/games/midnight-post">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Midnight Post — a free 3D driving game you play in a tab">
+<meta property="og:description" content="Eight parcels, one night, one van. Dispatch calls the address; you find the lit door before dawn.">
+<meta property="og:url" content="https://www.joshrix.com/games/midnight-post">
+<meta name="theme-color" content="#070b1c">
+<link rel="manifest" href="/manifest.webmanifest">
+<script src="/assets/splash.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"VideoGame","name":"Midnight Post",
+"url":"https://www.joshrix.com/games/midnight-post",
+"description":"A 3D driving game in the browser: run the night post van through a sleeping village and reach every lit doorstep before dawn.",
+"genre":["Driving","Arcade"],"playMode":"SinglePlayer",
+"applicationCategory":"Game","operatingSystem":"Any",
+"gamePlatform":["Web browser","Mobile web"],
+"publisher":{"@type":"Organization","name":"JOSHRIX Studio","url":"https://www.joshrix.com"},
+"offers":{"@type":"Offer","price":"0","priceCurrency":"GBP"}}
+</script>
+</head>
+<body>
+<script src="https://www.joshrix.com/assets/vendor/three.min.js"></script>
+<script src="https://www.joshrix.com/assets/vendor/GLTFLoader.js"></script>
+<script src="https://www.joshrix.com/assets/vendor/joshrix3d-1.js"></script>
+<script>
+/* Midnight Post — built on the JOSHRIX 3D runtime.
+   The runtime owns the canvas, loop, sky, ground, lights, shadows, overlays,
+   HUD, input, audio and particles. Everything below is the game.
+
+   Why a van and not a person: the character library is ten blocky humans, and
+   a game whose hero is the weakest asset in the library looks like the library.
+   A vehicle carries the whole read — Kenney's cars are the best-looking thing
+   here — and the village around it never has to animate. */
+
+var G = JOSHRIX3D.boot({
+  title: "Midnight Post", titleAccent: "Post",
+  tagline: "Eight parcels. One night. One van.",
+  howTo: "W / ↑ throttle · S / ↓ brake · A D / ← → steer. On a phone, touch and hold where you want to go. Dispatch calls the address — reach the lit door before dawn.",
+  /* Same envelope as the other two reference games on purpose: the runtime's
+     camera travels at half the player's distance from the centre, so an arena
+     much wider than this drives the van toward the edge of frame. A tighter
+     village that you cross in six seconds beats a big one you lose yourself in. */
+  arena: 26, playRadius: 16, accent: "#ffcf5c",
+  sky: { top: "#05081a", mid: "#182a55", haze: "#7b93c9" },
+  ground: { base: "#2b3040", speckle: ["#343a4c", "#232735", "#3d4356"], repeat: 9 }
+});
+
+var T = G.THREE;
+var LAMP = 0xffcf5c, DONE = 0x7ce8a0, HAZARD = 0xff6b5b;
+
+/* ---------- close the horizon ----------
+   The runtime draws the ground as a disc of radius `arena` (26) but fog does
+   not begin until arena * 1.4 (36), so that rim ALWAYS meets the sky unfogged
+   and the world reads as a plate floating in space — the single biggest tell
+   that a build is a demo rather than a game. Rather than change a pinned
+   runtime version under every already-published game, the game lays its own
+   skirt: one ring that starts under the arena edge and runs out past the fog's
+   far distance, so it fades into the haze instead of stopping. */
+var skirt = new T.Mesh(new T.RingGeometry(25.4, 130, 64, 1),
+  /* Same base colour as the arena's ground. A darker skirt just moves the seam
+     rather than removing it: what has to disappear is the COLOUR STEP, and the
+     arena's speckle texture already washes out with distance. */
+  new T.MeshStandardMaterial({ color: 0x2b3040, roughness: 1 }));
+skirt.rotation.x = -Math.PI / 2;
+skirt.position.y = -0.03;                 // just under the arena, so no z-fighting
+G.scene.add(skirt);
+
+/* ---------- the van: primitives first, so the game is playable even if every
+              download fails, then the library van swaps in on arrival ---------- */
+var van = new T.Group();
+var body = new T.Mesh(new T.BoxGeometry(0.95, 0.72, 2.05),
+  new T.MeshStandardMaterial({ color: 0xe8e3d6, roughness: 0.55 }));
+body.position.y = 0.62; body.castShadow = true; van.add(body);
+var cab = new T.Mesh(new T.BoxGeometry(0.9, 0.46, 0.72),
+  new T.MeshStandardMaterial({ color: 0x2f3448, roughness: 0.4 }));
+cab.position.set(0, 1.12, 0.5); cab.castShadow = true; van.add(cab);
+G.scene.add(van);
+G.follow(van);
+
+/* Headlights do two jobs: they say which way the van is pointing when it is a
+   silhouette against a dark road, and they light the doorstep you are aiming at. */
+var beam = new T.SpotLight(0xfff2d0, 2.4, 17, 0.55, 0.45, 1.4);
+beam.position.set(0, 0.85, 0.6);
+beam.target.position.set(0, 0, 6);
+van.add(beam); van.add(beam.target);
+var tail = new T.PointLight(0xff5544, 0.35, 3.2, 2);
+tail.position.set(0, 0.6, -1.1); van.add(tail);
+/* A warm pool under the van. On a dark street a small dark vehicle is genuinely
+   hard to pick out of the scenery, and "where am I" is not a puzzle the game is
+   trying to set. */
+var glow = new T.PointLight(0xffe0a8, 0.9, 5.5, 2);
+glow.position.set(0, 1.0, 0); van.add(glow);
+
+/* ---------- models: every one optional ---------- */
+G.load("van", "packs/kenney-carkit/delivery", { size: 2.3, onLoad: function () {
+    var v = G.get("van");
+    if (v) { van.remove(body); van.remove(cab); van.add(v); }
+  } })
+ .load("parked", "packs/kenney-carkit/sedan", { size: 2.1 })
+ .load("taxi", "packs/kenney-carkit/taxi", { size: 2.1 })
+ .load("house", "lib/house_small", { height: 3.2 })
+ .load("houseBig", "lib/house_large", { height: 4.1 })
+ .load("shop", "lib/shop", { height: 3.6 })
+ .load("lantern", "lib/lantern", { height: 1.6 })
+ .load("tree", "lib/tree_round_0", { height: 4.4 })
+ .load("pine", "lib/tree_pine_0", { height: 5.2 })
+ .load("fence", "lib/fence", { size: 1.9 })
+ .load("well", "lib/well", { height: 1.5 })
+ .load("crate", "lib/crate", { height: 0.6 })
+ .load("post", "lib/signpost", { height: 1.8 });
+
+/* ---------- the round: eight doorsteps, called one at a time ----------
+   The addresses are named because dispatch says them out loud. A number would
+   have been easier and would have made the radio meaningless. */
+var ADDRESSES = [
+  "the bakery on Mill Lane", "the old well cottage", "the schoolhouse",
+  "number four, Rope Walk", "the harbour shop", "the miller's house",
+  "the last house on Fen Road", "the lighthouse keeper's"
+];
+var stops = [];
+
+function makeStop(i) {
+  var ang = (i / ADDRESSES.length) * Math.PI * 2 + 0.35;
+  var rad = 7.5 + (i % 3) * 2.6;
+  var g = new T.Group();
+  g.position.set(Math.cos(ang) * rad, 0, Math.sin(ang) * rad);
+  g.rotation.y = -ang + Math.PI / 2;
+
+  /* A placeholder box stands in until the model lands, so a stop is never an
+     invisible spot on the road that you are told to drive to. */
+  var shell = new T.Mesh(new T.BoxGeometry(2.2, 2.4, 2.2),
+    new T.MeshStandardMaterial({ color: 0x4a4436, roughness: 0.9 }));
+  shell.position.y = 1.2; shell.castShadow = true; g.add(shell);
+
+  /* The porch light IS the objective marker. Dim while the parcel is undelivered
+     and unassigned, bright while it is the current drop, green once it is done —
+     so the state of the whole round is readable from the road without any HUD. */
+  var lamp = new T.PointLight(LAMP, 0.25, 7, 2);
+  lamp.position.set(0, 2.2, 1.4); g.add(lamp);
+  var bulb = new T.Mesh(new T.SphereGeometry(0.17, 10, 8),
+    new T.MeshBasicMaterial({ color: LAMP, transparent: true, opacity: 0.55 }));
+  bulb.position.copy(lamp.position); g.add(bulb);
+
+  /* A column of light, visible over the rooftops, for the ACTIVE drop only.
+     Without it the game is "drive around until you find the bright house". */
+  /* Tapered and brighter at the base. A straight column at low opacity reads as
+     a concrete post against a lit sky — additive blending over pale blue washes
+     the yellow out — and an objective marker that looks like scenery is worse
+     than none. The taper plus a lamp at the foot says "light", not "pillar". */
+  var beacon = new T.Mesh(new T.CylinderGeometry(0.85, 0.30, 15, 14, 1, true),
+    new T.MeshBasicMaterial({ color: LAMP, transparent: true, opacity: 0.26,
+      blending: T.AdditiveBlending, side: T.DoubleSide, depthWrite: false }));
+  beacon.position.y = 7.6; beacon.visible = false; g.add(beacon);
+
+  G.scene.add(g);
+  return { group: g, shell: shell, lamp: lamp, bulb: bulb, beacon: beacon,
+           name: ADDRESSES[i], done: false };
+}
+
+/* The doorsteps are built ONCE and reused every round. Rebuilding them on each
+   reset would re-download nothing but would leak a group per replay and lose the
+   swapped-in buildings, so a second run would be boxes again. */
+stops = ADDRESSES.map(function (_, i) { return makeStop(i); });
+
+G.onReady(function () {
+  /* Swap the placeholder boxes for real buildings and add a porch lantern. */
+  var kinds = ["house", "houseBig", "shop"];
+  stops.forEach(function (s, i) {
+    var b = G.get(kinds[i % kinds.length]);
+    if (b) { s.group.remove(s.shell); s.group.add(b); }
+    var l = G.get("lantern");
+    if (l) { l.position.set(1.1, 0, 1.5); s.group.add(l); }
+  });
+
+  /* Scenery rings the village OUTSIDE playRadius so nothing tall stands between
+     the camera and the van. Only flat, low props come inside the road area. */
+  /* Counts are a mobile budget, not a taste decision. Measured in a real
+     browser against the other two reference games: WonderVerse 193 meshes,
+     Dino Island 262. A driving game already carries eight buildings and seven
+     cars the others do not, so the scenery has to be thinner to land in the
+     same envelope — a village you drive past at 11 units/second does not repay
+     a tree the player never stops to look at. */
+  /* The ring is CONCENTRATED, not just present. Fog does not start until
+     arena * 1.4, so the ground disc's rim meets the sky unfogged and reads as
+     the edge of a plate unless something tall stands on it. Spreading the same
+     trees over a wider band left gaps you can see straight through — the ring
+     has to be dense at the rim, and the interior kept thin instead. */
+  G.scatter("pine", 11, { minR: 20, maxR: 25.5 });
+  G.scatter("tree", 10, { minR: 18.5, maxR: 24 });
+  G.scatter("fence", 8, { minR: 16.6, maxR: 17.6, jitter: false });
+  G.scatter("crate", 4, { minR: 6, maxR: 15 });
+  G.scatter("post", 3, { minR: 5, maxR: 14 });
+  var w = G.get("well"); if (w) { w.position.set(0, 0, 0); G.scene.add(w); }
+});
+
+/* Where the van begins every round. Named because the hazards have to keep
+   clear of it and the reset has to return to it. */
+var START = new T.Vector3(0, 0, 3.5);
+
+/* ---------- parked cars: the hazard ----------
+   They do not chase and they do not move. A night delivery round is a game about
+   reading a dark street at speed, not about being hunted — the punishment for
+   driving badly is the clock, which is the same thing the game is already about. */
+var hazards = [];
+function makeHazards() {
+  hazards.forEach(function (h) { G.scene.remove(h.obj); });
+  hazards.length = 0;          // emptied in place: G.hazards holds this array
+  for (var i = 0; i < 7; i++) {
+    var o = G.get(i % 2 ? "parked" : "taxi");
+    if (!o) {
+      o = new T.Mesh(new T.BoxGeometry(0.9, 0.7, 2),
+        new T.MeshStandardMaterial({ color: 0x8a4a44, roughness: 0.6 }));
+      o.position.y = 0.35; o.castShadow = true;
+    }
+    /* Reject any spot on the van's start position or on a doorstep. A car that
+       spawns on the van pins it in a collision loop it cannot drive out of —
+       every 1.2s another six seconds gone — and a car parked ON the drop turns
+       a delivery into a minefield. Both looked like "the van barely moves". */
+    var ok = false;
+    for (var tryN = 0; tryN < 40 && !ok; tryN++) {
+      var ang = Math.random() * Math.PI * 2;
+      var rad = 4.5 + Math.random() * 9.5;
+      o.position.set(Math.cos(ang) * rad, o.position.y || 0, Math.sin(ang) * rad);
+      ok = o.position.distanceTo(START) > 5;
+      for (var j = 0; ok && j < stops.length; j++) {
+        if (o.position.distanceTo(stops[j].group.position) < 4.6) ok = false;
+      }
+      for (var h2 = 0; ok && h2 < hazards.length; h2++) {
+        if (o.position.distanceTo(hazards[h2].obj.position) < 3) ok = false;
+      }
+    }
+    if (!ok) continue;                       // rather no car than a car in the way
+    o.rotation.y = Math.random() * Math.PI * 2;
+    G.scene.add(o);
+    hazards.push({ obj: o, hit: 0 });
+  }
+}
+
+/* ---------- driving ----------
+   Heading + speed rather than a velocity vector, because a van that can only
+   turn while it is moving is what makes it feel like a van and not a cursor. */
+var heading = 0, speed = 0, spin = 0;
+var MAXV = 11.5, ACCEL = 9.5, BRAKE = 15, DRAG = 2.4, TURN = 2.2;
+
+/* The runtime raycasts the pointer onto the ground and leaves the result in
+   G.target. It does not expose whether a finger is still down, so a change in
+   the target IS the touch: hold and it keeps updating, let go and it decays.
+   Reading it this way avoids duplicating the camera maths in a game file. */
+var lastTarget = new T.Vector3(999, 0, 999), pointHold = 0;
+
+var timeLeft = 0, active = 0, delivered = 0, msg = 0;
+
+function hud() {
+  G.stat("PARCELS", delivered + " / " + stops.length, "left");
+  G.stat("SCORE", G.score, "left");
+  var s = Math.max(0, Math.ceil(timeLeft));
+  G.stat("DAWN IN", Math.floor(s / 60) + ":" + ("0" + (s % 60)).slice(-2), "right");
+  G.stat("SPEED", Math.round(Math.abs(speed) * 8) + " mph", "right");
+}
+
+function callNextDrop() {
+  var next = -1;
+  for (var i = 0; i < stops.length; i++) {
+    var k = (active + 1 + i) % stops.length;
+    if (!stops[k].done) { next = k; break; }
+  }
+  if (next < 0) return false;
+  active = next;
+  stops.forEach(function (s, i) {
+    s.beacon.visible = (i === active && !s.done);
+    s.lamp.intensity = s.done ? 0.9 : (i === active ? 1.9 : 0.25);
+    s.lamp.color.setHex(s.done ? DONE : LAMP);
+    s.bulb.material.color.setHex(s.done ? DONE : LAMP);
+    s.bulb.material.opacity = s.done ? 0.9 : (i === active ? 1 : 0.55);
+  });
+  /* The radio is the reason the addresses have names. interrupt:true so a fresh
+     drop replaces a line still playing rather than queueing behind it. */
+  G.say("Next drop: " + stops[active].name, { interrupt: true });
+  G.beep(760, 0.1, "triangle", 0.12);
+  return true;
+}
+
+/* The runtime publishes G as window.JOSHRIX_GAME specifically so a host — an
+   arcade shell reading a final score, or an automated play-test — can read real
+   state instead of scraping pixels. These two are what describe a round here. */
+G.van = van;
+G.stops = stops;
+G.hazards = hazards;
+
+G.onReset(function (g) {
+  stops.forEach(function (s) {
+    s.done = false;
+    s.beacon.visible = false;
+    s.lamp.intensity = 0.25; s.lamp.color.setHex(LAMP);
+    s.bulb.material.color.setHex(LAMP); s.bulb.material.opacity = 0.55;
+  });
+  makeHazards();
+  van.position.copy(START);
+  heading = 0; speed = 0; spin = 0;
+  timeLeft = 105; delivered = 0; active = -1; msg = 0;
+  /* Seed from the CURRENT target, not a sentinel. Seeding with a value the
+     target could never hold makes the first frame look like a fresh touch, and
+     the van pulls away toward the middle of the village before the player has
+     touched anything — which reads as the game driving itself. */
+  lastTarget.copy(g.target); pointHold = 0;
+  hud();
+});
+
+G.onStart(function () {
+  G.voice("en-GB");
+  callNextDrop();
+  G.say("Van's loaded. Eight drops before dawn.", { interrupt: true });
+});
+
+G.onUpdate(function (g, dt) {
+  var k = g.keys;
+
+  /* ---- steering input: keys first, touch as the fallback ---- */
+  var throttle = 0, steer = 0;
+  if (k.w || k.arrowup) throttle += 1;
+  if (k.s || k.arrowdown) throttle -= 1;
+  if (k.a || k.arrowleft) steer += 1;
+  if (k.d || k.arrowright) steer -= 1;
+
+  if (!g.target.equals(lastTarget)) { lastTarget.copy(g.target); pointHold = 0.35; }
+  else if (pointHold > 0) pointHold -= dt;
+  if (!throttle && !steer && pointHold > 0) {
+    var dx = g.target.x - van.position.x, dz = g.target.z - van.position.z;
+    var dist = Math.hypot(dx, dz);
+    if (dist > 1.2) {
+      var want = Math.atan2(dx, dz);
+      var diff = Math.atan2(Math.sin(want - heading), Math.cos(want - heading));
+      steer = Math.max(-1, Math.min(1, diff * 2.4));
+      throttle = 1;
+    }
+  }
+
+  /* ---- physics ---- */
+  if (spin > 0) { spin -= dt; steer = 2.6; throttle = 0; }
+  if (throttle > 0) speed += ACCEL * dt;
+  else if (throttle < 0) speed -= BRAKE * dt;
+  else speed -= Math.sign(speed) * DRAG * dt * (Math.abs(speed) < 0.4 ? 3 : 1);
+  speed = Math.max(-MAXV * 0.4, Math.min(MAXV, speed));
+  if (Math.abs(speed) < 0.05) speed = 0;
+
+  /* Only a moving van turns, and it turns less the faster it goes. */
+  var grip = Math.min(1, Math.abs(speed) / 3.2);
+  heading += steer * TURN * dt * grip * (speed < 0 ? -1 : 1);
+
+  van.position.x += Math.sin(heading) * speed * dt;
+  van.position.z += Math.cos(heading) * speed * dt;
+  van.rotation.y = heading;
+  /* Body roll, so a hard turn reads as weight rather than a sprite rotating. */
+  van.rotation.z = -steer * grip * 0.08;
+  tail.intensity = throttle < 0 ? 1.5 : 0.35;
+
+  /* The village edge is a wall, not a cliff: bounce and lose speed. */
+  var r = Math.hypot(van.position.x, van.position.z);
+  if (r > g.playRadius) {
+    var s = g.playRadius / r;
+    van.position.x *= s; van.position.z *= s;
+    if (Math.abs(speed) > 4) { G.beep(150, 0.1, "square", 0.08); }
+    speed *= 0.35;
+  }
+
+  /* ---- parked cars ---- */
+  for (var i = 0; i < hazards.length; i++) {
+    var h = hazards[i];
+    if (h.hit > 0) { h.hit -= dt; continue; }
+    if (van.position.distanceTo(h.obj.position) < 1.75) {
+      h.hit = 1.2;
+      spin = 0.55;
+      speed = -Math.abs(speed) * 0.35;
+      /* Push clear along the separation normal. Without this a van that stops
+         inside a car stays inside it, and the same crash charges again every
+         1.2 seconds until the clock is gone. */
+      var nx = van.position.x - h.obj.position.x, nz = van.position.z - h.obj.position.z;
+      var nl = Math.hypot(nx, nz) || 1;
+      van.position.x = h.obj.position.x + (nx / nl) * 2.0;
+      van.position.z = h.obj.position.z + (nz / nl) * 2.0;
+      timeLeft -= 6;
+      G.flash("#ff6b5b");
+      G.burst(h.obj.position, HAZARD, 16);
+      G.beep(120, 0.28, "sawtooth", 0.16);
+      G.say("Watch the parked cars.", { interrupt: true });
+    }
+  }
+
+  /* ---- the drop ---- */
+  var cur = stops[active];
+  if (cur && !cur.done) {
+    cur.beacon.rotation.y += dt * 0.8;
+    cur.bulb.material.opacity = 0.7 + Math.sin(g.elapsed * 5) * 0.3;
+    if (van.position.distanceTo(cur.group.position) < 3.1 && Math.abs(speed) < 7.5) {
+      cur.done = true;
+      delivered++;
+      g.score += 100 + Math.max(0, Math.round(timeLeft));
+      timeLeft += 8;
+      cur.beacon.visible = false;
+      G.burst(cur.group.position, DONE, 26);
+      G.beep(980, 0.14, "triangle", 0.16);
+      if (delivered >= stops.length) {
+        g.score += Math.round(timeLeft) * 5;
+        G.say("Round complete. Well driven.", { interrupt: true });
+        G.over("Round Complete", "All eight delivered with " + Math.ceil(timeLeft) +
+          "s of night left. Final score " + g.score + ".");
+        hud();
+        return;
+      }
+      callNextDrop();
+    } else if (van.position.distanceTo(cur.group.position) < 3.1) {
+      /* Arriving flat out is not arriving. Say why, once, rather than letting
+         the player bounce off the doorstep wondering what is wrong. */
+      if (msg <= 0) { G.say("Slow down to drop it.", { interrupt: true }); msg = 2.5; }
+    }
+  }
+  if (msg > 0) msg -= dt;
+
+  /* ---- the clock ---- */
+  timeLeft -= dt;
+  if (timeLeft <= 0) {
+    G.over("Dawn", delivered + " of " + stops.length +
+      " delivered before the sun came up. Score " + g.score + ".");
+  }
+  hud();
+});
+</script>
+</body>
+</html>

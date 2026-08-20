@@ -93,6 +93,7 @@ export async function buildIssue(issue: string) {
   sections.push({
     heading: "Start here",
     links: [
+      { href: "/games/midnight-post", label: "Play Midnight Post", note: "Drive the night post van. Eight parcels, one night, no download." },
       { href: "/games/wonderverse", label: "Play WonderVerse", note: "A 3D game made on the platform. No download, no account." },
       { href: "/games/dino-island", label: "Play Dino Island", note: "Works on a phone as well as a desktop." },
       { href: "/features", label: "Every capability, with the numbers behind it" },
