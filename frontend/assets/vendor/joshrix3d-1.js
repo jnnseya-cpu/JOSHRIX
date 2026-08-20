@@ -15,13 +15,18 @@
  * Versioned in the filename on purpose — published games pin this URL forever,
  * so v1 must keep behaving like v1. Ship changes as joshrix3d-2.js.
  *
- * EXCEPTION, recorded deliberately: the sky-gradient and opt-in-sea fixes below
- * were applied to v1 in place rather than forked to v2. They correct behaviour
- * no game ever asked for — an ocean nobody requested, painted over sky colours
- * the creator did choose. Forking would have frozen every existing game with the
- * bug and fixed only future ones. A game that genuinely wants water passes
- * sea:true and is unaffected. If v1 ever has a real installed base, this is the
- * last change that gets to work this way.
+ * EXCEPTIONS, recorded deliberately. Three fixes have been applied to v1 IN
+ * PLACE rather than forked to v2:
+ *
+ *   1. the sky gradient, which was compressed into a band no camera could see
+ *   2. the sea, which every game got whether it asked or not
+ *   3. the horizon skirt, because the ground disc's rim met the sky unfogged
+ *
+ * All three correct behaviour no game ever asked for, and all three are
+ * invisible to a game that was not suffering from them. Forking would have
+ * frozen every already-published game with the bug and fixed only future ones —
+ * the opposite of what a pinned URL is for. Each was a deliberate call, not a
+ * habit: anything that changes what a game ASKED for still goes in v2.
  *
  * Requires three.js r147 UMD and GLTFLoader to be loaded first.
  */
@@ -219,6 +224,32 @@
     ground.rotation.x = -Math.PI / 2;
     ground.receiveShadow = true;
     scene.add(ground);
+
+    /* THE PLATE EDGE.
+     * The playable ground is a disc of radius `arena`, but the fog does not
+     * begin until arena * 1.4. So the disc's rim was ALWAYS reached before any
+     * fog could hide it: it met the sky as a hard curved line and the world
+     * read as a plate floating in space. Every game on this runtime had it, in
+     * every screenshot, and it is the single clearest tell that a build is a
+     * demo rather than a game.
+     *
+     * The fix is a skirt: one flat ring in the ground's own colour that starts
+     * under the disc rim and runs out PAST the fog's far distance, so it ends
+     * inside full haze and the horizon closes instead of stopping. Flat colour
+     * rather than the speckled texture on purpose — at that range fog dominates
+     * completely, and tiling a texture over 25x the area buys nothing.
+     *
+     * Not drawn when the game asked for a sea: the ocean disc is already the
+     * horizon there, and a skirt above it would cover the water. */
+    if (!cfg.sea) {
+      var skirt = new THREE.Mesh(
+        new THREE.RingGeometry(arena - 0.4, arena * 5.0, 64, 1),
+        new THREE.MeshStandardMaterial({ color: new THREE.Color(grd.base || "#4e8a45"), roughness: 1 }));
+      skirt.rotation.x = -Math.PI / 2;
+      skirt.position.y = -0.02;        // just under the disc, so no z-fighting
+      skirt.receiveShadow = false;     // nothing casts out there; keep it cheap
+      scene.add(skirt);
+    }
 
     // OPT-IN. This used to be `cfg.sea !== false`, so every game that did not
     // explicitly refuse got an ocean: a 5.4x-arena blue disc that becomes the

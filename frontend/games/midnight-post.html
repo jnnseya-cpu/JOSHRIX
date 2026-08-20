@@ -54,22 +54,8 @@ var G = JOSHRIX3D.boot({
 var T = G.THREE;
 var LAMP = 0xffcf5c, DONE = 0x7ce8a0, HAZARD = 0xff6b5b;
 
-/* ---------- close the horizon ----------
-   The runtime draws the ground as a disc of radius `arena` (26) but fog does
-   not begin until arena * 1.4 (36), so that rim ALWAYS meets the sky unfogged
-   and the world reads as a plate floating in space — the single biggest tell
-   that a build is a demo rather than a game. Rather than change a pinned
-   runtime version under every already-published game, the game lays its own
-   skirt: one ring that starts under the arena edge and runs out past the fog's
-   far distance, so it fades into the haze instead of stopping. */
-var skirt = new T.Mesh(new T.RingGeometry(25.4, 130, 64, 1),
-  /* Same base colour as the arena's ground. A darker skirt just moves the seam
-     rather than removing it: what has to disappear is the COLOUR STEP, and the
-     arena's speckle texture already washes out with distance. */
-  new T.MeshStandardMaterial({ color: 0x2b3040, roughness: 1 }));
-skirt.rotation.x = -Math.PI / 2;
-skirt.position.y = -0.03;                 // just under the arena, so no z-fighting
-G.scene.add(skirt);
+/* The horizon skirt this game used to lay for itself now lives in the runtime,
+   so every game gets a closed horizon instead of only this one. */
 
 /* ---------- the van: primitives first, so the game is playable even if every
               download fails, then the library van swaps in on arrival ---------- */
