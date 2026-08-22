@@ -7,6 +7,46 @@ Last updated: 2026-08-22 (character library landed; the runtime got a real sound
 
 ---
 
+## NOTHING IS FREE — Justin, 22 Aug
+
+> No one can build, create, sell or play for free, on any platform.
+
+This EXTENDS the standing "no free AI" rule to **playing**. It is coherent with the model
+below: if creators sell games in the marketplace, an arcade that gives the same games away
+is competing with the creators it is meant to pay. GO-TO-MARKET §2.2 already named the
+same failure in the creation lane — "the free tier destroys the paid tier".
+
+**One outright falsehood, fixed 22 Aug.** `index.html` told every visitor "Forge yours —
+the first one is free". A public signup gets **zero ACUs**; a 2D forge holds 150 and a 3D
+forge holds 250. Anyone who clicked it was refused. It now reads "creation starts from a
+£5 ACU pack", which is what `pricing.html` already said and what the code actually does.
+
+**What still contradicts the rule, and is NOT yet changed** — because paywalling play is
+outward-facing, hard to reverse, and Justin's call, not mine:
+
+| Where | What it says or does |
+|---|---|
+| `shared/payments.ts` | `explorer` plan, £0/month, "browse & play only" |
+| `arcade.html` | "playable instantly, **free**, no account, no download" |
+| `index.html` | "Play One Now — **No Account**" · "no payment — it runs in this page" |
+| `pricing.html` | "JOSHRIX Arcade · **Free**" |
+| `play.html` / `/play/:id` | no wallet check anywhere — play is open to the world |
+
+**THE DECISION WAITING FOR JUSTIN.** Does a stranger get to play ANYTHING before paying?
+It governs the whole funnel and cannot be inferred from the rule as stated:
+
+- **Nothing free at all** — every game requires an account with credit. Cleanest read of
+  the rule. Costs the shop window: GO-TO-MARKET's press story is "a stranger plays a
+  Nairobi student's game from a link", and `/api/seo` + the sitemap are built to send
+  strangers to playable pages.
+- **A demo is free, the catalogue is paid** — the three reference games stay open as the
+  shop window; every creator game requires purchase. Protects creator earnings, keeps
+  acquisition, and is what the marketplace lane already implies.
+
+Until he says which, the arcade stays as it is. Do not paywall it on inference.
+
+---
+
 ## THE BUSINESS MODEL — Justin's words, 22 Aug. Do not restate it any other way.
 
 > Customers create games and sell them in our marketplace. It can be in our place,
