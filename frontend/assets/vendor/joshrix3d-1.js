@@ -588,6 +588,46 @@
         return obj;
       },
 
+      /** Recolour a loaded model. USE THIS — never obj.material.color.
+       *
+       *  get() and actor() hand back the glTF scene ROOT, which is a Group. A
+       *  Group has no .material, so the obvious line
+       *
+       *      obj.material.color.set(0xff0000)
+       *
+       *  throws "Cannot read properties of undefined (reading 'color')" and
+       *  kills the build on frame one. It is the most natural thing to write and
+       *  it has cost a creator a real forge run, so the fix is a correct
+       *  one-liner rather than a warning nobody reads.
+       *
+       *      G.tint(obj, "#ff3b3b")           every mesh in the model
+       *      G.tint(obj, "#ff3b3b", 0.35)     blend 35% toward that colour
+       *
+       *  Materials are SHARED between clones of the same model, so this clones
+       *  each material before touching it — otherwise tinting one enemy red
+       *  turns the whole squad red, which looks like a game bug rather than a
+       *  material bug and is far harder to find. Never throws. */
+      tint: function (obj, color, amount) {
+        if (!obj || !obj.traverse) return obj;
+        var c;
+        try { c = new THREE.Color(color); } catch (e) { return obj; }
+        var mix = amount == null ? 1 : Math.max(0, Math.min(1, amount));
+        obj.traverse(function (n) {
+          if (!n.isMesh && !n.isSkinnedMesh) return;
+          var list = Array.isArray(n.material) ? n.material : [n.material];
+          var out = [];
+          for (var i = 0; i < list.length; i++) {
+            var m = list[i];
+            if (!m || !m.color) { out.push(m); continue; }
+            var copy = m.clone();
+            copy.color.lerp(c, mix);
+            out.push(copy);
+          }
+          n.material = Array.isArray(n.material) ? out : out[0];
+        });
+        return obj;
+      },
+
       /** An instance plus its own mixer, ready to play a named clip. */
       actor: function (key, clipName) {
         var obj = this.get(key);

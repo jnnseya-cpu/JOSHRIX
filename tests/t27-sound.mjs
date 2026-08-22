@@ -212,6 +212,42 @@ const afterMute = await pg.evaluate(() => {
 });
 t('a one-shot makes no sound while muted', afterMute === 0, 'started ' + afterMute);
 
+/* The trap that killed a real forge run: get() and actor() return the glTF
+   scene ROOT, a Group, which has no .material — so the obvious recolour line
+   throws "Cannot read properties of undefined (reading 'color')" on frame one.
+   G.tint exists to make that impossible, and these assertions keep it that way. */
+console.log('\n== recolouring a model cannot kill the build ==');
+const tint = await pg.evaluate(async () => {
+  const out = { direct: null };
+  G.load('m', 'packs/quaternius-modular-men/punk', { height: 1.9 });
+  await new Promise((r) => G.onReady(r));
+  const o = G.get('m');
+  out.isGroup = !!o && !o.isMesh && !o.material;
+  try { o.material.color.set(0xff0000); out.direct = 'no throw'; }
+  catch (e) { out.direct = e.message; }
+  const a = G.actor('m'), b = G.actor('m');
+  G.tint(a.obj, '#ff0000');
+  const hex = (x) => { let h = null; x.traverse((n) => {
+    if ((n.isMesh || n.isSkinnedMesh) && !h) { const m = [].concat(n.material)[0]; if (m && m.color) h = m.color.getHexString(); } }); return h; };
+  out.tinted = hex(a.obj);
+  out.sibling = hex(b.obj);
+  out.blend = (function () { const c = G.actor('m'); G.tint(c.obj, '#ff0000', 0.5); return hex(c.obj); })();
+  try { G.tint(null, '#fff'); G.tint(a.obj, 'not-a-colour'); G.tint(a.obj); out.safe = true; }
+  catch (e) { out.safe = e.message; }
+  return out;
+});
+t('G.tint exists on the runtime', typeof (await pg.evaluate(() => typeof G.tint)) === 'string'
+  && (await pg.evaluate(() => typeof G.tint)) === 'function');
+t('get() really does return a materialless Group — the trap is real', tint.isGroup === true);
+t('obj.material.color still throws, which is why G.tint has to exist',
+  /reading 'color'/.test(tint.direct || ''), String(tint.direct));
+t('G.tint recolours the model', tint.tinted === 'ff0000', String(tint.tinted));
+t('tinting one instance does NOT tint its siblings', tint.sibling !== 'ff0000' && !!tint.sibling,
+  'sibling came back ' + tint.sibling);
+t('a partial blend lands between the two colours',
+  tint.blend !== 'ff0000' && tint.blend !== tint.sibling, String(tint.blend));
+t('G.tint never throws on null, a bad colour, or no colour', tint.safe === true, String(tint.safe));
+
 console.log('\n== nothing threw at any point ==');
 t('no JavaScript errors across the whole run', errs.length === 0, errs.slice(0, 3).join(' | '));
 
