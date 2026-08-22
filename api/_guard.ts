@@ -79,6 +79,35 @@ export async function rateLimit(
 }
 
 /** Standard 429 body. Never reveals the limit policy in detail. */
+/**
+ * Throttle WRONG admin-key attempts, per IP.
+ *
+ * MODERATION_KEY is the only credential on this platform: it grants ACUs,
+ * designates testers, approves payouts — real money leaving the account — and
+ * opens the moderation queue and the margin data. Nothing was counting failed
+ * attempts, so it could be guessed at network speed indefinitely, which made
+ * the length of the key the only thing standing between an attacker and all of
+ * that.
+ *
+ * Ten attempts per fifteen minutes per IP turns an unlimited online guess into
+ * a rate no brute force survives. A CORRECT key is never counted, so an
+ * operator who mistypes twice and then gets it right is never locked out, and
+ * routine admin work never touches the limit at all.
+ *
+ * Returns true when it has already sent the 429 — the caller just returns.
+ */
+export async function tooManyBadKeys(sql: any, req: any, res: any): Promise<boolean> {
+  if (!sql) return false;                 // no store: the key check itself still stands
+  try {
+    const rl = await rateLimit(sql, "adminkey:" + clientIp(req), 10, 900);
+    if (rl.ok) return false;
+    tooMany(res, rl.retryAfter, "admin key attempts");
+    return true;
+  } catch {
+    return false;                         // never lock an operator out on a DB blip
+  }
+}
+
 export function tooMany(res: any, retryAfter: number, what = "requests") {
   res.setHeader("Retry-After", String(retryAfter));
   return res.status(429).json({

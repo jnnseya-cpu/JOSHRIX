@@ -10,6 +10,7 @@
  * attached to the call.
  */
 import { getDb, ensurePayoutSchema, listPayoutRequests, decidePayoutRequest, releaseReservation } from "./_ledger";
+import { tooManyBadKeys } from "./_guard";
 
 const DECISIONS = ["approved", "rejected", "paid"] as const;
 
@@ -21,7 +22,12 @@ export default async function handler(req: any, res: any) {
 
   const key = process.env.MODERATION_KEY;
   if (!key) return res.status(503).json({ error: "MODERATION_KEY not configured" });
-  if (req.headers?.["x-admin-key"] !== key) return res.status(401).json({ error: "Invalid admin key" });
+  if (req.headers?.["x-admin-key"] !== key) {
+    // count the failure before refusing, so the only credential on the
+    // platform cannot be guessed at network speed
+    if (await tooManyBadKeys(getDb(), req, res)) return;
+    return res.status(401).json({ error: "Invalid admin key" });
+  }
 
   const sql = getDb();
   if (!sql) return res.status(503).json({ error: "DATABASE_URL missing", mode: "no_db" });

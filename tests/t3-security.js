@@ -20,6 +20,47 @@ for (const mod of ['admin-wallets','admin-stats','moderation']) {
 let r = await call('admin-wallets', {method:'POST', headers:{}, body:{walletId:'w-victim', amount:100000}, query:{}});
 t('P5-04','admin-wallets: ACU grant without key refused', r.code===401||r.code===403, 'P0', `got ${r.code} ${JSON.stringify(r.body).slice(0,90)}`);
 
+console.log('\n== PHASE 5: THE ADMIN KEY MUST NOT BE GUESSABLE AT NETWORK SPEED ==');
+/* MODERATION_KEY grants ACUs, designates testers, approves payouts and opens
+   the moderation queue. Nothing counted failed attempts, so it could be brute
+   forced online forever and the key's length was the only defence. */
+{
+  const before = process.env.MODERATION_KEY;
+  process.env.MODERATION_KEY = 'the-real-key-nobody-knows';
+
+  // The throttle counts in the rate_limits table, so it can only be proven with
+  // a store behind it. Model the one statement rateLimit() actually runs.
+  const led = require('./build/api/_ledger.js');
+  const counters = new Map();
+  led.__setDbForTests((strings, ...vals) => {
+    const q = strings.join('?').replace(/\s+/g, ' ');
+    if (/^CREATE TABLE/i.test(q.trim())) return Promise.resolve([]);
+    if (/INSERT INTO rate_limits/i.test(q)) {
+      const k = vals[0];
+      const n = (counters.get(k) ?? 0) + 1;
+      counters.set(k, n);
+      return Promise.resolve([{ count: n, retry_after: 900 }]);
+    }
+    return Promise.resolve([]);
+  });
+
+  let throttled = 0, refused = 0;
+  for (let i = 0; i < 25; i++) {
+    const rr = await call('admin-wallets', { method: 'GET', headers: { 'x-admin-key': 'guess-' + i }, query: {} });
+    if (rr.code === 429) throttled++;
+    else if (rr.code === 401) refused++;
+  }
+  t('P5-06', 'wrong keys are eventually throttled, not answered forever', throttled > 0, 'P1',
+    `${refused} refused, ${throttled} throttled out of 25`);
+  t('P5-06', 'the throttle leaves room for an operator who mistypes', refused >= 3, 'P2',
+    `only ${refused} attempts before lockout — a fat-fingered admin would be locked out`);
+  const good = await call('admin-wallets', { method: 'GET', headers: { 'x-admin-key': 'the-real-key-nobody-knows' }, query: {} });
+  t('P5-06', 'the CORRECT key still works while wrong ones are throttled', good.code !== 429, 'P0',
+    `got ${good.code} — a lockout that catches the operator is a self-inflicted outage`);
+  led.__setDbForTests(null);          // leave the rest of the file DB-free
+  if (before === undefined) delete process.env.MODERATION_KEY; else process.env.MODERATION_KEY = before;
+}
+
 console.log('\n== PHASE 5: OPERATOR-ONLY ENDPOINTS MUST REFUSE STRANGERS ==');
 // /api/economy answers "what does each SKU cost us against what we charge" —
 // provider cost per top-up, per subscription month, per 3D forge, plus fixed
