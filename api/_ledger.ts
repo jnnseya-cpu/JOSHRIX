@@ -193,6 +193,8 @@ export async function ensureGameSchema(sql: Sql) {
   // are left exactly as they are (reclassifying live wallets is an admin
   // decision, not a migration's), but nothing new is born entitled. Keep this
   // literal in step with DEFAULT_WALLET_CATEGORY in shared/payments.ts.
+  await sql`ALTER TABLE forge_log ADD COLUMN IF NOT EXISTS bytes bigint`;
+  await sql`ALTER TABLE forge_log ADD COLUMN IF NOT EXISTS models integer`;
   await sql`ALTER TABLE wallets ALTER COLUMN category SET DEFAULT 'standard'`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT 'explorer'`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS name text`;
@@ -328,12 +330,15 @@ export async function getForgeResult(sql: Sql, ticket: string) {
  * per-provider error text when every AI failed — so diagnosing a bad run never
  * depends on what the creator's browser happened to display.
  */
-export async function recordForgeLog(sql: Sql, e: { provider: string; mode?: string | null; ms?: number | null; error?: string | null }) {
-  await sql`INSERT INTO forge_log (provider, mode, ms, error) VALUES (${e.provider}, ${e.mode ?? null}, ${e.ms ?? null}, ${e.error ?? null})`;
+/** `bytes` and `models` are the two fields that were missing when they were most
+ *  needed. Byte size is what exposed the 8,411-byte stub, and the model count is
+ *  the only way to answer "why does it look blocky" without the HTML in hand. */
+export async function recordForgeLog(sql: Sql, e: { provider: string; mode?: string | null; ms?: number | null; error?: string | null; bytes?: number | null; models?: number | null }) {
+  await sql`INSERT INTO forge_log (provider, mode, ms, error, bytes, models) VALUES (${e.provider}, ${e.mode ?? null}, ${e.ms ?? null}, ${e.error ?? null}, ${e.bytes ?? null}, ${e.models ?? null})`;
 }
 
 export async function listForgeLog(sql: Sql, limit = 20) {
-  return (await sql`SELECT provider, mode, ms, error, created_at FROM forge_log ORDER BY id DESC LIMIT ${limit}`) as any[];
+  return (await sql`SELECT provider, mode, ms, error, bytes, models, created_at FROM forge_log ORDER BY id DESC LIMIT ${limit}`) as any[];
 }
 
 /**

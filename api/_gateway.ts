@@ -540,9 +540,28 @@ const FLOOR_3D: Array<[string, RegExp]> = [
  *  boilerplate. */
 const FLOOR_ENGINE: Array<[string, RegExp]> = [
   ["a per-frame update — nothing can happen without one", /\.\s*onUpdate\s*\(/],
-  ["anything in the world at all (load/get/actor/scatter)", /\.\s*(load|get|actor|scatter)\s*\(/],
+  // WAS: /\.(load|get|actor|scatter)\(/ — which `G.get("thing")` satisfies even
+  // when "thing" was never loaded. get() then returns null, the game falls back
+  // to its own boxes and spheres, and the build ships as coloured primitives on
+  // a plane while passing every gate. That is precisely what "it looks blocky"
+  // means, and it is not a judgement about art style: the runtime exists to put
+  // the 2,300-model library on screen, and GAME_SYSTEM_3D forbids "floating
+  // primitives on a flat plane" outright. So require a real library path.
+  ["at least one model from the library — bare primitives are why builds look blocky",
+   /\.\s*load\s*\(\s*(['"])[^'"]*\1\s*,\s*(['"])(lib|packs|vehicles)\//],
   ["something for the player to reach or avoid", /\.\s*(burst|over|stat|pips|follow)\s*\(/],
 ];
+
+/** How many DISTINCT library models a build actually pulls in. Logged with every
+ *  forge, because "which provider and how many bytes" could not answer the one
+ *  question that mattered — did it use the library at all. */
+export function countLibraryModels(html: string): number {
+  const seen = new Set<string>();
+  const re = /['"]((?:lib|vehicles|packs)\/[A-Za-z0-9_\-/]+)['"]/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html))) seen.add(m[1]);
+  return seen.size;
+}
 
 export function missing3dFloor(html: string): string[] {
   if (usesEngine(html)) return FLOOR_ENGINE.filter(([, re]) => !re.test(html)).map(([n]) => n);

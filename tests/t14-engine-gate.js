@@ -116,6 +116,47 @@ t('a hand-written 3D build still faces the ORIGINAL floor',
   G.missing3dFloor(HANDWRITTEN_BARE).length > 0,
   'the engine exemption must not leak to non-engine builds');
 
+console.log('\n== a 3D build must actually LOAD a model, not just call get() ==');
+/* The floor used to accept /\.(load|get|actor|scatter)\(/ — and `G.get("thing")`
+   satisfies that even when "thing" was never loaded. get() returns null, the
+   game falls back to its own boxes, and coloured primitives on a plane ship
+   while passing every gate. That is what "it looks blocky" means. */
+{
+  const shell = (body) => `<!DOCTYPE html><html><body>
+<script src="https://www.joshrix.com/assets/vendor/joshrix3d-1.js"></script>
+<script>var G = JOSHRIX3D.boot({title:"X"}); ${body} G.onUpdate(function(){}); G.stat("SCORE",0);</script>
+</body></html>`;
+
+  const PRIMITIVES = shell('var o = G.get("hero"); if(!o){o=new THREE.Mesh(new THREE.BoxGeometry(1,1,1));} G.scene.add(o);');
+  t('a build that only calls get() on nothing is refused',
+    G.missing3dFloor(PRIMITIVES).length > 0, JSON.stringify(G.missing3dFloor(PRIMITIVES)));
+  t('and the reason names the library',
+    /library|blocky/i.test(G.missing3dFloor(PRIMITIVES).join(' ')), G.missing3dFloor(PRIMITIVES).join(' '));
+
+  const REAL = shell('G.load("hero","lib/hero_knight",{height:1.8}); G.load("tree","packs/kenney-nature-kit/tree_default",{height:4});');
+  t('a build that loads real models passes', G.missing3dFloor(REAL).length === 0,
+    JSON.stringify(G.missing3dFloor(REAL)));
+  t('countLibraryModels counts the distinct paths', G.countLibraryModels(REAL) === 2,
+    String(G.countLibraryModels(REAL)));
+  t('and reports zero for a build with none', G.countLibraryModels(PRIMITIVES) === 0);
+}
+
+console.log('\n== the floor must not reject the games that actually work ==');
+/* Synthetic samples prove the regex; only real shipped games prove the floor is
+   survivable. If a hand-built, play-tested game cannot clear it, the floor is
+   wrong — not the game. */
+{
+  const fs = require('fs'), path = require('path');
+  const dir = path.join(process.env.JOSHRIX_ROOT || process.cwd(), 'frontend', 'games');
+  for (const f of fs.readdirSync(dir).filter((x) => x.endsWith('.html'))) {
+    const html = fs.readFileSync(path.join(dir, f), 'utf8');
+    const miss = G.missing3dFloor(html);
+    t(`${f.replace('.html','')} clears the 3D floor`, miss.length === 0, miss.join(', '));
+    t(`${f.replace('.html','')} uses the model library`, G.countLibraryModels(html) > 0,
+      `${G.countLibraryModels(html)} models`);
+  }
+}
+
 console.log('\n== the 2D lane had no gate at all ==');
 /* Every check above lived inside `if (is3d)`. A 2D build faced the security
    scan and then looksPlayable(), which is true if the string "<canvas" appears

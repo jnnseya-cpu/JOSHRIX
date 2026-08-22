@@ -7,7 +7,7 @@
  * forge charge is debited server-side BEFORE generation and refunded on failure.
  */
 import { randomUUID } from "crypto";
-import { generateGameHtml, looksPlayable, acuChargeForUsage, FORGE_GAME_ACU_CHARGE, FORGE_GAME_3D_ACU_CHARGE, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE } from "./_gateway";
+import { generateGameHtml, looksPlayable, countLibraryModels, acuChargeForUsage, FORGE_GAME_ACU_CHARGE, FORGE_GAME_3D_ACU_CHARGE, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE } from "./_gateway";
 import { buildPlayableGame } from "./_engine";
 import { releaseExpiredForgeHolds, getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeHold, saveForgeResult, recordForgeLog } from "./_ledger";
 import { recordSecurityEvent } from "./_guard";
@@ -175,7 +175,7 @@ export default async function handler(req: any, res: any) {
       // record the rejected providers too, not just total failure: knowing WHY
       // the first two were skipped is what explains a slow or surprising build
       const trail = bespokeError ?? (attemptTrail.length ? attemptTrail.join(" | ").slice(0, 600) : null);
-      try { await recordForgeLog(sql, { provider, mode: is3d ? "3d" : "2d", ms: Date.now() - genStart, error: trail }); } catch { /* best-effort */ }
+      try { await recordForgeLog(sql, { provider, mode: is3d ? "3d" : "2d", ms: Date.now() - genStart, error: trail, bytes: html.length, models: countLibraryModels(html) }); } catch { /* best-effort */ }
     }
     // METERED SETTLEMENT (business model: charge = 4x the AI provider cost of THIS
     // run, from actual token usage). The upfront debit was only a hold:
