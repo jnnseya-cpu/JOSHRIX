@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Dino Island — Guardian of the Nest | JOSHRIX Studio</title>
+<meta name="description" content="A free 3D browser game: guard your nest from raptors, a T-Rex and a triceratops. Plays instantly on phone or desktop — no download, no account. Built on JOSHRIX Studio.">
+<link rel="canonical" href="https://www.joshrix.com/games/dino-island">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Dino Island — Guardian of the Nest">
+<meta property="og:description" content="Guard your nest from dinosaurs in this free 3D browser game. No download, no account.">
+<meta property="og:url" content="https://www.joshrix.com/games/dino-island">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0b1622">
+<link rel="manifest" href="/manifest.webmanifest">
+<script src="/assets/splash.js" defer></script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"VideoGame","name":"Dino Island — Guardian of the Nest",
+"description":"A free 3D browser game: guard your nest from raptors, a T-Rex and a triceratops.",
+"url":"https://www.joshrix.com/games/dino-island","genre":["Action","Arcade"],
+"gamePlatform":["Web browser","Android","iOS"],"applicationCategory":"Game","inLanguage":"en",
+"playMode":"SinglePlayer","publisher":{"@type":"Organization","name":"JOSHRIX Studio","url":"https://www.joshrix.com"},
+"offers":{"@type":"Offer","price":"0","priceCurrency":"GBP","availability":"https://schema.org/InStock"}}
+</script>
+<script src="/assets/vendor/three.min.js"></script>
+<script src="/assets/vendor/GLTFLoader.js"></script>
+<script src="/assets/vendor/joshrix3d-1.js"></script>
+</head>
+<body>
+<script>
+(function () {
+  "use strict";
+  if (typeof JOSHRIX3D === "undefined") {
+    document.body.innerHTML = "<p style='color:#fff;padding:2rem;font-family:system-ui'>The 3D engine could not load. Please refresh.</p>";
+    return;
+  }
+
+  var G = JOSHRIX3D.boot({
+    title: "Dino Island", titleAccent: "Island",
+    tagline: "Guardian of the Nest.",
+    howTo: "Dinosaurs are coming for your eggs. Collect the glowing crystals, and drive off anything that reaches the nest. Drag, or use the arrow keys / WASD, to move.",
+    arena: 24, playRadius: 18,
+    accent: "#ffd166",
+    sky: { top: "#1d3b57", mid: "#3f7ba6", haze: "#7fb0c8" },
+    ground: { base: "#4e8a45", speckle: ["#5c9c50", "#437a3c", "#6aa85c", "#3d6f38"] },
+    sea: true,
+  });
+
+  var T = G.THREE;
+  G.lives = 3;
+
+  /* ---- the guardian: visible immediately, upgraded when the model lands ---- */
+  var player = new T.Group();
+  var stand = new T.Mesh(new T.CylinderGeometry(0.5, 0.62, 0.25, 12),
+    new T.MeshStandardMaterial({ color: 0x2b6fd8, roughness: .6 }));
+  stand.position.y = 0.12; stand.castShadow = true; player.add(stand);
+  var proxy = new T.Mesh(new T.CapsuleGeometry(0.36, 0.9, 4, 10),
+    new T.MeshStandardMaterial({ color: 0x8fd6c7 }));
+  proxy.position.y = 1.05; proxy.castShadow = true; player.add(proxy);
+  var aura = new T.Mesh(new T.TorusGeometry(1.7, 0.08, 8, 28),
+    new T.MeshStandardMaterial({ color: 0x7ce0a0, emissive: 0x2ad07a, emissiveIntensity: 1.1 }));
+  aura.rotation.x = -Math.PI / 2; aura.position.y = 0.1; player.add(aura);
+  player.position.set(0, 0, 6);
+  G.scene.add(player);
+  G.follow(player);
+  G.target.set(0, 0, 6);
+
+  var nest = new T.Group(); nest.position.set(0, 0, -7); G.scene.add(nest);
+  var nestRing = new T.Mesh(new T.TorusGeometry(2.2, 0.32, 8, 22),
+    new T.MeshStandardMaterial({ color: 0xb99a5f, roughness: .95 }));
+  nestRing.rotation.x = -Math.PI / 2; nestRing.position.y = 0.3;
+  nestRing.castShadow = true; nestRing.receiveShadow = true; nest.add(nestRing);
+
+  /* ---- models: the engine normalises every height, so nothing arrives as a speck ---- */
+  G.load("hero", "lib/guardian", { height: 1.9, onLoad: function () {
+      player.remove(proxy);
+      var a = G.actor("hero", "walk");
+      if (a) { player.add(a.obj); player.userData.hero = a; }
+    } })
+   .load("trex", "lib/dino_trex", { height: 2.6 })
+   .load("raptor", "lib/dino_raptor", { height: 1.9 })
+   .load("trike", "lib/dino_trike", { height: 2.1 })
+   .load("nest", "lib/dino_nest", { size: 4.4, onLoad: function () {
+      var n = G.get("nest"); if (n) nest.add(n);
+    } })
+   .load("egg", "lib/dino_egg", { height: 0.9, onLoad: function () {
+      for (var e = 0; e < 3; e++) {
+        var eg = G.get("egg"); if (!eg) break;
+        var a = e / 3 * Math.PI * 2 + 0.4;
+        eg.position.set(Math.cos(a) * 0.85, 0.42, Math.sin(a) * 0.85);
+        eg.rotation.set(0.22, a, 0);
+        eg.name = "egg" + e; nest.add(eg);
+      }
+    } })
+   .load("crystal", "lib/crystal_0", { height: 1.6 })
+   .load("palm", "lib/tree_palm", { height: 4.2 })
+   .load("fern", "lib/fern_tree", { height: 3.4 })
+   .load("tree", "lib/tree_round_0", { height: 3.6 })
+   .load("rock", "lib/rock_0", { height: 1.0 })
+   .load("bush", "lib/bush_0", { height: 0.7 })
+   .load("volcano", "lib/volcano", { height: 8, onLoad: function () {
+      var v = G.get("volcano");
+      if (v) { v.position.set(-34, 0, -48); G.scene.add(v); }
+      var glow = new T.PointLight(0xff5a1a, 2.6, 40); glow.position.set(-34, 10, -48); G.scene.add(glow);
+    } });
+
+  // tall things ring the arena outside playRadius; low things fill the middle
+  G.onReady(function () {
+    G.scatter("palm", 7); G.scatter("fern", 5); G.scatter("tree", 6);
+    G.scatter("rock", 10, { minR: 4, maxR: 22, avoid: nest.position, avoidRadius: 5 });
+    G.scatter("bush", 12, { minR: 4, maxR: 22, avoid: nest.position, avoidRadius: 5 });
+  });
+
+  /* ------------------------------- gameplay ------------------------------- */
+  var crystals = [], dinos = [], spawnT = 0;
+  var KINDS = [["raptor", 1.4], ["trex", 0.75], ["trike", 1.0]];
+
+  function spawnCrystal() {
+    var c = G.get("crystal");
+    if (!c) {
+      c = new T.Mesh(new T.OctahedronGeometry(0.5),
+        new T.MeshStandardMaterial({ color: 0x7ee0ff, emissive: 0x2aa8d8, emissiveIntensity: .9, roughness: .25 }));
+      c.scale.y = 1.8; c.castShadow = true;
+    }
+    var a = Math.random() * Math.PI * 2, r = 4 + Math.random() * (G.playRadius - 5);
+    c.position.set(Math.cos(a) * r, 0.4, Math.sin(a) * r);
+    G.scene.add(c); crystals.push(c);
+  }
+
+  function spawnDino() {
+    var pick = KINDS[Math.floor(Math.random() * KINDS.length)];
+    var a = G.actor(pick[0], "walk");
+    var obj = a ? a.obj : null;
+    if (!obj) {
+      obj = new T.Mesh(new T.CapsuleGeometry(0.5, 1.1, 4, 8), new T.MeshStandardMaterial({ color: 0x7a9c4a }));
+      obj.rotation.z = Math.PI / 2; obj.position.y = 1; obj.castShadow = true;
+    }
+    var ang = Math.random() * Math.PI * 2, r = G.playRadius + 3;
+    obj.position.set(Math.cos(ang) * r, 0, Math.sin(ang) * r);
+    G.scene.add(obj);
+    dinos.push({ obj: obj, speed: (0.028 + G.wave * 0.006 + Math.random() * 0.012) * pick[1] * 60 });
+  }
+
+  var best = 0;
+  try { best = Number(localStorage.getItem("dinoIslandBest")) || 0; } catch (e) {}
+  function rank(s) {
+    return s >= 400 ? "Elder Guardian" : s >= 220 ? "Island Warden"
+         : s >= 120 ? "Nest Keeper" : s >= 50 ? "Scout" : "Fledgling";
+  }
+
+  G.onReset(function () {
+    dinos.forEach(function (d) { G.scene.remove(d.obj); }); dinos.length = 0;
+    crystals.forEach(function (c) { G.scene.remove(c); }); crystals.length = 0;
+    player.position.set(0, 0, 6); G.target.set(0, 0, 6);
+    G.lives = 3; spawnT = 0;
+    nest.children.forEach(function (c) { if (c.name && c.name.indexOf("egg") === 0) c.visible = true; });
+    for (var i = 0; i < 5; i++) spawnCrystal();
+    spawnDino();
+    hud();
+  });
+
+  function hud() {
+    G.stat("Score", G.score, "left");
+    G.pips("Nest", G.lives, "🥚", "right");
+    G.stat("Wave", G.wave, "right");
+  }
+
+  function hurt() {
+    G.lives--; hud();
+    G.flash("#ff3b3b");
+    G.beep(160, .3, "square", .18);
+    var eggs = nest.children.filter(function (c) { return c.name && c.name.indexOf("egg") === 0 && c.visible; });
+    if (eggs.length) eggs[eggs.length - 1].visible = false;
+    G.burst(nest.position, 0xff6a6a);
+    if (G.lives <= 0) {
+      var isBest = G.score > best;
+      if (isBest) { best = G.score; try { localStorage.setItem("dinoIslandBest", String(best)); } catch (e) {} }
+      G.over("Nest Lost", "You held out " + G.wave + (G.wave === 1 ? " wave" : " waves") +
+        " and scored " + G.score + " — " + rank(G.score) + "." +
+        (isBest ? " That is your best yet." : " Your best is " + best + "."));
+    }
+  }
+
+  G.onUpdate(function (g, dt) {
+    var sp = 11 * dt;
+    if (g.keys.arrowleft || g.keys.a) g.target.x -= sp;
+    if (g.keys.arrowright || g.keys.d) g.target.x += sp;
+    if (g.keys.arrowup || g.keys.w) g.target.z -= sp;
+    if (g.keys.arrowdown || g.keys.s) g.target.z += sp;
+    if (g.target.length() > g.playRadius) g.target.setLength(g.playRadius);
+
+    var prev = player.position.clone();
+    player.position.lerp(g.target, 0.14);
+    var moved = player.position.distanceTo(prev);
+    if (moved > 0.004) player.rotation.y = Math.atan2(player.position.x - prev.x, player.position.z - prev.z);
+    aura.rotation.z += dt * 1.6;
+    aura.scale.setScalar(1 + Math.sin(g.elapsed * 3) * 0.06);
+
+    for (var ci = crystals.length - 1; ci >= 0; ci--) {
+      var c = crystals[ci];
+      c.rotation.y += dt * 2.2;
+      c.position.y = 0.45 + Math.sin(g.elapsed * 2.4 + ci) * 0.16;
+      if (c.position.distanceTo(player.position) < 1.8) {
+        g.burst(c.position, 0x7ee0ff); g.scene.remove(c); crystals.splice(ci, 1);
+        g.score += 5; hud(); g.beep(880 + Math.random() * 200, .1, "triangle", .13);
+        spawnCrystal();
+      }
+    }
+
+    for (var di = dinos.length - 1; di >= 0; di--) {
+      var d = dinos[di], o = d.obj;
+      var dir = new T.Vector3().subVectors(nest.position, o.position); dir.y = 0;
+      var toPlayer = new T.Vector3().subVectors(player.position, o.position); toPlayer.y = 0;
+      if (toPlayer.length() < 7) dir.copy(toPlayer);
+      dir.normalize();
+      o.position.addScaledVector(dir, d.speed * dt);
+      o.rotation.y = Math.atan2(dir.x, dir.z);
+
+      if (o.position.distanceTo(player.position) < 2.6) {
+        g.burst(o.position, 0xffd166); g.scene.remove(o); dinos.splice(di, 1);
+        g.score += 12; hud(); g.beep(300, .16, "square", .14);
+        continue;
+      }
+      if (o.position.distanceTo(nest.position) < 2.8) {
+        g.scene.remove(o); dinos.splice(di, 1); hurt();
+      }
+    }
+
+    spawnT += dt;
+    if (spawnT > Math.max(1.5, 4.8 - g.wave * 0.32)) { spawnT = 0; spawnDino(); }
+    var w = 1 + Math.floor(g.elapsed / 22);
+    if (w !== g.wave) { g.wave = w; hud(); g.beep(520, .22, "triangle", .15); }
+
+    if (player.userData.hero && player.userData.hero.mixer) {
+      player.userData.hero.mixer.timeScale = moved > 0.02 ? 1 : 0.25;
+    }
+  });
+
+  hud();
+})();
+</script>
+</body>
+</html>

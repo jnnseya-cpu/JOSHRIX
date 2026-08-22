@@ -15,6 +15,23 @@ import { getDb, ensureBlogSchema, ensureGameSchema, saveBlogPost, getBlogPost, l
 const SITE = "https://www.joshrix.com";
 
 /** Rotating editorial calendar — high-intent queries for the AI game-creation market. */
+import { FEATURES, featureById } from "./_features";
+
+/** Every capability gets its own article. Interleaving them with the broader
+ *  editorial pieces means the calendar alternates "what this does" with "why it
+ *  matters", which is the shape a topic cluster wants: depth and breadth, not
+ *  twenty consecutive product pages. */
+export function allTopics(): string[] {
+  const feature = FEATURES.map((f) => `FEATURE:${f.id}`);
+  const out: string[] = [];
+  const n = Math.max(feature.length, EDITORIAL_TOPICS.length);
+  for (let i = 0; i < n; i++) {
+    if (i < feature.length) out.push(feature[i]);
+    if (i < EDITORIAL_TOPICS.length) out.push(EDITORIAL_TOPICS[i]);
+  }
+  return out;
+}
+
 export const EDITORIAL_TOPICS = [
   "How to create your own video game with AI — no coding required",
   "Can you really make money selling AI-created games? The honest economics",
@@ -39,7 +56,7 @@ slug (kebab-case, <=60 chars, no stopwords),
 metaDescription (string, <=155 chars, compelling, includes the primary keyword),
 keywords (string[] of 6-10 search phrases),
 excerpt (string, 1-2 sentences),
-html (string: the article BODY as an HTML fragment — no <html>/<head>/<body>. ~1100-1400 words. Structure: hook intro <p>, then 4-6 <h2> sections with <p>/<ul> content, one comparison or checklist <ul>, a <h2>FAQ</h2> with three <h3> questions each followed by a <p> answer, and a closing call-to-action paragraph. Naturally weave in 3-6 internal links from the provided link list using descriptive anchor text. Confident, concrete, zero fluff; no fabricated statistics, no competitor names.),
+html (string: the article BODY as an HTML fragment — no <html>/<head>/<body>. ~1100-1400 words. Structure: hook intro <p>, then 4-6 <h2> sections with <p>/<ul> content, one comparison or checklist <ul>, a <h2>FAQ</h2> with three <h3> questions each followed by a <p> answer, and a closing call-to-action paragraph. Weave in 5-8 internal links from the provided link list using DESCRIPTIVE anchor text (never "click here" or a bare URL), including at least two links to earlier articles when any are listed. Every link must be one of the exact URLs provided — never invent a URL. Open with a direct answer to the title question in the first 40 words (featured-snippet shape), and make each <h2> a question or a concrete claim a searcher would type. Confident, concrete, zero fluff; no fabricated statistics, no competitor names.),
 socialX (string <=260 chars for X/Twitter with 2-3 hashtags),
 socialLinkedIn (string, 400-600 chars, professional angle),
 socialFacebook (string, 200-400 chars, community angle),
@@ -60,21 +77,44 @@ function demoArticle(topic: string) {
   };
 }
 
-async function generateArticle(topic: string, liveGames: Array<{ id: string; title: string }>) {
-  if (!process.env.ANTHROPIC_API_KEY) return { article: demoArticle(topic), provider: "demo" as const };
+async function generateArticle(topic: string, liveGames: Array<{ id: string; title: string }>, priorPosts: Array<{ slug: string; title: string }> = []) {
+  // A FEATURE: topic carries a verified fact sheet. Handing the writer real
+  // specifics is the difference between an article a technical buyer trusts and
+  // one that reads like every other AI-generated product page — and it removes
+  // the temptation to invent a statistic in order to sound confident.
+  let brief = topic;
+  const f = topic.startsWith("FEATURE:") ? featureById(topic.slice(8)) : undefined;
+  if (f) {
+    brief = [
+      `Write the definitive article on this capability: "${f.name}".`,
+      `Search intent to satisfy: ${f.keywords.join("; ")}.`,
+      `These are the ONLY specifics you may state as fact — build the article on them, and do not add figures of your own:`,
+      ...f.proof.map((p) => `  - ${p}`),
+      `Link to ${f.href} where the capability itself is described, and to /features at least once.`,
+      `Explain what it means for a creator in practice, not what it is called.`,
+    ].join("\n");
+  }
+  if (!process.env.ANTHROPIC_API_KEY) return { article: demoArticle(f ? f.name : topic), provider: "demo" as const };
   const anthropic = new Anthropic();
+  // A wide, real link inventory: platform pages, live player games, and every
+  // previously published article. Deep interlinking between posts is what builds
+  // topical authority — a blog of orphan pages ranks for nothing.
   const links = [
     `${SITE}/studio.html — the Studio (create a game)`,
     `${SITE}/arcade.html — the Arcade (play free games)`,
     `${SITE}/pricing.html — plans, ACU packs and store distribution pricing`,
     `${SITE}/how-it-works.html — how the agent fleet forges games`,
-    ...liveGames.slice(0, 3).map((g) => `${SITE}/play/${g.id} — live player-made game "${g.title}"`),
+    `${SITE}/marketplace.html — buy and sell finished games`,
+    `${SITE}/ip-registry.html — ownership and remix lineage`,
+    `${SITE}/agent-fleet.html — the agents behind each build`,
+    ...liveGames.slice(0, 5).map((g) => `${SITE}/play/${g.id} — live player-made game "${g.title}"`),
+    ...priorPosts.slice(0, 10).map((p: any) => `${SITE}/blog/${p.slug} — earlier article: "${p.title}"`),
   ];
   const msg = await anthropic.messages.create({
     model: "claude-sonnet-5",
     max_tokens: 6000,
     system: CONTENT_SYSTEM,
-    messages: [{ role: "user", content: `Topic: ${topic}\n\nInternal links available (use 3-6, exact URLs):\n${links.join("\n")}` }],
+    messages: [{ role: "user", content: `${brief}\n\nInternal links available (use 3-6, exact URLs):\n${links.join("\n")}` }],
   });
   const text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
   const start = text.indexOf("{"); const end = text.lastIndexOf("}");
@@ -120,9 +160,12 @@ export default async function handler(req: any, res: any) {
     await ensureGameSchema(sql);
     const customTopic = req.method === "POST" ? String((req.body ?? {}).topic ?? "").trim() : "";
     const n = await countBlogPosts(sql);
-    const topic = customTopic || EDITORIAL_TOPICS[n % EDITORIAL_TOPICS.length];
-    const liveGames = (await listApprovedGames(sql, 3)) as Array<{ id: string; title: string }>;
-    const { article, provider } = await generateArticle(topic, liveGames);
+    const all = allTopics();
+    const topic = customTopic || all[n % all.length];
+    const liveGames = (await listApprovedGames(sql, 5)) as Array<{ id: string; title: string }>;
+    // prior posts feed the interlinking: each new article links back into the archive
+    const priorPosts = (await listBlogPosts(sql, 12)) as Array<{ slug: string; title: string }>;
+    const { article, provider } = await generateArticle(topic, liveGames, priorPosts);
 
     // never overwrite an existing slug — suffix when the calendar wraps around
     let slug = article.slug;
@@ -131,7 +174,7 @@ export default async function handler(req: any, res: any) {
       slug, title: article.title, description: article.metaDescription,
       keywords: (article.keywords || []).join(", "), excerpt: article.excerpt ?? null, html: article.html,
       social: { x: article.socialX, linkedin: article.socialLinkedIn, facebook: article.socialFacebook, hashtags: article.hashtags },
-      topic, provider,
+      topic: topic.startsWith("FEATURE:") ? (featureById(topic.slice(8))?.name ?? topic) : topic, provider,
     });
     return res.status(200).json({ ok: true, slug, url: `/blog/${slug}`, title: article.title, provider, topic });
   } catch (err: any) {

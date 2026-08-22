@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.webmanifest">
+<script src="/assets/splash.js" defer></script>
 <meta name="theme-color" content="#050508">
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -106,6 +107,9 @@ table.jx td:first-child{white-space:nowrap}
 </main>
 <footer class="jx"><p>© 2026 JOSHRIX Studio — Wallet. Create Worlds. Build Games. Own the Future.</p></footer>
 <script src="assets/config.js"></script>
+<script src="assets/human.js"></script>
+<script src="assets/appnav.js"></script>
+<script src="assets/track.js"></script>
 <script src="assets/site.js"></script>
 <script>
 (() => {
@@ -154,10 +158,14 @@ $('btnPayout').addEventListener('click', async () => {
     r.textContent = '✓ demo (offline) — payout request would be queued for the next settlement run';
   }
 });
-const applyLocalAcu = (skipBalance) => {
+/* The refill link appears only when the SERVER says this wallet is a designated
+   tester — free credit is not a client-side decision. The local jx.profile flag
+   only stands in offline/demo mode, where there is no real balance to be wrong
+   about. */
+const applyLocalAcu = (skipBalance, serverCategory) => {
   try {
     const p = JSON.parse(localStorage.getItem('jx.profile') || '{}');
-    if (p.testerAcuGranted) {
+    if (serverCategory ? serverCategory === 'tester' : p.testerAcuGranted) {
       if (!skipBalance) $('wAcu').textContent = (p.acu || 0).toLocaleString();
       $('wAcuCat').insertAdjacentHTML('beforeend', ' · 🧪 <a href="#" id="btnRefill" style="color:var(--cyan)">refill</a>');
       const rf = document.getElementById('btnRefill');
@@ -166,7 +174,9 @@ const applyLocalAcu = (skipBalance) => {
         rf.addEventListener('click', async (e) => {
           e.preventDefault();
           const prof = JSON.parse(localStorage.getItem('jx.profile') || '{}');
-          // server wallet live? refill THERE (tester-only, enforced server-side)
+          // A real wallet exists → the server decides, and a refusal is shown as
+          // a refusal. Falling back to a local number here would paint a balance
+          // the account does not have, and the next forge would 402 anyway.
           if (prof.serverWalletId) {
             try {
               const rr = await fetch(API + '/api/wallet-init', { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -177,8 +187,11 @@ const applyLocalAcu = (skipBalance) => {
                 $('wAcu').textContent = jj.balance.toLocaleString();
                 return;
               }
-            } catch (err) { /* fall back to local refill below */ }
+              alert((jj && jj.error) || 'Refill was refused.');
+            } catch (err) { alert('Could not reach the server — try again in a moment.'); }
+            return;
           }
+          // offline demo only: no server wallet exists, so no real credit is implied
           prof.acu = 2000; localStorage.setItem('jx.profile', JSON.stringify(prof));
           $('wAcu').textContent = '2,000';
         });
@@ -204,13 +217,14 @@ const applyLocalAcu = (skipBalance) => {
         if (j && j.mode === 'live') {
           $('wAcu').textContent = Number(j.balance).toLocaleString();
           try { const pp = JSON.parse(localStorage.getItem('jx.profile') || '{}'); pp.acu = Number(j.balance); localStorage.setItem('jx.profile', JSON.stringify(pp)); } catch (e) {}
-          if (j.category !== 'tester') $('wAcuCat').textContent = 'purchased · server-verified';
+          const CAT_LABEL = { tester: '🧪 tester', purchased: 'purchased', standard: 'account' };
+          $('wAcuCat').textContent = (CAT_LABEL[j.category] || j.category) + ' · server-verified';
           if (j.plan && j.plan !== 'explorer') {
             $('wAcuCat').innerHTML += ' · plan: <b style="color:var(--cyan)">' + String(j.plan).replace('_', ' ') + '</b>';
           } else {
             $('wAcuCat').innerHTML += ' · <a href="pricing.html" style="color:var(--cyan)">choose a plan</a>';
           }
-          applyLocalAcu(true); // server balance wins; this just adds the tester refill link
+          applyLocalAcu(true, j.category); // server balance wins; this just adds the tester refill link
         } else applyLocalAcu();
       }).catch(() => applyLocalAcu());
   } else { applyLocalAcu(); }

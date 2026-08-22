@@ -6,7 +6,8 @@
  */
 import Stripe from "stripe";
 import { TopupRequestSchema, TOPUP_PACKAGES, topupPostings } from "../shared/payments";
-import { safeOrigin } from "./_guard";
+import { safeOrigin, clientIp, rateLimit, tooMany } from "./_guard";
+import { getDb } from "./_ledger";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -14,6 +15,12 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+
+  const _sql = getDb();
+  if (_sql) {
+    const _rl = await rateLimit(_sql, "topup:" + clientIp(req), 10, 3600);
+    if (!_rl.ok) return tooMany(res, _rl.retryAfter, "payment attempts");
+  }
 
   const parsed = TopupRequestSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid top-up request", issues: parsed.error.issues.slice(0, 3) });

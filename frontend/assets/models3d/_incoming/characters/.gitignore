@@ -1,0 +1,43 @@
+# DROP A WHOLE PACK IN HERE. This decides what git keeps.
+#
+# Asset bundles ship the same characters four times over: glTF, FBX, .blend
+# sources, Unity/Unreal packages, preview renders, marketing images. A creator
+# should not have to navigate to exactly the right subfolder — the ingest walks
+# directories recursively and finds the models wherever they are — but every
+# byte committed here lives in git history permanently, even if deleted later.
+#
+# So: copy the whole pack folder in, and this keeps only what
+# tools/ingest-characters.mjs can actually read.
+#
+#   .glb                 self-contained, copied with nothing re-encoded
+#   .gltf + .bin + png   packed into one .glb losslessly by packGltf()
+#
+# FBX is DELIBERATELY EXCLUDED. The ingest supports it, but a bundle that also
+# ships glTF carries the FBX as a duplicate — and .blend sources are often
+# larger than every model combined. If you have a pack that ships FBX ONLY,
+# tell me and I will make an exception for that folder rather than opening the
+# door to every bundle's worth of duplicates.
+
+# ignore everything...
+*
+
+# ...but descend into directories so nested models are still found
+!*/
+
+# ...and keep the formats the ingest reads
+!*.glb
+!*.gltf
+!*.bin
+
+# textures a .gltf references by filename — without these it packs a blank skin
+!*.png
+!*.jpg
+!*.jpeg
+
+# licence files are small and worth keeping with the assets they cover
+!LICENSE*
+!License*
+!license*
+
+!README.md
+!.gitignore

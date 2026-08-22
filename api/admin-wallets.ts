@@ -3,12 +3,16 @@
  * Auth: x-admin-key must equal MODERATION_KEY (same credential as the bridge).
  *   GET                              → all wallets (id, balance, category, email)
  *   POST { walletId, amount }        → credit `amount` ACUs to that wallet
+ *   POST { walletId, plan }          → move the account onto a subscription tier
+ *   POST { walletId, category }      → designate a tester, or gate them again
  * Grants are admin-only top-ups for testers/goodwill — purchased balances still
- * only ever grow through verified Stripe settlement.
+ * only ever grow through verified Stripe settlement. Designating a tester is the
+ * ONLY route to free AI credit on this platform; everyone else pays.
  */
-import { getDb, ensureGameSchema, listWallets, creditWallet, getWallet, setWalletPlan, findWalletsByIdentity } from "./_ledger";
+import { getDb, ensureGameSchema, listWallets, creditWallet, getWallet, setWalletPlan, setWalletCategory, findWalletsByIdentity } from "./_ledger";
+import { tooManyBadKeys } from "./_guard";
 import { notify } from "./_notify";
-import { PLANS } from "../shared/payments";
+import { PLANS, ASSIGNABLE_WALLET_CATEGORIES } from "../shared/payments";
 
 const MAX_GRANT = 100_000;
 
@@ -20,7 +24,12 @@ export default async function handler(req: any, res: any) {
 
   const key = process.env.MODERATION_KEY;
   if (!key) return res.status(503).json({ error: "MODERATION_KEY not configured" });
-  if (req.headers?.["x-admin-key"] !== key) return res.status(401).json({ error: "Invalid admin key" });
+  if (req.headers?.["x-admin-key"] !== key) {
+    // count the failure before refusing, so the only credential on the
+    // platform cannot be guessed at network speed
+    if (await tooManyBadKeys(getDb(), req, res)) return;
+    return res.status(401).json({ error: "Invalid admin key" });
+  }
 
   const sql = getDb();
   if (!sql) return res.status(503).json({ error: "DATABASE_URL missing", mode: "no_db" });
@@ -36,7 +45,7 @@ export default async function handler(req: any, res: any) {
     }
 
     if (req.method === "POST") {
-      const { walletId, amount, plan, grantMonthlyAcu } = (req.body ?? {}) as { walletId?: string; amount?: number; plan?: string; grantMonthlyAcu?: boolean };
+      const { walletId, amount, plan, grantMonthlyAcu, category } = (req.body ?? {}) as { walletId?: string; amount?: number; plan?: string; grantMonthlyAcu?: boolean; category?: string };
       if (!walletId || typeof walletId !== "string") return res.status(400).json({ error: "walletId required" });
 
       // Admins know people, not IDs: accept a wallet ID, an email, or a name.
@@ -55,6 +64,20 @@ export default async function handler(req: any, res: any) {
       }
       if (!target) return res.status(404).json({ error: "No wallet found by that ID, email, or name — the tester's wallet ID is shown on their Wallet page." });
       const targetId = target.id;
+
+      // DESIGNATE A TESTER. This is the only way a wallet becomes entitled to free
+      // refills, which is what keeps "no free AI" true for everyone else. It moves
+      // no money; it decides who is allowed to be funded without paying.
+      if (category) {
+        if (!(ASSIGNABLE_WALLET_CATEGORIES as readonly string[]).includes(category)) {
+          return res.status(400).json({ error: `category must be one of: ${ASSIGNABLE_WALLET_CATEGORIES.join(", ")} — "purchased" is set by Stripe settlement, never by hand` });
+        }
+        const now = await setWalletCategory(sql, targetId, category);
+        if (now === null) {
+          return res.status(409).json({ error: "This wallet has purchased ACUs. A paid account cannot be reclassified — that would hand it free refills." });
+        }
+        return res.status(200).json({ ok: true, walletId: targetId, category: now, balance: Number(target.balance) });
+      }
 
       // plan change: put the account on a subscription tier, optionally granting
       // that plan's monthly ACUs immediately (admin decision, e.g. comped accounts)

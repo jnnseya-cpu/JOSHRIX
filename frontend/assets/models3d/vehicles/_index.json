@@ -453,16 +453,6 @@
     "bytes": 84364
   },
   {
-    "file": "lifeboat.glb",
-    "tags": [
-      "ship",
-      "vehicle",
-      "water"
-    ],
-    "height": 0.21,
-    "bytes": 46884
-  },
-  {
     "file": "sail_ship.glb",
     "tags": [
       "ship",

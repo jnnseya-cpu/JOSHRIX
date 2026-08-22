@@ -6,6 +6,7 @@
  * gets JOSHRIX pages ranked and unfurling nicely when shared.
  */
 import { getDb, ensureBlogSchema, getBlogPost, listBlogPosts } from "./_ledger";
+import { autoLink, articleJsonLd, readingMinutes } from "./_seo";
 
 const SITE = "https://www.joshrix.com";
 const esc = (s: unknown) => String(s ?? "").replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[c] as string));
@@ -20,24 +21,32 @@ export default async function handler(req: any, res: any) {
     await ensureBlogSchema(sql);
     const post = await getBlogPost(sql, slug);
     if (!post) return notFound(res);
-    const others = (await listBlogPosts(sql, 6)).filter((p) => p.slug !== slug).slice(0, 4);
+    const all = await listBlogPosts(sql, 60);
+    const others = all.filter((p) => p.slug !== slug);
     const url = `${SITE}/blog/${post.slug}`;
     const published = new Date(post.created_at).toISOString();
 
     // model-written HTML: strip anything executable before it reaches the page
-    const safeHtml = String(post.html ?? "")
+    const sanitised = String(post.html ?? "")
       .replace(/<script[\s\S]*?<\/script>/gi, "")
       .replace(/<script[^>]*>/gi, "")
       .replace(/\son\w+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "")
       .replace(/(href|src)\s*=\s*(["']?)\s*javascript:[^"'>\s]*/gi, '$1=$2#');
 
-    const jsonLd = JSON.stringify({
-      "@context": "https://schema.org", "@type": "Article",
-      headline: post.title, description: post.description, datePublished: published,
-      author: { "@type": "Organization", name: "JOSHRIX Studio", url: SITE },
-      publisher: { "@type": "Organization", name: "JOSHRIX Studio", logo: { "@type": "ImageObject", url: `${SITE}/assets/icons/icon-512.png` } },
-      mainEntityOfPage: url,
-    }).replace(/</g, "\\u003c");   // '</script>' inside data can never close the LD block
+    // AUTOMATIC INTERNAL LINKING. The model is asked to add links but cannot be
+    // relied on to, so the server adds them from the article's own wording:
+    // platform pages plus up to four sibling posts whose titles are mentioned.
+    const siblingTargets = others.slice(0, 12).map((p: any) => ({
+      phrase: new RegExp("\\b" + String(p.title).split(/[:\u2014-]/)[0].trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i"),
+      href: `/blog/${p.slug}`,
+      title: p.title,
+    })).filter((t: any) => t.phrase.source.length > 12);
+    const safeHtml = autoLink(sanitised, siblingTargets, 8);
+    const mins = readingMinutes(safeHtml);
+
+    // Article + BreadcrumbList + Organization + WebSite, and FAQPage when the
+    // post contains real Q&A — FAQPage is what earns expandable rich results.
+    const jsonLd = articleJsonLd(post, safeHtml);
 
     const html = `<!DOCTYPE html>
 <html lang="en">
@@ -96,10 +105,10 @@ ${post.keywords ? `<meta name="keywords" content="${esc(post.keywords)}">` : ""}
   <div class="nav-right"><a class="btn btn-primary btn-sm" href="/studio.html">Launch Studio</a></div>
 </nav>
 <main class="jx post">
-  <p class="meta">JOSHRIX Blog · ${new Date(post.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}</p>
+  <p class="meta">JOSHRIX Blog · ${new Date(post.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} · ${mins} min read</p>
   <h1>${esc(post.title)}</h1>
   <article>${safeHtml}</article>
-  ${others.length ? `<div class="more"><h2 style="font-size:1.1rem">More from the forge</h2>${others.map((p) => `<a href="/blog/${esc(p.slug)}">${esc(p.title)}</a>`).join("")}</div>` : ""}
+  ${others.length ? `<div class="more"><h2 style="font-size:1.1rem">Keep reading</h2>${others.slice(0, 6).map((p: any) => `<a href="/blog/${esc(p.slug)}">${esc(p.title)}</a>`).join("")}<p style="margin-top:1rem"><a href="/blog.html">All articles</a> · <a href="/studio.html">Create your own game</a> · <a href="/arcade.html">Play free games</a></p></div>` : `<div class="more"><p><a href="/blog.html">All articles</a> · <a href="/studio.html">Create your own game</a></p></div>`}
 </main>
 <div class="foot-base" style="justify-content:center;gap:1.4rem;display:flex;flex-wrap:wrap;padding:1.5rem">
   <span>© 2026 JOSHRIX Studio</span>

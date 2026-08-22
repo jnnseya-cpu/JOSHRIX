@@ -7,7 +7,7 @@
  */
 import { sendEmail } from "./comms";
 import { getDb, ensureCommsSchema, saveDelivery, countRecentDeliveries } from "./_ledger";
-import { EMAIL_RE, stripHeader } from "./_guard";
+import { EMAIL_RE, stripHeader, clientIp, rateLimit, tooMany } from "./_guard";
 
 const esc = (s: unknown) => String(s ?? "").replace(/[<>&"]/g, (c) => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", '"': "&quot;" }[c] as string));
 
@@ -17,6 +17,12 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+
+  const _sql = getDb();
+  if (_sql) {
+    const _rl = await rateLimit(_sql, "contact:" + clientIp(req), 5, 3600);
+    if (!_rl.ok) return tooMany(res, _rl.retryAfter, "messages");
+  }
 
   const { name, email, topic, message, website } = (req.body ?? {}) as Record<string, string>;
   if (website) return res.status(200).json({ ok: true }); // honeypot: swallow silently

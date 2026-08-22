@@ -11,6 +11,16 @@ const STATIC_PAGES = [
   "docs.html", "showcase.html", "worlds.html", "agent-fleet.html", "enterprise.html",
   "about.html", "press.html", "contact.html", "careers.html", "referrals.html",
   "ip-registry.html", "terms.html", "privacy.html", "refunds.html",
+  "features",
+  /* The reference games are the strongest organic entry point on the site — a
+     stranger can play one without an account — so every one of them belongs
+     here. WonderVerse was missing entirely: it shipped, it is linked from the
+     newsletter, and search engines were never told it exists.
+     Extensionless because cleanUrls is on and the games' own <link rel=canonical>
+     points at the extensionless form; listing both spellings would compete. */
+  "games/dino-island",
+  "games/wonderverse",
+  "games/midnight-post",
 ];
 
 export default async function handler(_req: any, res: any) {

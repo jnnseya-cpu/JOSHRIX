@@ -11,8 +11,9 @@
  * auto-refunds via the forge_charges ledger like any forge.
  */
 import { randomUUID } from "crypto";
+import { clientIp, rateLimit, tooMany, forgeDisabled } from "./_guard";
 import { enhanceGameHtml, looksPlayable, acuChargeForUsage, ENHANCE_HOLD, FORGE_MIN_CHARGE } from "./_gateway";
-import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge } from "./_ledger";
+import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge, acceptForgeCharge } from "./_ledger";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -20,8 +21,16 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  const _paused = forgeDisabled();
+  if (_paused) return res.status(503).json({ error: _paused });
 
-  const { html, walletId, notes, language } = (req.body ?? {}) as Record<string, string>;
+  const _sql = getDb();
+  if (_sql) {
+    const _rl = await rateLimit(_sql, "enhance:" + clientIp(req), 20, 3600);
+    if (!_rl.ok) return tooMany(res, _rl.retryAfter, "polish passes");
+  }
+
+  const { html, walletId, notes, language, baseForgeId } = (req.body ?? {}) as Record<string, string>;
   if (!html || typeof html !== "string" || !looksPlayable(html)) {
     return res.status(400).json({ error: "Body must include the current game `html` (a real 2D canvas or 3D WebGL build)." });
   }
@@ -35,6 +44,15 @@ export default async function handler(req: any, res: any) {
     if (!walletId) return res.status(402).json({ error: "No wallet — open the Studio to initialise your ACU wallet." });
     try {
       await ensureGameSchema(sql);
+      // ACCEPT: spending an Enhance pass on a build is the creator keeping it, so
+      // the ORIGINAL forge settles now — charged what it cost, remainder returned.
+      // Done before this pass's own hold so the refund is available to fund it.
+      if (baseForgeId && typeof baseForgeId === "string") {
+        try {
+          const settled = await acceptForgeCharge(sql, baseForgeId, walletId);
+          if (settled && settled.refund > 0) await creditWallet(sql, walletId, settled.refund);
+        } catch { /* reconciliation catches strays */ }
+      }
       balanceAfter = await debitWallet(sql, walletId, ENHANCE_HOLD);
     } catch (err: any) {
       return res.status(502).json({ error: "Wallet check failed", detail: String(err?.message ?? err) });

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.webmanifest">
+<script src="/assets/splash.js" defer></script>
 <meta name="theme-color" content="#050508">
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -38,18 +39,68 @@
   <div class="sec-tag">Marketplace</div>
   <h1 class="jx">Create → Play → <span class="grad">Sell</span></h1>
   <p class="lede">Five listing classes, seven licence models, escrow for high-value sales, and a commission ladder that rewards subscribers. Every listing carries verified rights provenance.</p>
-</div><h2 class="jx reveal" style="margin-top:0">Live Now — <span class="grad">Play Free</span></h2>
-<p class="lede reveal" style="max-width:66ch">Every approved creator game, free to play today. Paid listings, templates, asset packs and services open with the marketplace launch — the licence models below are how they'll work.</p>
+</div><h2 class="jx reveal" style="margin-top:0">For <span class="grad">Sale</span></h2>
+<p class="lede reveal" style="max-width:66ch">Worlds their creators have put on sale. You pay through Stripe and the world is yours the moment the payment clears — the creator is paid their share automatically.</p>
+<div class="grid c3" id="mkSale"><p style="color:var(--muted)">Loading listings…</p></div>
+<h2 class="jx reveal">Free to <span class="grad">Play</span></h2>
+<p class="lede reveal" style="max-width:66ch">Every other approved creator world, free to play today.</p>
 <div class="grid c3" id="mkGrid"><p style="color:var(--muted)">Loading live games…</p></div>
 <script>
 (function(){
+  var API = window.JOSHRIX_API_BASE || '';
   var esc = function(s){ return String(s == null ? '' : s).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
-  fetch((window.JOSHRIX_API_BASE || '') + '/api/arcade').then(function(r){ return r.json(); }).then(function(j){
-    var g = document.getElementById('mkGrid'), games = j.games || [];
-    g.innerHTML = games.length ? games.slice(0, 9).map(function(x){
+  var money = function(minor){ return '£' + (minor / 100).toFixed(2); };
+  var profile = function(){ try { return JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (e) { return {}; } };
+
+  if (/[?&]purchase=cancelled/.test(location.search)) {
+    var n = document.createElement('p');
+    n.className = 'lede'; n.style.color = 'var(--muted)';
+    n.textContent = 'Purchase cancelled — nothing was charged.';
+    document.getElementById('mkSale').before(n);
+  }
+
+  /* BUY. The button sends only the listing id: the price, the seller and the
+     commission all come from the listing server-side, so nothing a browser can
+     edit changes what is charged or who is paid. */
+  function buy(id, btn){
+    var p = profile();
+    btn.disabled = true; btn.textContent = 'Opening checkout…';
+    fetch(API + '/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ listingId: id, method: 'card', buyerWalletId: p.serverWalletId || undefined, buyerEmail: p.email || undefined }) })
+      .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+      .then(function(res){
+        if (res.ok && res.j.checkoutUrl) { location.href = res.j.checkoutUrl; return; }
+        btn.disabled = false; btn.textContent = 'Try again';
+        alert(res.j.error || 'Checkout is unavailable right now.');
+      })
+      .catch(function(){ btn.disabled = false; btn.textContent = 'Try again'; alert('Could not reach the server.'); });
+  }
+
+  fetch(API + '/api/arcade').then(function(r){ return r.json(); }).then(function(j){
+    var games = j.games || [];
+    var sale = games.filter(function(x){ return x.priceMinor; });
+    var free = games.filter(function(x){ return !x.priceMinor; });
+
+    var saleEl = document.getElementById('mkSale');
+    saleEl.innerHTML = sale.length ? sale.slice(0, 9).map(function(x, i){
+      return '<div class="card reveal in"><span class="tag">FOR SALE</span><h3>' + esc(x.title) + '</h3>'
+        + '<p>' + esc(x.summary || 'A world forged on JOSHRIX.') + '</p>'
+        + '<div class="price-row" style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem">'
+        + '<b style="font-family:var(--mono);font-size:1.15rem">' + money(x.priceMinor) + '</b>'
+        + '<span><a href="' + esc(x.playUrl) + '" style="color:var(--cyan);margin-right:.9rem">▶ Try it</a>'
+        + '<button class="btn btn-primary btn-sm mkBuy" data-i="' + i + '">Buy</button></span></div></div>';
+    }).join('') : '<p style="color:var(--muted)">No worlds are on sale yet. Creators set a price on their <a href="dashboard.html" style="color:var(--cyan)">dashboard</a>.</p>';
+    saleEl.querySelectorAll('.mkBuy').forEach(function(b){
+      b.addEventListener('click', function(){ buy(sale[b.dataset.i].id, b); });
+    });
+
+    document.getElementById('mkGrid').innerHTML = free.length ? free.slice(0, 9).map(function(x){
       return '<a class="card reveal in" style="text-decoration:none;color:inherit" href="' + esc(x.playUrl) + '"><span class="tag">LIVE GAME</span><h3>' + esc(x.title) + '</h3><p>' + esc(x.summary || 'A world forged on JOSHRIX.') + '</p><p style="margin-top:.8rem"><b style="font-family:var(--mono);font-size:1rem">▶ ' + Number(x.plays || 0).toLocaleString() + ' plays · FREE</b></p></a>';
     }).join('') : '<p style="color:var(--muted)">The first approved games land here the moment moderation clears them — <a href="studio.html" style="color:var(--cyan)">forge yours</a>.</p>';
-  }).catch(function(){ document.getElementById('mkGrid').innerHTML = '<p style="color:var(--muted)">Could not load live games — refresh to retry.</p>'; });
+  }).catch(function(){
+    document.getElementById('mkSale').innerHTML = '<p style="color:var(--muted)">Could not load listings — refresh to retry.</p>';
+    document.getElementById('mkGrid').innerHTML = '<p style="color:var(--muted)">Could not load live games — refresh to retry.</p>';
+  });
 })();
 </script>
 <h2 class="jx reveal">Licence <span class="grad">Models</span></h2>
@@ -63,8 +114,9 @@
 <tr><td><b>Subscription Licence</b></td><td>Rights continue while the subscription is active</td></tr>
 </tbody></table>
 <h2 class="jx reveal">Commission <span class="grad">Ladder</span></h2>
-<table class="jx reveal"><thead><tr><th>Seller tier</th><th>Free</th><th>Creator</th><th>Creator Pro</th><th>Studio</th><th>Business</th><th>Enterprise</th></tr></thead>
-<tbody><tr><td><b>Commission</b></td><td>30%</td><td>25%</td><td>20%</td><td>15%</td><td>10%</td><td>5–10%</td></tr></tbody></table>
+<table class="jx reveal"><thead><tr><th>Seller tier</th><th>Explorer (free)</th><th>Creator</th><th>Creator Pro</th><th>Studio</th><th>Business</th><th>Enterprise</th></tr></thead>
+<tbody><tr><td><b>Commission</b></td><td>cannot sell</td><td>25%</td><td>20%</td><td>15%</td><td>10%</td><td>7.5% (5–10% negotiated)</td></tr></tbody></table>
+<p class="lede reveal" style="max-width:66ch">Selling starts at <a href="pricing.html" style="color:var(--cyan)">Creator</a>. The free Explorer tier plays and browses; it does not list. The rate on this row is the rate the payment engine actually applies — it is read from your account, never from the page.</p>
 <p class="lede reveal">Creators may set royalties on eligible secondary sales. High-value exclusive sales run through escrow with automated technical verification and an inspection period.</p>
 <div class="reveal" style="margin-top:2rem"><a class="btn btn-primary" href="signup.html">Become a Seller</a></div>
 </main>
@@ -97,6 +149,8 @@
     <span class="sys">◉ ALL SYSTEMS OPERATIONAL</span>
   </div>
 </footer>
+<script src="assets/appnav.js"></script>
+<script src="assets/track.js"></script>
 <script src="assets/site.js"></script>
 </body>
 </html>

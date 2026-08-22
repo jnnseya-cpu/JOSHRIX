@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.webmanifest">
+<script src="/assets/splash.js" defer></script>
 <meta name="theme-color" content="#050508">
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -27,6 +28,7 @@
     <li><a href="agent-fleet.html">Fleet</a></li>
     <li><a href="worlds.html">Worlds</a></li>
     <li><a href="arcade.html">Arcade</a></li><li><a href="marketplace.html">Marketplace</a></li>
+    <li><a href="growth.html">Growth</a></li>
     <li><a href="wallet.html">Wallet</a></li>
     <li><a href="pricing.html">Pricing</a></li>
     <li><a href="how-it-works.html">How It Works</a></li>
@@ -51,8 +53,8 @@
 <div class="module"><h3><span class="st"></span>Earnings</h3><span class="num">£0.00</span><div class="bar"><i style="width:0%"></i></div><span class="readout">MARKETPLACE SALES SETTLE HERE — <a href="wallet.html">PAYOUTS IN WALLET</a></span></div>
 </div></div>
 <div id="secCreator"><h2 class="jx reveal">My Games</h2>
-<table class="jx reveal"><thead><tr><th>Game</th><th>Status</th><th>Plays</th><th>Created</th><th>Links</th></tr></thead><tbody id="myGamesBody">
-<tr><td colspan="5" style="color:var(--muted)">Loading your games…</td></tr>
+<table class="jx reveal"><thead><tr><th>Game</th><th>Status</th><th>Plays</th><th>Created</th><th>Price</th><th>Links</th></tr></thead><tbody id="myGamesBody">
+<tr><td colspan="6" style="color:var(--muted)">Loading your games…</td></tr>
 </tbody></table></div>
 <div class="reveal" style="margin-top:2.2rem;display:flex;gap:1rem;flex-wrap:wrap">
 <a class="btn btn-primary" href="studio.html">▶&nbsp; New Forge</a>
@@ -88,6 +90,9 @@
     <span class="sys">◉ ALL SYSTEMS OPERATIONAL</span>
   </div>
 </footer>
+<script src="assets/human.js"></script>
+<script src="assets/appnav.js"></script>
+<script src="assets/track.js"></script>
 <script src="assets/site.js"></script>
 <script>
 (function () {
@@ -133,7 +138,8 @@
       body: JSON.stringify({ walletId: p.serverWalletId }), signal: AbortSignal.timeout(8000) })
       .then(r => r.json()).then(j => {
         if (j && j.mode === 'live') {
-          showAcu(j.balance, (j.category === 'tester' ? '🧪 TESTER' : 'PURCHASED') + ' · SERVER-VERIFIED');
+          const CAT = { tester: '🧪 TESTER', purchased: 'PURCHASED', standard: 'ACCOUNT' };
+          showAcu(j.balance, (CAT[j.category] || String(j.category).toUpperCase()) + ' · SERVER-VERIFIED');
           jxStore.save({ acu: Number(j.balance) });   // re-sync the local copy so every page agrees
         }
       }).catch(() => {});
@@ -142,7 +148,7 @@
   // My Games: the creator's real forged games
   const body = $('myGamesBody');
   const PILL = { approved: '<span class="pill green">● LIVE</span>', pending_review: '<span class="pill amber">◐ IN REVIEW</span>', rejected: '<span class="pill" style="color:#f87171">✕ REJECTED</span>' };
-  const emptyRow = '<tr><td colspan="5" style="color:var(--muted)">No games yet — <a href="studio.html" style="color:var(--cyan)">forge your first world</a>. It appears here the moment you publish.</td></tr>';
+  const emptyRow = '<tr><td colspan="6" style="color:var(--muted)">No games yet — <a href="studio.html" style="color:var(--cyan)">forge your first world</a>. It appears here the moment you publish.</td></tr>';
   if (!p.serverWalletId) { body.innerHTML = emptyRow; }
   else {
     fetch(API + '/api/my-games', { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -158,12 +164,44 @@
         }
         $('mPlays').textContent = Number((j && j.totalPlays) || 0).toLocaleString();
         $('mPlaysBar').style.width = Math.min(100, ((j && j.totalPlays) || 0) / 5) + '%';
-        body.innerHTML = games.length ? games.map(g =>
+        body.innerHTML = games.length ? games.map((g, i) =>
           '<tr><td><b>' + esc(g.title) + '</b></td><td>' + (PILL[g.status] || esc(g.status)) + '</td>'
           + '<td>' + Number(g.plays || 0).toLocaleString() + '</td>'
           + '<td>' + (g.createdAt ? new Date(g.createdAt).toLocaleDateString() : '—') + '</td>'
+          + '<td style="white-space:nowrap">£<input class="gPrice" data-i="' + i + '" type="number" min="0.50" step="0.01" value="'
+            + (g.priceMinor ? (g.priceMinor / 100).toFixed(2) : '') + '" placeholder="—" '
+            + 'aria-label="Sale price for ' + esc(g.title) + ' in pounds" '
+            + 'style="width:72px;background:rgba(255,255,255,.04);border:1px solid var(--stroke);border-radius:6px;padding:.3rem .4rem;color:inherit;font-family:var(--mono)">'
+            + ' <button class="gSave" data-i="' + i + '" style="background:none;border:0;color:var(--cyan);cursor:pointer;font:inherit;font-size:.85rem">save</button>'
+            + '<div class="gMsg" data-i="' + i + '" style="font-size:.72rem;color:var(--muted);margin-top:.15rem"></div></td>'
           + '<td><a href="' + esc(g.status === 'approved' ? g.playUrl : g.previewUrl) + '" target="_blank" rel="noopener" style="color:var(--cyan)">▶ ' + (g.status === 'approved' ? 'Play' : 'Preview') + '</a></td></tr>'
         ).join('') : emptyRow;
+
+        /* PRICING. The creator types pounds; the server is told pence and is the
+           only thing that decides whether the price is allowed, what commission
+           applies, and what they keep. Blank means "not for sale". */
+        body.querySelectorAll('.gSave').forEach(btn => btn.addEventListener('click', () => {
+          const i = btn.dataset.i, g = games[i];
+          const input = body.querySelector('.gPrice[data-i="' + i + '"]');
+          const msg = body.querySelector('.gMsg[data-i="' + i + '"]');
+          const raw = input.value.trim();
+          const priceMinor = raw === '' ? null : Math.round(parseFloat(raw) * 100);
+          if (raw !== '' && !Number.isFinite(priceMinor)) { msg.textContent = 'Enter an amount, or clear it to unlist.'; return; }
+          btn.disabled = true; msg.style.color = 'var(--muted)'; msg.textContent = 'saving…';
+          fetch(API + '/api/listing', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ walletId: p.serverWalletId, gameId: g.id, priceMinor }), signal: AbortSignal.timeout(10000) })
+            .then(r => r.json().then(j => ({ ok: r.ok, j })))
+            .then(({ ok, j }) => {
+              btn.disabled = false;
+              if (!ok) { msg.style.color = '#f87171'; msg.textContent = j.error || 'Could not save.'; return; }
+              g.priceMinor = j.priceMinor;
+              msg.style.color = 'var(--muted)';
+              msg.textContent = j.listed
+                ? 'you keep £' + (j.youKeepMinor / 100).toFixed(2) + ' — ' + j.note
+                : 'not for sale';
+            })
+            .catch(() => { btn.disabled = false; msg.style.color = '#f87171'; msg.textContent = 'Could not reach the server.'; });
+        }));
       }).catch(() => { body.innerHTML = emptyRow; });
   }
 })();

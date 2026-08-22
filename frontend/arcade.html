@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.webmanifest">
+<script src="/assets/splash.js" defer></script>
 <meta name="theme-color" content="#050508">
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -62,14 +63,45 @@
   var grid = document.getElementById('arcGrid');
   var ICONS = ['🕹️','👾','🐉','🚀','⚔️','🏰','🌌','🎯','🧩','🏎️'];
   function esc(s){ return String(s == null ? '' : s).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); }
+
+  // The house builds ship with the site, so the shelf is never bare and there is
+  // always something to play before the first creator game clears moderation.
+  // A LIST, not one hardcoded card: WonderVerse shipped months after Dino Island
+  // and never reached this shelf, because adding a game meant remembering to
+  // edit this function. Adding one here is now one line.
+  var HOUSE = [
+    { href: 'games/midnight-post.html', icon: '📮', title: 'Midnight Post',
+      blurb: 'Eight parcels, one night, one van. Drive the round before dawn.' },
+    { href: 'games/wonderverse.html', icon: '🌌', title: 'WonderVerse',
+      blurb: 'Gather the wonders in a twilight glade and light the Wonder Gate.' },
+    { href: 'games/dino-island.html', icon: '🦖', title: 'Dino Island',
+      blurb: 'Guardian of the Nest — a 3D wave-defence built on the JOSHRIX model library.' },
+  ];
+  function houseCard(g){
+    var a = document.createElement('a');
+    a.className = 'arc-card';
+    a.href = g.href;
+    a.style.textDecoration = 'none'; a.style.color = 'inherit';
+    a.innerHTML = '<div class="arc-art">' + g.icon + '</div>'
+      + '<div class="arc-body"><h3>' + esc(g.title) + '</h3>'
+      + '<p>' + esc(g.blurb) + '</p>'
+      + '<div class="arc-meta"><i>3D</i><i>English</i>'
+      + '<i style="color:#a78bfa;border-color:rgba(167,139,250,.4)">◆ Studio build</i></div></div>';
+    return a;
+  }
+
   grid.innerHTML = '<div class="arc-empty">Loading the arcade…</div>';
   fetch(API + '/api/arcade').then(function(r){ return r.json(); }).then(function(j){
     var games = j.games || [];
+    grid.innerHTML = '';
+    HOUSE.forEach(function (g) { grid.appendChild(houseCard(g)); });
     if (!games.length) {
-      grid.innerHTML = '<div class="arc-empty"><p style="font-size:1.05rem"><b>The shelves are being stocked.</b></p><p>The first approved worlds land here the moment moderation clears them.<br>Want yours on this shelf? <a href="studio.html" style="color:var(--cyan)">Forge it now</a>.</p></div>';
+      var note = document.createElement('div');
+      note.className = 'arc-empty';
+      note.innerHTML = '<p style="font-size:1.05rem"><b>More shelves are being stocked.</b></p><p>Creator worlds land here the moment moderation clears them.<br>Want yours on this shelf? <a href="studio.html" style="color:var(--cyan)">Forge it now</a>.</p>';
+      grid.appendChild(note);
       return;
     }
-    grid.innerHTML = '';
     games.forEach(function(g, i){
       var a = document.createElement('a');
       a.className = 'arc-card';
@@ -84,10 +116,18 @@
       grid.appendChild(a);
     });
   }).catch(function(){
-    grid.innerHTML = '<div class="arc-empty">Could not reach the Arcade — check your connection and refresh.</div>';
+    // the API being down must not take the house build down with it
+    grid.innerHTML = '';
+    HOUSE.forEach(function (g) { grid.appendChild(houseCard(g)); });
+    var note = document.createElement('div');
+    note.className = 'arc-empty';
+    note.textContent = 'Could not reach the Arcade listing — check your connection and refresh.';
+    grid.appendChild(note);
   });
 })();
 </script>
+<script src="assets/appnav.js"></script>
+<script src="assets/track.js"></script>
 <script src="assets/site.js"></script>
 </body>
 </html>

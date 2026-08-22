@@ -2,11 +2,15 @@
  * POST /api/games — Build 1: game persistence + public play URLs.
  * Body: { title, html, summary?, language?, walletId?, email? }
  * Saves the forged game and returns { id, playUrl, status: "pending_review" }.
+ * Publishing IS the moment the creator accepts the build, so it is also the
+ * moment the forge is paid for: the held ACUs settle to what the run actually
+ * cost and the remainder is refunded. A build that is never published costs the
+ * creator nothing.
  * Every game enters the moderation queue (Build 3) before its /play/<id> URL
  * serves to the public; the creator can preview immediately via ?preview=1.
  */
 import { randomUUID } from "node:crypto";
-import { getDb, ensureGameSchema, saveGame, getWallet, countPendingByWallet } from "./_ledger";
+import { getDb, ensureGameSchema, saveGame, getWallet, countPendingByWallet, acceptForgeCharge, creditWallet } from "./_ledger";
 import { notify } from "./_notify";
 import { EMAIL_RE } from "./_guard";
 
@@ -30,7 +34,7 @@ export default async function handler(req: any, res: any) {
   const sql = getDb();
   if (!sql) return res.status(503).json({ error: "Game hosting is not configured yet (DATABASE_URL missing).", mode: "no_db" });
 
-  const { title, html, summary, language, walletId, email } = (req.body ?? {}) as Record<string, string>;
+  const { title, html, summary, language, walletId, email, forgeId } = (req.body ?? {}) as Record<string, string>;
   if (!title || typeof title !== "string" || title.trim().length < 2) {
     return res.status(400).json({ error: "A game `title` is required." });
   }
@@ -69,11 +73,28 @@ export default async function handler(req: any, res: any) {
       creatorWallet: walletId,
       creatorEmail,
     });
+    // ACCEPT: publishing is the creator keeping the build, so this is where the
+    // forge is finally paid for. The hold settles to what the run actually cost
+    // and the remainder is credited back. Best-effort and AFTER the save — a
+    // billing hiccup must never lose a game the creator already committed to.
+    let acuCharged: number | undefined, acuRefunded: number | undefined;
+    if (forgeId && typeof forgeId === "string") {
+      try {
+        const settled = await acceptForgeCharge(sql, forgeId, walletId);
+        if (settled) {
+          acuCharged = settled.charged;
+          acuRefunded = settled.refund;
+          if (settled.refund > 0) await creditWallet(sql, walletId, settled.refund);
+        }
+      } catch { /* reconciliation catches strays; never block a publish on it */ }
+    }
+
     await notify("game.submitted", wallet.email ?? null, { game: title.trim().slice(0, 60) });
     return res.status(200).json({
       id,
       playUrl: `/play/${id}`,
       status: "pending_review",
+      ...(acuCharged !== undefined ? { acuCharged, acuRefunded } : {}),
       note: "Your game is saved. It goes public at its play URL once moderation approves it; you can playtest it now via the preview link.",
       previewUrl: `/play/${id}?preview=1&w=${encodeURIComponent(walletId)}`,
     });

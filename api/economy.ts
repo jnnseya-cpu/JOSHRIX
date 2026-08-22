@@ -5,6 +5,12 @@
  *        per SKU) and receive the re-evaluation with repricing orders.
  * Production: runs daily + on provider price-change webhooks; act/panic alerts
  * page the admin Economy module and can auto-suspend a SKU.
+ *
+ * OPERATOR-ONLY. This endpoint answers "what does each SKU cost us against what
+ * we charge" — provider cost per top-up, per subscription month, per 3D forge,
+ * plus fixed monthly overhead and the price floors. That is the commercial
+ * position of the business, and it was readable by anyone with the URL. Same
+ * credential convention as /api/traffic: MODERATION_KEY, or the cron secret.
  */
 import { SKU_CATALOGUE, CostObservationBatchSchema, evaluateSku, fixedMonthlyOverheadMinor, ECON } from "../shared/economics";
 
@@ -23,8 +29,18 @@ function summarise(rows: ReturnType<typeof evaluateSku>[]) {
 export default function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-moderation-key");
+  res.setHeader("Cache-Control", "no-store");
   if (req.method === "OPTIONS") return res.status(204).end();
+
+  // Fail CLOSED: with no credential configured this stays shut rather than
+  // falling back to open, which is how it was readable in the first place.
+  const key = process.env.MODERATION_KEY;
+  const cron = process.env.CRON_SECRET;
+  const authorised = (!!key && String(req.headers["x-moderation-key"] ?? "") === key) ||
+                     (!!cron && String(req.headers["authorization"] ?? "") === `Bearer ${cron}`);
+  if (!key && !cron) return res.status(503).json({ error: "Economy unavailable — set MODERATION_KEY." });
+  if (!authorised) return res.status(401).json({ error: "Unauthorised." });
 
   if (req.method === "GET") {
     const rows = SKU_CATALOGUE.map((s) => evaluateSku(s));

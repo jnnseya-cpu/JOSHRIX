@@ -91,10 +91,13 @@
     onStatus: (cb) => { statusCb = cb; },
   };
 
-  // tester grant: accounts in tester mode receive 2,000 tester ACUs, once per
-  // device — tester credit only, never a real-account entitlement (No-Free-AI rule)
+  // OFFLINE DEMO ONLY. Device test-mode shows a simulated 2,000 ACUs so the UI
+  // can be walked through without a backend. It is never granted once a real
+  // server wallet exists: the server is the only thing that can fund an account
+  // (No-Free-AI rule), and painting a balance it would refuse is worse than
+  // showing zero — the forge would 402 a second later.
   try {
-    if (sessionStorage.getItem('jx.testMode') === '1' && !state.testerAcuGranted) {
+    if (sessionStorage.getItem('jx.testMode') === '1' && !state.testerAcuGranted && !state.serverWalletId) {
       state.acu = (state.acu || 0) + 2000;
       state.acuCategory = 'tester';
       state.testerAcuGranted = true;

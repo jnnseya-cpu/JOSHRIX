@@ -8,7 +8,8 @@
  */
 import Stripe from "stripe";
 import { PLANS } from "../shared/payments";
-import { safeOrigin } from "./_guard";
+import { safeOrigin, clientIp, rateLimit, tooMany } from "./_guard";
+import { getDb } from "./_ledger";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -16,6 +17,12 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+
+  const _sql = getDb();
+  if (_sql) {
+    const _rl = await rateLimit(_sql, "subscribe:" + clientIp(req), 5, 3600);
+    if (!_rl.ok) return tooMany(res, _rl.retryAfter, "sign-ups");
+  }
 
   const { planId, walletId } = (req.body ?? {}) as { planId?: string; walletId?: string };
   const plan = PLANS.find((p) => p.id === planId);

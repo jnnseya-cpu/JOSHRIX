@@ -7,6 +7,7 @@
  * and refunded automatically if generation fails. 402 = not enough ACUs.
  */
 import { generateBlueprint, acuChargeForUsage, BLUEPRINT_ACU_CHARGE, BLUEPRINT_MIN_CHARGE } from "./_gateway";
+import { clientIp, rateLimit, tooMany, forgeDisabled } from "./_guard";
 import { getDb, ensureGameSchema, debitWallet, creditWallet } from "./_ledger";
 
 export default async function handler(req: any, res: any) {
@@ -15,6 +16,14 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  const _paused = forgeDisabled();
+  if (_paused) return res.status(503).json({ error: _paused });
+
+  const _sql = getDb();
+  if (_sql) {
+    const _rl = await rateLimit(_sql, "blueprint:" + clientIp(req), 40, 3600);
+    if (!_rl.ok) return tooMany(res, _rl.retryAfter, "blueprint requests");
+  }
 
   const { prompt, type, platform, scope, language, walletId } = (req.body ?? {}) as Record<string, string>;
   if (!prompt || typeof prompt !== "string" || prompt.length < 4) {

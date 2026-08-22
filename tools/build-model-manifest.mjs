@@ -88,10 +88,18 @@ function scanPacks() {
 
 const existing = fs.existsSync(MANIFEST) ? JSON.parse(fs.readFileSync(MANIFEST, "utf8")) : { packs: {} };
 const scanned = scanPacks();
+
+// Keep every hand-authored pack that does NOT live under packs/ — lib/ and
+// vehicles/ are curated by hand and scanPacks() never sees them, so listing
+// only `wonder` here silently deleted them from the manifest.
+const preserved = Object.fromEntries(
+  Object.entries(existing.packs || {}).filter(([name]) => !(name in scanned)),
+);
+
 const manifest = {
   base: existing.base || "https://www.joshrix.com/assets/models3d/",
   loader: existing.loader || "https://www.joshrix.com/assets/vendor/GLTFLoader.js",
-  packs: { ...(existing.packs?.wonder ? { wonder: existing.packs.wonder } : {}), ...scanned },
+  packs: { ...preserved, ...scanned },
 };
 fs.writeFileSync(MANIFEST, JSON.stringify(manifest, null, 2) + "\n");
 

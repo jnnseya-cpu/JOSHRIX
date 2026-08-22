@@ -29,6 +29,9 @@ export default async function handler(req: any, res: any) {
       createdAt: g.created_at,
       playUrl: `/play/${g.id}`,
       previewUrl: `/play/${g.id}?preview=1`,
+      // marketplace state, so the creator can see and change their own price
+      priceMinor: g.price_minor == null ? null : Number(g.price_minor),
+      sellerPlan: g.seller_plan ?? null,
     }));
     const totalPlays = games.reduce((s, g) => s + g.plays, 0);
     return res.status(200).json({ games, count: games.length, totalPlays });

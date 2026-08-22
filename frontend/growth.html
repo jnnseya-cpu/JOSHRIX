@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.webmanifest">
+<script src="/assets/splash.js" defer></script>
+<meta name="theme-color" content="#050508">
+<link rel="apple-touch-icon" href="assets/icons/icon-180.png">
+<title>AI Growth Engine — JOSHRIX Studio</title>
+<meta name="description" content="Ten AI tools to launch and grow your game: social posts, adverts, email campaigns, landing pages, hashtags, video scripts, plus advisors that read your real play data.">
+<link rel="canonical" href="https://www.joshrix.com/growth.html">
+<link rel="stylesheet" href="assets/joshrix.css">
+<script src="assets/config.js"></script>
+<script src="assets/auth.js"></script>
+<script src="assets/store.js"></script>
+<script>
+/* Growth tools bill a real wallet, so an unsigned visitor is sent to sign in. */
+(function () {
+  try {
+    var p = JSON.parse(localStorage.getItem('jx.profile') || '{}');
+    if (!p.email || String(p.email).indexOf('@') < 1) location.replace('login.html?next=growth.html');
+  } catch (e) { location.replace('login.html?next=growth.html'); }
+})();
+</script>
+<style>
+  .gtools{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.8rem;margin:1.2rem 0}
+  .gtool{text-align:left;border:1px solid var(--stroke,#26263a);border-radius:12px;padding:.9rem 1rem;background:rgba(255,255,255,.02);cursor:pointer;transition:border-color .15s,transform .15s}
+  .gtool:hover,.gtool:focus-visible{border-color:#7C3AED;transform:translateY(-2px)}
+  .gtool[aria-pressed="true"]{border-color:#22D3EE;background:rgba(34,211,238,.07)}
+  .gtool b{display:block;font-size:.95rem;margin-bottom:.25rem}
+  .gtool span{font-size:.8rem;color:var(--muted,#9d9db3);line-height:1.45}
+  .gtool .kind{display:inline-block;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;padding:.12rem .4rem;border-radius:5px;margin-bottom:.4rem}
+  .kind.gen{background:rgba(124,58,237,.2);color:#c4a8ff}
+  .kind.adv{background:rgba(34,211,238,.15);color:#7fe3f5}
+  .gform{border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem;margin-top:1rem}
+  .gform label{display:block;font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#9d9db3);margin:.7rem 0 .3rem}
+  .gform input,.gform select,.gform textarea{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:9px;padding:.6rem .8rem;color:inherit;font:inherit}
+  .gform textarea{min-height:90px;resize:vertical}
+  .grow2{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+  @media(max-width:620px){.grow2{grid-template-columns:1fr}}
+  .out{margin-top:1.2rem;border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem;display:none}
+  .out h3{font-size:1rem;margin:1.1rem 0 .4rem;color:#22D3EE}
+  .out h3:first-child{margin-top:0}
+  .card{border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.8rem .9rem;margin:.6rem 0;background:rgba(255,255,255,.02)}
+  .card .plat{font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:#c4a8ff;margin-bottom:.35rem}
+  .card p{margin:.3rem 0;line-height:1.6;white-space:pre-wrap}
+  .tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.5rem}
+  .tag{font-size:.75rem;background:rgba(124,58,237,.16);color:#c4a8ff;padding:.15rem .5rem;border-radius:6px}
+  .copy{font-size:.72rem;background:none;border:1px solid var(--stroke,#26263a);color:var(--muted,#9d9db3);border-radius:6px;padding:.2rem .5rem;cursor:pointer;float:right}
+  .copy:hover{color:#22D3EE;border-color:#22D3EE}
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.7rem;margin:.9rem 0}
+  .stat{border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.7rem .8rem}
+  .stat b{display:block;font-size:1.4rem;color:#22D3EE;font-variant-numeric:tabular-nums}
+  .stat span{font-size:.74rem;color:var(--muted,#9d9db3)}
+  .honest{border-left:3px solid #f0c75e;background:rgba(240,199,94,.07);padding:.7rem .9rem;border-radius:0 8px 8px 0;margin:.9rem 0;font-size:.86rem;line-height:1.6}
+  .nm{font-size:.82rem;color:var(--muted,#9d9db3);line-height:1.7}
+  .nm li{margin:.2rem 0}
+</style>
+</head>
+<body>
+<canvas id="stars" aria-hidden="true"></canvas>
+<div class="noise" aria-hidden="true"></div>
+<nav class="jx">
+  <a class="brand" href="index.html">
+    <svg viewBox="-50 -50 100 100"><defs><linearGradient id="jxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7C3AED"/><stop offset="100%" stop-color="#22D3EE"/></linearGradient></defs><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#jxG)" stroke-width="7" stroke-linejoin="round"/><polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#jxG)"/></svg>
+    <span class="word">JOSHRIX<em>STUDIO</em></span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="dashboard.html">Dashboard</a></li>
+    <li><a href="arcade.html">Arcade</a></li>
+    <li><a href="marketplace.html">Marketplace</a></li>
+    <li><a href="wallet.html">Wallet</a></li>
+    <li><a href="pricing.html">Pricing</a></li>
+  </ul>
+  <div class="nav-right"><a class="btn btn-primary btn-sm" href="studio.html">Launch Studio</a></div>
+</nav>
+<main class="jx">
+
+<div class="page-hero reveal">
+  <div class="sec-tag">AI Growth Engine</div>
+  <h1 class="jx">Launch it, then <span class="grad">grow it</span></h1>
+  <p class="lede">Ten tools that turn a finished game into a campaign. Six write your copy; four read your real play numbers and tell you what to do next — and say plainly when there isn't enough data yet.</p>
+</div>
+
+<section class="console reveal">
+  <div class="panel-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t">Your numbers — counted, never estimated</span></div>
+  <div class="panel-body">
+    <div class="statgrid" id="stats"><div class="stat"><b>—</b><span>loading…</span></div></div>
+    <div id="analyticsNote" class="honest" style="display:none"></div>
+    <details style="margin-top:.6rem">
+      <summary style="cursor:pointer;font-size:.85rem;color:var(--muted,#9d9db3)">What this platform does <b>not</b> measure</summary>
+      <ul class="nm" id="notMeasured"></ul>
+    </details>
+  </div>
+</section>
+
+<section class="console reveal" style="margin-top:1.4rem">
+  <div class="panel-bar"><span class="dots"><i></i><i></i><i></i></span><span class="t">Pick a tool</span></div>
+  <div class="panel-body">
+    <div class="gtools" id="tools"></div>
+
+    <div class="gform" id="form" style="display:none">
+      <div id="toolHead"></div>
+      <div class="grow2">
+        <div>
+          <label for="gGame">Which game?</label>
+          <select id="gGame"><option value="">— loading your games —</option></select>
+        </div>
+        <div>
+          <label for="gLang">Language</label>
+          <select id="gLang">
+            <option value="auto" selected>Auto</option><option>English</option><option>Français</option>
+            <option>Español</option><option>Português</option><option>Kiswahili</option><option>Deutsch</option><option>العربية</option>
+          </select>
+        </div>
+      </div>
+      <label for="gBrief">Anything specific to include? <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+      <textarea id="gBrief" placeholder="e.g. it's free to play, launching Friday, aimed at parents of 7–11 year olds"></textarea>
+      <div class="grow2">
+        <div>
+          <label for="gAud">Target audience <span style="text-transform:none;letter-spacing:0">(optional)</span></label>
+          <input id="gAud" placeholder="e.g. casual mobile players in West Africa">
+        </div>
+        <div>
+          <label for="gTone">Tone</label>
+          <select id="gTone"><option>confident, concrete</option><option>playful</option><option>professional</option><option>warm and friendly</option><option>bold and punchy</option></select>
+        </div>
+      </div>
+      <div style="display:flex;gap:.7rem;align-items:center;margin-top:1rem;flex-wrap:wrap">
+        <button class="btn btn-primary" id="gRun">✦ Generate</button>
+        <span class="hint" id="gHint">Metered — you pay only for the compute this uses (typically 4–12 ACUs). The unused hold refunds instantly.</span>
+      </div>
+    </div>
+
+    <div class="out" id="out"></div>
+  </div>
+</section>
+
+<div class="foot-base" style="justify-content:center;gap:1.4rem;display:flex;flex-wrap:wrap;padding:1.5rem">
+  <span>© 2026 JOSHRIX Studio</span>
+  <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a>
+</div>
+
+<script>
+(function () {
+  var API = (window.JOSHRIX_API_BASE || '');
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[<>&"]/g, function (c) { return ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c]; }); };
+  var profile = {}; try { profile = JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (e) {}
+  var wallet = profile.serverWalletId || '';
+
+  var TOOLS = [
+    { id: 'social_posts',  kind: 'gen', name: 'Social post generator',   desc: 'Five ready-to-post messages for X, Instagram, Facebook and LinkedIn.' },
+    { id: 'game_advert',   kind: 'gen', name: 'Game advert creator',     desc: 'Paid-ad copy in search, social and display formats, plus your strongest angles.' },
+    { id: 'email_campaign',kind: 'gen', name: 'Email campaign generator',desc: 'A three-email launch sequence: announce, prove, last call.' },
+    { id: 'landing_page',  kind: 'gen', name: 'Landing page builder',    desc: 'Hero, sections, FAQ and meta tags for a one-page pitch.' },
+    { id: 'hashtags',      kind: 'gen', name: 'Hashtag generator',       desc: 'Broad, niche and branded sets per platform — and which to avoid.' },
+    { id: 'video_script',  kind: 'gen', name: 'Video script generator',  desc: 'Two short-video scripts with hooks, beats and captions.' },
+    { id: 'performance',   kind: 'adv', name: 'Performance recommendations', desc: 'Reads your real play counts and says what to do next.' },
+    { id: 'audience',      kind: 'adv', name: 'Audience optimisation',   desc: 'Who is actually playing, and where to find more of them.' },
+    { id: 'posting_time',  kind: 'adv', name: 'Best posting time',       desc: 'Timing advice, labelled by whether it comes from your data or general norms.' }
+  ];
+  var picked = null;
+
+  $('tools').innerHTML = TOOLS.map(function (t) {
+    return '<button class="gtool" data-id="' + t.id + '" aria-pressed="false">' +
+      '<span class="kind ' + t.kind + '">' + (t.kind === 'gen' ? 'Generator' : 'Advisor') + '</span>' +
+      '<b>' + esc(t.name) + '</b><span>' + esc(t.desc) + '</span></button>';
+  }).join('') +
+  '<a class="gtool" href="dashboard.html" style="display:block;text-decoration:none;color:inherit">' +
+    '<span class="kind adv">Advisor</span><b>Campaign analytics</b><span>Your full play history, per game — on the dashboard.</span></a>';
+
+  Array.prototype.forEach.call(document.querySelectorAll('.gtool[data-id]'), function (b) {
+    b.addEventListener('click', function () {
+      picked = b.dataset.id;
+      Array.prototype.forEach.call(document.querySelectorAll('.gtool[data-id]'), function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      var t = TOOLS.filter(function (x) { return x.id === picked; })[0];
+      $('toolHead').innerHTML = '<b style="font-size:1.05rem">' + esc(t.name) + '</b><p style="color:var(--muted,#9d9db3);font-size:.88rem;margin:.3rem 0 0">' + esc(t.desc) + '</p>';
+      $('form').style.display = 'block';
+      $('out').style.display = 'none';
+      $('form').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  });
+
+  // real numbers
+  if (wallet) {
+    fetch(API + '/api/growth-analytics?w=' + encodeURIComponent(wallet))
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.summary) return;
+        var s = j.summary;
+        $('stats').innerHTML =
+          stat(s.published, 'games published') + stat(s.totalPlays, 'total plays') +
+          stat(s.averagePlaysPerPublishedGame, 'avg plays / game') + stat(s.gamesWithNoPlaysYet, 'never played') +
+          stat(s.awaitingReview, 'awaiting review');
+        if (j.honesty) { $('analyticsNote').style.display = 'block'; $('analyticsNote').textContent = j.honesty; }
+        $('notMeasured').innerHTML = (j.notMeasured || []).map(function (n) { return '<li>' + esc(n) + '</li>'; }).join('');
+        var opts = '<option value="">— all my games —</option>' + (j.games || []).map(function (g) {
+          return '<option value="' + esc(g.id) + '">' + esc(g.title) + ' (' + g.plays + ' plays)</option>';
+        }).join('');
+        $('gGame').innerHTML = opts;
+      }).catch(function () { $('stats').innerHTML = stat('—', 'numbers unavailable'); });
+  } else {
+    $('stats').innerHTML = stat(0, 'games published') + stat(0, 'total plays');
+    $('gGame').innerHTML = '<option value="">— no games yet —</option>';
+  }
+  function stat(v, label) { return '<div class="stat"><b>' + esc(v) + '</b><span>' + esc(label) + '</span></div>'; }
+
+  $('gRun').addEventListener('click', function () {
+    if (!picked) return;
+    var btn = $('gRun'); btn.disabled = true; btn.textContent = 'Working…';
+    $('out').style.display = 'block';
+    $('out').innerHTML = '<p style="color:var(--muted,#9d9db3)">The Growth Agent is writing…</p>';
+    fetch(API + '/api/growth', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        tool: picked, walletId: wallet, gameId: $('gGame').value || undefined,
+        brief: $('gBrief').value, audience: $('gAud').value, tone: $('gTone').value, language: $('gLang').value
+      })
+    }).then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+      .then(function (res) {
+        btn.disabled = false; btn.textContent = '✦ Generate';
+        if (!res.ok) { $('out').innerHTML = '<p style="color:#fca5a5">⚠ ' + esc(res.j && res.j.error || 'Request failed') + '</p>'; return; }
+        render(res.j);
+      }).catch(function () {
+        btn.disabled = false; btn.textContent = '✦ Generate';
+        $('out').innerHTML = '<p style="color:#fca5a5">⚠ Could not reach the Growth Engine. Nothing was charged.</p>';
+      });
+  });
+
+  function copyBtn(text) {
+    return '<button class="copy" data-copy="' + esc(text) + '">copy</button>';
+  }
+
+  function render(j) {
+    if (j.insufficientData) {
+      $('out').innerHTML = '<div class="honest"><b>' + esc(j.headline) + '</b><ul class="nm" style="margin:.5rem 0 0">' +
+        (j.guidance || []).map(function (g) { return '<li>' + esc(g) + '</li>'; }).join('') + '</ul></div>' +
+        '<p style="font-size:.82rem;color:var(--muted,#9d9db3)">' + esc(j.note || '') + '</p>';
+      return;
+    }
+    var r = j.result || {}, h = '';
+    if (r.posts) h += '<h3>Ready to post</h3>' + r.posts.map(function (p) {
+      return '<div class="card">' + copyBtn(p.text) + '<div class="plat">' + esc(p.platform) + '</div><p>' + esc(p.text) + '</p>' +
+        (p.hashtags && p.hashtags.length ? '<div class="tags">' + p.hashtags.map(function (t) { return '<span class="tag">#' + esc(t) + '</span>'; }).join('') + '</div>' : '') + '</div>';
+    }).join('');
+    if (r.ads) h += '<h3>Advert copy</h3>' + r.ads.map(function (a) {
+      return '<div class="card">' + copyBtn(a.headline + ' — ' + a.body) + '<div class="plat">' + esc(a.format) + '</div><p><b>' + esc(a.headline) + '</b></p><p>' + esc(a.body) + '</p><p style="color:#22D3EE">' + esc(a.cta) + '</p></div>';
+    }).join('');
+    if (r.angles) h += '<h3>Strongest angles</h3><ul class="nm">' + r.angles.map(function (a) { return '<li>' + esc(a) + '</li>'; }).join('') + '</ul>';
+    if (r.emails) h += '<h3>Email sequence</h3>' + r.emails.map(function (e) {
+      return '<div class="card">' + copyBtn(e.subject + '\n\n' + e.body) + '<div class="plat">' + esc(e.send) + '</div><p><b>' + esc(e.subject) + '</b></p><p style="color:var(--muted,#9d9db3);font-size:.85rem">' + esc(e.preheader) + '</p><p>' + esc(e.body) + '</p></div>';
+    }).join('');
+    if (r.hero) h += '<h3>Landing page</h3><div class="card">' + copyBtn(r.hero.headline + '\n' + r.hero.subhead) +
+      '<p><b>' + esc(r.hero.headline) + '</b></p><p>' + esc(r.hero.subhead) + '</p><p style="color:#22D3EE">' + esc(r.hero.cta) + '</p></div>' +
+      (r.sections || []).map(function (s) { return '<div class="card"><p><b>' + esc(s.heading) + '</b></p><p>' + esc(s.body) + '</p></div>'; }).join('');
+    if (r.sets) h += '<h3>Hashtags</h3>' + r.sets.map(function (s) {
+      return '<div class="card"><div class="plat">' + esc(s.platform) + '</div>' +
+        ['broad', 'niche', 'branded'].map(function (k) {
+          return (s[k] && s[k].length) ? '<p style="font-size:.78rem;color:var(--muted,#9d9db3);margin-top:.5rem">' + k + '</p><div class="tags">' + s[k].map(function (t) { return '<span class="tag">#' + esc(t) + '</span>'; }).join('') + '</div>' : '';
+        }).join('') + '</div>';
+    }).join('') + (r.avoid && r.avoid.length ? '<h3>Avoid these</h3><ul class="nm">' + r.avoid.map(function (a) { return '<li>' + esc(a) + '</li>'; }).join('') + '</ul>' : '');
+    if (r.scripts) h += '<h3>Video scripts</h3>' + r.scripts.map(function (s) {
+      return '<div class="card"><div class="plat">' + esc(s.length) + '</div><p><b>Hook:</b> ' + esc(s.hook) + '</p>' +
+        (s.beats || []).map(function (b) { return '<p><b>' + esc(b.t) + '</b> — ' + esc(b.visual) + '<br><i>' + esc(b.voice) + '</i></p>'; }).join('') +
+        '<p style="color:#22D3EE">' + esc(s.cta) + '</p><p style="font-size:.85rem;color:var(--muted,#9d9db3)">' + esc(s.caption) + '</p></div>';
+    }).join('');
+    if (r.headline) h += '<h3>' + esc(r.headline) + '</h3>';
+    if (r.reading) h += '<ul class="nm">' + r.reading.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
+    if (r.actions) h += '<h3>Do this next</h3>' + r.actions.map(function (a) {
+      return '<div class="card"><p><b>' + esc(a.do) + '</b></p><p>' + esc(a.why) + '</p><p style="font-size:.78rem;color:var(--muted,#9d9db3)">effort: ' + esc(a.effort) + '</p></div>';
+    }).join('');
+    if (r.likelyAudience) h += '<h3>Who is playing</h3><div class="card"><p>' + esc(r.likelyAudience) + '</p></div>';
+    if (r.signals) h += '<h3>Signals in your data</h3><ul class="nm">' + r.signals.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
+    if (r.unknowns) h += '<div class="honest"><b>What cannot be known from platform data alone</b><ul class="nm" style="margin:.4rem 0 0">' + r.unknowns.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+    if (r.channels) h += '<h3>Where to find more players</h3>' + r.channels.map(function (c) {
+      return '<div class="card"><p><b>' + esc(c.channel) + '</b></p><p>' + esc(c.why) + '</p><p style="color:#22D3EE">' + esc(c.firstStep) + '</p></div>';
+    }).join('');
+    if (r.basis) h += '<div class="honest">' + esc(r.basis) + '</div>';
+    if (r.recommendations) h += '<h3>Posting windows</h3>' + r.recommendations.map(function (x) {
+      return '<div class="card"><div class="plat">' + esc(x.platform) + '</div><p><b>' + esc(x.window) + '</b></p><p style="font-size:.8rem;color:var(--muted,#9d9db3)">source: ' + esc(x.source) + ' · confidence: ' + esc(x.confidence) + '</p></div>';
+    }).join('');
+    if (r.howToImprove) h += '<h3>Get real timing data</h3><ul class="nm">' + r.howToImprove.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
+    if (r.faq) h += '<h3>FAQ</h3>' + r.faq.map(function (f) { return '<div class="card"><p><b>' + esc(f.q) + '</b></p><p>' + esc(f.a) + '</p></div>'; }).join('');
+
+    if (!h) h = '<pre style="white-space:pre-wrap;font-size:.82rem;color:var(--muted,#9d9db3)">' + esc(JSON.stringify(r, null, 2)) + '</pre>';
+    h += '<p style="font-size:.8rem;color:var(--muted,#9d9db3);margin-top:1.2rem;border-top:1px solid var(--stroke,#26263a);padding-top:.8rem">' +
+      'Charged <b>' + esc(j.charged) + ' ACUs</b>' + (typeof j.balanceAfter === 'number' ? ' · balance ' + esc(j.balanceAfter) : '') +
+      '. Written for ' + esc(j.basedOn && j.basedOn.game || 'your games') + '. Always read it before you publish it — you are the editor.</p>';
+    $('out').innerHTML = h;
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.copy') : null;
+    if (!b) return;
+    navigator.clipboard.writeText(b.dataset.copy || '').then(function () {
+      var o = b.textContent; b.textContent = '✓ copied'; setTimeout(function () { b.textContent = o; }, 1400);
+    }).catch(function () {});
+  });
+})();
+</script>
+<script src="assets/appnav.js"></script>
+<script src="assets/track.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

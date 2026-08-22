@@ -787,5 +787,250 @@
     "height": 0.8,
     "bytes": 2076,
     "animations": []
+  },
+  {
+    "file": "football.glb",
+    "tags": [
+      "ball",
+      "football",
+      "sport"
+    ],
+    "height": 0.44,
+    "bytes": 36168,
+    "animations": []
+  },
+  {
+    "file": "goal.glb",
+    "tags": [
+      "goal",
+      "football",
+      "sport",
+      "structure"
+    ],
+    "height": 2.5,
+    "bytes": 17572,
+    "animations": []
+  },
+  {
+    "file": "stadium_stands.glb",
+    "tags": [
+      "stadium",
+      "football",
+      "sport",
+      "structure"
+    ],
+    "height": 7.4,
+    "bytes": 266860,
+    "animations": []
+  },
+  {
+    "file": "pitch_tile.glb",
+    "tags": [
+      "pitch",
+      "football",
+      "sport",
+      "platform"
+    ],
+    "height": 0.1,
+    "bytes": 6016,
+    "animations": []
+  },
+  {
+    "file": "corner_flag.glb",
+    "tags": [
+      "flag",
+      "football",
+      "sport",
+      "prop"
+    ],
+    "height": 1.9,
+    "bytes": 4736,
+    "animations": []
+  },
+  {
+    "file": "dino_trex.glb",
+    "tags": [
+      "dinosaur",
+      "enemy",
+      "creature",
+      "animated"
+    ],
+    "height": 2.2,
+    "bytes": 51204,
+    "animations": [
+      "walk",
+      "idle"
+    ]
+  },
+  {
+    "file": "dino_raptor.glb",
+    "tags": [
+      "dinosaur",
+      "enemy",
+      "creature",
+      "animated"
+    ],
+    "height": 2,
+    "bytes": 51208,
+    "animations": [
+      "walk",
+      "idle"
+    ]
+  },
+  {
+    "file": "dino_stego.glb",
+    "tags": [
+      "dinosaur",
+      "creature",
+      "animated"
+    ],
+    "height": 2.2,
+    "bytes": 60400,
+    "animations": [
+      "walk",
+      "idle"
+    ]
+  },
+  {
+    "file": "dino_bronto.glb",
+    "tags": [
+      "dinosaur",
+      "creature",
+      "animated"
+    ],
+    "height": 3,
+    "bytes": 50012,
+    "animations": [
+      "walk",
+      "idle"
+    ]
+  },
+  {
+    "file": "dino_trike.glb",
+    "tags": [
+      "dinosaur",
+      "creature",
+      "animated"
+    ],
+    "height": 2.2,
+    "bytes": 53200,
+    "animations": [
+      "walk",
+      "idle"
+    ]
+  },
+  {
+    "file": "dino_egg.glb",
+    "tags": [
+      "egg",
+      "dinosaur",
+      "collectable",
+      "prop"
+    ],
+    "height": 0.7,
+    "bytes": 39960,
+    "animations": []
+  },
+  {
+    "file": "dino_nest.glb",
+    "tags": [
+      "nest",
+      "dinosaur",
+      "prop"
+    ],
+    "height": 0.3,
+    "bytes": 24084,
+    "animations": []
+  },
+  {
+    "file": "volcano.glb",
+    "tags": [
+      "volcano",
+      "structure",
+      "island",
+      "emissive"
+    ],
+    "height": 4,
+    "bytes": 13868,
+    "animations": []
+  },
+  {
+    "file": "fern_tree.glb",
+    "tags": [
+      "tree",
+      "jungle",
+      "nature",
+      "prehistoric"
+    ],
+    "height": 2.9,
+    "bytes": 16600,
+    "animations": []
+  },
+  {
+    "file": "water_pool.glb",
+    "tags": [
+      "water",
+      "nature",
+      "platform"
+    ],
+    "height": 0.1,
+    "bytes": 2476,
+    "animations": []
+  },
+  {
+    "file": "ground_tile.glb",
+    "tags": [
+      "platform",
+      "terrain",
+      "nature"
+    ],
+    "height": 0.5,
+    "bytes": 4304,
+    "animations": []
+  },
+  {
+    "file": "stone_platform.glb",
+    "tags": [
+      "platform",
+      "structure"
+    ],
+    "height": 0.3,
+    "bytes": 4096,
+    "animations": []
+  },
+  {
+    "file": "cloud_puff.glb",
+    "tags": [
+      "cloud",
+      "sky",
+      "decor"
+    ],
+    "height": 0.6,
+    "bytes": 37832,
+    "animations": []
+  },
+  {
+    "file": "trophy.glb",
+    "tags": [
+      "trophy",
+      "collectable",
+      "prize",
+      "sport"
+    ],
+    "height": 0.9,
+    "bytes": 11440,
+    "animations": []
+  },
+  {
+    "file": "scoreboard.glb",
+    "tags": [
+      "scoreboard",
+      "sport",
+      "structure",
+      "emissive"
+    ],
+    "height": 1.9,
+    "bytes": 9240,
+    "animations": []
   }
 ]

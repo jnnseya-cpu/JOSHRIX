@@ -10,11 +10,15 @@
 (function () {
   try {
     var p = JSON.parse(localStorage.getItem('jx.profile') || '{}');
-    if (!(p.displayName || p.handle || p.email)) location.replace('login.html?next=studio.html');
+    // require the EMAIL specifically: it is the identity the server binds the ACU
+    // grant to, so a profile without one cannot forge anyway — and accepting a
+    // bare displayName let a hand-written localStorage entry through the gate.
+    if (!p.email || String(p.email).indexOf('@') < 1) location.replace('login.html?next=studio.html');
   } catch (e) { location.replace('login.html?next=studio.html'); }
 })();
 </script>
 <link rel="manifest" href="manifest.webmanifest">
+<script src="/assets/splash.js" defer></script>
 <meta name="theme-color" content="#050508">
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -210,7 +214,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
     <span class="word">JOSHRIX<em>STUDIO</em></span>
   </a>
   <div class="nav-right">
-    <span class="acu">ACU <b id="acuBal">2,000</b></span>
+    <span class="acu">ACU <b id="acuBal">0</b></span>
     <a class="back" href="index.html">← Home</a>
   </div>
 </nav>
@@ -295,7 +299,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
       <div class="actions" id="approveRow" style="display:none">
         <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.5rem .8rem">
           <input type="checkbox" id="chk3d" style="accent-color:#7C3AED;width:18px;height:18px">
-          <span><b style="color:var(--cyan,#22D3EE)">⬢ 3D Build</b> — real three.js 3D world. Metered pricing: you pay only for the compute your build actually uses — 3D holds 1,200 ACUs, 2D holds 300, and the unused hold refunds the moment your build settles (typical final: 40–200 ACUs).</span>
+          <span><b style="color:var(--cyan,#22D3EE)">⬢ 3D Build</b> — real three.js 3D world. You are charged only if you keep the build. A forge holds 250 ACUs for 3D and 150 for 2D; the hold returns in full if you refine, discard or walk away. Only publishing it — or spending an Enhance pass on it — collects what the run actually cost, typically 40–95 ACUs, and refunds the rest.</span>
         </label>
         <button class="btn btn-primary" id="btnForge">▶ Approve &amp; Initiate Forge</button>
         <span class="hint">Approval gate 1 of 3 — you stay in control</span>
@@ -446,9 +450,9 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
               </ul>
               <div class="price-row">
                 <span class="price" style="font-size:1rem">You set the price</span>
-                <button class="btn btn-ghost" style="padding:.6rem 1.4rem;font-size:.85rem" disabled title="Selling opens with the marketplace">List on Marketplace — soon</button>
+                <a class="btn btn-ghost" style="padding:.6rem 1.4rem;font-size:.85rem" href="dashboard.html">Set a price on your dashboard</a>
               </div>
-              <p class="split">Example split at Creator Pro (20% commission) on a £4.99 sale: platform £1.00 · you keep £3.99. Your IP certificate is issued to you at listing.</p>
+              <p class="split">Publish the game, then set its price in the <b>Price</b> column on your dashboard — the split is shown before you save. Example at Creator Pro (20% commission) on a £4.99 sale: platform £1.00 · you keep £3.99. Selling requires a Creator plan or above.</p>
               <p class="split">⑂ <b>Remix-enabled</b>: others may fork this game by licence — you earn a <b>lineage royalty on every descendant's revenue</b>, forever. Being remixed pays you.</p>
               <div class="actions" style="margin-top:.7rem"><button class="btn btn-ghost chan-btn" id="btnRemix">⑂ Remix This Game — fork with 70/30 lineage</button></div>
             </div>
@@ -478,13 +482,17 @@ const jxTrack = (event, props) => {
     }).catch(() => {});
   } catch (e) { /* telemetry must never break the studio */ }
 };
-/* account wallet: tester accounts forge with their REAL balance — spends persist
-   to the wallet and hard-stop at zero (never a negative balance) */
+/* account wallet: a device-mode profile forges against its local balance — spends
+   persist to the wallet and hard-stop at zero (never a negative balance). Once a
+   server wallet answers below, the server balance replaces this entirely. */
 const WALLET = (() => {
   try { const p = JSON.parse(localStorage.getItem('jx.profile') || '{}'); return p.testerAcuGranted ? p : null; }
   catch (e) { return null; }
 })();
-let acu = WALLET ? (WALLET.acu || 0) : 2000;
+/* Start at ZERO, never at an assumed balance. The server answers a moment later
+   with the real figure; showing a number first would promise credit the account
+   may not have, and the forge would refuse it anyway. */
+let acu = WALLET ? (WALLET.acu || 0) : 0;
 $('acuBal').textContent = acu.toLocaleString();
 /* server wallet (Build 2): once DATABASE_URL is live, the REAL balance lives on the
    server — every AI call is debited there and returns balanceAfter. The local sim
@@ -502,7 +510,9 @@ walletReady = (async () => {
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
     const r = await fetch(base + '/api/wallet-init', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ walletId: prof.serverWalletId || undefined, email: prof.email || undefined, name: prof.displayName || prof.handle || undefined }),
+      body: JSON.stringify({ walletId: prof.serverWalletId || undefined, email: prof.email || undefined, name: prof.displayName || prof.handle || undefined,
+        // only wallet CREATION runs the human check, so only that path pays the CPU cost
+        human: prof.serverWalletId ? undefined : (window.joshrixHuman ? await window.joshrixHuman(base) : undefined) }),
       signal: AbortSignal.timeout(10000)
     });
     const j = await r.json().catch(() => null);
@@ -571,7 +581,7 @@ const needAcu = (cost, hintEl) => {
 
 /* ---------- Stage 1: blueprint ---------- */
 let refining = false;   // refine passes are delta-priced, never a full re-charge
-let forgeAcu0 = 2000;   // ACU balance when the current forge run started
+let forgeAcu0 = 0;      // ACU balance when the current forge run started (set at launch)
 let lastBp = { title: 'Penalty King', summary: null, genre: [] };  // the user's generated blueprint follows them through the flow
 let realBuild = null, realBuildPromise = null, realBuildErr = null;  // the Code Agent's actual generated game
 
@@ -974,7 +984,7 @@ $('btnEnhance').addEventListener('click', async () => {
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
     const r = await fetch(base + '/api/forge-enhance', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ html: realBuild.html, walletId: serverWalletId || undefined, notes: (fixNote ? fixNote + ' — original concept: ' : '') + $('prompt').value, language: $('selLang').value }),
+      body: JSON.stringify({ html: realBuild.html, walletId: serverWalletId || undefined, notes: (fixNote ? fixNote + ' — original concept: ' : '') + $('prompt').value, language: $('selLang').value, baseForgeId: (realBuild && realBuild.forgeId) || undefined }),
       signal: AbortSignal.timeout(295000)
     });
     const j = await r.json().catch(() => null);
@@ -1039,7 +1049,11 @@ $('btnPub').addEventListener('click', async () => {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: lastBp.title || 'Untitled World', summary: lastBp.summary, language: $('selLang').value,
-        html: realBuild.html, walletId: serverWalletId || undefined, email: prof.email || undefined
+        html: realBuild.html, walletId: serverWalletId || undefined, email: prof.email || undefined,
+        // Publishing is the creator KEEPING the build, so it is the moment the
+        // forge is paid for. Without this id the server cannot settle the hold
+        // and the creator would be left holding ACUs they had already earned back.
+        forgeId: (realBuild && realBuild.forgeId) || undefined
       }),
       signal: AbortSignal.timeout(30000)
     });
@@ -1518,5 +1532,8 @@ function initGame() {
 <script>if('serviceWorker' in navigator && location.protocol==='https:'){addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{})})}</script>
 <script src="assets/install.js" defer></script>
 <script src="assets/identity.js" defer></script>
+<script src="assets/human.js"></script>
+<script src="assets/appnav.js"></script>
+<script src="assets/track.js"></script>
 </body>
 </html>

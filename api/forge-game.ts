@@ -7,9 +7,12 @@
  * forge charge is debited server-side BEFORE generation and refunded on failure.
  */
 import { randomUUID } from "crypto";
-import { generateGameHtml, looksPlayable, acuChargeForUsage, FORGE_GAME_ACU_CHARGE, FORGE_GAME_3D_ACU_CHARGE, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE } from "./_gateway";
+import { generateGameHtml, looksPlayable, countLibraryModels, acuChargeForUsage, FORGE_GAME_ACU_CHARGE, FORGE_GAME_3D_ACU_CHARGE, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE } from "./_gateway";
 import { buildPlayableGame } from "./_engine";
-import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge, saveForgeResult, recordForgeLog } from "./_ledger";
+import { releaseExpiredForgeHolds, getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeHold, saveForgeResult, recordForgeLog } from "./_ledger";
+import { recordSecurityEvent } from "./_guard";
+import { scanConcept, sanitiseConcept } from "./_security";
+import { clientIp, rateLimit, tooMany, forgeDisabled } from "./_guard";
 import type { GameBlueprint } from "../shared/contracts";
 
 /** Coerce whatever the client sends as a blueprint into the shape the engine needs. */
@@ -50,6 +53,32 @@ export default async function handler(req: any, res: any) {
   if (prompt.length > 20000) {
     return res.status(400).json({ error: "Prompt too long (max 20,000 chars)." });
   }
+  const paused = forgeDisabled();
+  if (paused) return res.status(503).json({ error: paused });
+
+  /* The concept is arbitrary public text. Strip the characters that hide it
+     from a human reviewer, then judge its SHAPE — never its subject. A horror
+     game about hackers is a game; text addressed to the model is not. */
+  const concept = sanitiseConcept(prompt);
+  const verdict = scanConcept(concept);
+  if (verdict.action !== "allow") {
+    const sqlEarly = getDb();
+    if (sqlEarly) {
+      await recordSecurityEvent(sqlEarly, "concept_flagged", verdict.action === "block" ? "block" : "warn", {
+        ip: clientIp(req), risk: verdict.risk, reasons: verdict.reasons,
+        excerpt: concept.slice(0, 400), walletId: walletId ?? null,
+      });
+    }
+    if (verdict.action === "block") {
+      // No charge is taken: nothing was generated, so nothing is owed.
+      return res.status(400).json({
+        error: "That description reads as instructions aimed at the AI rather than a game concept, so it was not run.",
+        reasons: verdict.reasons,
+        help: "Describe the game you want — the world, the player, what they do, how they win. Your ACUs are untouched.",
+      });
+    }
+  }
+
   const is3d = mode === "3d";
   const CHARGE = is3d ? FORGE_GAME_3D_ACU_CHARGE : FORGE_GAME_ACU_CHARGE;
 
@@ -57,9 +86,21 @@ export default async function handler(req: any, res: any) {
   const sql = getDb();
   let balanceAfter: number | null = null;
   if (sql) {
+    // DENIAL-OF-WALLET GUARD. Every forge spends real provider money, so the
+    // rate limit is per IP *and* per wallet — a stolen wallet id cannot be
+    // driven from many machines, and one machine cannot cycle many wallets.
+    const ipRl = await rateLimit(sql, "forge:ip:" + clientIp(req), 30, 3600);
+    if (!ipRl.ok) return tooMany(res, ipRl.retryAfter, "game builds");
+    if (walletId) {
+      const wRl = await rateLimit(sql, "forge:w:" + String(walletId).slice(0, 80), 20, 3600);
+      if (!wRl.ok) return tooMany(res, wRl.retryAfter, "game builds on this account");
+    }
     if (!walletId) return res.status(402).json({ error: "No wallet — open the Studio to initialise your ACU wallet, or top up at /wallet.html." });
     try {
       await ensureGameSchema(sql);
+      // Hand back any hold the creator left undecided before taking a new one,
+      // so an abandoned forge can never make the next one unaffordable.
+      try { await releaseExpiredForgeHolds(sql, walletId); } catch { /* best-effort */ }
       balanceAfter = await debitWallet(sql, walletId, CHARGE);
     } catch (err: any) {
       return res.status(502).json({ error: "Wallet check failed", detail: String(err?.message ?? err) });
@@ -93,9 +134,22 @@ export default async function handler(req: any, res: any) {
     let fallbackHtml: string | undefined;
     let aiUsage: { inputTokens: number; outputTokens: number } | undefined;
     let bespokeError: string | undefined;
+    let attemptTrail: string[] = [];
     const genStart = Date.now();
     try {
-      const ai = await generateGameHtml(prompt, { title, summary, language, mode: is3d ? "3d" : "2d" });
+      const ai = await generateGameHtml(concept, { title, summary, language, mode: is3d ? "3d" : "2d" });
+      attemptTrail = ai.attempts ?? [];
+      // A build rejected by the security scan is the loudest signal this
+      // platform can produce: someone got a model to write hostile code that
+      // would have been hosted here. Record it whether or not a later provider
+      // then succeeded, because the attempt is the finding.
+      const blocked = attemptTrail.filter((a) => a.indexOf("rejected by the security scan") !== -1);
+      if (blocked.length && sql) {
+        await recordSecurityEvent(sql, "malicious_build_blocked", "block", {
+          ip: clientIp(req), walletId: walletId ?? null, mode: is3d ? "3d" : "2d",
+          rejections: blocked, conceptExcerpt: concept.slice(0, 400),
+        });
+      }
       // any REAL provider build ships as bespoke (claude/gemini/openai); the
       // keyless demo build is weaker than the engine, so the engine wins there.
       // looksPlayable, not a literal <canvas> check — 3D builds create their
@@ -118,7 +172,10 @@ export default async function handler(req: any, res: any) {
     // provider that shipped (or 'engine' + the aggregated error) — diagnosable
     // from one URL, independent of what the creator's browser shows.
     if (sql) {
-      try { await recordForgeLog(sql, { provider, mode: is3d ? "3d" : "2d", ms: Date.now() - genStart, error: bespokeError ?? null }); } catch { /* best-effort */ }
+      // record the rejected providers too, not just total failure: knowing WHY
+      // the first two were skipped is what explains a slow or surprising build
+      const trail = bespokeError ?? (attemptTrail.length ? attemptTrail.join(" | ").slice(0, 600) : null);
+      try { await recordForgeLog(sql, { provider, mode: is3d ? "3d" : "2d", ms: Date.now() - genStart, error: trail, bytes: html.length, models: countLibraryModels(html) }); } catch { /* best-effort */ }
     }
     // METERED SETTLEMENT (business model: charge = 4x the AI provider cost of THIS
     // run, from actual token usage). The upfront debit was only a hold:
@@ -129,26 +186,30 @@ export default async function handler(req: any, res: any) {
     const settledCharge = provider !== "engine"
       ? Math.max(FORGE_MIN_CHARGE, aiUsage ? acuChargeForUsage(meterKey, aiUsage) : FORGE_MIN_CHARGE * 2)
       : ENGINE_BUILD_CHARGE;
-    if (sql && walletId && balanceAfter !== null && settledCharge !== CHARGE) {
-      try {
-        if (settledCharge < CHARGE) {
-          const nb = await creditWallet(sql, walletId, CHARGE - settledCharge);
-          if (nb !== null) balanceAfter = nb;
-        } else {
-          const nb = await debitWallet(sql, walletId, settledCharge - CHARGE);
-          if (nb !== null) balanceAfter = nb; // insufficient extra -> hold stands; reconciliation
-        }
-      } catch { /* settlement best-effort; ledger reconciliation catches strays */ }
-    }
+    // CHARGE ON ACCEPT: the hold STAYS debited while the creator decides, but it
+    // is not a payment. Nothing is collected here. Publishing or spending an
+    // Enhance pass collects settledCharge and refunds the rest; refining,
+    // discarding or walking away refunds all of it (see api/_ledger.ts).
+    //
+    // The old code settled here, so a build that rendered but was worthless was
+    // charged in full — the one case a creator would rightly dispute, and the
+    // reason this changed.
     // Single-use forge id so a build that fails to RENDER on the client can
     // auto-refund. Recorded only after a real charge, so a refund can't exceed the pay.
     let forgeId: string | undefined;
     if (sql && walletId && balanceAfter !== null) {
       forgeId = randomUUID();
-      try { await recordForgeCharge(sql, forgeId, walletId, settledCharge); } catch { forgeId = undefined; }
+      try { await recordForgeHold(sql, forgeId, walletId, CHARGE, settledCharge); } catch { forgeId = undefined; }
     }
     const body = {
-      html, provider, acuCharge: settledCharge,
+      html, provider,
+      // acuCharge stays for older Studio builds, but it is what WOULD be charged
+      // on accept — not what has been taken. acuHeld is what actually left the
+      // balance and comes back if the creator does not keep this build.
+      acuCharge: settledCharge,
+      acuHeld: CHARGE,
+      acuOnAccept: settledCharge,
+      chargedOnAccept: true,
       ...(bespokeError ? { bespokeError } : {}),
       ...(fallbackHtml ? { fallbackHtml } : {}),
       ...(forgeId ? { forgeId } : {}),
