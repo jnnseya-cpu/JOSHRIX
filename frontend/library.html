@@ -24,6 +24,14 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--violet-hot),var(-
 .layout{display:grid;grid-template-columns:minmax(0,1fr);gap:1.4rem}
 @media(min-width:900px){.layout{grid-template-columns:320px minmax(0,1fr);align-items:start}}
 
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.search{display:block;margin-bottom:.5rem}
+.search input{width:100%;background:var(--void-2);border:1px solid var(--stroke-bright);border-radius:10px;
+  color:var(--text);font-family:var(--body);font-size:1rem;font-weight:600;padding:.7rem .9rem}
+.search input::placeholder{color:var(--muted);font-weight:500}
+.search input:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.hint{font-family:var(--mono);font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);min-height:1.1em;margin-bottom:.55rem}
 .packs{display:flex;flex-direction:column;gap:.35rem;max-height:70vh;overflow-y:auto;padding-right:.3rem}
 .packs button{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;width:100%;text-align:left;
   background:var(--surface);border:1px solid var(--stroke);border-radius:10px;color:var(--text);cursor:pointer;
@@ -85,7 +93,15 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--violet-hot),var(-
   <div class="counts" id="counts"><b>Loading the manifest…</b></div>
 
   <div class="layout">
-    <div class="packs" id="packs" role="group" aria-label="Model packs"></div>
+    <div>
+      <label class="search">
+        <span class="vh">Search every model</span>
+        <input id="q" type="search" autocomplete="off" spellcheck="false"
+               placeholder="Search 2,435 models — gun, car, tree, zombie…">
+      </label>
+      <p class="hint" id="hint"></p>
+      <div class="packs" id="packs" role="group" aria-label="Model packs"></div>
+    </div>
     <div>
       <div id="stage"><div id="stageMsg">Pick a model</div></div>
       <div class="viewerbar"><span class="path" id="path">—</span></div>
@@ -235,6 +251,7 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--violet-hot),var(-
 
   function selectPack(name) {
     currentPack = name;
+    if (qEl && qEl.value && document.activeElement !== qEl) { qEl.value = ""; hintEl.textContent = ""; }
     [].forEach.call(packsEl.children, function (b) {
       b.setAttribute("aria-pressed", String(b.dataset.pack === name));
     });
@@ -269,11 +286,76 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--violet-hot),var(-
     });
   }
 
+  /* Numbered packs (roadtile_001 …, modularbuildings_014 …) are unsearchable by
+     name because the supplier never gave them one. Tagging them here means a
+     search for "road" still finds them through the PACK name, which is the only
+     descriptive text those files have. */
+  var index = [];
+  function buildIndex(m) {
+    index = [];
+    Object.keys(m.packs || {}).forEach(function (pack) {
+      ((m.packs[pack] || {}).models || []).forEach(function (it) {
+        var file = it.file.split("/").pop().replace(/\.glb$/, "");
+        index.push({ pack: pack, file: file, rel: it.file, it: it,
+                     hay: (file + " " + pack + " " + (it.tags || []).join(" ")).toLowerCase() });
+      });
+    });
+  }
+
+  var qEl = document.getElementById("q");
+  var hintEl = document.getElementById("hint");
+
+  function renderResults(term) {
+    var q = term.trim().toLowerCase();
+    if (!q) { hintEl.textContent = ""; if (currentPack) selectPack(currentPack); return; }
+    var words = q.split(/\s+/);
+    var hits = index.filter(function (e) {
+      return words.every(function (w) { return e.hay.indexOf(w) >= 0; });
+    });
+    // Whole-word matches on the FILENAME first: searching "gun" should open with
+    // machinegun and gun props, not every model in a pack whose name contains it.
+    hits.sort(function (a, b) {
+      var an = a.file.toLowerCase().indexOf(words[0]) >= 0 ? 0 : 1;
+      var bn = b.file.toLowerCase().indexOf(words[0]) >= 0 ? 0 : 1;
+      return an - bn || a.file.localeCompare(b.file);
+    });
+    [].forEach.call(packsEl.children, function (b) { b.setAttribute("aria-pressed", "false"); });
+    hintEl.textContent = hits.length
+      ? hits.length + " match" + (hits.length === 1 ? "" : "es")
+      : "nothing matches " + term;
+    gridEl.innerHTML = "";
+    var opened = false;
+    hits.slice(0, 300).forEach(function (e) {
+      var b = document.createElement("button");
+      b.type = "button"; b.setAttribute("aria-pressed", "false");
+      b.appendChild(document.createTextNode(e.file.replace(/_/g, " ")));
+      var em = document.createElement("em");
+      em.textContent = e.pack.replace(/^(kenney|quaternius)-/, "")
+        + (e.it.clips && e.it.clips.length ? " · " + e.it.clips.length + " clips" : "");
+      b.appendChild(em);
+      b.addEventListener("click", function () {
+        [].forEach.call(gridEl.children, function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        show(e.rel);
+      });
+      gridEl.appendChild(b);
+      if (!opened) { opened = true; setTimeout(function () { b.click(); }, 0); }
+    });
+  }
+
+  var debounce = null;
+  qEl.addEventListener("input", function () {
+    clearTimeout(debounce);
+    var v = qEl.value;
+    debounce = setTimeout(function () { renderResults(v); }, 120);
+  });
+
   fetch(BASE + "manifest.json").then(function (r) {
     if (!r.ok) throw new Error("manifest " + r.status);
     return r.json();
   }).then(function (m) {
     manifest = m;
+    buildIndex(m);
     var names = Object.keys(m.packs || {}).sort(function (a, b) {
       // Rigged packs first — they are what a creator is usually looking for.
       var ra = /quaternius|characters/.test(a) ? 0 : 1, rb = /quaternius|characters/.test(b) ? 0 : 1;

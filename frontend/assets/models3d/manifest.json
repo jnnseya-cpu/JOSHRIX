@@ -2162,7 +2162,9 @@
         {
           "file": "packs/kenney-carkit/ambulance.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 195008,
           "height": 1.7,
@@ -2173,7 +2175,9 @@
         {
           "file": "packs/kenney-carkit/delivery.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 179748,
           "height": 1.6,
@@ -2184,7 +2188,9 @@
         {
           "file": "packs/kenney-carkit/delivery_flat.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 179424,
           "height": 1.3,
@@ -2198,7 +2204,9 @@
             "light",
             "prop",
             "emissive",
-            "vehicle"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 194816,
           "height": 1.7,
@@ -2211,7 +2219,9 @@
           "tags": [
             "container",
             "prop",
-            "vehicle"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 207220,
           "height": 1.6,
@@ -2222,7 +2232,9 @@
         {
           "file": "packs/kenney-carkit/hatchback_sports.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 151168,
           "height": 1.1,
@@ -2233,6 +2245,9 @@
         {
           "file": "packs/kenney-carkit/police.glb",
           "tags": [
+            "vehicle",
+            "city",
+            "modern",
             "biome",
             "nature"
           ],
@@ -2245,7 +2260,9 @@
         {
           "file": "packs/kenney-carkit/race.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 112936,
           "height": 0.733,
@@ -2256,7 +2273,9 @@
         {
           "file": "packs/kenney-carkit/race_future.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 117952,
           "height": 0.833,
@@ -2267,7 +2286,9 @@
         {
           "file": "packs/kenney-carkit/sedan.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 148440,
           "height": 1.3,
@@ -2278,7 +2299,9 @@
         {
           "file": "packs/kenney-carkit/sedan_sports.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 153184,
           "height": 1.1,
@@ -2289,7 +2312,9 @@
         {
           "file": "packs/kenney-carkit/suv.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 176952,
           "height": 1.3,
@@ -2300,7 +2325,9 @@
         {
           "file": "packs/kenney-carkit/suv_luxury.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 144496,
           "height": 1.3,
@@ -2311,7 +2338,9 @@
         {
           "file": "packs/kenney-carkit/taxi.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 124484,
           "height": 1.5,
@@ -2322,7 +2351,9 @@
         {
           "file": "packs/kenney-carkit/tractor.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 130728,
           "height": 1.462,
@@ -2333,6 +2364,9 @@
         {
           "file": "packs/kenney-carkit/tractor_police.glb",
           "tags": [
+            "vehicle",
+            "city",
+            "modern",
             "biome",
             "nature"
           ],
@@ -2345,7 +2379,9 @@
         {
           "file": "packs/kenney-carkit/tractor_shovel.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 145624,
           "height": 1.462,
@@ -2422,7 +2458,9 @@
         {
           "file": "packs/kenney-carkit/wheel_tractor_back.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 24604,
           "height": 0.875,
@@ -2433,7 +2471,9 @@
         {
           "file": "packs/kenney-carkit/wheel_tractor_dark_back.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 24608,
           "height": 0.875,
@@ -2444,7 +2484,9 @@
         {
           "file": "packs/kenney-carkit/wheel_tractor_dark_front.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 18392,
           "height": 0.539,
@@ -2455,7 +2497,9 @@
         {
           "file": "packs/kenney-carkit/wheel_tractor_front.glb",
           "tags": [
-            "prop"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 18396,
           "height": 0.539,
@@ -3369,6 +3413,8 @@
         {
           "file": "packs/kenney-fantasy-town-kit/blade.glb",
           "tags": [
+            "knife",
+            "weapon",
             "prop"
           ],
           "bytes": 16664,
@@ -3789,7 +3835,10 @@
           "file": "packs/kenney-fantasy-town-kit/road_curb.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2336,
           "height": 0.05,
@@ -5818,6 +5867,8 @@
         {
           "file": "packs/kenney-food-kit/cooking_knife.glb",
           "tags": [
+            "knife",
+            "weapon",
             "prop"
           ],
           "bytes": 4476,
@@ -5829,6 +5880,8 @@
         {
           "file": "packs/kenney-food-kit/cooking_knife_chopping.glb",
           "tags": [
+            "knife",
+            "weapon",
             "prop"
           ],
           "bytes": 5584,
@@ -6326,6 +6379,8 @@
         {
           "file": "packs/kenney-food-kit/knife_block.glb",
           "tags": [
+            "knife",
+            "weapon",
             "prop"
           ],
           "bytes": 16096,
@@ -7356,6 +7411,8 @@
         {
           "file": "packs/kenney-food-kit/utensil_knife.glb",
           "tags": [
+            "knife",
+            "weapon",
             "prop"
           ],
           "bytes": 2760,
@@ -9677,6 +9734,9 @@
         {
           "file": "packs/kenney-graveyardkit/lightpost_all.glb",
           "tags": [
+            "street",
+            "city",
+            "modern",
             "prop"
           ],
           "bytes": 88564,
@@ -9688,6 +9748,9 @@
         {
           "file": "packs/kenney-graveyardkit/lightpost_double.glb",
           "tags": [
+            "street",
+            "city",
+            "modern",
             "prop"
           ],
           "bytes": 48352,
@@ -9699,6 +9762,9 @@
         {
           "file": "packs/kenney-graveyardkit/lightpost_single.glb",
           "tags": [
+            "street",
+            "city",
+            "modern",
             "prop"
           ],
           "bytes": 28228,
@@ -10287,7 +10353,10 @@
           "file": "packs/kenney-hexagonkit/path_crossing.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8136,
           "height": 0.025,
@@ -10452,7 +10521,9 @@
         {
           "file": "packs/kenney-hexagonkit/river_crossing.glb",
           "tags": [
-            "prop"
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 15308,
           "height": 0.2,
@@ -10993,6 +11064,9 @@
         {
           "file": "packs/kenney-holidaypack/lightpost.glb",
           "tags": [
+            "street",
+            "city",
+            "modern",
             "prop"
           ],
           "bytes": 14768,
@@ -11582,6 +11656,9 @@
         {
           "file": "packs/kenney-medieval-town/lightpost_01.glb",
           "tags": [
+            "street",
+            "city",
+            "modern",
             "prop"
           ],
           "bytes": 12120,
@@ -11615,7 +11692,9 @@
         {
           "file": "packs/kenney-medieval-town/plate_pavement_01.glb",
           "tags": [
-            "prop"
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2340,
           "height": 0.3,
@@ -11638,7 +11717,9 @@
         {
           "file": "packs/kenney-medieval-town/plate_sidewalk_01.glb",
           "tags": [
-            "prop"
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 3584,
           "height": 0.3,
@@ -12758,7 +12839,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_001.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3892,
           "height": 0.213,
@@ -12770,7 +12853,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_002.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 6612,
           "height": 0.213,
@@ -12782,7 +12867,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_003.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 7460,
           "height": 0.213,
@@ -12794,7 +12881,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_004.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3368,
           "height": 0.213,
@@ -12806,7 +12895,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_005.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3768,
           "height": 0.213,
@@ -12818,7 +12909,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_006.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4276,
           "height": 0.213,
@@ -12830,7 +12923,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_007.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5432,
           "height": 0.213,
@@ -12842,7 +12937,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_008.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3504,
           "height": 0.213,
@@ -12854,7 +12951,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_009.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3120,
           "height": 0.213,
@@ -12866,7 +12965,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_010.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 24080,
           "height": 0.213,
@@ -12878,7 +12979,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_011.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3868,
           "height": 0.213,
@@ -12890,7 +12993,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_012.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 8388,
           "height": 0.213,
@@ -12902,7 +13007,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_013.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3868,
           "height": 0.213,
@@ -12914,7 +13021,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_014.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 2732,
           "height": 0.213,
@@ -12926,7 +13035,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_015.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4664,
           "height": 0.213,
@@ -12938,7 +13049,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_016.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 2328,
           "height": 0.106,
@@ -12950,7 +13063,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_017.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 2716,
           "height": 0.106,
@@ -12962,7 +13077,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_018.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 2316,
           "height": 0.625,
@@ -12974,7 +13091,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_019.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 2328,
           "height": 0.213,
@@ -12986,7 +13105,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_020.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4488,
           "height": 0.213,
@@ -12998,7 +13119,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_021.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 6312,
           "height": 0.625,
@@ -13010,7 +13133,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_022.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 14780,
           "height": 0.625,
@@ -13022,7 +13147,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_023.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5852,
           "height": 0.625,
@@ -13034,7 +13161,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_024.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 11264,
           "height": 0.837,
@@ -13046,7 +13175,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_025.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 20192,
           "height": 0.837,
@@ -13058,7 +13189,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_026.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 8948,
           "height": 0.837,
@@ -13070,7 +13203,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_027.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 7508,
           "height": 0.837,
@@ -13082,7 +13217,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_028.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 6084,
           "height": 0.625,
@@ -13094,7 +13231,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_029.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 14780,
           "height": 0.625,
@@ -13106,7 +13245,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_030.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 17120,
           "height": 0.625,
@@ -13118,7 +13259,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_031.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 2332,
           "height": 0.106,
@@ -13130,7 +13273,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_032.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4584,
           "height": 0.561,
@@ -13142,7 +13287,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_033.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 23016,
           "height": 0.625,
@@ -13154,7 +13301,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_034.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 8652,
           "height": 0.625,
@@ -13166,7 +13315,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_035.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 6312,
           "height": 0.625,
@@ -13178,7 +13329,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_036.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 2524,
           "height": 0.625,
@@ -13190,7 +13343,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_037.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 2532,
           "height": 0.625,
@@ -13202,7 +13357,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_038.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4720,
           "height": 0.625,
@@ -13214,7 +13371,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_039.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 7528,
           "height": 0.625,
@@ -13226,7 +13385,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_040.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4312,
           "height": 0.625,
@@ -13238,7 +13399,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_041.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5504,
           "height": 0.625,
@@ -13250,7 +13413,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_042.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 7040,
           "height": 0.625,
@@ -13262,7 +13427,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_043.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3812,
           "height": 0.561,
@@ -13274,7 +13441,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_044.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5724,
           "height": 0.519,
@@ -13286,7 +13455,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_045.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5124,
           "height": 0.561,
@@ -13298,7 +13469,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_046.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4312,
           "height": 0.625,
@@ -13310,7 +13483,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_047.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5504,
           "height": 0.625,
@@ -13322,7 +13497,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_048.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4104,
           "height": 0.625,
@@ -13334,7 +13511,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_049.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4720,
           "height": 0.625,
@@ -13346,7 +13525,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_050.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4488,
           "height": 0.625,
@@ -13358,7 +13539,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_051.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3540,
           "height": 0.519,
@@ -13370,7 +13553,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_052.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4088,
           "height": 0.561,
@@ -13382,7 +13567,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_053.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 16544,
           "height": 0.625,
@@ -13394,7 +13581,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_054.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 8076,
           "height": 0.625,
@@ -13406,7 +13595,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_055.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4084,
           "height": 0.625,
@@ -13418,7 +13609,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_056.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 2720,
           "height": 0.625,
@@ -13430,7 +13623,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_057.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 8948,
           "height": 0.625,
@@ -13442,7 +13637,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_058.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3696,
           "height": 0.625,
@@ -13454,7 +13651,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_059.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4720,
           "height": 0.625,
@@ -13466,7 +13665,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_060.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4856,
           "height": 0.625,
@@ -13478,7 +13679,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_061.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4336,
           "height": 0.625,
@@ -13490,7 +13693,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_062.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 6824,
           "height": 0.625,
@@ -13502,7 +13707,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_063.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 11584,
           "height": 0.561,
@@ -13514,7 +13721,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_064.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3096,
           "height": 0.519,
@@ -13526,7 +13735,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_065.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4364,
           "height": 0.519,
@@ -13538,7 +13749,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_066.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3364,
           "height": 0.519,
@@ -13550,7 +13763,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_067.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 7032,
           "height": 0.625,
@@ -13562,7 +13777,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_068.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4312,
           "height": 0.625,
@@ -13574,7 +13791,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_069.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 6312,
           "height": 0.625,
@@ -13586,7 +13805,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_070.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3336,
           "height": 0.625,
@@ -13598,7 +13819,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_071.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3720,
           "height": 0.625,
@@ -13610,7 +13833,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_072.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 7316,
           "height": 0.106,
@@ -13622,7 +13847,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_073.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 7496,
           "height": 0.2,
@@ -13634,7 +13861,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_074.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4124,
           "height": 0.5,
@@ -13646,7 +13875,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_075.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4352,
           "height": 0.5,
@@ -13658,7 +13889,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_076.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4124,
           "height": 0.5,
@@ -13670,7 +13903,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_077.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4352,
           "height": 0.5,
@@ -13682,7 +13917,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_078.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3892,
           "height": 0.5,
@@ -13694,7 +13931,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_079.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 3896,
           "height": 0.5,
@@ -13706,7 +13945,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_080.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5072,
           "height": 0.38,
@@ -13718,7 +13959,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_081.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5068,
           "height": 0.38,
@@ -13730,7 +13973,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_082.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 6608,
           "height": 0.38,
@@ -13742,7 +13987,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_083.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5080,
           "height": 0.422,
@@ -13754,7 +14001,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_084.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5076,
           "height": 0.5,
@@ -13766,7 +14015,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_085.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5076,
           "height": 0.5,
@@ -13778,7 +14029,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_086.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5080,
           "height": 0.422,
@@ -13790,7 +14043,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_087.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 6608,
           "height": 0.38,
@@ -13802,7 +14057,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_088.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5072,
           "height": 0.5,
@@ -13814,7 +14071,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_089.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5072,
           "height": 0.5,
@@ -13826,7 +14085,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_090.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5068,
           "height": 0.38,
@@ -13838,7 +14099,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_091.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 5064,
           "height": 0.38,
@@ -13850,7 +14113,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_092.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 12756,
           "height": 0.422,
@@ -13862,7 +14127,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_093.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 12756,
           "height": 0.422,
@@ -13874,7 +14141,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_094.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 12768,
           "height": 0.466,
@@ -13886,7 +14155,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_095.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 12768,
           "height": 0.466,
@@ -13898,7 +14169,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_096.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 12768,
           "height": 0.346,
@@ -13910,7 +14183,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_097.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 12768,
           "height": 0.346,
@@ -13922,7 +14197,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_098.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 12404,
           "height": 0.466,
@@ -13934,7 +14211,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_099.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 12400,
           "height": 0.466,
@@ -13946,7 +14225,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_100.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4464,
           "height": 0.625,
@@ -13958,7 +14239,9 @@
           "file": "packs/kenney-modular-buildings/modularbuildings_101.glb",
           "tags": [
             "building",
-            "structure"
+            "structure",
+            "city",
+            "modern"
           ],
           "bytes": 4460,
           "height": 0.625,
@@ -18230,6 +18513,9 @@
         {
           "file": "packs/kenney-pirate-kit/pirate_officer.glb",
           "tags": [
+            "building",
+            "city",
+            "modern",
             "biome",
             "nature"
           ],
@@ -19478,6 +19764,9 @@
         {
           "file": "packs/kenney-racingkit/light_post_exclusive.glb",
           "tags": [
+            "street",
+            "city",
+            "modern",
             "prop"
           ],
           "bytes": 16824,
@@ -19489,6 +19778,9 @@
         {
           "file": "packs/kenney-racingkit/light_post_large.glb",
           "tags": [
+            "street",
+            "city",
+            "modern",
             "prop"
           ],
           "bytes": 23536,
@@ -19500,6 +19792,9 @@
         {
           "file": "packs/kenney-racingkit/light_post_modern.glb",
           "tags": [
+            "street",
+            "city",
+            "modern",
             "prop"
           ],
           "bytes": 16584,
@@ -19610,6 +19905,9 @@
         {
           "file": "packs/kenney-racingkit/pits_office.glb",
           "tags": [
+            "building",
+            "city",
+            "modern",
             "biome",
             "nature"
           ],
@@ -19622,6 +19920,9 @@
         {
           "file": "packs/kenney-racingkit/pits_office_corner.glb",
           "tags": [
+            "building",
+            "city",
+            "modern",
             "biome",
             "nature"
           ],
@@ -19634,6 +19935,9 @@
         {
           "file": "packs/kenney-racingkit/pits_office_roof.glb",
           "tags": [
+            "building",
+            "city",
+            "modern",
             "biome",
             "nature"
           ],
@@ -19657,7 +19961,9 @@
         {
           "file": "packs/kenney-racingkit/race_car_green.glb",
           "tags": [
-            "vehicle"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 106068,
           "height": 0.397,
@@ -19668,7 +19974,9 @@
         {
           "file": "packs/kenney-racingkit/race_car_orange.glb",
           "tags": [
-            "vehicle"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 106068,
           "height": 0.397,
@@ -19679,7 +19987,9 @@
         {
           "file": "packs/kenney-racingkit/race_car_red.glb",
           "tags": [
-            "vehicle"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 106064,
           "height": 0.397,
@@ -19690,7 +20000,9 @@
         {
           "file": "packs/kenney-racingkit/race_car_white.glb",
           "tags": [
-            "vehicle"
+            "vehicle",
+            "city",
+            "modern"
           ],
           "bytes": 105864,
           "height": 0.397,
@@ -20048,7 +20360,10 @@
           "file": "packs/kenney-racingkit/road_crossing.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 18676,
           "height": 0.02,
@@ -20545,7 +20860,10 @@
           "file": "packs/kenney-road-kit/roadtile_001.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2304,
           "height": 0.455,
@@ -20557,7 +20875,10 @@
           "file": "packs/kenney-road-kit/roadtile_002.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2300,
           "height": 0.63,
@@ -20569,7 +20890,10 @@
           "file": "packs/kenney-road-kit/roadtile_003.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2312,
           "height": 1.73,
@@ -20581,7 +20905,10 @@
           "file": "packs/kenney-road-kit/roadtile_004.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2312,
           "height": 1.65,
@@ -20593,7 +20920,10 @@
           "file": "packs/kenney-road-kit/roadtile_005.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2296,
           "height": 1.65,
@@ -20605,7 +20935,10 @@
           "file": "packs/kenney-road-kit/roadtile_006.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2296,
           "height": 1.65,
@@ -20617,7 +20950,10 @@
           "file": "packs/kenney-road-kit/roadtile_007.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2300,
           "height": 1.65,
@@ -20629,7 +20965,10 @@
           "file": "packs/kenney-road-kit/roadtile_008.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6176,
           "height": 0.55,
@@ -20641,7 +20980,10 @@
           "file": "packs/kenney-road-kit/roadtile_009.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6176,
           "height": 1.65,
@@ -20653,7 +20995,10 @@
           "file": "packs/kenney-road-kit/roadtile_010.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6196,
           "height": 1.65,
@@ -20665,7 +21010,10 @@
           "file": "packs/kenney-road-kit/roadtile_011.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4416,
           "height": 1.65,
@@ -20677,7 +21025,10 @@
           "file": "packs/kenney-road-kit/roadtile_012.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4416,
           "height": 1.65,
@@ -20689,7 +21040,10 @@
           "file": "packs/kenney-road-kit/roadtile_013.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8724,
           "height": 0.55,
@@ -20701,7 +21055,10 @@
           "file": "packs/kenney-road-kit/roadtile_014.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9880,
           "height": 0.55,
@@ -20713,7 +21070,10 @@
           "file": "packs/kenney-road-kit/roadtile_015.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6076,
           "height": 0.55,
@@ -20725,7 +21085,10 @@
           "file": "packs/kenney-road-kit/roadtile_016.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7344,
           "height": 0.55,
@@ -20737,7 +21100,10 @@
           "file": "packs/kenney-road-kit/roadtile_017.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6692,
           "height": 0.55,
@@ -20749,7 +21115,10 @@
           "file": "packs/kenney-road-kit/roadtile_018.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8008,
           "height": 1.65,
@@ -20761,7 +21130,10 @@
           "file": "packs/kenney-road-kit/roadtile_019.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8492,
           "height": 2.531,
@@ -20773,7 +21145,10 @@
           "file": "packs/kenney-road-kit/roadtile_020.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7560,
           "height": 2.623,
@@ -20785,7 +21160,10 @@
           "file": "packs/kenney-road-kit/roadtile_021.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6196,
           "height": 1.65,
@@ -20797,7 +21175,10 @@
           "file": "packs/kenney-road-kit/roadtile_022.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7156,
           "height": 0.55,
@@ -20809,7 +21190,10 @@
           "file": "packs/kenney-road-kit/roadtile_023.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7540,
           "height": 0.55,
@@ -20821,7 +21205,10 @@
           "file": "packs/kenney-road-kit/roadtile_024.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8112,
           "height": 0.705,
@@ -20833,7 +21220,10 @@
           "file": "packs/kenney-road-kit/roadtile_025.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13116,
           "height": 0.63,
@@ -20845,7 +21235,10 @@
           "file": "packs/kenney-road-kit/roadtile_026.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 16208,
           "height": 0.63,
@@ -20857,7 +21250,10 @@
           "file": "packs/kenney-road-kit/roadtile_027.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6376,
           "height": 0.63,
@@ -20869,7 +21265,10 @@
           "file": "packs/kenney-road-kit/roadtile_028.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6180,
           "height": 1.65,
@@ -20881,7 +21280,10 @@
           "file": "packs/kenney-road-kit/roadtile_029.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6180,
           "height": 0.55,
@@ -20893,7 +21295,10 @@
           "file": "packs/kenney-road-kit/roadtile_030.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 10908,
           "height": 0.63,
@@ -20905,7 +21310,10 @@
           "file": "packs/kenney-road-kit/roadtile_031.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9704,
           "height": 0.63,
@@ -20917,7 +21325,10 @@
           "file": "packs/kenney-road-kit/roadtile_032.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13752,
           "height": 0.63,
@@ -20929,7 +21340,10 @@
           "file": "packs/kenney-road-kit/roadtile_033.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 22628,
           "height": 0.63,
@@ -20941,7 +21355,10 @@
           "file": "packs/kenney-road-kit/roadtile_034.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4136,
           "height": 0.6,
@@ -20953,7 +21370,10 @@
           "file": "packs/kenney-road-kit/roadtile_035.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6952,
           "height": 0.63,
@@ -20965,7 +21385,10 @@
           "file": "packs/kenney-road-kit/roadtile_036.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2304,
           "height": 1.65,
@@ -20977,7 +21400,10 @@
           "file": "packs/kenney-road-kit/roadtile_037.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2300,
           "height": 1.65,
@@ -20989,7 +21415,10 @@
           "file": "packs/kenney-road-kit/roadtile_038.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7760,
           "height": 0.63,
@@ -21001,7 +21430,10 @@
           "file": "packs/kenney-road-kit/roadtile_039.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 10748,
           "height": 0.63,
@@ -21013,7 +21445,10 @@
           "file": "packs/kenney-road-kit/roadtile_040.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7920,
           "height": 0.63,
@@ -21025,7 +21460,10 @@
           "file": "packs/kenney-road-kit/roadtile_041.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 14480,
           "height": 0.63,
@@ -21037,7 +21475,10 @@
           "file": "packs/kenney-road-kit/roadtile_042.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 11484,
           "height": 0.55,
@@ -21049,7 +21490,10 @@
           "file": "packs/kenney-road-kit/roadtile_043.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 19080,
           "height": 0.63,
@@ -21061,7 +21505,10 @@
           "file": "packs/kenney-road-kit/roadtile_044.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 14172,
           "height": 1.73,
@@ -21073,7 +21520,10 @@
           "file": "packs/kenney-road-kit/roadtile_045.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6724,
           "height": 1.73,
@@ -21085,7 +21535,10 @@
           "file": "packs/kenney-road-kit/roadtile_046.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7336,
           "height": 1.73,
@@ -21097,7 +21550,10 @@
           "file": "packs/kenney-road-kit/roadtile_047.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 15508,
           "height": 1.73,
@@ -21109,7 +21565,10 @@
           "file": "packs/kenney-road-kit/roadtile_048.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 15164,
           "height": 0.63,
@@ -21121,7 +21580,10 @@
           "file": "packs/kenney-road-kit/roadtile_049.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9832,
           "height": 0.63,
@@ -21133,7 +21595,10 @@
           "file": "packs/kenney-road-kit/roadtile_050.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6376,
           "height": 1.73,
@@ -21145,7 +21610,10 @@
           "file": "packs/kenney-road-kit/roadtile_051.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5916,
           "height": 1.73,
@@ -21157,7 +21625,10 @@
           "file": "packs/kenney-road-kit/roadtile_052.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8752,
           "height": 0.63,
@@ -21169,7 +21640,10 @@
           "file": "packs/kenney-road-kit/roadtile_053.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8796,
           "height": 0.63,
@@ -21181,7 +21655,10 @@
           "file": "packs/kenney-road-kit/roadtile_054.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 11924,
           "height": 0.6,
@@ -21193,7 +21670,10 @@
           "file": "packs/kenney-road-kit/roadtile_055.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 14820,
           "height": 0.63,
@@ -21205,7 +21685,10 @@
           "file": "packs/kenney-road-kit/roadtile_056.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7336,
           "height": 0.63,
@@ -21217,7 +21700,10 @@
           "file": "packs/kenney-road-kit/roadtile_057.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9480,
           "height": 0.63,
@@ -21229,7 +21715,10 @@
           "file": "packs/kenney-road-kit/roadtile_058.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4132,
           "height": 0.6,
@@ -21241,7 +21730,10 @@
           "file": "packs/kenney-road-kit/roadtile_059.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4764,
           "height": 0.63,
@@ -21253,7 +21745,10 @@
           "file": "packs/kenney-road-kit/roadtile_060.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6916,
           "height": 0.63,
@@ -21265,7 +21760,10 @@
           "file": "packs/kenney-road-kit/roadtile_061.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4492,
           "height": 0.63,
@@ -21277,7 +21775,10 @@
           "file": "packs/kenney-road-kit/roadtile_062.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5144,
           "height": 0.63,
@@ -21289,7 +21790,10 @@
           "file": "packs/kenney-road-kit/roadtile_063.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7068,
           "height": 0.63,
@@ -21301,7 +21805,10 @@
           "file": "packs/kenney-road-kit/roadtile_064.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5100,
           "height": 0.63,
@@ -21313,7 +21820,10 @@
           "file": "packs/kenney-road-kit/roadtile_065.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7952,
           "height": 0.63,
@@ -21325,7 +21835,10 @@
           "file": "packs/kenney-road-kit/roadtile_066.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 11092,
           "height": 0.63,
@@ -21337,7 +21850,10 @@
           "file": "packs/kenney-road-kit/roadtile_067.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8408,
           "height": 0.63,
@@ -21349,7 +21865,10 @@
           "file": "packs/kenney-road-kit/roadtile_068.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6840,
           "height": 0.63,
@@ -21361,7 +21880,10 @@
           "file": "packs/kenney-road-kit/roadtile_069.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5280,
           "height": 0.63,
@@ -21373,7 +21895,10 @@
           "file": "packs/kenney-road-kit/roadtile_070.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6252,
           "height": 0.63,
@@ -21385,7 +21910,10 @@
           "file": "packs/kenney-road-kit/roadtile_071.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5112,
           "height": 0.63,
@@ -21397,7 +21925,10 @@
           "file": "packs/kenney-road-kit/roadtile_072.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8968,
           "height": 0.63,
@@ -21409,7 +21940,10 @@
           "file": "packs/kenney-road-kit/roadtile_073.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8352,
           "height": 0.63,
@@ -21421,7 +21955,10 @@
           "file": "packs/kenney-road-kit/roadtile_074.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5856,
           "height": 0.63,
@@ -21433,7 +21970,10 @@
           "file": "packs/kenney-road-kit/roadtile_075.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9904,
           "height": 0.63,
@@ -21445,7 +21985,10 @@
           "file": "packs/kenney-road-kit/roadtile_076.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9144,
           "height": 0.63,
@@ -21457,7 +22000,10 @@
           "file": "packs/kenney-road-kit/roadtile_077.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6280,
           "height": 0.63,
@@ -21469,7 +22015,10 @@
           "file": "packs/kenney-road-kit/roadtile_078.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7684,
           "height": 0.63,
@@ -21481,7 +22030,10 @@
           "file": "packs/kenney-road-kit/roadtile_079.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13304,
           "height": 0.63,
@@ -21493,7 +22045,10 @@
           "file": "packs/kenney-road-kit/roadtile_080.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8608,
           "height": 0.63,
@@ -21505,7 +22060,10 @@
           "file": "packs/kenney-road-kit/roadtile_081.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 18004,
           "height": 0.63,
@@ -21517,7 +22075,10 @@
           "file": "packs/kenney-road-kit/roadtile_082.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8568,
           "height": 1.73,
@@ -21529,7 +22090,10 @@
           "file": "packs/kenney-road-kit/roadtile_083.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8968,
           "height": 1.73,
@@ -21541,7 +22105,10 @@
           "file": "packs/kenney-road-kit/roadtile_084.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4760,
           "height": 1.73,
@@ -21553,7 +22120,10 @@
           "file": "packs/kenney-road-kit/roadtile_085.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6296,
           "height": 0.63,
@@ -21565,7 +22135,10 @@
           "file": "packs/kenney-road-kit/roadtile_086.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 23196,
           "height": 0.63,
@@ -21577,7 +22150,10 @@
           "file": "packs/kenney-road-kit/roadtile_087.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 18040,
           "height": 0.63,
@@ -21589,7 +22165,10 @@
           "file": "packs/kenney-road-kit/roadtile_088.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 44348,
           "height": 0.63,
@@ -21601,7 +22180,10 @@
           "file": "packs/kenney-road-kit/roadtile_089.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4756,
           "height": 1.73,
@@ -21613,7 +22195,10 @@
           "file": "packs/kenney-road-kit/roadtile_090.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5340,
           "height": 1.73,
@@ -21625,7 +22210,10 @@
           "file": "packs/kenney-road-kit/roadtile_091.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4492,
           "height": 1.73,
@@ -21637,7 +22225,10 @@
           "file": "packs/kenney-road-kit/roadtile_092.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 45556,
           "height": 0.63,
@@ -21649,7 +22240,10 @@
           "file": "packs/kenney-road-kit/roadtile_093.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 25620,
           "height": 0.63,
@@ -21661,7 +22255,10 @@
           "file": "packs/kenney-road-kit/roadtile_094.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6068,
           "height": 0.63,
@@ -21673,7 +22270,10 @@
           "file": "packs/kenney-road-kit/roadtile_095.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 39416,
           "height": 0.63,
@@ -21685,7 +22285,10 @@
           "file": "packs/kenney-road-kit/roadtile_096.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13824,
           "height": 0.63,
@@ -21697,7 +22300,10 @@
           "file": "packs/kenney-road-kit/roadtile_097.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5300,
           "height": 0.63,
@@ -21709,7 +22315,10 @@
           "file": "packs/kenney-road-kit/roadtile_098.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9300,
           "height": 0.63,
@@ -21721,7 +22330,10 @@
           "file": "packs/kenney-road-kit/roadtile_099.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8528,
           "height": 0.63,
@@ -21733,7 +22345,10 @@
           "file": "packs/kenney-road-kit/roadtile_100.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13364,
           "height": 0.63,
@@ -21745,7 +22360,10 @@
           "file": "packs/kenney-road-kit/roadtile_101.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6528,
           "height": 0.63,
@@ -21757,7 +22375,10 @@
           "file": "packs/kenney-road-kit/roadtile_102.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 41720,
           "height": 0.63,
@@ -21769,7 +22390,10 @@
           "file": "packs/kenney-road-kit/roadtile_103.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6296,
           "height": 1.73,
@@ -21781,7 +22405,10 @@
           "file": "packs/kenney-road-kit/roadtile_104.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8144,
           "height": 0.6,
@@ -21793,7 +22420,10 @@
           "file": "packs/kenney-road-kit/roadtile_105.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 10524,
           "height": 0.63,
@@ -21805,7 +22435,10 @@
           "file": "packs/kenney-road-kit/roadtile_106.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13288,
           "height": 0.63,
@@ -21817,7 +22450,10 @@
           "file": "packs/kenney-road-kit/roadtile_107.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4080,
           "height": 0.63,
@@ -21829,7 +22465,10 @@
           "file": "packs/kenney-road-kit/roadtile_108.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13476,
           "height": 0.63,
@@ -21841,7 +22480,10 @@
           "file": "packs/kenney-road-kit/roadtile_109.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 10144,
           "height": 0.63,
@@ -21853,7 +22495,10 @@
           "file": "packs/kenney-road-kit/roadtile_110.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7952,
           "height": 0.63,
@@ -21865,7 +22510,10 @@
           "file": "packs/kenney-road-kit/roadtile_111.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9720,
           "height": 0.6,
@@ -21877,7 +22525,10 @@
           "file": "packs/kenney-road-kit/roadtile_112.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13824,
           "height": 0.63,
@@ -21889,7 +22540,10 @@
           "file": "packs/kenney-road-kit/roadtile_113.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5880,
           "height": 0.63,
@@ -21901,7 +22555,10 @@
           "file": "packs/kenney-road-kit/roadtile_114.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7896,
           "height": 0.63,
@@ -21913,7 +22570,10 @@
           "file": "packs/kenney-road-kit/roadtile_115.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6392,
           "height": 0.63,
@@ -21925,7 +22585,10 @@
           "file": "packs/kenney-road-kit/roadtile_116.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7420,
           "height": 0.63,
@@ -21937,7 +22600,10 @@
           "file": "packs/kenney-road-kit/roadtile_117.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4312,
           "height": 1.73,
@@ -21949,7 +22615,10 @@
           "file": "packs/kenney-road-kit/roadtile_118.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4536,
           "height": 1.73,
@@ -21961,7 +22630,10 @@
           "file": "packs/kenney-road-kit/roadtile_119.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8912,
           "height": 0.63,
@@ -21973,7 +22645,10 @@
           "file": "packs/kenney-road-kit/roadtile_120.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6052,
           "height": 0.63,
@@ -21985,7 +22660,10 @@
           "file": "packs/kenney-road-kit/roadtile_121.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9232,
           "height": 0.63,
@@ -21997,7 +22675,10 @@
           "file": "packs/kenney-road-kit/roadtile_122.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 12528,
           "height": 0.63,
@@ -22009,7 +22690,10 @@
           "file": "packs/kenney-road-kit/roadtile_123.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13596,
           "height": 1.73,
@@ -22021,7 +22705,10 @@
           "file": "packs/kenney-road-kit/roadtile_124.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5648,
           "height": 1.73,
@@ -22033,7 +22720,10 @@
           "file": "packs/kenney-road-kit/roadtile_125.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4292,
           "height": 1.73,
@@ -22045,7 +22735,10 @@
           "file": "packs/kenney-road-kit/roadtile_126.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 12204,
           "height": 1.73,
@@ -22057,7 +22750,10 @@
           "file": "packs/kenney-road-kit/roadtile_127.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 15088,
           "height": 0.63,
@@ -22069,7 +22765,10 @@
           "file": "packs/kenney-road-kit/roadtile_128.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 19288,
           "height": 0.63,
@@ -22081,7 +22780,10 @@
           "file": "packs/kenney-road-kit/roadtile_129.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 3904,
           "height": 0.6,
@@ -22093,7 +22795,10 @@
           "file": "packs/kenney-road-kit/roadtile_130.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4520,
           "height": 0.63,
@@ -22105,7 +22810,10 @@
           "file": "packs/kenney-road-kit/roadtile_131.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5168,
           "height": 0.63,
@@ -22117,7 +22825,10 @@
           "file": "packs/kenney-road-kit/roadtile_132.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8700,
           "height": 0.63,
@@ -22129,7 +22840,10 @@
           "file": "packs/kenney-road-kit/roadtile_133.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5120,
           "height": 0.63,
@@ -22141,7 +22855,10 @@
           "file": "packs/kenney-road-kit/roadtile_134.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 11908,
           "height": 0.63,
@@ -22153,7 +22870,10 @@
           "file": "packs/kenney-road-kit/roadtile_135.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5756,
           "height": 0.63,
@@ -22165,7 +22885,10 @@
           "file": "packs/kenney-road-kit/roadtile_136.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 12940,
           "height": 0.63,
@@ -22177,7 +22900,10 @@
           "file": "packs/kenney-road-kit/roadtile_137.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 10692,
           "height": 0.63,
@@ -22189,7 +22915,10 @@
           "file": "packs/kenney-road-kit/roadtile_138.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13596,
           "height": 0.63,
@@ -22201,7 +22930,10 @@
           "file": "packs/kenney-road-kit/roadtile_139.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 23764,
           "height": 1.26,
@@ -22213,7 +22945,10 @@
           "file": "packs/kenney-road-kit/roadtile_140.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2300,
           "height": 1.65,
@@ -22225,7 +22960,10 @@
           "file": "packs/kenney-road-kit/roadtile_141.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 18744,
           "height": 0.63,
@@ -22237,7 +22975,10 @@
           "file": "packs/kenney-road-kit/roadtile_142.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 14916,
           "height": 0.63,
@@ -22249,7 +22990,10 @@
           "file": "packs/kenney-road-kit/roadtile_143.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 15500,
           "height": 0.63,
@@ -22261,7 +23005,10 @@
           "file": "packs/kenney-road-kit/roadtile_144.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7836,
           "height": 0.63,
@@ -22273,7 +23020,10 @@
           "file": "packs/kenney-road-kit/roadtile_145.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4760,
           "height": 0.55,
@@ -22285,7 +23035,10 @@
           "file": "packs/kenney-road-kit/roadtile_146.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5140,
           "height": 0.55,
@@ -22297,7 +23050,10 @@
           "file": "packs/kenney-road-kit/roadtile_147.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9300,
           "height": 0.63,
@@ -22309,7 +23065,10 @@
           "file": "packs/kenney-road-kit/roadtile_148.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 39440,
           "height": 0.63,
@@ -22321,7 +23080,10 @@
           "file": "packs/kenney-road-kit/roadtile_149.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 12768,
           "height": 0.63,
@@ -22333,7 +23095,10 @@
           "file": "packs/kenney-road-kit/roadtile_150.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13288,
           "height": 0.63,
@@ -22345,7 +23110,10 @@
           "file": "packs/kenney-road-kit/roadtile_151.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2316,
           "height": 1.65,
@@ -22357,7 +23125,10 @@
           "file": "packs/kenney-road-kit/roadtile_152.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2316,
           "height": 1.65,
@@ -22369,7 +23140,10 @@
           "file": "packs/kenney-road-kit/roadtile_153.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 26576,
           "height": 0.63,
@@ -22381,7 +23155,10 @@
           "file": "packs/kenney-road-kit/roadtile_154.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8544,
           "height": 1.73,
@@ -22393,7 +23170,10 @@
           "file": "packs/kenney-road-kit/roadtile_155.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 25884,
           "height": 0.63,
@@ -22405,7 +23185,10 @@
           "file": "packs/kenney-road-kit/roadtile_156.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 15148,
           "height": 0.63,
@@ -22417,7 +23200,10 @@
           "file": "packs/kenney-road-kit/roadtile_157.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 11480,
           "height": 0.55,
@@ -22429,7 +23215,10 @@
           "file": "packs/kenney-road-kit/roadtile_158.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9376,
           "height": 0.55,
@@ -22441,7 +23230,10 @@
           "file": "packs/kenney-road-kit/roadtile_159.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8148,
           "height": 0.55,
@@ -22453,7 +23245,10 @@
           "file": "packs/kenney-road-kit/roadtile_160.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8276,
           "height": 0.63,
@@ -22465,7 +23260,10 @@
           "file": "packs/kenney-road-kit/roadtile_161.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8804,
           "height": 1.73,
@@ -22477,7 +23275,10 @@
           "file": "packs/kenney-road-kit/roadtile_162.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8528,
           "height": 0.63,
@@ -22489,7 +23290,10 @@
           "file": "packs/kenney-road-kit/roadtile_163.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 2304,
           "height": 0.55,
@@ -22501,7 +23305,10 @@
           "file": "packs/kenney-road-kit/roadtile_164.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8296,
           "height": 1.73,
@@ -22513,7 +23320,10 @@
           "file": "packs/kenney-road-kit/roadtile_165.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 10000,
           "height": 1.73,
@@ -22525,7 +23335,10 @@
           "file": "packs/kenney-road-kit/roadtile_166.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 18744,
           "height": 0.63,
@@ -22537,7 +23350,10 @@
           "file": "packs/kenney-road-kit/roadtile_167.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 14460,
           "height": 0.55,
@@ -22549,7 +23365,10 @@
           "file": "packs/kenney-road-kit/roadtile_168.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5148,
           "height": 0.55,
@@ -22561,7 +23380,10 @@
           "file": "packs/kenney-road-kit/roadtile_169.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 3532,
           "height": 1.65,
@@ -22573,7 +23395,10 @@
           "file": "packs/kenney-road-kit/roadtile_170.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 10872,
           "height": 1.73,
@@ -22585,7 +23410,10 @@
           "file": "packs/kenney-road-kit/roadtile_171.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8928,
           "height": 1.73,
@@ -22597,7 +23425,10 @@
           "file": "packs/kenney-road-kit/roadtile_172.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 26344,
           "height": 1.73,
@@ -22609,7 +23440,10 @@
           "file": "packs/kenney-road-kit/roadtile_173.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 25692,
           "height": 0.55,
@@ -22621,7 +23455,10 @@
           "file": "packs/kenney-road-kit/roadtile_174.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4144,
           "height": 0.55,
@@ -22633,7 +23470,10 @@
           "file": "packs/kenney-road-kit/roadtile_175.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 10212,
           "height": 0.55,
@@ -22645,7 +23485,10 @@
           "file": "packs/kenney-road-kit/roadtile_176.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 14460,
           "height": 0.55,
@@ -22657,7 +23500,10 @@
           "file": "packs/kenney-road-kit/roadtile_177.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8376,
           "height": 0.55,
@@ -22669,7 +23515,10 @@
           "file": "packs/kenney-road-kit/roadtile_178.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 15612,
           "height": 0.55,
@@ -22681,7 +23530,10 @@
           "file": "packs/kenney-road-kit/roadtile_179.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8140,
           "height": 1.73,
@@ -22693,7 +23545,10 @@
           "file": "packs/kenney-road-kit/roadtile_180.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13224,
           "height": 1.73,
@@ -22705,7 +23560,10 @@
           "file": "packs/kenney-road-kit/roadtile_181.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8912,
           "height": 1.1,
@@ -22717,7 +23575,10 @@
           "file": "packs/kenney-road-kit/roadtile_182.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8528,
           "height": 1.26,
@@ -22729,7 +23590,10 @@
           "file": "packs/kenney-road-kit/roadtile_183.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8328,
           "height": 1.18,
@@ -22741,7 +23605,10 @@
           "file": "packs/kenney-road-kit/roadtile_184.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8532,
           "height": 1.73,
@@ -22753,7 +23620,10 @@
           "file": "packs/kenney-road-kit/roadtile_185.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 14212,
           "height": 0.55,
@@ -22765,7 +23635,10 @@
           "file": "packs/kenney-road-kit/roadtile_186.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 14444,
           "height": 1.65,
@@ -22777,7 +23650,10 @@
           "file": "packs/kenney-road-kit/roadtile_187.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 18436,
           "height": 0.975,
@@ -22789,7 +23665,10 @@
           "file": "packs/kenney-road-kit/roadtile_188.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 15364,
           "height": 0.63,
@@ -22801,7 +23680,10 @@
           "file": "packs/kenney-road-kit/roadtile_189.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5528,
           "height": 1.65,
@@ -22813,7 +23695,10 @@
           "file": "packs/kenney-road-kit/roadtile_190.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4844,
           "height": 0.55,
@@ -22825,7 +23710,10 @@
           "file": "packs/kenney-road-kit/roadtile_191.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8756,
           "height": 1.73,
@@ -22837,7 +23725,10 @@
           "file": "packs/kenney-road-kit/roadtile_192.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8296,
           "height": 1.18,
@@ -22849,7 +23740,10 @@
           "file": "packs/kenney-road-kit/roadtile_193.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8908,
           "height": 1.26,
@@ -22861,7 +23755,10 @@
           "file": "packs/kenney-road-kit/roadtile_194.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 17512,
           "height": 1.73,
@@ -22873,7 +23770,10 @@
           "file": "packs/kenney-road-kit/roadtile_195.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5532,
           "height": 1.65,
@@ -22885,7 +23785,10 @@
           "file": "packs/kenney-road-kit/roadtile_196.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5760,
           "height": 1.65,
@@ -22897,7 +23800,10 @@
           "file": "packs/kenney-road-kit/roadtile_197.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 12980,
           "height": 1.73,
@@ -22909,7 +23815,10 @@
           "file": "packs/kenney-road-kit/roadtile_198.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5688,
           "height": 1.73,
@@ -22921,7 +23830,10 @@
           "file": "packs/kenney-road-kit/roadtile_199.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 10292,
           "height": 1.73,
@@ -22933,7 +23845,10 @@
           "file": "packs/kenney-road-kit/roadtile_200.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5844,
           "height": 1.73,
@@ -22945,7 +23860,10 @@
           "file": "packs/kenney-road-kit/roadtile_201.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 10216,
           "height": 1.73,
@@ -22957,7 +23875,10 @@
           "file": "packs/kenney-road-kit/roadtile_202.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5684,
           "height": 1.73,
@@ -22969,7 +23890,10 @@
           "file": "packs/kenney-road-kit/roadtile_203.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 10140,
           "height": 1.73,
@@ -22981,7 +23905,10 @@
           "file": "packs/kenney-road-kit/roadtile_204.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6300,
           "height": 1.73,
@@ -22993,7 +23920,10 @@
           "file": "packs/kenney-road-kit/roadtile_205.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8524,
           "height": 1.73,
@@ -23005,7 +23935,10 @@
           "file": "packs/kenney-road-kit/roadtile_206.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8748,
           "height": 1.73,
@@ -23017,7 +23950,10 @@
           "file": "packs/kenney-road-kit/roadtile_207.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 17508,
           "height": 1.73,
@@ -23029,7 +23965,10 @@
           "file": "packs/kenney-road-kit/roadtile_208.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 10300,
           "height": 1.73,
@@ -23041,7 +23980,10 @@
           "file": "packs/kenney-road-kit/roadtile_209.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6080,
           "height": 1.73,
@@ -23053,7 +23995,10 @@
           "file": "packs/kenney-road-kit/roadtile_210.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 11872,
           "height": 1.73,
@@ -23065,7 +24010,10 @@
           "file": "packs/kenney-road-kit/roadtile_211.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5692,
           "height": 1.73,
@@ -23077,7 +24025,10 @@
           "file": "packs/kenney-road-kit/roadtile_212.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 10148,
           "height": 1.73,
@@ -23089,7 +24040,10 @@
           "file": "packs/kenney-road-kit/roadtile_213.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5696,
           "height": 1.73,
@@ -23101,7 +24055,10 @@
           "file": "packs/kenney-road-kit/roadtile_214.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6076,
           "height": 1.73,
@@ -23113,7 +24070,10 @@
           "file": "packs/kenney-road-kit/roadtile_215.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8752,
           "height": 0.63,
@@ -23125,7 +24085,10 @@
           "file": "packs/kenney-road-kit/roadtile_216.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7748,
           "height": 1.65,
@@ -23137,7 +24100,10 @@
           "file": "packs/kenney-road-kit/roadtile_217.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 18972,
           "height": 0.63,
@@ -23149,7 +24115,10 @@
           "file": "packs/kenney-road-kit/roadtile_218.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5460,
           "height": 1.26,
@@ -23161,7 +24130,10 @@
           "file": "packs/kenney-road-kit/roadtile_219.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 14820,
           "height": 1.65,
@@ -23173,7 +24145,10 @@
           "file": "packs/kenney-road-kit/roadtile_220.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6220,
           "height": 1.65,
@@ -23185,7 +24160,10 @@
           "file": "packs/kenney-road-kit/roadtile_221.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5916,
           "height": 1.65,
@@ -23197,7 +24175,10 @@
           "file": "packs/kenney-road-kit/roadtile_222.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9296,
           "height": 1.65,
@@ -23209,7 +24190,10 @@
           "file": "packs/kenney-road-kit/roadtile_223.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6148,
           "height": 2.2,
@@ -23221,7 +24205,10 @@
           "file": "packs/kenney-road-kit/roadtile_224.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5908,
           "height": 2.2,
@@ -23233,7 +24220,10 @@
           "file": "packs/kenney-road-kit/roadtile_225.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4692,
           "height": 1.73,
@@ -23245,7 +24235,10 @@
           "file": "packs/kenney-road-kit/roadtile_226.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7632,
           "height": 1.73,
@@ -23257,7 +24250,10 @@
           "file": "packs/kenney-road-kit/roadtile_227.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5692,
           "height": 1.1,
@@ -23269,7 +24265,10 @@
           "file": "packs/kenney-road-kit/roadtile_228.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5312,
           "height": 1.26,
@@ -23281,7 +24280,10 @@
           "file": "packs/kenney-road-kit/roadtile_229.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5588,
           "height": 1.18,
@@ -23293,7 +24295,10 @@
           "file": "packs/kenney-road-kit/roadtile_230.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5312,
           "height": 1.73,
@@ -23305,7 +24310,10 @@
           "file": "packs/kenney-road-kit/roadtile_231.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8756,
           "height": 1.73,
@@ -23317,7 +24325,10 @@
           "file": "packs/kenney-road-kit/roadtile_232.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5324,
           "height": 1.18,
@@ -23329,7 +24340,10 @@
           "file": "packs/kenney-road-kit/roadtile_233.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 24192,
           "height": 0.975,
@@ -23341,7 +24355,10 @@
           "file": "packs/kenney-road-kit/roadtile_234.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 25648,
           "height": 1.73,
@@ -23353,7 +24370,10 @@
           "file": "packs/kenney-road-kit/roadtile_235.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 26340,
           "height": 0.63,
@@ -23365,7 +24385,10 @@
           "file": "packs/kenney-road-kit/roadtile_236.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5684,
           "height": 1.26,
@@ -23377,7 +24400,10 @@
           "file": "packs/kenney-road-kit/roadtile_237.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5528,
           "height": 1.18,
@@ -23389,7 +24415,10 @@
           "file": "packs/kenney-road-kit/roadtile_238.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5068,
           "height": 1.73,
@@ -23401,7 +24430,10 @@
           "file": "packs/kenney-road-kit/roadtile_239.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5304,
           "height": 1.73,
@@ -23413,7 +24445,10 @@
           "file": "packs/kenney-road-kit/roadtile_240.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5560,
           "height": 1.18,
@@ -23425,7 +24460,10 @@
           "file": "packs/kenney-road-kit/roadtile_241.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5284,
           "height": 1.26,
@@ -23437,7 +24475,10 @@
           "file": "packs/kenney-road-kit/roadtile_242.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 27372,
           "height": 0.63,
@@ -23449,7 +24490,10 @@
           "file": "packs/kenney-road-kit/roadtile_243.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 14436,
           "height": 0.63,
@@ -23461,7 +24505,10 @@
           "file": "packs/kenney-road-kit/roadtile_244.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 29368,
           "height": 0.63,
@@ -23473,7 +24520,10 @@
           "file": "packs/kenney-road-kit/roadtile_245.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4912,
           "height": 1.73,
@@ -23485,7 +24535,10 @@
           "file": "packs/kenney-road-kit/roadtile_246.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7848,
           "height": 1.73,
@@ -23497,7 +24550,10 @@
           "file": "packs/kenney-road-kit/roadtile_247.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5684,
           "height": 1.1,
@@ -23509,7 +24565,10 @@
           "file": "packs/kenney-road-kit/roadtile_248.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6684,
           "height": 1.73,
@@ -23521,7 +24580,10 @@
           "file": "packs/kenney-road-kit/roadtile_249.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6144,
           "height": 1.73,
@@ -23533,7 +24595,10 @@
           "file": "packs/kenney-road-kit/roadtile_250.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 14216,
           "height": 1.73,
@@ -23545,7 +24610,10 @@
           "file": "packs/kenney-road-kit/roadtile_251.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 48800,
           "height": 0.63,
@@ -23557,7 +24625,10 @@
           "file": "packs/kenney-road-kit/roadtile_252.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5756,
           "height": 0.63,
@@ -23569,7 +24640,10 @@
           "file": "packs/kenney-road-kit/roadtile_253.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 12512,
           "height": 0.63,
@@ -23581,7 +24655,10 @@
           "file": "packs/kenney-road-kit/roadtile_254.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7100,
           "height": 1.73,
@@ -23593,7 +24670,10 @@
           "file": "packs/kenney-road-kit/roadtile_255.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5692,
           "height": 1.73,
@@ -23605,7 +24685,10 @@
           "file": "packs/kenney-road-kit/roadtile_256.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 22916,
           "height": 1.73,
@@ -23617,7 +24700,10 @@
           "file": "packs/kenney-road-kit/roadtile_257.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6068,
           "height": 1.65,
@@ -23629,7 +24715,10 @@
           "file": "packs/kenney-road-kit/roadtile_258.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5068,
           "height": 1.65,
@@ -23641,7 +24730,10 @@
           "file": "packs/kenney-road-kit/roadtile_259.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 11980,
           "height": 1.65,
@@ -23653,7 +24745,10 @@
           "file": "packs/kenney-road-kit/roadtile_260.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13136,
           "height": 0.63,
@@ -23665,7 +24760,10 @@
           "file": "packs/kenney-road-kit/roadtile_261.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6076,
           "height": 1.73,
@@ -23677,7 +24775,10 @@
           "file": "packs/kenney-road-kit/roadtile_262.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5556,
           "height": 1.73,
@@ -23689,7 +24790,10 @@
           "file": "packs/kenney-road-kit/roadtile_263.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 4532,
           "height": 1.65,
@@ -23701,7 +24805,10 @@
           "file": "packs/kenney-road-kit/roadtile_264.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7984,
           "height": 0.63,
@@ -23713,7 +24820,10 @@
           "file": "packs/kenney-road-kit/roadtile_265.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 26836,
           "height": 0.63,
@@ -23725,7 +24835,10 @@
           "file": "packs/kenney-road-kit/roadtile_266.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9604,
           "height": 0.63,
@@ -23737,7 +24850,10 @@
           "file": "packs/kenney-road-kit/roadtile_267.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6528,
           "height": 1.73,
@@ -23749,7 +24865,10 @@
           "file": "packs/kenney-road-kit/roadtile_268.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5316,
           "height": 1.73,
@@ -23761,7 +24880,10 @@
           "file": "packs/kenney-road-kit/roadtile_269.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5304,
           "height": 0.63,
@@ -23773,7 +24895,10 @@
           "file": "packs/kenney-road-kit/roadtile_270.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5796,
           "height": 1.73,
@@ -23785,7 +24910,10 @@
           "file": "packs/kenney-road-kit/roadtile_271.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5536,
           "height": 0.63,
@@ -23797,7 +24925,10 @@
           "file": "packs/kenney-road-kit/roadtile_272.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13980,
           "height": 0.63,
@@ -23809,7 +24940,10 @@
           "file": "packs/kenney-road-kit/roadtile_273.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 16204,
           "height": 0.63,
@@ -23821,7 +24955,10 @@
           "file": "packs/kenney-road-kit/roadtile_274.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7056,
           "height": 2.28,
@@ -23833,7 +24970,10 @@
           "file": "packs/kenney-road-kit/roadtile_275.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5292,
           "height": 0.63,
@@ -23845,7 +24985,10 @@
           "file": "packs/kenney-road-kit/roadtile_276.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5340,
           "height": 1.73,
@@ -23857,7 +25000,10 @@
           "file": "packs/kenney-road-kit/roadtile_277.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5544,
           "height": 0.63,
@@ -23869,7 +25015,10 @@
           "file": "packs/kenney-road-kit/roadtile_278.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 10064,
           "height": 0.63,
@@ -23881,7 +25030,10 @@
           "file": "packs/kenney-road-kit/roadtile_279.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7848,
           "height": 0.63,
@@ -23893,7 +25045,10 @@
           "file": "packs/kenney-road-kit/roadtile_280.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9144,
           "height": 0.63,
@@ -23905,7 +25060,10 @@
           "file": "packs/kenney-road-kit/roadtile_281.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5264,
           "height": 0.63,
@@ -23917,7 +25075,10 @@
           "file": "packs/kenney-road-kit/roadtile_282.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6600,
           "height": 0.63,
@@ -23929,7 +25090,10 @@
           "file": "packs/kenney-road-kit/roadtile_283.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6984,
           "height": 0.63,
@@ -23941,7 +25105,10 @@
           "file": "packs/kenney-road-kit/roadtile_284.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 17312,
           "height": 0.63,
@@ -23953,7 +25120,10 @@
           "file": "packs/kenney-road-kit/roadtile_285.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9008,
           "height": 0.63,
@@ -23965,7 +25135,10 @@
           "file": "packs/kenney-road-kit/roadtile_286.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5724,
           "height": 0.63,
@@ -23977,7 +25150,10 @@
           "file": "packs/kenney-road-kit/roadtile_287.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 21600,
           "height": 0.63,
@@ -23989,7 +25165,10 @@
           "file": "packs/kenney-road-kit/roadtile_288.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 13980,
           "height": 0.63,
@@ -24001,7 +25180,10 @@
           "file": "packs/kenney-road-kit/roadtile_289.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5300,
           "height": 1.73,
@@ -24013,7 +25195,10 @@
           "file": "packs/kenney-road-kit/roadtile_290.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 14216,
           "height": 0.63,
@@ -24025,7 +25210,10 @@
           "file": "packs/kenney-road-kit/roadtile_291.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8144,
           "height": 0.63,
@@ -24037,7 +25225,10 @@
           "file": "packs/kenney-road-kit/roadtile_292.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6472,
           "height": 0.63,
@@ -24049,7 +25240,10 @@
           "file": "packs/kenney-road-kit/roadtile_293.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 7500,
           "height": 1.26,
@@ -24061,7 +25255,10 @@
           "file": "packs/kenney-road-kit/roadtile_294.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 9228,
           "height": 0.63,
@@ -24073,7 +25270,10 @@
           "file": "packs/kenney-road-kit/roadtile_295.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 8016,
           "height": 0.63,
@@ -24085,7 +25285,10 @@
           "file": "packs/kenney-road-kit/roadtile_296.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 5708,
           "height": 1.73,
@@ -24097,7 +25300,10 @@
           "file": "packs/kenney-road-kit/roadtile_297.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 22460,
           "height": 0.63,
@@ -24109,7 +25315,10 @@
           "file": "packs/kenney-road-kit/roadtile_298.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 24452,
           "height": 2.28,
@@ -24121,7 +25330,10 @@
           "file": "packs/kenney-road-kit/roadtile_299.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 22464,
           "height": 0.63,
@@ -24133,7 +25345,10 @@
           "file": "packs/kenney-road-kit/roadtile_300.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 12356,
           "height": 0.63,
@@ -24145,7 +25360,10 @@
           "file": "packs/kenney-road-kit/roadtile_301.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 6512,
           "height": 0.63,
@@ -24157,7 +25375,10 @@
           "file": "packs/kenney-road-kit/roadtile_302.glb",
           "tags": [
             "prop",
-            "structure"
+            "structure",
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 35612,
           "height": 0.63,
@@ -25283,6 +26504,9 @@
         {
           "file": "packs/kenney-tower-defense-kit/snow_tile_crossing.glb",
           "tags": [
+            "road",
+            "city",
+            "modern",
             "biome",
             "nature"
           ],
@@ -25753,7 +26977,9 @@
         {
           "file": "packs/kenney-tower-defense-kit/tile_crossing.glb",
           "tags": [
-            "prop"
+            "road",
+            "city",
+            "modern"
           ],
           "bytes": 19216,
           "height": 0.2,
@@ -27008,6 +28234,9 @@
         {
           "file": "packs/kenney-weapon-pack/ammo_machinegun.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 94328,
@@ -27019,6 +28248,9 @@
         {
           "file": "packs/kenney-weapon-pack/ammo_machinegunlauncher.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 71140,
@@ -27030,6 +28262,9 @@
         {
           "file": "packs/kenney-weapon-pack/ammo_pistol.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 71292,
@@ -27043,6 +28278,10 @@
           "tags": [
             "rock",
             "nature",
+            "gun",
+            "firearm",
+            "weapon",
+            "prop",
             "vehicle"
           ],
           "bytes": 19312,
@@ -27056,6 +28295,10 @@
           "tags": [
             "rock",
             "nature",
+            "gun",
+            "firearm",
+            "weapon",
+            "prop",
             "vehicle"
           ],
           "bytes": 19480,
@@ -27067,6 +28310,9 @@
         {
           "file": "packs/kenney-weapon-pack/ammo_shotgun.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 35384,
@@ -27078,6 +28324,9 @@
         {
           "file": "packs/kenney-weapon-pack/ammo_sniper.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 92280,
@@ -27089,6 +28338,9 @@
         {
           "file": "packs/kenney-weapon-pack/ammo_uzi.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 71284,
@@ -27100,6 +28352,9 @@
         {
           "file": "packs/kenney-weapon-pack/flamethrower.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 56932,
@@ -27111,6 +28366,9 @@
         {
           "file": "packs/kenney-weapon-pack/flamethrowerhandle.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 64216,
@@ -27122,6 +28380,9 @@
         {
           "file": "packs/kenney-weapon-pack/grenade.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 60588,
@@ -27133,6 +28394,9 @@
         {
           "file": "packs/kenney-weapon-pack/grenade_vintage.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 86656,
@@ -27144,6 +28408,9 @@
         {
           "file": "packs/kenney-weapon-pack/grenadeflash.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 23332,
@@ -27155,6 +28422,9 @@
         {
           "file": "packs/kenney-weapon-pack/grenadesmoke.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 62316,
@@ -27166,6 +28436,8 @@
         {
           "file": "packs/kenney-weapon-pack/knife_sharp.glb",
           "tags": [
+            "knife",
+            "weapon",
             "prop"
           ],
           "bytes": 13504,
@@ -27177,6 +28449,8 @@
         {
           "file": "packs/kenney-weapon-pack/knife_smooth.glb",
           "tags": [
+            "knife",
+            "weapon",
             "prop"
           ],
           "bytes": 14428,
@@ -27188,6 +28462,8 @@
         {
           "file": "packs/kenney-weapon-pack/kniferound_sharp.glb",
           "tags": [
+            "knife",
+            "weapon",
             "prop"
           ],
           "bytes": 141756,
@@ -27199,6 +28475,8 @@
         {
           "file": "packs/kenney-weapon-pack/kniferound_smooth.glb",
           "tags": [
+            "knife",
+            "weapon",
             "prop"
           ],
           "bytes": 143144,
@@ -27210,6 +28488,9 @@
         {
           "file": "packs/kenney-weapon-pack/machinegun.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 57196,
@@ -27221,6 +28502,9 @@
         {
           "file": "packs/kenney-weapon-pack/machinegunlauncher.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 88420,
@@ -27232,6 +28516,9 @@
         {
           "file": "packs/kenney-weapon-pack/pistol.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 38696,
@@ -27243,6 +28530,9 @@
         {
           "file": "packs/kenney-weapon-pack/pistolsilencer.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 58200,
@@ -27256,6 +28546,10 @@
           "tags": [
             "rock",
             "nature",
+            "gun",
+            "firearm",
+            "weapon",
+            "prop",
             "vehicle"
           ],
           "bytes": 85520,
@@ -27269,6 +28563,10 @@
           "tags": [
             "rock",
             "nature",
+            "gun",
+            "firearm",
+            "weapon",
+            "prop",
             "vehicle"
           ],
           "bytes": 93824,
@@ -27282,6 +28580,10 @@
           "tags": [
             "rock",
             "nature",
+            "gun",
+            "firearm",
+            "weapon",
+            "prop",
             "vehicle"
           ],
           "bytes": 96396,
@@ -27295,6 +28597,10 @@
           "tags": [
             "rock",
             "nature",
+            "gun",
+            "firearm",
+            "weapon",
+            "prop",
             "vehicle"
           ],
           "bytes": 85912,
@@ -27306,6 +28612,9 @@
         {
           "file": "packs/kenney-weapon-pack/shotgun.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 72328,
@@ -27317,6 +28626,9 @@
         {
           "file": "packs/kenney-weapon-pack/shotgunshort.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 80680,
@@ -27328,6 +28640,9 @@
         {
           "file": "packs/kenney-weapon-pack/sniper.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 105508,
@@ -27339,6 +28654,9 @@
         {
           "file": "packs/kenney-weapon-pack/snipercamo.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 105500,
@@ -27350,6 +28668,9 @@
         {
           "file": "packs/kenney-weapon-pack/uzi.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 62988,
@@ -27361,6 +28682,9 @@
         {
           "file": "packs/kenney-weapon-pack/uzigold.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 62968,
@@ -27372,6 +28696,9 @@
         {
           "file": "packs/kenney-weapon-pack/uzigoldlong.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 73340,
@@ -27383,6 +28710,9 @@
         {
           "file": "packs/kenney-weapon-pack/uzigoldlongsilencer.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 93248,
@@ -27394,6 +28724,9 @@
         {
           "file": "packs/kenney-weapon-pack/uzigoldsilencer.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 82472,
@@ -27405,6 +28738,9 @@
         {
           "file": "packs/kenney-weapon-pack/uzilong.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 73292,
@@ -27416,6 +28752,9 @@
         {
           "file": "packs/kenney-weapon-pack/uzilongsilencer.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 92796,
@@ -27427,6 +28766,9 @@
         {
           "file": "packs/kenney-weapon-pack/uzisilencer.glb",
           "tags": [
+            "gun",
+            "firearm",
+            "weapon",
             "prop"
           ],
           "bytes": 82788,

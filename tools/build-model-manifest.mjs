@@ -29,11 +29,27 @@ const TAGWORDS = [
   [/chest|barrel|crate|box|sack|bag|pot|vase/i, ["container", "prop"]],
   [/torch|lantern|lamp|candle|fire|campfire|brazier/i, ["light", "prop", "emissive"]],
   [/sword|axe|bow|shield|staff|dagger|hammer|spear|weapon/i, ["weapon", "prop"]],
+  /* Firearms name themselves and nothing else: "pistol" contains no word a
+     player would search for. Without this a creator looking for "gun" finds
+     seven models out of a 38-piece weapon pack and concludes the library has
+     none — which is exactly what happened. */
+  [/pistol|shotgun|sniper|machinegun|uzi|rifle|rocketlauncher|flamethrower|grenade|ammo|silencer/i,
+   ["gun", "firearm", "weapon", "prop"]],
+  [/knife|blade/i, ["knife", "weapon", "prop"]],
   [/coin|gem|crystal|treasure|key|potion|scroll|book/i, ["collectable", "prop"]],
   [/skeleton|zombie|orc|goblin|demon|dragon|slime|spider|monster|enemy/i, ["enemy", "character", "creature"]],
   [/knight|mage|rogue|warrior|barbarian|ranger|druid|character|hero|player|human|adventurer/i, ["character", "humanoid"]],
   [/cow|sheep|horse|dog|cat|bird|fish|deer|bear|wolf|fox|animal/i, ["animal", "creature"]],
   [/car|truck|van|bus|bike|boat|ship|plane|rocket|vehicle|tank/i, ["vehicle"]],
+  /* The modern-city vocabulary. A creator searching "city", "street" or
+     "police" is looking for these kits and they were findable only by knowing
+     the supplier's filename in advance. */
+  [/police|ambulance|firetruck|taxi|sedan|suv|hatchback|delivery|garbage|tractor|race/i,
+   ["vehicle", "city", "modern"]],
+  [/modularbuilding|skyscraper|office|apartment|shop|store|hotel/i, ["building", "city", "modern"]],
+  [/roadtile|street|pavement|sidewalk|kerb|curb|crossing|junction/i, ["road", "city", "modern"]],
+  [/lightpost|streetlight|lamppost|light_post|trafficlight|trafficcone|trafficsign/i,
+   ["street", "city", "modern", "prop"]],
   [/space|planet|asteroid|satellite|astronaut|alien|ufo/i, ["space", "scifi"]],
   [/dungeon|tomb|crypt|coffin|grave|skull|bone/i, ["dungeon", "dark"]],
   [/snow|ice|desert|sand|cactus|lava|swamp/i, ["biome", "nature"]],
