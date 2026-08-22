@@ -28,6 +28,10 @@
  * the opposite of what a pinned URL is for. Each was a deliberate call, not a
  * habit: anything that changes what a game ASKED for still goes in v2.
  *
+ * G.sfx() and G.ambience() are NOT a fourth exception. They are new methods, so
+ * no already-published game can call them and none of them can change how one
+ * sounds. Additive API is always safe on a pinned file; changed behaviour is not.
+ *
  * COLOUR PIPELINE — a deliberate non-change, recorded so it is not "fixed" again.
  * This renderer never sets outputEncoding = sRGBEncoding, so r147 writes linear
  * values straight to the framebuffer. That is textbook-wrong and it is staying.
@@ -333,6 +337,128 @@
 
     /* ---------------------------- audio ------------------------------ */
     var actx = null, muted = false;
+    var master = null, noiseBuf = null, bed = null;
+
+    /* One master node so the mute button can silence a bed that is ALREADY
+       playing. G.beep() predates this and still talks to destination directly,
+       which is correct: it checks `muted` before it makes a sound at all, and
+       a one-shot cannot outlive the click. A loop can. */
+    function bus() {
+      if (!actx) return null;
+      if (!master) {
+        master = actx.createGain();
+        master.gain.value = muted ? 0 : 1;
+        master.connect(actx.destination);
+      }
+      return master;
+    }
+
+    /* White noise, generated once and reused. Every impact, explosion, footstep,
+       splash and weather bed in the table below is this buffer through a
+       different filter envelope — which is why the whole sound library costs one
+       second of samples instead of a download. */
+    function noiseSource() {
+      if (!actx) return null;
+      if (!noiseBuf) {
+        noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate);
+        var d = noiseBuf.getChannelData(0);
+        for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      }
+      var s = actx.createBufferSource();
+      s.buffer = noiseBuf;
+      s.loop = true;
+      return s;
+    }
+
+    /** A pitched voice with an optional glide and a percussive decay. */
+    function tone(t0, f0, f1, dur, type, gain) {
+      var out = bus(); if (!out) return;
+      var o = actx.createOscillator(), g = actx.createGain();
+      o.type = type || "sine";
+      o.frequency.setValueAtTime(Math.max(1, f0), t0);
+      if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain), t0 + Math.min(0.012, dur * 0.3));
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g); g.connect(out);
+      o.start(t0); o.stop(t0 + dur + 0.02);
+    }
+
+    /** A filtered noise burst — the other half of every sound here. */
+    function noise(t0, dur, gain, filter, f0, f1, q) {
+      var out = bus(); if (!out) return;
+      var s = noiseSource(); if (!s) return;
+      var bq = actx.createBiquadFilter(), g = actx.createGain();
+      bq.type = filter || "lowpass";
+      bq.Q.value = q == null ? 1 : q;
+      bq.frequency.setValueAtTime(Math.max(20, f0), t0);
+      if (f1 && f1 !== f0) bq.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain), t0 + Math.min(0.01, dur * 0.25));
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      s.connect(bq); bq.connect(g); g.connect(out);
+      s.start(t0); s.stop(t0 + dur + 0.02);
+    }
+
+    /* The sound library. Every entry is (t0, v, p) -> void, where v scales
+       loudness and p scales pitch, so one preset covers a small pickup and a
+       big one without a second name.
+
+       This exists because the alternative is what was happening: the build
+       prompt asks every game for "distinct SFX per event", the runtime offered
+       one sine oscillator, and each build reinvented percussion badly or shipped
+       silent. A game should name the event, not synthesise it. */
+    var SFX = {
+      click:    function (t, v, p) { noise(t, 0.03, 0.20 * v, "highpass", 2200 * p, 3200 * p, 1); },
+      step:     function (t, v, p) { noise(t, 0.07, 0.16 * v, "lowpass", 900 * p, 260 * p, 1); },
+      pickup:   function (t, v, p) { tone(t, 660 * p, 990 * p, 0.09, "square", 0.13 * v);
+                                     tone(t + 0.07, 990 * p, 1320 * p, 0.10, "square", 0.11 * v); },
+      coin:     function (t, v, p) { tone(t, 988 * p, 988 * p, 0.06, "triangle", 0.16 * v);
+                                     tone(t + 0.05, 1319 * p, 1319 * p, 0.17, "triangle", 0.14 * v); },
+      powerup:  function (t, v, p) { for (var i = 0; i < 4; i++) tone(t + i * 0.06, (440 + i * 220) * p, (520 + i * 240) * p, 0.11, "square", 0.11 * v); },
+      jump:     function (t, v, p) { tone(t, 300 * p, 760 * p, 0.14, "sine", 0.16 * v); },
+      land:     function (t, v, p) { tone(t, 180 * p, 60 * p, 0.13, "sine", 0.18 * v);
+                                     noise(t, 0.09, 0.13 * v, "lowpass", 1200, 300, 1); },
+      thud:     function (t, v, p) { tone(t, 120 * p, 45 * p, 0.20, "sine", 0.22 * v);
+                                     noise(t, 0.12, 0.10 * v, "lowpass", 700, 180, 1); },
+      hit:      function (t, v, p) { tone(t, 420 * p, 120 * p, 0.10, "square", 0.15 * v);
+                                     noise(t, 0.08, 0.16 * v, "bandpass", 1600 * p, 500 * p, 2); },
+      hurt:     function (t, v, p) { tone(t, 320 * p, 90 * p, 0.26, "sawtooth", 0.17 * v); },
+      shoot:    function (t, v, p) { tone(t, 900 * p, 260 * p, 0.07, "square", 0.13 * v);
+                                     noise(t, 0.07, 0.16 * v, "highpass", 900 * p, 2400 * p, 1); },
+      laser:    function (t, v, p) { tone(t, 1500 * p, 220 * p, 0.20, "sawtooth", 0.13 * v); },
+      explode:  function (t, v, p) { noise(t, 0.55, 0.30 * v, "lowpass", 1800 * p, 90, 1);
+                                     tone(t, 90 * p, 34 * p, 0.42, "sine", 0.22 * v); },
+      spark:    function (t, v, p) { noise(t, 0.05, 0.14 * v, "highpass", 3200 * p, 5200 * p, 2); },
+      whoosh:   function (t, v, p) { noise(t, 0.28, 0.16 * v, "bandpass", 300 * p, 2400 * p, 1.6); },
+      splash:   function (t, v, p) { noise(t, 0.34, 0.20 * v, "bandpass", 2600 * p, 420 * p, 1.2); },
+      door:     function (t, v, p) { noise(t, 0.45, 0.14 * v, "lowpass", 200, 1400 * p, 3); },
+      alarm:    function (t, v, p) { for (var i = 0; i < 4; i++) tone(t + i * 0.17, (i % 2 ? 660 : 880) * p, (i % 2 ? 660 : 880) * p, 0.15, "square", 0.13 * v); },
+      win:      function (t, v, p) { var n = [523, 659, 784, 1047];
+                                     for (var i = 0; i < n.length; i++) tone(t + i * 0.11, n[i] * p, n[i] * p, 0.26, "triangle", 0.15 * v); },
+      lose:     function (t, v, p) { var n = [440, 349, 262];
+                                     for (var i = 0; i < n.length; i++) tone(t + i * 0.16, n[i] * p, n[i] * p * 0.98, 0.34, "sawtooth", 0.14 * v); },
+    };
+
+    /* Looping weather and room tone. One bed at a time on purpose: two beds are
+       never a mix, they are mud. Each is the same noise buffer under a different
+       filter, plus a slow LFO so it breathes instead of hissing. */
+    var BEDS = {
+      wind:   { filter: "lowpass",  f: 420,  q: 0.7, gain: 0.055, lfo: 0.09, depth: 260 },
+      rain:   { filter: "highpass", f: 1500, q: 0.5, gain: 0.045, lfo: 0.30, depth: 400 },
+      sea:    { filter: "lowpass",  f: 600,  q: 0.8, gain: 0.060, lfo: 0.13, depth: 380 },
+      forest: { filter: "bandpass", f: 1900, q: 0.9, gain: 0.030, lfo: 0.21, depth: 700 },
+      night:  { filter: "lowpass",  f: 260,  q: 0.7, gain: 0.040, lfo: 0.07, depth: 120 },
+      city:   { filter: "lowpass",  f: 190,  q: 0.6, gain: 0.070, lfo: 0.05, depth: 90 },
+      hum:    { filter: "lowpass",  f: 140,  q: 1.2, gain: 0.045, lfo: 0.03, depth: 40 },
+    };
+
+    function stopBed() {
+      if (!bed) return;
+      try { bed.src.stop(); } catch (e) {}
+      try { bed.lfo.stop(); } catch (e) {}
+      bed = null;
+    }
     // Defaults to the page's own language, which the forge sets from the
     // creator's concept — so a game written in French speaks French unprompted.
     var voiceLang = document.documentElement.getAttribute("lang") || "en";
@@ -341,6 +467,9 @@
       mute.innerHTML = muted ? "&#128263;" : "&#128266;";
       // Mute has to silence a line already being spoken, not just the next one.
       try { if (muted && window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) {}
+      // ...and an ambience bed, which is a loop that would otherwise outlive the
+      // click. One-shots gate on `muted` before they make a sound at all.
+      try { if (master) master.gain.value = muted ? 0 : 1; } catch (e) {}
     });
 
     /* ---------------------------- particles -------------------------- */
@@ -567,6 +696,69 @@
           o.connect(g); g.connect(actx.destination);
           o.start(); o.stop(actx.currentTime + dur);
         } catch (e) {}
+      },
+
+      /** A named sound. The whole point of this over G.beep() is that a game
+       *  says WHAT happened, not how to synthesise it:
+       *
+       *    G.sfx("coin")                    a pickup
+       *    G.sfx("explode", { gain: 1.6 })  a bigger one
+       *    G.sfx("hit", { pitch: 0.7 })     the same hit on a heavier enemy
+       *
+       *  Names: click step pickup coin powerup jump land thud hit hurt shoot
+       *  laser explode spark whoosh splash door alarm win lose.
+       *
+       *  An unknown name falls back to `click` rather than going silent, because
+       *  a silent game reads as broken and a wrong-but-present sound reads as a
+       *  choice. Honours mute. Never throws. */
+      sfx: function (name, opts) {
+        if (!actx || muted) return this;
+        opts = opts || {};
+        try {
+          var f = SFX[name] || SFX.click;
+          f(actx.currentTime + 0.001,
+            opts.gain == null ? 1 : opts.gain,
+            opts.pitch == null ? 1 : opts.pitch);
+        } catch (e) {}
+        return this;
+      },
+
+      /** The looping bed under everything: wind rain sea forest night city hum.
+       *  Call once with the kind, or with nothing to stop it. Replacing one bed
+       *  with another cross-fades by simply stopping the first — two beds at
+       *  once is mud, never a mix.
+       *
+       *    G.ambience("night")
+       *    G.ambience("rain", { gain: 1.4 })
+       *    G.ambience(null) */
+      ambience: function (kind, opts) {
+        if (!actx) return this;
+        opts = opts || {};
+        stopBed();
+        var spec = BEDS[kind];
+        if (!spec) return this;
+        var out = bus(); if (!out) return this;
+        try {
+          var src = noiseSource(), bq = actx.createBiquadFilter(), g = actx.createGain();
+          bq.type = spec.filter; bq.Q.value = spec.q;
+          bq.frequency.value = spec.f;
+          g.gain.value = 0.0001;
+          // Fade in: a bed that snaps on at full level announces itself as a
+          // sound effect instead of disappearing into the scene.
+          g.gain.exponentialRampToValueAtTime(
+            Math.max(0.0002, spec.gain * (opts.gain == null ? 1 : opts.gain)),
+            actx.currentTime + 1.2);
+
+          var lfo = actx.createOscillator(), lg = actx.createGain();
+          lfo.frequency.value = spec.lfo;
+          lg.gain.value = spec.depth;
+          lfo.connect(lg); lg.connect(bq.frequency);
+
+          src.connect(bq); bq.connect(g); g.connect(out);
+          src.start(); lfo.start();
+          bed = { src: src, lfo: lfo, gain: g };
+        } catch (e) {}
+        return this;
       },
 
       flash: function (color) {

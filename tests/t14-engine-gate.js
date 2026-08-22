@@ -124,7 +124,7 @@ console.log('\n== a 3D build must actually LOAD a model, not just call get() =='
 {
   const shell = (body) => `<!DOCTYPE html><html><body>
 <script src="https://www.joshrix.com/assets/vendor/joshrix3d-1.js"></script>
-<script>var G = JOSHRIX3D.boot({title:"X"}); ${body} G.onUpdate(function(){}); G.stat("SCORE",0);</script>
+<script>var G = JOSHRIX3D.boot({title:"X"}); ${body} G.onUpdate(function(){}); G.stat("SCORE",0); G.sfx("coin");</script>
 </body></html>`;
 
   const PRIMITIVES = shell('var o = G.get("hero"); if(!o){o=new THREE.Mesh(new THREE.BoxGeometry(1,1,1));} G.scene.add(o);');
@@ -139,6 +139,20 @@ console.log('\n== a 3D build must actually LOAD a model, not just call get() =='
   t('countLibraryModels counts the distinct paths', G.countLibraryModels(REAL) === 2,
     String(G.countLibraryModels(REAL)));
   t('and reports zero for a build with none', G.countLibraryModels(PRIMITIVES) === 0);
+
+  /* The runtime plays its own start and game-over cues, so a build that never
+     makes a sound is not literally silent — nothing the PLAYER does is audible.
+     G.sfx() is one call per event and the prompt names all twenty, so a build
+     that skips it skipped the instruction. */
+  const SILENT = REAL.replace(' G.sfx("coin");', '');
+  t('a build where nothing the player does makes a sound is refused',
+    G.missing3dFloor(SILENT).length > 0, JSON.stringify(G.missing3dFloor(SILENT)));
+  t('and the reason says the player must hear it',
+    /hear/i.test(G.missing3dFloor(SILENT).join(' ')), G.missing3dFloor(SILENT).join(' '));
+  t('G.ambience alone satisfies it — a bed is a sound of its own',
+    G.missing3dFloor(SILENT.replace('G.stat("SCORE",0);', 'G.stat("SCORE",0); G.ambience("night");')).length === 0);
+  t('and so does the raw oscillator, which published games still use',
+    G.missing3dFloor(SILENT.replace('G.stat("SCORE",0);', 'G.stat("SCORE",0); G.beep(440,.1);')).length === 0);
 }
 
 console.log('\n== the floor must not reject the games that actually work ==');

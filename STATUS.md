@@ -3,9 +3,64 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-08-22 (the character library landed — 152 rigged models, 150 animated)
+Last updated: 2026-08-22 (character library landed; the runtime got a real sound engine)
 
 ---
+
+## What is actually in the asset library — settle this, stop re-deriving it
+
+Both suppliers Justin paid for are **in the repo and shipping**. This section exists
+because I got it wrong in conversation and cost him a round trip.
+
+| Supplier | 3D | 2D sprites | Audio |
+|---|---|---|---|
+| **Kenney** | 22 kits, **2,119 models** — in since before this session | 6 packs, **2,553 sprites** — in | none |
+| **Quaternius** | 9 packs, **152 rigged models**, 150 animated — landed 22 Aug | — | none |
+
+Nothing further needs uploading for models or sprites. The **only** asset class the
+platform has never had is audio — and as of 22 Aug that is closed in code rather than
+by a download (below), so there is now no outstanding upload at all.
+
+---
+
+## The runtime had no sound engine — closed 22 Aug, no assets needed
+
+The entire audio surface was `G.beep(freq, dur, type, gain)`: one oscillator with a
+decay. Meanwhile the build prompt asked every game for "procedural WebAudio sound
+design: distinct SFX per event + ambient bed", so each build reinvented percussion
+from scratch and mostly shipped thin or silent.
+
+`G.sfx(name, { gain, pitch })` is now a **twenty-sound library** — click step pickup
+coin powerup jump land thud hit hurt shoot laser explode spark whoosh splash door
+alarm win lose — and `G.ambience(kind)` is **seven looping beds** (wind rain sea
+forest night city hum). All of it is synthesis: one second of noise buffer through
+filter envelopes, plus oscillators with pitch glides. **No files, no download, no
+new dependency, nothing added to page weight.**
+
+`gain` and `pitch` mean one preset covers a light hit and a heavy one, so twenty
+names cover far more than twenty sounds. An unknown name falls back to `click`
+rather than going silent, because a silent game reads as broken.
+
+**This is additive API, NOT a fourth v1 exception.** No already-published game can
+call a method that did not exist when it shipped, so none of them can change. That
+is the line: additive is always safe on a pinned file, changed behaviour is not.
+
+Wired all the way through, so it is not another complete thing with nothing calling
+it: the runtime API list, the worked example (which now reads `g.sfx("coin")` and
+`g.sfx("hurt")`), the 3D requirements — which now forbid hand-rolling an
+AudioContext — and **the engine floor, which rejects a build where nothing the
+player does makes a sound.**
+
+`tests/t27-sound.mjs` (19 assertions) wraps every AudioContext factory before the
+runtime boots and asserts on the graph that actually gets built — because every node
+here is inside a try/catch by design, so a totally broken synth would return `this`
+from every call and look healthy. It checks all twenty sounds start a source, that
+impacts are noise-based and fanfares are pitched, that the bed loops and a second bed
+replaces rather than stacks, and that mute silences a loop already playing.
+
+**`G.say()` already covers voice** — real speech synthesis, defaulting to the page's
+own language, so a game written in French speaks French unprompted. There was never a
+voice pack to buy.
 
 ## The character library — landed 22 Aug
 
@@ -59,10 +114,9 @@ for a clip that does not exist leaves the character frozen. The old closing line
 "CHARACTERS ARE SCARCE" is gone; it was the sentence steering every build away from
 using people at all.
 
-Still on Justin's side: the **Kenney 3D bundle** and, more valuable, the **Kenney
-Audio library** — the platform has no sound library at all today. And the 2D
-sprite packs, which need `PACKS` extended in `tools/ingest-sprites.mjs` and the
-names added to the sprite catalogue in `GAME_SYSTEM`.
+Nothing further is owed from Justin's side. Kenney's 3D kits and sprite packs were
+already in the repo, and the audio gap was closed in code — see the two sections at
+the top of this file.
 
 ---
 

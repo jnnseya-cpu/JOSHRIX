@@ -252,7 +252,7 @@ Include these three tags, in this order, and nothing else:
 <script src="https://www.joshrix.com/assets/vendor/three.min.js"><\/script>
 <script src="https://www.joshrix.com/assets/vendor/GLTFLoader.js"><\/script>
 <script src="https://www.joshrix.com/assets/vendor/joshrix3d-1.js"><\/script>
-The runtime already owns, and guarantees, every part that has historically shipped broken: the canvas is created and on screen before your first line runs; the loop renders from frame one and survives a throwing frame; shadows, fog, a procedural sky dome whose horizon matches the fog exactly, a textured ground, a three-light rig; the title and game-over screens; the HUD; drag and WASD input; WebAudio on first gesture with a mute button; a particle pool; portrait and landscape camera framing; and a reduced render budget on phones. You do NOT write any of that, and you must not try.
+The runtime already owns, and guarantees, every part that has historically shipped broken: the canvas is created and on screen before your first line runs; the loop renders from frame one and survives a throwing frame; shadows, fog, a procedural sky dome whose horizon matches the fog exactly, a textured ground, a three-light rig; the title and game-over screens; the HUD; drag and WASD input; a twenty-sound procedural sound library and seven looping ambience beds, opened on the first gesture, with a mute button; a particle pool; portrait and landscape camera framing; and a reduced render budget on phones. You do NOT write any of that, and you must not try.
 var G = JOSHRIX3D.boot({ title, titleAccent, tagline, howTo, arena, playRadius, accent, sky:{top,mid,haze}, ground:{base,speckle} });
 sky.haze is the horizon and the fog, so it is the colour that fills most of the frame — pick THAT one for the mood, and use sky.mid/sky.top for the band above it. Add sea:true ONLY for an island, coast or ocean concept: it lays a wide water disc that becomes the horizon and hides the sky, which is wrong for a forest, a desert, a city or space.
 What G gives you: G.scene G.camera G.renderer G.THREE · G.state G.score G.lives G.wave G.elapsed · G.keys G.target (a Vector3 the pointer and WASD both steer) · G.arena G.playRadius
@@ -261,7 +261,10 @@ What G gives you: G.scene G.camera G.renderer G.THREE · G.state G.score G.lives
 - G.get(key) — a fresh instance at the right scale, or null if that model failed. Skinned characters are rebound so each copy animates on its own.
 - G.actor(key, "walk") — an instance with its own mixer; .play("run") to switch clip. The runtime updates every mixer for you.
 - G.scatter(key, count, { minR, maxR, avoid, avoidRadius }) — ring the arena with scenery. The default band sits OUTSIDE playRadius so nothing tall can stand between the camera and the player.
-- G.burst(pos, colour) · G.beep(freq, dur, type, gain) · G.flash("#ff3b3b")
+- G.burst(pos, colour) · G.flash("#ff3b3b")
+- G.sfx(name, { gain, pitch }) — THE SOUND LIBRARY. Name the event, never synthesise it: click step pickup coin powerup jump land thud hit hurt shoot laser explode spark whoosh splash door alarm win lose. gain scales loudness and pitch scales pitch, so G.sfx("hit") and G.sfx("hit", { pitch: 0.7, gain: 1.4 }) are a light hit and a heavy one without a second name. Reach for this for EVERY event the player causes or suffers — a game whose only sounds are the runtime's own start and game-over cues reads as unfinished.
+- G.ambience("night") — the looping bed under everything: wind rain sea forest night city hum. Set it once inside G.onStart, pass nothing to stop it. One bed at a time; a second replaces the first. This is what makes a world feel like a place rather than a screen, and it costs one line.
+- G.beep(freq, dur, type, gain) — the raw oscillator, still here for a pitch you specifically need (a rising alarm, a tuned puzzle chime). Prefer G.sfx: it is a designed sound, not a tone.
 - G.say("The gate is waking.", { rate, pitch, interrupt:true }) — the game SPEAKS, out loud, in the creator's language. Use it when the concept has anyone who would talk: a narrator, a guide, a boss who taunts, a tutorial, a coach, a story beat. Beeps cannot carry a sentence. Keep lines short, write them in the creator's language, and do not narrate every pickup — a line the player hears on every collect stops being heard. An arcade concept with no speaking character should stay on beeps.
 - G.stat("Score", n, "left") · G.pips("Lives", n, "♥", "right") — the HUD.
 - G.follow(obj) — lagged chase camera on that object during play, cinematic orbit on the menus.
@@ -303,12 +306,12 @@ G.onUpdate(function (g, dt) {
   for (var i = pearls.length - 1; i >= 0; i--) { pearls[i].rotation.y += dt * 2;
     if (pearls[i].position.distanceTo(player.position) < 1.6) {
       g.burst(pearls[i].position, 0xfff0a0); g.scene.remove(pearls[i]); pearls.splice(i, 1);
-      g.score += 10; hud(); g.beep(900, 0.1, "triangle", 0.12); spawnPearl(); } }
+      g.score += 10; hud(); g.sfx("coin"); spawnPearl(); } }
   for (var k = eels.length - 1; k >= 0; k--) { var e = eels[k];
     var d = new T.Vector3().subVectors(player.position, e.position); d.y = 0; d.normalize();
     e.position.addScaledVector(d, 3.2 * dt); e.rotation.y = Math.atan2(d.x, d.z);
     if (e.position.distanceTo(player.position) < 1.3) {
-      g.scene.remove(e); eels.splice(k, 1); g.lives--; hud(); g.flash("#ff3b3b"); g.beep(150, 0.3, "square", 0.16);
+      g.scene.remove(e); eels.splice(k, 1); g.lives--; hud(); g.flash("#ff3b3b"); g.sfx("hurt");
       if (g.lives <= 0) g.over("Caught", "You gathered " + g.score + " pearls."); } }
   t += dt; if (t > Math.max(1.4, 4 - g.elapsed / 20)) { t = 0; spawnEel(); }
 });
@@ -335,7 +338,7 @@ GAME REQUIREMENTS:
 - Player-controlled entity with smooth eased movement; collisions via distance checks. Works with BOTH touch (drag) and mouse + arrow/WASD keys. window resize handler; renderer.setPixelRatio(Math.min(devicePixelRatio,2)); antialias:true.
 - HUD as styled DOM overlay divs (position:fixed) over the WebGL canvas: score, lives/health, level name — styled to match the game's identity. Animated title overlay with START -> gameplay -> win/lose overlay with restart. A pause button.
 - Rising difficulty across the blueprint's levels. 3-8 minute session. Distinct enemy behaviours (patrol, chase, ambush — not one clone).
-- Procedural WebAudio sound design: distinct SFX per event + ambient bed + mute button; AudioContext only on first user gesture.
+- Sound: call G.sfx("<name>") on every event the player causes or suffers, and set one G.ambience(...) bed in G.onStart. Do NOT write an AudioContext, an oscillator or a noise buffer — the runtime owns all of it, including the mute button and opening audio on the first gesture. A build that hand-rolls a synth is rebuilding the engine, which is the failure mode here.
 - All player-facing text in the creator's language. Age-appropriate. No real brands or licensed characters.
 - If typeof THREE === "undefined" after the script tag, write a visible message into the page and stop cleanly (no throw loop).
 PERFORMANCE: target 60fps on mobile — InstancedMesh over many meshes, cap shadow casters, reuse geometries/materials, no per-frame allocations in the loop.
@@ -572,6 +575,12 @@ const FLOOR_ENGINE: Array<[string, RegExp]> = [
   ["at least one model from the library — bare primitives are why builds look blocky",
    /\.\s*load\s*\(\s*(['"])[^'"]*\1\s*,\s*(['"])(lib|packs|vehicles)\//],
   ["something for the player to reach or avoid", /\.\s*(burst|over|stat|pips|follow)\s*\(/],
+  // The runtime plays its own start and game-over cues, so a build that never
+  // makes a sound of its own still is not silent — which is exactly why this
+  // needs asserting. Nothing the PLAYER does would be audible: no pickup, no
+  // hit, no landing. Since G.sfx() is one call per event and the prompt names
+  // all twenty, a build that skips it skipped the instruction.
+  ["a sound of its own — the player must hear what they did", /\.\s*(sfx|ambience|beep)\s*\(/],
 ];
 
 /** How many DISTINCT library models a build actually pulls in. Logged with every
