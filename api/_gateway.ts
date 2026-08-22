@@ -555,6 +555,34 @@ const FLOOR_ENGINE: Array<[string, RegExp]> = [
 /** How many DISTINCT library models a build actually pulls in. Logged with every
  *  forge, because "which provider and how many bytes" could not answer the one
  *  question that mattered — did it use the library at all. */
+/**
+ * A concept longer than this is a DESIGN DOCUMENT, not a game brief.
+ *
+ * A creator pasted a 16,743-character, 33-section AAA console pitch —
+ * districts, factions, co-op, competitive modes, audio design, expansions,
+ * marketing positioning, trailer copy. All of it went into the BUILD prompt
+ * verbatim, next to "write one self-contained HTML file with a canvas". The
+ * model produced a complete file with no canvas at all and the run fell
+ * through to the engine fallback.
+ *
+ * The blueprint stage exists precisely to distil a brief into title, summary,
+ * levels and mechanics, and it still sees the WHOLE document — breadth helps
+ * there. What the build stage needs is the playable core, plus an explicit
+ * instruction not to try to represent a four-year production in 900 lines.
+ * 6,000 characters is roughly the first six sections of a document like that:
+ * the selling idea, the world, and what the player actually does.
+ */
+export const MAX_CONCEPT_CHARS = 6_000;
+
+export function conceptForBuild(prompt: string): string {
+  if (prompt.length <= MAX_CONCEPT_CHARS) return prompt;
+  const head = prompt.slice(0, MAX_CONCEPT_CHARS);
+  return `${head}
+
+[The creator's brief continues for ${prompt.length - MAX_CONCEPT_CHARS} more characters and describes a full multi-platform production: additional systems, cinematics, audio direction, online modes, expansions and marketing. DO NOT attempt to represent all of it, and do not produce a design document, a menu of features, or a website about the game. Build the PLAYABLE CORE LOOP of what is described above as ONE browser game — the world, the player, what they do minute to minute, what opposes them, and how a session ends. One vertical slice that plays beats a summary of everything that does not.]`;
+}
+
+/** How many DISTINCT library models a build actually pulls in. */
 export function countLibraryModels(html: string): number {
   const seen = new Set<string>();
   const re = /['"]((?:lib|vehicles|packs)\/[A-Za-z0-9_\-/]+)['"]/g;
@@ -739,7 +767,7 @@ export async function generateGameHtml(
   const system = is3d ? GAME_SYSTEM_3D : GAME_SYSTEM;
   // The concept is arbitrary text from the public internet. Fence it so the
   // model reads it as DATA, and never as instructions addressed to itself.
-  const userMsg = `${wrapUntrusted(prompt)}\n\nBlueprint title: ${opts.title ?? "(derive from concept)"}\nBlueprint summary: ${opts.summary ?? "(none)"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the concept"}`;
+  const userMsg = `${wrapUntrusted(conceptForBuild(prompt))}\n\nBlueprint title: ${opts.title ?? "(derive from concept)"}\nBlueprint summary: ${opts.summary ?? "(none)"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the concept"}`;
 
   // Per-provider output budgets, sized from the full-size diagnostic probe:
   // Claude writes past 12k tokens and truncates (= broken game), so it gets the

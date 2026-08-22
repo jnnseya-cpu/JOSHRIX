@@ -157,6 +157,31 @@ console.log('\n== the floor must not reject the games that actually work ==');
   }
 }
 
+
+console.log('\n== a design document must not be pasted straight into the build prompt ==');
+/* A creator pasted a 16,743-character, 33-section AAA console pitch. All of it
+   reached the BUILD prompt verbatim, beside "write one HTML file with a
+   canvas". The model returned a complete file with NO canvas and the run fell
+   through to the engine fallback — the creator got "collect the orbs" instead
+   of their game. The blueprint stage still sees everything; the build stage
+   gets the playable core and an explicit instruction. */
+{
+  const short = 'A penalty shootout game set in African stadiums.';
+  t('a normal concept is passed through untouched', G.conceptForBuild(short) === short);
+
+  const doc = 'BLACKOUT: 72 HOURS. Vesper City, 11 million people, loses power at 21:17. '
+    + 'X'.repeat(20000);
+  const out = G.conceptForBuild(doc);
+  t('a design document is capped', out.length < doc.length, `${out.length} vs ${doc.length}`);
+  t('the opening — the selling idea and the world — survives',
+    out.startsWith('BLACKOUT: 72 HOURS. Vesper City'), out.slice(0, 40));
+  t('it says how much was dropped rather than silently cutting',
+    /continues for \d+ more characters/.test(out), out.slice(-260));
+  t('and names the failure it is preventing',
+    /do not produce a design document|PLAYABLE CORE LOOP/i.test(out));
+  t('the cap leaves room for a real brief', G.MAX_CONCEPT_CHARS >= 4000);
+}
+
 console.log('\n== the 2D lane had no gate at all ==');
 /* Every check above lived inside `if (is3d)`. A 2D build faced the security
    scan and then looksPlayable(), which is true if the string "<canvas" appears
