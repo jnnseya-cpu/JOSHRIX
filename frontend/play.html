@@ -133,6 +133,9 @@
       }
       document.title = (g.title || 'Play') + ' — JOSHRIX Studio';
       $('gTitle').textContent = g.title || 'Untitled world';
+      // A real play, not a link click: this only runs once the game record came
+      // back from the server, so a 404 or a dead link is never counted as one.
+      try { JX.track('play_game', { id: id, title: g.title || '' }); } catch (e) {}
       if (g.summary) $('gSummary').textContent = g.summary;
       if (typeof g.plays === 'number' && g.status === 'approved') $('gPlays').textContent = '▶ ' + g.plays.toLocaleString() + ' plays';
 
@@ -183,5 +186,7 @@
 <script src="/assets/site.js"></script>
 <script src="assets/appnav.js"></script>
 <script src="assets/track.js"></script>
+<script src="assets/pixels.js"></script>
+<script src="assets/consent.js" defer></script>
 </body>
 </html>

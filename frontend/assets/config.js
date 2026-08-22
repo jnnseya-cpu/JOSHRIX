@@ -36,3 +36,23 @@ window.JOSHRIX_FIREBASE_CONFIG = window.JOSHRIX_FIREBASE_CONFIG || {
   appId: "1:867833032711:web:18aa35cd58fca5f0bbfaa2",
   measurementId: "G-N64P209G6Y"
 };
+
+/**
+ * Advertising tags — Meta Pixel and Google Tag.
+ *
+ * BOTH ARE PUBLIC IDs BY DESIGN. A Pixel ID and a GA4 measurement ID are
+ * visible in the page source of every site that uses them; they are not
+ * secrets and must never be handled as ones. Paste yours here and deploy.
+ *
+ *   Meta Pixel ID   Events Manager -> Data sources -> your pixel  (15-16 digits)
+ *   Google tag ID   GA4 Admin -> Data streams -> your web stream  ("G-XXXXXXXXXX")
+ *                   or a Google Ads conversion tag ("AW-XXXXXXXXX")
+ *
+ * Leave either empty and that platform is never loaded — no script, no cookie,
+ * no request. With BOTH empty no consent banner appears at all, because there
+ * is nothing to consent to.
+ *
+ * Nothing third-party loads before the visitor accepts. See assets/pixels.js.
+ */
+window.JOSHRIX_META_PIXEL_ID = window.JOSHRIX_META_PIXEL_ID || '';
+window.JOSHRIX_GA_ID = window.JOSHRIX_GA_ID || '';

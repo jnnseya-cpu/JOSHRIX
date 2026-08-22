@@ -762,6 +762,10 @@ $('btnForge').addEventListener('click', () => {
     let mainErr = null;
     let fatal = false;   // a 4xx means the forge NEVER STARTED — stop waiting instantly
 
+    // The two events that matter most: what an ad click actually came here to do,
+    // and whether it succeeded. Fired around the real request, not around a click.
+    try { JX.track('forge_start', { mode: ($('chk3d') && $('chk3d').checked) ? '3d' : '2d' }); } catch (e) {}
+
     const main = (async () => {
       try {
         const r = await fetch(base + '/api/forge-game', {
@@ -770,7 +774,7 @@ $('btnForge').addEventListener('click', () => {
           signal: AbortSignal.timeout(295000)
         });
         const j = await r.json().catch(() => null);
-        if (r.ok) finish(j);
+        if (r.ok) { finish(j); try { JX.track('forge_complete', { mode: ($('chk3d') && $('chk3d').checked) ? '3d' : '2d' }); } catch (e) {} }
         else {
           mainErr = (j && (j.error + (j.detail ? ' — ' + j.detail : ''))) || ('HTTP ' + r.status);
           // 4xx = refused before any generation began (no wallet, bad prompt):
@@ -1059,6 +1063,9 @@ $('btnPub').addEventListener('click', async () => {
     });
     const j = await r.json().catch(() => null);
     if (r.ok && j && j.playUrl) {
+      // On the server's confirmation, not the button press: publishing is what
+      // settles the forge charge, so a click that failed is not a conversion.
+      try { JX.track('publish', { id: j.gameId || undefined }); } catch (e) {}
       publishedGame = j;
       su.value = location.origin + j.playUrl;
       if (pill) { pill.textContent = '◐ IN REVIEW'; pill.classList.remove('live'); pill.style.color = 'var(--amber)'; }
@@ -1535,5 +1542,7 @@ function initGame() {
 <script src="assets/human.js"></script>
 <script src="assets/appnav.js"></script>
 <script src="assets/track.js"></script>
+<script src="assets/pixels.js"></script>
+<script src="assets/consent.js" defer></script>
 </body>
 </html>

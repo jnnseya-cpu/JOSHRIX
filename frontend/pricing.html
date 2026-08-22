@@ -66,6 +66,9 @@
       if (!prof.serverWalletId) return;   // no wallet yet → signup flow as linked
       e.preventDefault();
       a.textContent = 'Opening checkout…';
+      /* Intent, not revenue — Stripe settles the plan, and a webhook is the only
+         honest place to count a subscription that was actually paid for. */
+      try { JX.track('begin_checkout', { id: plan }); } catch (e) {}
       fetch((window.JOSHRIX_API_BASE || '') + '/api/subscribe', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ planId: plan, walletId: prof.serverWalletId })
@@ -137,6 +140,8 @@
 </footer>
 <script src="assets/appnav.js"></script>
 <script src="assets/track.js"></script>
+<script src="assets/pixels.js"></script>
+<script src="assets/consent.js" defer></script>
 <script src="assets/site.js"></script>
 </body>
 </html>

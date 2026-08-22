@@ -93,6 +93,8 @@
 <script src="assets/human.js"></script>
 <script src="assets/appnav.js"></script>
 <script src="assets/track.js"></script>
+<script src="assets/pixels.js"></script>
+<script src="assets/consent.js" defer></script>
 <script src="assets/site.js"></script>
 <script>
 (function () {
@@ -188,6 +190,7 @@
           const priceMinor = raw === '' ? null : Math.round(parseFloat(raw) * 100);
           if (raw !== '' && !Number.isFinite(priceMinor)) { msg.textContent = 'Enter an amount, or clear it to unlist.'; return; }
           btn.disabled = true; msg.style.color = 'var(--muted)'; msg.textContent = 'saving…';
+          try { JX.track('list_game'); } catch (e) {}
           fetch(API + '/api/listing', { method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ walletId: p.serverWalletId, gameId: g.id, priceMinor }), signal: AbortSignal.timeout(10000) })
             .then(r => r.json().then(j => ({ ok: r.ok, j })))

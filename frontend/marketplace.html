@@ -65,6 +65,10 @@
   function buy(id, btn){
     var p = profile();
     btn.disabled = true; btn.textContent = 'Opening checkout…';
+    /* begin_checkout, not purchase: the money is not taken until Stripe
+       settles, and counting an intent as a sale inflates the ad platform's
+       optimisation with buyers who never paid. */
+    try { JX.track('begin_checkout', { id: id }); } catch (e) {}
     fetch(API + '/api/checkout', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ listingId: id, method: 'card', buyerWalletId: p.serverWalletId || undefined, buyerEmail: p.email || undefined }) })
       .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
@@ -151,6 +155,9 @@
 </footer>
 <script src="assets/appnav.js"></script>
 <script src="assets/track.js"></script>
+<script src="assets/config.js"></script>
+<script src="assets/pixels.js"></script>
+<script src="assets/consent.js" defer></script>
 <script src="assets/site.js"></script>
 </body>
 </html>

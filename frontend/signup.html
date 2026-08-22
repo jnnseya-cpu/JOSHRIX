@@ -145,6 +145,7 @@
       );
       saveProfile();
       fireWelcome();
+      try { JX.track('sign_up', { method: 'email' }); } catch (e) {}
       note.textContent = '✓ Account created — entering your dashboard…';
       location.href = NEXT;
     } catch (err) {
@@ -198,6 +199,8 @@
 </footer>
 <script src="assets/appnav.js"></script>
 <script src="assets/track.js"></script>
+<script src="assets/pixels.js"></script>
+<script src="assets/consent.js" defer></script>
 <script src="assets/site.js"></script>
 </body>
 </html>
