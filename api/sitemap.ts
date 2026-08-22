@@ -12,6 +12,10 @@ const STATIC_PAGES = [
   "about.html", "press.html", "contact.html", "careers.html", "referrals.html",
   "ip-registry.html", "terms.html", "privacy.html", "refunds.html",
   "features",
+  /* "2,435 CC0 models included" is a claim on every marketing page; /library is
+     the page that lets a stranger check it in ten seconds instead of taking it
+     on trust, and "free 3D game assets" is a search anyone building a game runs. */
+  "library",
   /* The reference games are the strongest organic entry point on the site — a
      stranger can play one without an account — so every one of them belongs
      here. WonderVerse was missing entirely: it shipped, it is linked from the

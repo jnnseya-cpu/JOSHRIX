@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Model Library — JOSHRIX Studio</title>
+<meta name="description" content="Every 3D model included with JOSHRIX Studio: 2,435 CC0 GLB models across 34 packs, including 178 rigged and animated characters, creatures and animals. Load any one and play its animation in the browser.">
+<meta name="theme-color" content="#050508">
+<link rel="stylesheet" href="assets/joshrix.css">
+<style>
+.wrap{max-width:1200px;margin:0 auto;padding:5.5rem clamp(1rem,4vw,3rem) 4rem}
+h1{font-family:var(--mono);font-weight:900;font-size:clamp(1.6rem,4.5vw,2.6rem);letter-spacing:.06em;
+  text-wrap:balance;margin-bottom:.5rem}
+h1 em{font-style:normal;background:linear-gradient(90deg,var(--violet-hot),var(--cyan));
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{color:var(--muted);font-size:1.05rem;max-width:60ch;line-height:1.6}
+
+.counts{display:flex;flex-wrap:wrap;gap:.6rem;margin:1.4rem 0 2rem}
+.counts b{font-family:var(--mono);font-size:.66rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--text);background:var(--surface);border:1px solid var(--stroke-bright);border-radius:999px;
+  padding:.45rem .95rem;font-variant-numeric:tabular-nums}
+.counts b i{font-style:normal;color:var(--cyan)}
+
+.layout{display:grid;grid-template-columns:minmax(0,1fr);gap:1.4rem}
+@media(min-width:900px){.layout{grid-template-columns:320px minmax(0,1fr);align-items:start}}
+
+.packs{display:flex;flex-direction:column;gap:.35rem;max-height:70vh;overflow-y:auto;padding-right:.3rem}
+.packs button{display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;width:100%;text-align:left;
+  background:var(--surface);border:1px solid var(--stroke);border-radius:10px;color:var(--text);cursor:pointer;
+  padding:.6rem .8rem;font-family:var(--body);font-size:.95rem;font-weight:600;transition:border-color .2s,background .2s}
+.packs button:hover{border-color:var(--stroke-bright)}
+.packs button[aria-pressed=true]{border-color:var(--cyan);background:rgba(34,211,238,.09)}
+.packs button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.packs button span{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:var(--muted);
+  font-variant-numeric:tabular-nums;white-space:nowrap}
+.packs button b{font-weight:700;color:var(--green);font-size:.6rem;font-family:var(--mono);letter-spacing:.1em;margin-left:.5rem}
+.packs button q{quotes:none;font-family:var(--mono);font-size:.5rem;font-weight:700;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--muted);border:1px solid var(--stroke);border-radius:4px;
+  padding:.12rem .3rem;margin-right:.45rem;flex:none}
+.packs button{gap:0}
+.packs button>span{margin-left:auto;padding-left:.6rem}
+
+#stage{position:relative;border:1px solid var(--stroke-bright);border-radius:16px;overflow:hidden;background:#06040f;
+  min-height:340px;box-shadow:0 30px 70px rgba(0,0,0,.55),inset 0 1px 0 rgba(255,255,255,.06)}
+#stage canvas{display:block;width:100%;height:auto;touch-action:none}
+#stageMsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
+  font-family:var(--mono);font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);padding:1rem}
+
+.viewerbar{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.8rem}
+.viewerbar .path{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;color:var(--cyan);
+  background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.3);border-radius:8px;padding:.4rem .7rem;
+  overflow-x:auto;white-space:nowrap;max-width:100%}
+.clips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.6rem}
+.clips button{font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.1em;color:var(--text);
+  background:var(--surface);border:1px solid var(--stroke);border-radius:999px;padding:.35rem .8rem;cursor:pointer}
+.clips button[aria-pressed=true]{border-color:var(--violet-hot);background:rgba(168,85,247,.16)}
+.clips button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.clips .none{font-family:var(--body);font-size:.85rem;color:var(--muted)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:.5rem;margin-top:1.2rem;
+  max-height:44vh;overflow-y:auto;padding-right:.3rem}
+.grid button{background:var(--surface);border:1px solid var(--stroke);border-radius:10px;color:var(--text);
+  cursor:pointer;padding:.55rem .7rem;text-align:left;font-family:var(--body);font-size:.9rem;font-weight:600;
+  transition:border-color .2s}
+.grid button:hover{border-color:var(--stroke-bright)}
+.grid button[aria-pressed=true]{border-color:var(--cyan);background:rgba(34,211,238,.09)}
+.grid button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+.grid button em{display:block;font-style:normal;font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;
+  color:var(--muted);margin-top:.2rem;font-variant-numeric:tabular-nums}
+
+.note{margin-top:2.2rem;border-left:2px solid var(--stroke-bright);padding-left:1rem;color:var(--muted);
+  font-size:.95rem;line-height:1.65;max-width:70ch}
+.note b{color:var(--text)}
+.note code{font-family:var(--mono);font-size:.8rem;color:var(--cyan)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The <em>model library</em>, live</h1>
+  <p class="lede">Every model here ships with the platform and is CC0 — a creator owns whatever they build
+    with it outright. Pick a pack, pick a model, watch it animate. The path under the viewer is exactly what
+    a game asks for, and the buttons are the clip names, spelled the way the file spells them.</p>
+
+  <div class="counts" id="counts"><b>Loading the manifest…</b></div>
+
+  <div class="layout">
+    <div class="packs" id="packs" role="group" aria-label="Model packs"></div>
+    <div>
+      <div id="stage"><div id="stageMsg">Pick a model</div></div>
+      <div class="viewerbar"><span class="path" id="path">—</span></div>
+      <div class="clips" id="clips"></div>
+      <div class="grid" id="grid" role="group" aria-label="Models in this pack"></div>
+    </div>
+  </div>
+
+  <p class="note">
+    <b>Two art styles live here on purpose.</b> The Kenney kits are deliberately chunky low-poly — that is the
+    style, not a fault, and it is what makes a whole town or racetrack buildable from tiles. The Quaternius
+    packs are the smooth, rigged, animated ones, and they are where the people, monsters and animals are.
+    A world built from Kenney with a cast from Quaternius is the combination the forge is tuned for.
+    <br><br>
+    <b>Scale differs between packs and it matters.</b> Kenney is grid-based, one unit per cell. Quaternius
+    characters stand about 3 units, except the modular men and women who are metric at about 1.9.
+    Games written on the JOSHRIX runtime never have to care: <code>G.load(key, path, { height: 1.9 })</code>
+    normalises whatever arrives.
+  </p>
+</div>
+
+<script src="/assets/vendor/three.min.js"></script>
+<script src="/assets/vendor/GLTFLoader.js"></script>
+<script>
+(function () {
+  "use strict";
+  var BASE = "/assets/models3d/";
+  var packsEl = document.getElementById("packs");
+  var gridEl = document.getElementById("grid");
+  var clipsEl = document.getElementById("clips");
+  var pathEl = document.getElementById("path");
+  var countsEl = document.getElementById("counts");
+  var stage = document.getElementById("stage");
+  var stageMsg = document.getElementById("stageMsg");
+
+  /* The manifest is 750KB. Fetching it once here is what keeps this page honest:
+     it shows what is actually deployed, so a missing pack shows up as a missing
+     pack rather than as a page that still claims everything is fine. */
+  var manifest = null, currentPack = null, mixer = null, current = null, clock = null;
+
+  var renderer, scene, camera, key;
+  function initGL() {
+    if (renderer) return true;
+    if (typeof THREE === "undefined") return false;
+    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    stage.appendChild(renderer.domElement);
+    scene = new THREE.Scene();
+    scene.background = new THREE.Color("#06040f");
+    key = new THREE.DirectionalLight(0xfff4e2, 2.0);
+    key.position.set(4, 9, 11); key.castShadow = true;
+    key.shadow.mapSize.set(1024, 1024);
+    scene.add(key);
+    scene.add(new THREE.HemisphereLight(0xc9d8ff, 0x2a2440, 1.9));
+    var rim = new THREE.DirectionalLight(0xa855f7, 1.1); rim.position.set(-6, 4, -7); scene.add(rim);
+    var floor = new THREE.Mesh(new THREE.CircleGeometry(6, 48),
+      new THREE.MeshStandardMaterial({ color: "#100e1c", roughness: 1 }));
+    floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+    camera = new THREE.PerspectiveCamera(38, 16 / 9, 0.1, 100);
+    clock = new THREE.Clock();
+    fit();
+    addEventListener("resize", fit);
+    (function loop() {
+      requestAnimationFrame(loop);
+      var dt = clock.getDelta();
+      if (mixer) { try { mixer.update(dt); } catch (e) {} }
+      if (current) current.rotation.y += dt * 0.5;
+      try { renderer.render(scene, camera); } catch (e) {}
+    })();
+    return true;
+  }
+  function fit() {
+    var w = stage.clientWidth || 640;
+    var h = Math.max(340, Math.round(w * 0.56));
+    renderer.setSize(w, h, false);
+    renderer.domElement.style.height = h + "px";
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+  }
+
+  var loader = null;
+  /* `rel` is the manifest's own path, e.g. "packs/kenney-nature-kit/tree_oak.glb"
+     or "lib/guardian.glb". Using it verbatim is what keeps this page in step with
+     the library: lib/ and vehicles/ do not live under packs/, and rebuilding the
+     path by hand is how a viewer starts disagreeing with what games actually load. */
+  function show(rel) {
+    if (!initGL()) { stageMsg.textContent = "3D is not available in this browser"; return; }
+    loader = loader || new THREE.GLTFLoader();
+    var noExt = rel.replace(/\.glb$/, "");
+    stageMsg.style.display = "flex";
+    stageMsg.textContent = "Loading " + noExt.split("/").pop() + "…";
+    var url = BASE + rel;
+    pathEl.textContent = noExt;
+    loader.load(url, function (g) {
+      if (current) { scene.remove(current); current = null; }
+      mixer = null;
+      var o = g.scene;
+      var box = new THREE.Box3().setFromObject(o);
+      var size = new THREE.Vector3(); box.getSize(size);
+      // Normalise so a 6-unit mech and a 1.4-unit blob both fill the frame.
+      var s = 2.6 / (Math.max(size.x, size.y, size.z) || 1);
+      o.scale.setScalar(s);
+      var b2 = new THREE.Box3().setFromObject(o);
+      o.position.y = -b2.min.y;
+      o.traverse(function (n) { if (n.isMesh || n.isSkinnedMesh) { n.castShadow = true; n.receiveShadow = true; } });
+      var holder = new THREE.Group(); holder.add(o); scene.add(holder); current = holder;
+      camera.position.set(0, 2.0, 5.4); camera.lookAt(0, 1.2, 0);
+      buildClips(g.animations || [], o);
+      stageMsg.style.display = "none";
+    }, undefined, function () {
+      stageMsg.style.display = "flex";
+      stageMsg.textContent = "This model did not load — it may not be deployed yet";
+      clipsEl.innerHTML = "";
+    });
+  }
+
+  function buildClips(clips, obj) {
+    clipsEl.innerHTML = "";
+    if (!clips.length) {
+      var n = document.createElement("span");
+      n.className = "none";
+      n.textContent = "No animation clips — this one is a static pose.";
+      clipsEl.appendChild(n);
+      return;
+    }
+    mixer = new THREE.AnimationMixer(obj);
+    var buttons = [];
+    clips.forEach(function (c, i) {
+      var b = document.createElement("button");
+      b.type = "button"; b.textContent = c.name;
+      b.setAttribute("aria-pressed", String(i === 0));
+      b.addEventListener("click", function () {
+        mixer.stopAllAction();
+        mixer.clipAction(c).play();
+        buttons.forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+      });
+      buttons.push(b); clipsEl.appendChild(b);
+    });
+    var first = clips.filter(function (c) { return /^idle$/i.test(c.name); })[0] || clips[0];
+    mixer.clipAction(first).play();
+    buttons.forEach(function (x, i) {
+      x.setAttribute("aria-pressed", String(clips[i] === first));
+    });
+  }
+
+  function selectPack(name) {
+    currentPack = name;
+    [].forEach.call(packsEl.children, function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.pack === name));
+    });
+    var entry = manifest.packs[name] || {};
+    var items = entry.models || [];
+    var opened = false;
+    gridEl.innerHTML = "";
+    items.forEach(function (it, i) {
+      var file = it.file.split("/").pop().replace(/\.glb$/, "");
+      var b = document.createElement("button");
+      b.type = "button";
+      b.setAttribute("aria-pressed", "false");
+      b.innerHTML = "";
+      b.appendChild(document.createTextNode(file.replace(/_/g, " ")));
+      var em = document.createElement("em");
+      em.textContent = (it.clips && it.clips.length ? it.clips.length + " clips · " : "")
+        + (it.height ? it.height.toFixed(1) + "u" : "");
+      b.appendChild(em);
+      b.addEventListener("click", function () {
+        [].forEach.call(gridEl.children, function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        show(it.file);
+      });
+      gridEl.appendChild(b);
+      /* Open on a real character rather than base_character, which is the
+         artist's untextured template and reads as a broken model to anyone
+         seeing the library for the first time. */
+      if (!opened && !/^base[_-]?character$/i.test(file)) {
+        opened = true;
+        setTimeout(function () { b.click(); }, 0);
+      }
+    });
+  }
+
+  fetch(BASE + "manifest.json").then(function (r) {
+    if (!r.ok) throw new Error("manifest " + r.status);
+    return r.json();
+  }).then(function (m) {
+    manifest = m;
+    var names = Object.keys(m.packs || {}).sort(function (a, b) {
+      // Rigged packs first — they are what a creator is usually looking for.
+      var ra = /quaternius|characters/.test(a) ? 0 : 1, rb = /quaternius|characters/.test(b) ? 0 : 1;
+      return ra - rb || a.localeCompare(b);
+    });
+    var total = 0, animated = 0;
+    names.forEach(function (n) {
+      var items = (m.packs[n] || {}).models || [];
+      total += items.length;
+      items.forEach(function (i) { if (i.clips && i.clips.length) animated++; });
+      var b = document.createElement("button");
+      b.type = "button"; b.dataset.pack = n; b.setAttribute("aria-pressed", "false");
+      var sup = (n.match(/^(kenney|quaternius)-/) || [])[1];
+      if (sup) { var q = document.createElement("q"); q.textContent = sup; b.appendChild(q); }
+      b.appendChild(document.createTextNode(n.replace(/^(kenney|quaternius)-/, "")));
+      var anim = items.filter(function (i) { return i.clips && i.clips.length; }).length;
+      if (anim) { var em = document.createElement("b"); em.textContent = "ANIM"; b.appendChild(em); }
+      var s = document.createElement("span"); s.textContent = items.length; b.appendChild(s);
+      b.addEventListener("click", function () { selectPack(n); });
+      packsEl.appendChild(b);
+    });
+    countsEl.innerHTML = "";
+    [["models", total], ["packs", names.length], ["animated", animated]].forEach(function (p) {
+      var b = document.createElement("b");
+      var i = document.createElement("i"); i.textContent = p[1].toLocaleString();
+      b.appendChild(i); b.appendChild(document.createTextNode(" " + p[0]));
+      countsEl.appendChild(b);
+    });
+    var first = names.filter(function (n) { return /quaternius-characters/.test(n); })[0] || names[0];
+    if (first) selectPack(first);
+  }).catch(function (e) {
+    countsEl.innerHTML = "";
+    var b = document.createElement("b");
+    b.textContent = "The model manifest did not load (" + e.message + ")";
+    countsEl.appendChild(b);
+    stageMsg.textContent = "Manifest unavailable";
+  });
+})();
+</script>
+</body>
+</html>
