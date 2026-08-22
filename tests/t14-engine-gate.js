@@ -116,5 +116,53 @@ t('a hand-written 3D build still faces the ORIGINAL floor',
   G.missing3dFloor(HANDWRITTEN_BARE).length > 0,
   'the engine exemption must not leak to non-engine builds');
 
+console.log('\n== the 2D lane had no gate at all ==');
+/* Every check above lived inside `if (is3d)`. A 2D build faced the security
+   scan and then looksPlayable(), which is true if the string "<canvas" appears
+   anywhere — so a stub shipped to a paying creator with nothing in its way.
+   2D has no runtime to lean on, so it is MORE exposed than 3D, not less. */
+{
+  const body = (extra) => `<!DOCTYPE html><html><body><canvas id="c"></canvas><script>
+const cv=document.getElementById('c'),cx=cv.getContext('2d');
+let score=0,lives=3,over=false;
+addEventListener('touchstart',tap); addEventListener('pointerdown',tap);
+let ac=null; function snd(){ ac=ac||new (window.AudioContext||window.webkitAudioContext)(); }
+function tap(){ snd(); score++; }
+function loop(){ cx.clearRect(0,0,300,300); requestAnimationFrame(loop); }
+loop(); ${extra}</script></body></html>`;
+
+  const REAL = body('/*'.padEnd(12500, 'x') + '*/');     // a complete-sized build
+  t('a complete 2D build passes the floor', G.missing2dFloor(REAL).length === 0,
+    JSON.stringify(G.missing2dFloor(REAL)));
+  t('and clears the substance floor', REAL.length >= G.MIN_2D_BYTES, `${REAL.length} bytes`);
+
+  const STUB = '<!DOCTYPE html><html><body><canvas id="c"></canvas>'
+    + '<script>document.getElementById("c").getContext("2d").fillRect(0,0,10,10);</script></body></html>';
+  t('the old gate passed a stub outright', G.looksPlayable(STUB),
+    'looksPlayable is satisfied by the string "<canvas" — this is what shipped');
+  t('the substance floor now rejects it', STUB.length < G.MIN_2D_BYTES, `${STUB.length} bytes`);
+  t('openai\'s measured 8,411-byte build would be rejected', 8411 < G.MIN_2D_BYTES);
+  t('gemini\'s measured 35,973-byte build would be accepted', 35973 >= G.MIN_2D_BYTES,
+    'a floor that rejects a real build is worse than no floor');
+
+  // each requirement is one GAME_SYSTEM states outright; removing one must bite
+  const missing = (re, label) => {
+    const broken = REAL.replace(re, '/*removed*/');
+    t(`a build with no ${label} is refused`, G.missing2dFloor(broken).length > 0, label);
+  };
+  missing(/requestAnimationFrame\s*\(loop\)/, 'render loop');
+  missing(/getContext\('2d'\)/, '2D context');
+  // pointerdown alone is fine — pointer events unify mouse and touch — so a
+  // build only fails this when it has NO path a finger can take
+  t('a build with no touch path at all is refused',
+    G.missing2dFloor(REAL.replace(/touchstart/g, 'x').replace(/pointerdown/g, 'x')).length > 0);
+  t('pointerdown alone satisfies it', G.missing2dFloor(REAL.replace(/touchstart/g, 'x')).length === 0,
+    'pointer events already cover touch; demanding touchstart too would reject correct builds');
+  missing(/AudioContext\|\|window\.webkitAudioContext/, 'sound');
+
+  t('the 3D floor is not applied to 2D builds', G.missing3dFloor(REAL).length > 0,
+    'a 2D game has no shadowMap or fog and must never be judged against them');
+}
+
 console.log(`\n  ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -549,6 +549,50 @@ export function missing3dFloor(html: string): string[] {
   return FLOOR_3D.filter(([, re]) => !re.test(html)).map(([n]) => n);
 }
 
+/** The 2D floor.
+ *
+ *  Until now EVERY quality gate lived inside `if (is3d)`. A 2D build faced the
+ *  security scan and then `looksPlayable()`, which is satisfied by the string
+ *  "<canvas" appearing anywhere — so a 2,000-byte stub shipped to a paying
+ *  creator with nothing in its way. 3D got a floor after openai's 8,411-byte
+ *  stub was caught; the 2D lane has no runtime to lean on and is MORE exposed,
+ *  not less.
+ *
+ *  These are not stylistic preferences. Every one is something GAME_SYSTEM
+ *  states as a hard requirement, chosen because its absence means the build is
+ *  not a game rather than a plain-looking one, and because none can be
+ *  satisfied by boilerplate. */
+const FLOOR_2D: Array<[string, RegExp]> = [
+  ["a render loop — nothing moves without one", /requestAnimationFrame\s*\(/],
+  ["a 2D drawing context", /getContext\s*\(\s*['"]2d['"]/],
+  // "Works with BOTH mouse and touch" is a hard requirement, and a phone is the
+  // likeliest device for a shared game link. A build with no touch path at all
+  // is unplayable for most of the people who will ever open it.
+  ["touch input — most players will be on a phone", /touchstart|pointerdown/],
+  // "Procedural WebAudio sound design ... + a mute button". A silent build is
+  // the single most common sign the model stopped early.
+  ["sound", /AudioContext|webkitAudioContext/],
+];
+
+export function missing2dFloor(html: string): string[] {
+  return FLOOR_2D.filter(([, re]) => !re.test(html)).map(([n]) => n);
+}
+
+/** The 2D substance floor, calibrated on the only two real measurements of the
+ *  2D prompt this platform owns — the /api/forge-selftest run of 18 Aug, which
+ *  probes GAME_SYSTEM at live 2D budgets:
+ *
+ *      gemini   35,973 bytes   ok
+ *      openai    8,411 bytes   ok      <- structurally fine, a third of a game
+ *      claude    truncated     fail
+ *
+ *  GAME_SYSTEM asks for 650-900 lines. 8,411 bytes is around 250. 12,000 sits
+ *  far enough above the thin build to reject it and far enough below a complete
+ *  one (gemini measured three times this) that a genuinely concise game still
+ *  ships. Demoted rather than discarded, exactly as in 3D: if every provider
+ *  comes in short, the best of them is still better than nothing. */
+export const MIN_2D_BYTES = 12_000;
+
 /** Every inline script in a shipping build must PARSE. A syntax error is a
  *  guaranteed-dead game — and with three providers on the gateway, broken code
  *  must burn through to the NEXT provider, not reach a creator's screen.
@@ -717,7 +761,16 @@ export async function generateGameHtml(
   // (An earlier commit today put claude first, reasoning that the JOSHRIX3D
   // runtime had made games short enough to stop the truncation. The probe above
   // disproved that within the hour. Evidence, then order — not the reverse.)
-  const chain = is3d ? [gemini, openai, claude] : [openai, gemini, claude];
+  /* ONE ORDER FOR BOTH LANES, and the evidence for it is 2D evidence.
+   *
+   * /api/forge-selftest probes GAME_SYSTEM — the 2D prompt, at 2D budgets. Its
+   * 18 Aug run measured gemini 35,973 bytes ok, openai 8,411 ok, claude
+   * truncated at 159s. That result was used to put gemini first in 3D; the lane
+   * it actually measured, 2D, was left leading with openai — the provider that
+   * returned a third of a game. Same measurement, same conclusion, both lanes.
+   *
+   * claude stays last on measured truncation, not preference. */
+  const chain = [gemini, openai, claude];
   const errors: string[] = [];
   // Whole-chain time budget: the serverless function dies hard at 300s, and a
   // reply must still be built, settled, and persisted after generation. Skip
@@ -766,9 +819,9 @@ export async function generateGameHtml(
           if (!subFloor) subFloor = { html: r.html, provider: c.name, usage: r.usage };
           continue;
         }
-        const miss = missing3dFloor(r.html);
-        if (miss.length) {
-          errors.push(c.name + ": below the 3D fidelity floor (missing: " + miss.join(", ") + ")");
+        const miss3 = missing3dFloor(r.html);
+        if (miss3.length) {
+          errors.push(c.name + ": below the 3D fidelity floor (missing: " + miss3.join(", ") + ")");
           // The backstop is for a build that IS a game but looks cheap. A build
           // on the runtime that failed this floor is not a game at all — it boots
           // the runtime and leaves its empty default world on screen. Keeping
@@ -776,6 +829,21 @@ export async function generateGameHtml(
           // with a button, which is worse than the deterministic engine build we
           // would otherwise ship. So it is discarded outright.
           if (!subFloor && !usesEngine(r.html)) subFloor = { html: r.html, provider: c.name, usage: r.usage };
+          continue;
+        }
+      } else {
+        // THE 2D LANE. It had no gate at all beyond the security scan, which is
+        // how a stub reached a paying creator. Same two-stage shape as 3D:
+        // substance first, then the requirements the prompt actually states.
+        if (r.html.length < MIN_2D_BYTES) {
+          errors.push(c.name + `: only ${r.html.length} bytes — below the ${MIN_2D_BYTES}-byte substance floor for a 2D game`);
+          if (!subFloor) subFloor = { html: r.html, provider: c.name, usage: r.usage };
+          continue;
+        }
+        const miss2 = missing2dFloor(r.html);
+        if (miss2.length) {
+          errors.push(c.name + ": below the 2D floor (missing: " + miss2.join(", ") + ")");
+          if (!subFloor) subFloor = { html: r.html, provider: c.name, usage: r.usage };
           continue;
         }
       }

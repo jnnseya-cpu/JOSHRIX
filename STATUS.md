@@ -12,6 +12,33 @@ Last updated: 2026-08-20 (third reference game, played end to end by a test)
 `GO-TO-MARKET.md` is the launch plan: **Nairobi**, 18 Aug – 15 Nov 2026, £2,650 lean /
 £6,100 with an agency. It is gated on the forge working — items 1 and 2 below.
 
+## The 2D lane had no quality gate at all — fixed 20 Aug
+
+Tracing "what happens if a user makes a 2D game" found that **every quality gate
+in the gateway lived inside `if (is3d)`**. A 2D build faced the security scan and
+then `looksPlayable()`, which returns true if the string `<canvas` appears
+anywhere in the file. A 2,000-byte stub passed and shipped.
+
+**A correction that matters.** The `/api/forge-selftest` numbers of 18 Aug —
+gemini 35,973 bytes ok, openai 8,411 ok, claude truncated — were measured with
+`GAME_SYSTEM`, the **2D** prompt, at 2D budgets. I used them to diagnose and
+reorder the **3D** chain. The conclusion may still hold for 3D, but it was never
+measured there; the lane those numbers actually describe is 2D, and 2D was left
+leading with openai, the provider that returned a third of a game.
+
+Now: `MIN_2D_BYTES = 12_000` (openai's measured 8,411 is ~250 lines against the
+prompt's own 650-line minimum; gemini's complete build was three times the floor),
+a `FLOOR_2D` of four things `GAME_SYSTEM` states outright — a render loop, a 2D
+context, a path a finger can take, and sound — and one provider order for both
+lanes, gemini first. Short builds are demoted to fallback, not discarded, so a
+creator still gets the best of a bad run. 26 assertions in `tests/t14`.
+
+**2D still has no runtime.** The model writes the loop, input, collision, HUD and
+state machine from scratch every time — exactly the condition 3D was in before
+9 Aug, which is when 3D output started being usable. The floor stops the worst
+builds shipping; it does not make good ones. The 2D runtime port is the fix and
+it is still open.
+
 ## A third reference game, and the first automated proof one is playable — 20 Aug
 
 **`/games/midnight-post`** — drive the night post van through a sleeping village,
