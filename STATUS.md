@@ -7,6 +7,27 @@ Last updated: 2026-08-22 (character library landed; the runtime got a real sound
 
 ---
 
+## The deploy was about to ship 736MB of dead weight — fixed 22 Aug
+
+`vercel.json` sets `outputDirectory: "frontend"` and there was no `.vercelignore`,
+so **every byte under `frontend/` was uploaded and served** — including
+`frontend/assets/models3d/_incoming/`, the 736MB of raw `.gltf + .bin + png` the
+suppliers ship, which the ingest had already packed losslessly into the `.glb`
+files under `packs/`. No player ever fetches a byte of it. The deploy was **983MB,
+of which 748MB was waste**; it is now ~235MB.
+
+This was not cosmetic. A deploy that size is slow at best and refused at worst, and
+a refused deploy means the model library silently never reaches the site: every game
+the forge builds 404s on its characters and the creator is **charged for a build
+that cannot run.** It appeared the moment the 22 Aug upload landed and would have
+hit the first forge run after it.
+
+The uploads stay in git — they are the source a re-ingest runs from and cannot be
+re-downloaded from this environment (kenney.nl and quaternius.com are both blocked
+by proxy policy) — so ignoring them at deploy time is the fix, not deleting them.
+
+---
+
 ## What is actually in the asset library — settle this, stop re-deriving it
 
 Both suppliers Justin paid for are **in the repo and shipping**. This section exists

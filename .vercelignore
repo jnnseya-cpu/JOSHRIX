@@ -1,0 +1,22 @@
+# What must NOT be uploaded to Vercel.
+#
+# vercel.json sets outputDirectory: "frontend", so every byte under frontend/ is
+# uploaded and served. After the 22 Aug character upload that came to 983MB, of
+# which 736MB was frontend/assets/models3d/_incoming — the raw .gltf + .bin + png
+# a supplier ships, which the ingest already packed losslessly into the .glb files
+# under packs/. No player ever fetches a byte of it.
+#
+# That is not merely waste. A deploy that large is slow at best and refused at
+# worst, and a refused deploy means the model library silently does not reach the
+# site: every game the forge builds 404s on its characters and the creator is
+# charged for a build that cannot run. The uploads must stay in git — they are the
+# source a re-ingest runs from, and re-downloading them is not possible from the
+# build environment — so ignoring them here is the fix, not deleting them.
+frontend/assets/models3d/_incoming/
+frontend/assets/sprites/_incoming/
+
+# Dev-only. The test suite compiles api/ and shared/ into its own throwaway tree;
+# neither the tests nor the asset tooling is part of the deployed app.
+tests/
+tools/
+.testbuild/
