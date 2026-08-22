@@ -254,6 +254,7 @@ Include these three tags, in this order, and nothing else:
 <script src="https://www.joshrix.com/assets/vendor/joshrix3d-1.js"><\/script>
 The runtime already owns, and guarantees, every part that has historically shipped broken: the canvas is created and on screen before your first line runs; the loop renders from frame one and survives a throwing frame; shadows, fog, a procedural sky dome whose horizon matches the fog exactly, a textured ground, a three-light rig; the title and game-over screens; the HUD; drag and WASD input; a twenty-sound procedural sound library and seven looping ambience beds, opened on the first gesture, with a mute button; a particle pool; portrait and landscape camera framing; and a reduced render budget on phones. You do NOT write any of that, and you must not try.
 var G = JOSHRIX3D.boot({ title, titleAccent, tagline, howTo, arena, playRadius, accent, sky:{top,mid,haze}, ground:{base,speckle} });
+THE BOOT CONFIG IS THE MOOD, AND IT IS NOT OPTIONAL. If the concept says night, rain, dusk, snow, desert or underground, the sky and ground colours here MUST say so too — leaving the defaults gives a bright blue afternoon no matter what the concept asked for, and the creator sees their night thriller rendered as a sunny field. Set sky.top, sky.mid, sky.haze and ground.base from the concept's own palette before you write anything else.
 sky.haze is the horizon and the fog, so it is the colour that fills most of the frame — pick THAT one for the mood, and use sky.mid/sky.top for the band above it. Add sea:true ONLY for an island, coast or ocean concept: it lays a wide water disc that becomes the horizon and hides the sky, which is wrong for a forest, a desert, a city or space.
 What G gives you: G.scene G.camera G.renderer G.THREE · G.state G.score G.lives G.wave G.elapsed · G.keys G.target (a Vector3 the pointer and WASD both steer) · G.arena G.playRadius
 - G.load(key, "lib/guardian", { height: 1.9, onLoad: fn }) — queue a model, chainable, NEVER blocks. Pass height for anything upright, size for wide flat things like a nest or a platform (sizing a flat disc by height scales it enormously), or scale for a raw multiplier.
@@ -338,6 +339,7 @@ HARD REQUIREMENTS — the gateway REJECTS a 3D file missing any of these three, 
 GAME REQUIREMENTS:
 - Player-controlled entity with smooth eased movement; collisions via distance checks. Works with BOTH touch (drag) and mouse + arrow/WASD keys. window resize handler; renderer.setPixelRatio(Math.min(devicePixelRatio,2)); antialias:true.
 - HUD as styled DOM overlay divs (position:fixed) over the WebGL canvas: score, lives/health, level name — styled to match the game's identity. Animated title overlay with START -> gameplay -> win/lose overlay with restart. A pause button.
+- EVERY NUMBER THE PLAYER SEES IS FORMATTED. g.elapsed is a float in seconds, so a timer written straight into the HUD renders as "Time: 04:0.36268333333339934". Round or pad every value before it reaches the screen — Math.floor for a countdown, String(n).padStart(2,"0") for a clock, Math.round for a percentage. A raw float on screen makes a finished game look broken.
 - Rising difficulty across the blueprint's levels. 3-8 minute session. Distinct enemy behaviours (patrol, chase, ambush — not one clone).
 - Sound: call G.sfx("<name>") on every event the player causes or suffers, and set one G.ambience(...) bed in G.onStart. Do NOT write an AudioContext, an oscillator or a noise buffer — the runtime owns all of it, including the mute button and opening audio on the first gesture. A build that hand-rolls a synth is rebuilding the engine, which is the failure mode here.
 - All player-facing text in the creator's language. Age-appropriate. No real brands or licensed characters.
@@ -347,6 +349,7 @@ SIZE: 260-420 lines of GAME. The runtime is the engine, so a finished 3D game on
 ${RUNTIME_SAFETY}
 
 MODEL LIBRARY — reference list, below. It is a parts catalogue, not a brief. Pick the handful your concept needs and move on; a build that lists beautiful models and forgets the gameplay above has failed.
+LOAD AT LEAST FIVE DIFFERENT MODELS, and use G.scatter to repeat the scenery ones. This is a hard gate, not advice: a build with a character and one crate on an empty ground disc is REFUSED. The three reference games shipping on this platform each load twelve to thirteen. If the concept names specific models, use those first — the creator picked them.
 JOSHRIX MODEL LIBRARY — 2,435 hosted low-poly GLB models across four libraries, every one verified to load.
 SCALE — READ THIS BEFORE PLACING ANYTHING. The three libraries are NOT built at the same scale, and mixing them raw is the most common way a 3D build looks broken:
 · LIBRARY 1 (lib/) is metric — a character is ~2 units tall, so 1 unit ≈ 1 metre.
@@ -623,8 +626,28 @@ export function countLibraryModels(html: string): number {
   return seen.size;
 }
 
+/* ONE model satisfied "did it use the library", and one model is not a world.
+ *
+ * A build shipped with a lone character and a single crate on an empty disc —
+ * the creator's own words were "no gun, no city, nothing". It passed every gate
+ * because every gate it faced was satisfiable once. The three reference games
+ * that actually work use 13, 13 and 12 distinct library models, so five is a
+ * floor no working build has ever come near failing, and it is exactly what
+ * separates a world from a placeholder. */
+export const MIN_ENGINE_MODELS = 5;
+
 export function missing3dFloor(html: string): string[] {
-  if (usesEngine(html)) return FLOOR_ENGINE.filter(([, re]) => !re.test(html)).map(([n]) => n);
+  if (usesEngine(html)) {
+    const missing = FLOOR_ENGINE.filter(([, re]) => !re.test(html)).map(([n]) => n);
+    const used = countLibraryModels(html);
+    if (used < MIN_ENGINE_MODELS) {
+      missing.push(
+        `a world, not a placeholder — only ${used} library model${used === 1 ? "" : "s"} ` +
+        `on screen and the floor is ${MIN_ENGINE_MODELS}; the shipped reference games use 12 to 13`,
+      );
+    }
+    return missing;
+  }
   return FLOOR_3D.filter(([, re]) => !re.test(html)).map(([n]) => n);
 }
 

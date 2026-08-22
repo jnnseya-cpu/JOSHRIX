@@ -151,7 +151,7 @@ const outcome = await pg.evaluate(async () => {
   const clear = () => { K.w = K.s = K.a = K.d = false; };
   const t0 = Date.now();
   let delivered0 = G.stops.filter((s) => s.done).length;
-  while (G.state === 'play' && Date.now() - t0 < 180000) {
+  while (G.state === 'play' && Date.now() - t0 < 240000) {
     const stop = G.stops.find((s) => s.beacon.visible) || G.stops.find((s) => !s.done);
     if (!stop) break;
     const dx = stop.group.position.x - G.van.position.x;
@@ -179,7 +179,21 @@ const outcome = await pg.evaluate(async () => {
     if (diff > 0.08) K.a = true; else if (diff < -0.08) K.d = true;
     // ease off on the approach: arriving flat out is not arriving
     if (dist > 3.8) K.w = true; else if (dist < 2.2) K.s = true;
-    await new Promise((r) => setTimeout(r, 60));
+    /* Wait on SIMULATED time, not the wall clock.
+       Dawn arrives after a fixed amount of G.elapsed, but a 60ms sleep buys a
+       different slice of game time depending on frame rate — and on this
+       GPU-less box the frame rate collapses when the other browser tests run
+       beside this one. Pacing by wall clock therefore gave the autopilot three
+       times fewer steering decisions per game-second in a full suite run than
+       standalone, so it drove badly and the round timed out: the test passed
+       alone and failed in the suite. Waiting for the game's own clock to move
+       makes the number of decisions per game-second identical at any frame
+       rate. The wall-clock bound below is only a hang guard. */
+    const mark = G.elapsed;
+    const guard = Date.now();
+    while (G.elapsed - mark < 0.06 && Date.now() - guard < 2000 && G.state === 'play') {
+      await new Promise((r) => requestAnimationFrame(r));
+    }
   }
   clear();
   return {

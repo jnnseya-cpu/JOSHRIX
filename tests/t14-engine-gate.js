@@ -133,10 +133,15 @@ console.log('\n== a 3D build must actually LOAD a model, not just call get() =='
   t('and the reason names the library',
     /library|blocky/i.test(G.missing3dFloor(PRIMITIVES).join(' ')), G.missing3dFloor(PRIMITIVES).join(' '));
 
-  const REAL = shell('G.load("hero","lib/hero_knight",{height:1.8}); G.load("tree","packs/kenney-nature-kit/tree_default",{height:4});');
+  /* Five models, because that is the floor: a character and one crate on an
+     empty disc is what "no gun, no city, nothing" looked like. */
+  const REAL = shell('G.load("hero","lib/hero_knight",{height:1.8}); G.load("tree","packs/kenney-nature-kit/tree_default",{height:4});'
+    + ' G.load("rock","packs/kenney-nature-kit/rock_large_a",{height:1.2});'
+    + ' G.load("car","vehicles/copcar",{height:1.4});'
+    + ' G.load("foe","packs/quaternius-monsters/orc",{height:1.8});');
   t('a build that loads real models passes', G.missing3dFloor(REAL).length === 0,
     JSON.stringify(G.missing3dFloor(REAL)));
-  t('countLibraryModels counts the distinct paths', G.countLibraryModels(REAL) === 2,
+  t('countLibraryModels counts the distinct paths', G.countLibraryModels(REAL) === 5,
     String(G.countLibraryModels(REAL)));
   t('and reports zero for a build with none', G.countLibraryModels(PRIMITIVES) === 0);
 
@@ -153,6 +158,28 @@ console.log('\n== a 3D build must actually LOAD a model, not just call get() =='
     G.missing3dFloor(SILENT.replace('G.stat("SCORE",0);', 'G.stat("SCORE",0); G.ambience("night");')).length === 0);
   t('and so does the raw oscillator, which published games still use',
     G.missing3dFloor(SILENT.replace('G.stat("SCORE",0);', 'G.stat("SCORE",0); G.beep(440,.1);')).length === 0);
+
+  /* A character and one crate on an empty ground disc passed every gate and
+     shipped. Every gate it faced was satisfiable ONCE, and one model is not a
+     world. Five is well under the 12-13 the reference games use, so this can
+     only reject a build that genuinely has nothing in it. */
+  const THIN = shell('G.load("hero","packs/quaternius-characters/doctor_male_young",{height:1.9});'
+    + ' G.load("crate","packs/kenney-platformerkit/crate",{height:0.8});');
+  t('a character and one crate on an empty field is refused',
+    G.missing3dFloor(THIN).length > 0, JSON.stringify(G.missing3dFloor(THIN)));
+  t('and the reason says how many it used and how many it needed',
+    /only 2 library models/.test(G.missing3dFloor(THIN).join(' ')), G.missing3dFloor(THIN).join(' '));
+  t('the floor is the constant, not a magic number', G.MIN_ENGINE_MODELS === 5,
+    String(G.MIN_ENGINE_MODELS));
+
+  /* The floor must never reject the games that actually shipped. */
+  const fs2 = require('fs'), path2 = require('path');
+  const gamesDir = path2.join(REPO, 'frontend', 'games');
+  for (const f of fs2.readdirSync(gamesDir).filter((x) => x.endsWith('.html'))) {
+    const html = fs2.readFileSync(path2.join(gamesDir, f), 'utf8');
+    t(`${f} clears the model floor (${G.countLibraryModels(html)} models)`,
+      G.countLibraryModels(html) >= G.MIN_ENGINE_MODELS);
+  }
 }
 
 console.log('\n== the floor must not reject the games that actually work ==');
