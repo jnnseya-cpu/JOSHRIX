@@ -7,6 +7,38 @@ Last updated: 2026-08-22 (character library landed; the runtime got a real sound
 
 ---
 
+## THE BUSINESS MODEL — Justin's words, 22 Aug. Do not restate it any other way.
+
+> Customers create games and sell them in our marketplace. It can be in our place,
+> or on the user's own Android and iOS developer account.
+
+Three distribution routes, and the third is **not built**:
+
+| Route | State |
+|---|---|
+| Sell on the JOSHRIX marketplace | **Built** — `/api/listing`, `/api/checkout`, `/api/payout`, commission 7.5–25% by plan |
+| Play free on the arcade / by link | **Built** |
+| **Publish to the creator's OWN Play Store / App Store developer account** | **SPECIFIED, NOT BUILT** |
+
+The third route is written into the specs already — `PLATFORM.md` §127 promises "generate an
+Android package, prepare an iOS project", and `DATA-MODEL.md` carries
+`target: "web" | "android" | "ios" | "desktop" | "source"` — but **nothing in `api/`
+implements any of it.** `arcade.html` also tells visitors the shelf "ships inside the
+JOSHRIX Arcade apps on Google Play and the App Store", which is a claim about apps that
+do not exist. Both are marketing ahead of the code and should be treated as debt.
+
+Technically it is a wrapper job, not a rewrite: the games are self-contained HTML, so
+Android is a Trusted Web Activity or a Capacitor shell, and iOS is a WKWebView project the
+creator opens in Xcode under their own Apple account. It is real work — signing, icons,
+store metadata, age ratings — but nothing about the current architecture blocks it.
+
+**I described the product as "browser games, one HTML file" on 22 Aug and Justin corrected
+me. That framing was mine, not his, and it made a distribution route sound like a ceiling.
+The format is the advantage — no install for the player — and it does not preclude a
+creator shipping the same game to their own store account.**
+
+---
+
 ## The deploy was about to ship 736MB of dead weight — fixed 22 Aug
 
 `vercel.json` sets `outputDirectory: "frontend"` and there was no `.vercelignore`,
