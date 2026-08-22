@@ -12,7 +12,7 @@
  *   npm i three@0.160.0
  *   node tests/t17-characters.mjs
  */
-import { clipName, embeddedImage, injectTexture, slug, packGltf } from "../tools/ingest-characters.mjs";
+import { clipName, embeddedImage, injectTexture, slug, packGltf, repairMaterials } from "../tools/ingest-characters.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -159,6 +159,72 @@ console.log("\n== .gltf + .bin + loose texture packs into one .glb ==");
                      pbin.subarray(nv.byteOffset || 0, (nv.byteOffset || 0) + nv.byteLength)) === 0);
   }
   fs.rmSync(dir, { recursive: true, force: true });
+}
+
+/* The Nov 2019 Quaternius export writes Skin as near-black in 48 of 52 files.
+ * The repair has to be narrow: plenty of materials in the same packs are meant
+ * to be nearly black (Black, Visor, Eye_Black, Hair), and brightening those
+ * would be a worse bug than the one being fixed. So it matches the exact broken
+ * constant, and these assertions are what keep it that narrow. */
+console.log("\n== the black-skin repair, and everything it must NOT touch ==");
+const BROKEN = 0.013410447165369987;
+const SKIN = [0.6172067523002625, 0.4178851246833801, 0.23839758336544037];
+const mat = (name, c) => ({ name, pbrMetallicRoughness: { baseColorFactor: c } });
+
+{
+  const doc = { materials: [mat("Skin", [BROKEN, BROKEN, BROKEN, 1])] };
+  t("the broken Skin constant is repaired", repairMaterials(doc) === 1);
+  t("repaired to the artist's own skin tone from their 2022 packs",
+    doc.materials[0].pbrMetallicRoughness.baseColorFactor.slice(0, 3)
+      .every((v, i) => Math.abs(v - SKIN[i]) < 1e-12));
+  t("alpha is preserved", doc.materials[0].pbrMetallicRoughness.baseColorFactor[3] === 1);
+}
+{
+  // the goblins and zombies: a Skin material that is dark but not THE constant
+  const doc = { materials: [mat("Skin", [0.042, 0.077, 0.035, 1])] };
+  t("a Skin that is merely dark is left alone", repairMaterials(doc) === 0);
+  t("...and its colour is untouched",
+    doc.materials[0].pbrMetallicRoughness.baseColorFactor[1] === 0.077);
+}
+{
+  const doc = {
+    materials: [mat("Black", [BROKEN, BROKEN, BROKEN, 1]), mat("Eye_Black", [BROKEN, BROKEN, BROKEN, 1]),
+                mat("Visor", [BROKEN, BROKEN, BROKEN, 1]), mat("Hair", [BROKEN, BROKEN, BROKEN, 1])],
+  };
+  t("materials that are SUPPOSED to be black are never brightened", repairMaterials(doc) === 0);
+}
+{
+  const doc = { materials: [mat("Skin", [BROKEN, BROKEN, 0.5, 1])] };
+  t("a partial match is not a match", repairMaterials(doc) === 0);
+}
+t("a document with no materials does not throw", repairMaterials({}) === 0);
+
+// and the library itself: no character may ship with a black face again
+{
+  const packs = path.resolve("frontend/assets/models3d/packs");
+  let dark = 0, checked = 0;
+  if (fs.existsSync(packs)) {
+    for (const p of fs.readdirSync(packs)) {
+      const d = path.join(packs, p);
+      if (!fs.statSync(d).isDirectory()) continue;
+      for (const f of fs.readdirSync(d).filter((x) => x.endsWith(".glb"))) {
+        const b = fs.readFileSync(path.join(d, f));
+        if (b.length < 20 || b.readUInt32LE(0) !== 0x46546c67) continue;
+        let o = 12, j = null;
+        while (o + 8 <= b.length) {
+          const len = b.readUInt32LE(o), ty = b.readUInt32LE(o + 4);
+          if (ty === 0x4e4f534a) { try { j = JSON.parse(b.subarray(o + 8, o + 8 + len).toString("utf8")); } catch {} }
+          o += 8 + ((len + 3) & ~3);
+        }
+        const m = (j?.materials || []).find((x) => /^skin$/i.test(x.name || ""));
+        const c = m?.pbrMetallicRoughness?.baseColorFactor;
+        if (!c) continue;
+        checked++;
+        if (c.slice(0, 3).every((v) => Math.abs(v - BROKEN) < 1e-9)) dark++;
+      }
+    }
+  }
+  t(`no shipped model carries the broken Skin constant (${checked} checked)`, dark === 0, dark + " still black");
 }
 
 console.log(`\n  ${pass} passed, ${fail} failed`);

@@ -53,12 +53,12 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "model-library",
-    name: "2,273 game-ready 3D models, included",
+    name: "2,435 game-ready 3D models, included",
     group: "Assets",
     keywords: ["free 3D game assets", "CC0 low poly models", "game art without an artist"],
     proof: [
-      "2,273 GLB models across 24 packs, every one load-tested in a real browser before it shipped.",
-      "Includes 8 rigged, textured, animated humans with idle, run and jump clips.",
+      "2,435 GLB models across 34 packs, every one load-tested in a real browser before it shipped.",
+      "Includes 178 rigged, textured, animated characters, creatures and animals — humans, monsters, mounts and mechs, with full skeletal clip sets.",
       "All CC0, so a creator owns the output outright with no attribution burden.",
     ],
     href: "/studio",

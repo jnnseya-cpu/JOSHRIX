@@ -27436,6 +27436,4463 @@
           "tris": 17260
         }
       ]
+    },
+    "quaternius-animals": {
+      "license": "CC0 1.0 — Quaternius (quaternius.com)",
+      "models": [
+        {
+          "file": "packs/quaternius-animals/alpaca.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 783920,
+          "height": 5.398,
+          "width": 1.266,
+          "depth": 4.299,
+          "tris": 2060,
+          "clips": [
+            "Attack_Headbutt",
+            "Attack_Kick",
+            "Death",
+            "Eating",
+            "Gallop",
+            "Gallop_Jump",
+            "Idle",
+            "Idle_2",
+            "Idle_Headlow",
+            "Idle_HitReact1",
+            "Idle_HitReact2",
+            "Jump_toIdle",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-animals/bull.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1918476,
+          "height": 4.587,
+          "width": 2.513,
+          "depth": 8.067,
+          "tris": 2418,
+          "clips": [
+            "Attack_Headbutt",
+            "Attack_Kick",
+            "Death",
+            "Eating",
+            "Gallop",
+            "Gallop_Jump",
+            "Idle",
+            "Idle_2",
+            "Idle_Headlow",
+            "Idle_HitReact1",
+            "Idle_HitReact2",
+            "Jump_toIdle",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-animals/cow.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 1921500,
+          "height": 4.587,
+          "width": 2.312,
+          "depth": 8.067,
+          "tris": 2450,
+          "clips": [
+            "Attack_Headbutt",
+            "Attack_Kick",
+            "Death",
+            "Eating",
+            "Gallop",
+            "Gallop_Jump",
+            "Idle",
+            "Idle_2",
+            "Idle_Headlow",
+            "Idle_HitReact1",
+            "Idle_HitReact2",
+            "Jump_toIdle",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-animals/deer.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 2013616,
+          "height": 4.274,
+          "width": 1.459,
+          "depth": 4.397,
+          "tris": 2098,
+          "clips": [
+            "Attack_Headbutt",
+            "Attack_Kick",
+            "Death",
+            "Eating",
+            "Gallop",
+            "Gallop_Jump",
+            "Idle",
+            "Idle_2",
+            "Idle_Headlow",
+            "Idle_HitReact1",
+            "Idle_HitReact2",
+            "Jump_toIdle",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-animals/donkey.glb",
+          "tags": [
+            "collectable",
+            "prop"
+          ],
+          "bytes": 2181160,
+          "height": 3.954,
+          "width": 1.16,
+          "depth": 4.708,
+          "tris": 2000,
+          "clips": [
+            "Attack_Headbutt",
+            "Attack_Kick",
+            "Death",
+            "Eating",
+            "Gallop",
+            "Gallop_Jump",
+            "Idle",
+            "Idle_2",
+            "Idle_Headlow",
+            "Idle_HitReact1",
+            "Idle_HitReact2",
+            "Jump_toIdle",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-animals/fox.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 1909888,
+          "height": 2.677,
+          "width": 1.062,
+          "depth": 5.883,
+          "tris": 1848,
+          "clips": [
+            "Attack",
+            "Death",
+            "Eating",
+            "Gallop",
+            "Gallop_Jump",
+            "Idle",
+            "Idle_2",
+            "Idle_2_HeadLow",
+            "Idle_HitReact1",
+            "Idle_HitReact2",
+            "Jump_ToIdle",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-animals/horse.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 2215736,
+          "height": 4.824,
+          "width": 1.407,
+          "depth": 5.676,
+          "tris": 2182,
+          "clips": [
+            "Attack_Headbutt",
+            "Attack_Kick",
+            "Death",
+            "Eating",
+            "Gallop",
+            "Gallop_Jump",
+            "Idle",
+            "Idle_2",
+            "Idle_Headlow",
+            "Idle_HitReact1",
+            "Idle_HitReact2",
+            "Jump_toIdle",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-animals/horse_white.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 2214712,
+          "height": 4.824,
+          "width": 1.407,
+          "depth": 5.676,
+          "tris": 2182,
+          "clips": [
+            "Attack_Headbutt",
+            "Attack_Kick",
+            "Death",
+            "Eating",
+            "Gallop",
+            "Gallop_Jump",
+            "Idle",
+            "Idle_2",
+            "Idle_Headlow",
+            "Idle_HitReact1",
+            "Idle_HitReact2",
+            "Jump_toIdle",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-animals/husky.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1849744,
+          "height": 3.191,
+          "width": 0.99,
+          "depth": 3.889,
+          "tris": 1920,
+          "clips": [
+            "Attack",
+            "Death",
+            "Eating",
+            "Gallop",
+            "Gallop_Jump",
+            "Idle",
+            "Idle_2",
+            "Idle_2_HeadLow",
+            "Idle_HitReact1",
+            "Idle_HitReact2",
+            "Jump_ToIdle",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-animals/shiba_inu.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1752188,
+          "height": 3.096,
+          "width": 1.071,
+          "depth": 3.948,
+          "tris": 1950,
+          "clips": [
+            "Attack",
+            "Death",
+            "Eating",
+            "Gallop",
+            "Gallop_Jump",
+            "Idle",
+            "Idle_2",
+            "Idle_2_HeadLow",
+            "Idle_HitReact1",
+            "Idle_HitReact2",
+            "Jump_ToIdle",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-animals/stag.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2044408,
+          "height": 5.378,
+          "width": 2.536,
+          "depth": 4.837,
+          "tris": 3670,
+          "clips": [
+            "Attack_Headbutt",
+            "Attack_Kick",
+            "Death",
+            "Eating",
+            "Gallop",
+            "Gallop_Jump",
+            "Idle",
+            "Idle_2",
+            "Idle_Headlow",
+            "Idle_HitReact1",
+            "Idle_HitReact2",
+            "Jump_toIdle",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-animals/wolf.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 1920232,
+          "height": 2.681,
+          "width": 1.065,
+          "depth": 5.553,
+          "tris": 1962,
+          "clips": [
+            "Attack",
+            "Death",
+            "Eating",
+            "Gallop",
+            "Gallop_Jump",
+            "Idle",
+            "Idle_2",
+            "Idle_2_HeadLow",
+            "Idle_HitReact1",
+            "Idle_HitReact2",
+            "Jump_ToIdle",
+            "Walk"
+          ]
+        }
+      ]
+    },
+    "quaternius-base-characters": {
+      "license": "CC0 1.0 — Quaternius (quaternius.com)",
+      "models": [
+        {
+          "file": "packs/quaternius-base-characters/superhero_female_full_body.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 1711516,
+          "height": 1.775,
+          "width": 1.669,
+          "depth": 0.303,
+          "tris": 15060
+        },
+        {
+          "file": "packs/quaternius-base-characters/superhero_male_full_body.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 1213484,
+          "height": 1.82,
+          "width": 1.859,
+          "depth": 0.291,
+          "tris": 14318
+        }
+      ]
+    },
+    "quaternius-characters": {
+      "license": "CC0 1.0 — Quaternius (quaternius.com)",
+      "models": [
+        {
+          "file": "packs/quaternius-characters/base_character.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 927676,
+          "height": 3.147,
+          "width": 3.24,
+          "depth": 0.993,
+          "tris": 2104,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/blue_soldier_female.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1281928,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.423,
+          "tris": 7066,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/blue_soldier_male.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1073860,
+          "height": 3.284,
+          "width": 3.24,
+          "depth": 1.148,
+          "tris": 2994,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/casual2_female.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1252420,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.423,
+          "tris": 6752,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/casual2_male.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1068480,
+          "height": 3.205,
+          "width": 3.24,
+          "depth": 1.047,
+          "tris": 3216,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/casual3_female.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1336192,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.422,
+          "tris": 8444,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/casual3_male.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1153800,
+          "height": 3.205,
+          "width": 3.24,
+          "depth": 1.083,
+          "tris": 4920,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/casual_bald.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 985380,
+          "height": 3.147,
+          "width": 3.24,
+          "depth": 0.993,
+          "tris": 2312,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/casual_female.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1245928,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.529,
+          "tris": 6624,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/casual_male.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1238356,
+          "height": 3.325,
+          "width": 3.24,
+          "depth": 1.325,
+          "tris": 6492,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/chef_female.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1359128,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.422,
+          "tris": 8768,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/chef_hat.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1078988,
+          "height": 3.845,
+          "width": 3.24,
+          "depth": 1.105,
+          "tris": 3048,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/chef_male.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1197076,
+          "height": 3.205,
+          "width": 3.24,
+          "depth": 1.159,
+          "tris": 5452,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/cow.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 1066000,
+          "height": 2.909,
+          "width": 3.24,
+          "depth": 1.119,
+          "tris": 2332,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/cowboy_female.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 1270184,
+          "height": 3.533,
+          "width": 3.24,
+          "depth": 1.532,
+          "tris": 6840,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/cowboy_hair.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 1246808,
+          "height": 3.325,
+          "width": 3.24,
+          "depth": 1.325,
+          "tris": 6560,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/cowboy_male.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 1080988,
+          "height": 3.517,
+          "width": 3.24,
+          "depth": 1.416,
+          "tris": 3176,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/doctor_female_old.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1255832,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.423,
+          "tris": 6790,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/doctor_female_young.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1344048,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.422,
+          "tris": 8530,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/doctor_male_old.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1161700,
+          "height": 3.205,
+          "width": 3.24,
+          "depth": 1.083,
+          "tris": 5006,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/doctor_male_young.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1238856,
+          "height": 3.325,
+          "width": 3.24,
+          "depth": 1.325,
+          "tris": 6498,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/elf.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1052444,
+          "height": 4.096,
+          "width": 3.24,
+          "depth": 1.73,
+          "tris": 2594,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/goblin_female.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 1271896,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.423,
+          "tris": 6972,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/goblin_male.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 1018728,
+          "height": 3.147,
+          "width": 3.24,
+          "depth": 1.009,
+          "tris": 2462,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/kimono_female.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1379780,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.325,
+          "tris": 9236,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/kimono_male.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1028488,
+          "height": 3.338,
+          "width": 3.24,
+          "depth": 1.059,
+          "tris": 2540,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/knight_golden_female.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 1256760,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.529,
+          "tris": 6224,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/knight_golden_male.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 1089412,
+          "height": 3.186,
+          "width": 3.24,
+          "depth": 1.08,
+          "tris": 2964,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/knight_male.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 1091684,
+          "height": 3.589,
+          "width": 3.24,
+          "depth": 1.35,
+          "tris": 2992,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/ninja_female.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1292440,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.529,
+          "tris": 7104,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/ninja_male.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1058632,
+          "height": 3.157,
+          "width": 3.24,
+          "depth": 0.953,
+          "tris": 2720,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/ninja_male_hair.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1338900,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.156,
+          "tris": 8024,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/ninja_sand.glb",
+          "tags": [
+            "biome",
+            "nature"
+          ],
+          "bytes": 1058628,
+          "height": 3.157,
+          "width": 3.24,
+          "depth": 0.953,
+          "tris": 2720,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/ninja_sand_female.glb",
+          "tags": [
+            "biome",
+            "nature"
+          ],
+          "bytes": 1292436,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.529,
+          "tris": 7104,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/old_classy_female.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1278256,
+          "height": 3.772,
+          "width": 3.24,
+          "depth": 1.423,
+          "tris": 7008,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/old_classy_male.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1194392,
+          "height": 3.772,
+          "width": 3.24,
+          "depth": 1.154,
+          "tris": 5432,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/pirate_female.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1413272,
+          "height": 3.924,
+          "width": 3.24,
+          "depth": 1.389,
+          "tris": 9460,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/pirate_male.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1051292,
+          "height": 3.79,
+          "width": 3.24,
+          "depth": 1.337,
+          "tris": 2724,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/pug.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1045300,
+          "height": 2.835,
+          "width": 3.24,
+          "depth": 0.965,
+          "tris": 2124,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/soldier_female.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1281976,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.423,
+          "tris": 7066,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/soldier_male.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1073860,
+          "height": 3.284,
+          "width": 3.24,
+          "depth": 1.148,
+          "tris": 2994,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/suit_female.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1258672,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.423,
+          "tris": 6810,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/suit_male.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1208576,
+          "height": 3.325,
+          "width": 3.24,
+          "depth": 1.325,
+          "tris": 6518,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/viking_female.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1307924,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.422,
+          "tris": 7320,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/viking_helmet.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1286040,
+          "height": 3.554,
+          "width": 3.24,
+          "depth": 1.109,
+          "tris": 6498,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/viking_male.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1258324,
+          "height": 3.635,
+          "width": 3.24,
+          "depth": 1.321,
+          "tris": 6264,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/witch.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1286608,
+          "height": 4.292,
+          "width": 3.24,
+          "depth": 1.703,
+          "tris": 7066,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/wizard.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1260540,
+          "height": 4.096,
+          "width": 3.24,
+          "depth": 1.73,
+          "tris": 6482,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/worker_female.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1216648,
+          "height": 3.429,
+          "width": 3.24,
+          "depth": 1.508,
+          "tris": 5856,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/worker_male.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1030452,
+          "height": 3.336,
+          "width": 3.24,
+          "depth": 1.281,
+          "tris": 2524,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/zombie_female.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 1468944,
+          "height": 3.204,
+          "width": 3.24,
+          "depth": 1.325,
+          "tris": 9750,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        },
+        {
+          "file": "packs/quaternius-characters/zombie_male.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 1174692,
+          "height": 3.106,
+          "width": 3.24,
+          "depth": 0.993,
+          "tris": 4046,
+          "clips": [
+            "Death",
+            "Defeat",
+            "Idle",
+            "Jump",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Carry",
+            "Shoot_OneHanded",
+            "SitDown",
+            "StandUp",
+            "SwordSlash",
+            "Victory",
+            "Walk",
+            "Walk_Carry"
+          ]
+        }
+      ]
+    },
+    "quaternius-cute-monsters": {
+      "license": "CC0 1.0 — Quaternius (quaternius.com)",
+      "models": [
+        {
+          "file": "packs/quaternius-cute-monsters/alien.glb",
+          "tags": [
+            "space",
+            "scifi"
+          ],
+          "bytes": 370116,
+          "height": 2.057,
+          "width": 2.189,
+          "depth": 1.417,
+          "tris": 1720,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/alien_tall.glb",
+          "tags": [
+            "space",
+            "scifi"
+          ],
+          "bytes": 330432,
+          "height": 2.108,
+          "width": 2.029,
+          "depth": 1.575,
+          "tris": 1592,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/bat.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 338828,
+          "height": 1.754,
+          "width": 3.206,
+          "depth": 1.417,
+          "tris": 1200,
+          "clips": [
+            "Bite_Front",
+            "Death",
+            "Flying",
+            "HitRecieve"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/bee.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 302216,
+          "height": 1.897,
+          "width": 2.89,
+          "depth": 1.485,
+          "tris": 1492,
+          "clips": [
+            "Bite_Front",
+            "Death",
+            "Flying",
+            "HitRecieve"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/cactus.glb",
+          "tags": [
+            "biome",
+            "nature"
+          ],
+          "bytes": 399144,
+          "height": 2.224,
+          "width": 2.367,
+          "depth": 1.458,
+          "tris": 1500,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/chicken.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 348260,
+          "height": 1.613,
+          "width": 2.269,
+          "depth": 1.555,
+          "tris": 1040,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/crab.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 372408,
+          "height": 1.567,
+          "width": 2.567,
+          "depth": 1.417,
+          "tris": 1820,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/cthulhu.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 372880,
+          "height": 1.565,
+          "width": 3.206,
+          "depth": 1.49,
+          "tris": 1576,
+          "clips": [
+            "Bite_Front",
+            "Death",
+            "Flying",
+            "HitRecieve"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/cyclops.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 374356,
+          "height": 1.667,
+          "width": 1.637,
+          "depth": 1.473,
+          "tris": 972,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/deer.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 365228,
+          "height": 1.898,
+          "width": 1.891,
+          "depth": 1.446,
+          "tris": 1180,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/demon.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 379116,
+          "height": 1.624,
+          "width": 1.978,
+          "depth": 1.417,
+          "tris": 1640,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/ghost.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 288400,
+          "height": 1.398,
+          "width": 1.452,
+          "depth": 1.462,
+          "tris": 1000,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/green_demon.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 369148,
+          "height": 1.624,
+          "width": 1.684,
+          "depth": 1.417,
+          "tris": 1280,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/mushroom.glb",
+          "tags": [
+            "mushroom",
+            "nature",
+            "fantasy"
+          ],
+          "bytes": 270164,
+          "height": 2.071,
+          "width": 1.923,
+          "depth": 1.925,
+          "tris": 868,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/panda.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 335148,
+          "height": 1.641,
+          "width": 1.83,
+          "depth": 1.473,
+          "tris": 1428,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/penguin.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 274716,
+          "height": 1.613,
+          "width": 2.269,
+          "depth": 1.555,
+          "tris": 1040,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/pig.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 329284,
+          "height": 1.642,
+          "width": 1.902,
+          "depth": 1.891,
+          "tris": 1316,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/skull.glb",
+          "tags": [
+            "dungeon",
+            "dark"
+          ],
+          "bytes": 391484,
+          "height": 1.55,
+          "width": 1.461,
+          "depth": 1.465,
+          "tris": 450,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/tree.glb",
+          "tags": [
+            "tree",
+            "nature"
+          ],
+          "bytes": 402776,
+          "height": 2.846,
+          "width": 2.811,
+          "depth": 1.727,
+          "tris": 1368,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/yellow_dragon.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 421444,
+          "height": 1.647,
+          "width": 3.206,
+          "depth": 1.417,
+          "tris": 1592,
+          "clips": [
+            "Bite_Front",
+            "Death",
+            "Flying",
+            "HitRecieve"
+          ]
+        },
+        {
+          "file": "packs/quaternius-cute-monsters/yeti.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 338080,
+          "height": 1.667,
+          "width": 1.684,
+          "depth": 1.441,
+          "tris": 1292,
+          "clips": [
+            "Bite_Front",
+            "Bite_InPlace",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        }
+      ]
+    },
+    "quaternius-fantasy-outfits": {
+      "license": "CC0 1.0 — Quaternius (quaternius.com)",
+      "models": [
+        {
+          "file": "packs/quaternius-fantasy-outfits/female_peasant.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1093124,
+          "height": 1.525,
+          "width": 1.664,
+          "depth": 0.335,
+          "tris": 13568
+        },
+        {
+          "file": "packs/quaternius-fantasy-outfits/female_ranger.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 2840676,
+          "height": 1.798,
+          "width": 1.664,
+          "depth": 0.377,
+          "tris": 26966
+        },
+        {
+          "file": "packs/quaternius-fantasy-outfits/male_peasant.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1453912,
+          "height": 1.563,
+          "width": 1.799,
+          "depth": 0.352,
+          "tris": 12894
+        },
+        {
+          "file": "packs/quaternius-fantasy-outfits/male_ranger.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 2620680,
+          "height": 1.869,
+          "width": 1.799,
+          "depth": 0.373,
+          "tris": 26982
+        }
+      ]
+    },
+    "quaternius-mechs": {
+      "license": "CC0 1.0 — Quaternius (quaternius.com)",
+      "models": [
+        {
+          "file": "packs/quaternius-mechs/george.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 3391936,
+          "height": 6.528,
+          "width": 7.257,
+          "depth": 2.458,
+          "tris": 7864,
+          "clips": [
+            "Dance",
+            "Death",
+            "Hello",
+            "HitRecieve_1",
+            "HitRecieve_2",
+            "Idle",
+            "Jump",
+            "Kick",
+            "No",
+            "Pickup",
+            "Punch",
+            "Run",
+            "Run_Holding",
+            "Run_Tall",
+            "Shoot",
+            "SwordSlash",
+            "Walk",
+            "Walk_Holding",
+            "Walk_Tall",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-mechs/leela.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2379212,
+          "height": 5.276,
+          "width": 2.959,
+          "depth": 2.675,
+          "tris": 2368,
+          "clips": [
+            "Dance",
+            "Death",
+            "Hello",
+            "HitRecieve_1",
+            "HitRecieve_2",
+            "Idle",
+            "Jump",
+            "Kick",
+            "No",
+            "Pickup",
+            "Punch",
+            "Run",
+            "Run_Tall",
+            "Shoot",
+            "SwordSlash",
+            "Walk",
+            "Walk_Tall",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-mechs/mike.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2926700,
+          "height": 5.335,
+          "width": 8.535,
+          "depth": 1.664,
+          "tris": 6062,
+          "clips": [
+            "Dance",
+            "Death",
+            "Hello",
+            "HitRecieve_1",
+            "HitRecieve_2",
+            "Idle",
+            "Jump",
+            "Kick",
+            "No",
+            "Pickup",
+            "Punch",
+            "Run",
+            "Run_Holding",
+            "Shoot",
+            "SwordSlash",
+            "Walk",
+            "Walk_Holding",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-mechs/stan.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2449872,
+          "height": 6.462,
+          "width": 8.55,
+          "depth": 1.568,
+          "tris": 6110,
+          "clips": [
+            "Dance",
+            "Death",
+            "Hello",
+            "HitRecieve_1",
+            "HitRecieve_2",
+            "Idle",
+            "Jump",
+            "Kick",
+            "No",
+            "Pickup",
+            "Punch",
+            "Run",
+            "Run_Holding",
+            "Shoot",
+            "SwordSlash",
+            "Walk",
+            "Walk_Holding",
+            "Yes"
+          ]
+        }
+      ]
+    },
+    "quaternius-modular-men": {
+      "license": "CC0 1.0 — Quaternius (quaternius.com)",
+      "models": [
+        {
+          "file": "packs/quaternius-modular-men/adventurer.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 2069132,
+          "height": 1.857,
+          "width": 1.675,
+          "depth": 0.55,
+          "tris": 10202,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-men/beach.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1691780,
+          "height": 1.883,
+          "width": 1.675,
+          "depth": 0.374,
+          "tris": 6578,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-men/casual_2.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1611824,
+          "height": 1.858,
+          "width": 1.675,
+          "depth": 0.455,
+          "tris": 5776,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-men/casual_hoodie.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1646632,
+          "height": 1.87,
+          "width": 1.675,
+          "depth": 0.378,
+          "tris": 6206,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-men/farmer.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1565656,
+          "height": 1.856,
+          "width": 1.675,
+          "depth": 0.4,
+          "tris": 5476,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-men/king.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2159552,
+          "height": 1.904,
+          "width": 1.675,
+          "depth": 0.365,
+          "tris": 11110,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-men/punk.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1568720,
+          "height": 1.97,
+          "width": 1.675,
+          "depth": 0.446,
+          "tris": 5500,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-men/spacesuit.glb",
+          "tags": [
+            "space",
+            "scifi"
+          ],
+          "bytes": 2104016,
+          "height": 1.886,
+          "width": 1.675,
+          "depth": 0.413,
+          "tris": 10558,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-men/suit.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1803052,
+          "height": 1.857,
+          "width": 1.758,
+          "depth": 0.372,
+          "tris": 7674,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-men/swat.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1844496,
+          "height": 1.854,
+          "width": 1.758,
+          "depth": 0.362,
+          "tris": 8794,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-men/worker.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1541248,
+          "height": 1.866,
+          "width": 1.675,
+          "depth": 0.389,
+          "tris": 5240,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        }
+      ]
+    },
+    "quaternius-modular-women": {
+      "license": "CC0 1.0 — Quaternius (quaternius.com)",
+      "models": [
+        {
+          "file": "packs/quaternius-modular-women/adventurer.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 1718128,
+          "height": 1.828,
+          "width": 1.649,
+          "depth": 0.46,
+          "tris": 6812,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-women/casual.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1668252,
+          "height": 1.852,
+          "width": 1.65,
+          "depth": 0.37,
+          "tris": 6424,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-women/formal.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1631212,
+          "height": 1.843,
+          "width": 1.649,
+          "depth": 0.372,
+          "tris": 6108,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-women/medieval.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1718712,
+          "height": 1.877,
+          "width": 1.649,
+          "depth": 0.987,
+          "tris": 7276,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-women/punk.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1615296,
+          "height": 1.958,
+          "width": 1.649,
+          "depth": 0.383,
+          "tris": 5956,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-women/sci_fi.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1795840,
+          "height": 1.854,
+          "width": 1.649,
+          "depth": 0.433,
+          "tris": 8038,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-women/soldier.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1830932,
+          "height": 1.83,
+          "width": 1.649,
+          "depth": 0.327,
+          "tris": 7900,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-women/suit.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1675460,
+          "height": 1.845,
+          "width": 1.649,
+          "depth": 0.371,
+          "tris": 6482,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-women/witch.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1722828,
+          "height": 2.045,
+          "width": 1.649,
+          "depth": 0.548,
+          "tris": 6872,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-modular-women/worker.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1638260,
+          "height": 1.861,
+          "width": 1.649,
+          "depth": 0.363,
+          "tris": 6112,
+          "clips": [
+            "Death",
+            "Gun_Shoot",
+            "HitRecieve",
+            "HitRecieve_2",
+            "Idle",
+            "Idle_Gun",
+            "Idle_Gun_Pointing",
+            "Idle_Gun_Shoot",
+            "Idle_Neutral",
+            "Idle_Sword",
+            "Interact",
+            "Kick_Left",
+            "Kick_Right",
+            "Punch_Left",
+            "Punch_Right",
+            "Roll",
+            "Run",
+            "Run_Back",
+            "Run_Left",
+            "Run_Right",
+            "Run_Shoot",
+            "Sword_Slash",
+            "Walk",
+            "Wave"
+          ]
+        }
+      ]
+    },
+    "quaternius-monsters": {
+      "license": "CC0 1.0 — Quaternius (quaternius.com)",
+      "models": [
+        {
+          "file": "packs/quaternius-monsters/alien.glb",
+          "tags": [
+            "space",
+            "scifi"
+          ],
+          "bytes": 126060,
+          "height": 3.243,
+          "width": 3.869,
+          "depth": 1.941,
+          "tris": 2616,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/alpaking.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 175976,
+          "height": 2.139,
+          "width": 4.304,
+          "depth": 2.238,
+          "tris": 2508,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/alpaking_evolved.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 282072,
+          "height": 3.192,
+          "width": 4.304,
+          "depth": 2.973,
+          "tris": 4684,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/armabee.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 170652,
+          "height": 1.886,
+          "width": 4.304,
+          "depth": 2.059,
+          "tris": 2280,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/armabee_evolved.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 215876,
+          "height": 2.138,
+          "width": 4.304,
+          "depth": 2.046,
+          "tris": 3200,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/birb.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 165368,
+          "height": 2.612,
+          "width": 2.795,
+          "depth": 2.757,
+          "tris": 3164,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/blue_demon.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 604656,
+          "height": 2.841,
+          "width": 4.628,
+          "depth": 2.157,
+          "tris": 5800,
+          "clips": [
+            "Death",
+            "Duck",
+            "HitReact",
+            "Idle",
+            "Jump",
+            "Jump_Idle",
+            "Jump_Land",
+            "No",
+            "Punch",
+            "Run",
+            "Walk",
+            "Wave",
+            "Weapon",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/bunny.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 760020,
+          "height": 3.444,
+          "width": 4.791,
+          "depth": 1.81,
+          "tris": 8284,
+          "clips": [
+            "Death",
+            "Duck",
+            "HitReact",
+            "Idle",
+            "Jump",
+            "Jump_Idle",
+            "Jump_Land",
+            "No",
+            "Punch",
+            "Run",
+            "Walk",
+            "Wave",
+            "Weapon",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/cactoro.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 134136,
+          "height": 3.574,
+          "width": 4.074,
+          "depth": 3.669,
+          "tris": 2388,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/cat.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 109448,
+          "height": 1.944,
+          "width": 2.099,
+          "depth": 1.724,
+          "tris": 1772,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/chicken.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 137600,
+          "height": 2.347,
+          "width": 2.349,
+          "depth": 2.102,
+          "tris": 2904,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/demon.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 225108,
+          "height": 1.676,
+          "width": 5.472,
+          "depth": 2.064,
+          "tris": 4784,
+          "clips": [
+            "Flying_Idle"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/dino.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 610012,
+          "height": 3.226,
+          "width": 4.649,
+          "depth": 1.919,
+          "tris": 5414,
+          "clips": [
+            "Death",
+            "Duck",
+            "HitReact",
+            "Idle",
+            "Jump",
+            "Jump_Idle",
+            "Jump_Land",
+            "No",
+            "Punch",
+            "Run",
+            "Walk",
+            "Wave",
+            "Weapon",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/dog.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 84280,
+          "height": 1.828,
+          "width": 2.136,
+          "depth": 1.721,
+          "tris": 1392,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/dragon.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 268016,
+          "height": 1.541,
+          "width": 4.382,
+          "depth": 2.43,
+          "tris": 4562,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/dragon_evolved.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 555856,
+          "height": 2.858,
+          "width": 5.475,
+          "depth": 2.416,
+          "tris": 7440,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/fish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 156012,
+          "height": 2.731,
+          "width": 2.795,
+          "depth": 2.823,
+          "tris": 3346,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/frog.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 581748,
+          "height": 2.695,
+          "width": 4.649,
+          "depth": 1.556,
+          "tris": 5016,
+          "clips": [
+            "Death",
+            "Duck",
+            "HitReact",
+            "Idle",
+            "Jump",
+            "Jump_Idle",
+            "Jump_Land",
+            "No",
+            "Punch",
+            "Run",
+            "Walk",
+            "Wave",
+            "Weapon",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/ghost.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 327732,
+          "height": 3.101,
+          "width": 5.5,
+          "depth": 1.236,
+          "tris": 3192,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/ghost_skull.glb",
+          "tags": [
+            "dungeon",
+            "dark"
+          ],
+          "bytes": 357132,
+          "height": 3.101,
+          "width": 5.5,
+          "depth": 1.534,
+          "tris": 3146,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/glub.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 179152,
+          "height": 2.351,
+          "width": 4.304,
+          "depth": 2.171,
+          "tris": 2528,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/glub_evolved.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 244312,
+          "height": 3.707,
+          "width": 4.304,
+          "depth": 2.008,
+          "tris": 4452,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/goleling.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 236504,
+          "height": 1.552,
+          "width": 4.382,
+          "depth": 1.942,
+          "tris": 3696,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/goleling_evolved.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 318472,
+          "height": 2.568,
+          "width": 4.382,
+          "depth": 2.186,
+          "tris": 5864,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/green_blob.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 87892,
+          "height": 1.853,
+          "width": 2.249,
+          "depth": 2.195,
+          "tris": 1520,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/green_spiky_blob.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 211160,
+          "height": 4.143,
+          "width": 3.5,
+          "depth": 4.159,
+          "tris": 4888,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/hywirl.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 324304,
+          "height": 2.745,
+          "width": 5.543,
+          "depth": 1.768,
+          "tris": 3296,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/monkroose.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 624624,
+          "height": 2.985,
+          "width": 4.649,
+          "depth": 1.493,
+          "tris": 5824,
+          "clips": [
+            "Death",
+            "Duck",
+            "HitReact",
+            "Idle",
+            "Jump",
+            "Jump_Idle",
+            "Jump_Land",
+            "No",
+            "Punch",
+            "Run",
+            "Walk",
+            "Wave",
+            "Weapon",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/mushnub.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 77020,
+          "height": 3.296,
+          "width": 2.751,
+          "depth": 2.751,
+          "tris": 1248,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/mushnub_evolved.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 160756,
+          "height": 4.411,
+          "width": 3.402,
+          "depth": 3.52,
+          "tris": 3072,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/mushroom_king.glb",
+          "tags": [
+            "mushroom",
+            "nature",
+            "fantasy"
+          ],
+          "bytes": 620816,
+          "height": 3.609,
+          "width": 4.648,
+          "depth": 2.056,
+          "tris": 6044,
+          "clips": [
+            "Death",
+            "Duck",
+            "HitReact",
+            "Idle",
+            "Jump",
+            "Jump_Idle",
+            "Jump_Land",
+            "No",
+            "Punch",
+            "Run",
+            "Walk",
+            "Wave",
+            "Weapon",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/ninja.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 114328,
+          "height": 3.011,
+          "width": 2.483,
+          "depth": 2.663,
+          "tris": 2160,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/orc.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 138060,
+          "height": 2.347,
+          "width": 2.638,
+          "depth": 1.653,
+          "tris": 2296,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/orc_skull.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature",
+            "dungeon",
+            "dark"
+          ],
+          "bytes": 676400,
+          "height": 3.268,
+          "width": 4.688,
+          "depth": 1.861,
+          "tris": 7364,
+          "clips": [
+            "Death",
+            "Duck",
+            "HitReact",
+            "Idle",
+            "Jump",
+            "Jump_Idle",
+            "Jump_Land",
+            "No",
+            "Punch",
+            "Run",
+            "Walk",
+            "Wave",
+            "Weapon",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/pigeon.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 223816,
+          "height": 1.37,
+          "width": 4.135,
+          "depth": 2.172,
+          "tris": 3512,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/pink_blob.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 69812,
+          "height": 2.009,
+          "width": 1.834,
+          "depth": 1.738,
+          "tris": 1030,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/squidle.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 429164,
+          "height": 1.987,
+          "width": 5.472,
+          "depth": 2.123,
+          "tris": 4880,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/tribal.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 428236,
+          "height": 4.108,
+          "width": 5.5,
+          "depth": 1.377,
+          "tris": 5252,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/wizard.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 98752,
+          "height": 2.601,
+          "width": 2.33,
+          "depth": 2.309,
+          "tris": 1674,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/yeti.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 121520,
+          "height": 2.437,
+          "width": 2.547,
+          "depth": 2.592,
+          "tris": 2136,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        }
+      ]
+    },
+    "quaternius-rpg-characters": {
+      "license": "CC0 1.0 — Quaternius (quaternius.com)",
+      "models": [
+        {
+          "file": "packs/quaternius-rpg-characters/cleric.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1970120,
+          "height": 3.036,
+          "width": 3.065,
+          "depth": 2.515,
+          "tris": 5104,
+          "clips": [
+            "Death",
+            "Idle",
+            "Idle_Weapon",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "RecieveHit_Attacking",
+            "Run",
+            "Spell1",
+            "Staff_Attack",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-rpg-characters/monk.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1723956,
+          "height": 2.948,
+          "width": 3.276,
+          "depth": 0.983,
+          "tris": 6714,
+          "clips": [
+            "Attack",
+            "Attack2",
+            "Death",
+            "Idle",
+            "Idle_Attacking",
+            "PickUp",
+            "RecieveHit",
+            "RecieveHit_2",
+            "Roll",
+            "Run",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-rpg-characters/ranger.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 1900384,
+          "height": 2.981,
+          "width": 3.031,
+          "depth": 2.201,
+          "tris": 3806,
+          "clips": [
+            "Bow_Draw",
+            "Bow_Shoot",
+            "Death",
+            "Idle",
+            "Idle_Attacking",
+            "Idle_Weapon",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "RecieveHit_2",
+            "Roll",
+            "Run",
+            "Run_Holding",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-rpg-characters/rogue.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 1631308,
+          "height": 3.031,
+          "width": 3.098,
+          "depth": 1.58,
+          "tris": 2326,
+          "clips": [
+            "Attacking_Idle",
+            "Dagger_Attack",
+            "Dagger_Attack2",
+            "Death",
+            "Idle",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "RecieveHit_2",
+            "Roll",
+            "Run",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-rpg-characters/warrior.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 1959888,
+          "height": 2.997,
+          "width": 3.044,
+          "depth": 2.596,
+          "tris": 5402,
+          "clips": [
+            "Death",
+            "Idle",
+            "Idle_Attacking",
+            "Idle_Weapon",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "Roll",
+            "Run",
+            "Run_Weapon",
+            "Sword_Attack",
+            "Sword_Attack2",
+            "Walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-rpg-characters/wizard.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2108428,
+          "height": 3.125,
+          "width": 3.052,
+          "depth": 2.119,
+          "tris": 5376,
+          "clips": [
+            "Death",
+            "Idle",
+            "Idle_Attacking",
+            "Idle_Weapon",
+            "PickUp",
+            "Punch",
+            "RecieveHit",
+            "RecieveHit_2",
+            "Roll",
+            "Run",
+            "Run_Weapon",
+            "Spell1",
+            "Spell2",
+            "Staff_Attack",
+            "Walk"
+          ]
+        }
+      ]
     }
   }
 }

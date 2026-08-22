@@ -49,11 +49,16 @@ const blocks = [];
   blocks.push({
     label: "3D models", ext: ".glb", text: SRC.slice(start, end),
     dirFor(line, current) {
-      const kit = line.match(/^-\s+(kenney-[a-z0-9-]+)\s+\(/);
-      if (kit) return path.join(MODELS, "packs", kit[1]);
+      // Any pack, not just kenney- — the character library is quaternius-*, and
+      // a supplier-specific regex here silently attributed all 152 of its names
+      // to the previous kenney kit and reported every one as missing.
+      const kit = line.match(/^-\s+([a-z][a-z0-9]*(?:-[a-z0-9]+)+)\s+\(\d+\)/);
+      if (kit && fs.existsSync(path.join(MODELS, "packs", kit[1]))) {
+        return path.join(MODELS, "packs", kit[1]);
+      }
       if (/LIBRARY 2 —|models3d\/vehicles\//.test(line)) return path.join(MODELS, "vehicles");
       if (/LIBRARY 1 —|models3d\/lib\//.test(line)) return path.join(MODELS, "lib");
-      if (/LIBRARY 3 —/.test(line)) return null;      // header only, names follow per kit
+      if (/LIBRARY 3 —|LIBRARY 4 —/.test(line)) return null; // header only, names follow per kit
       return current;
     },
   });
@@ -95,7 +100,7 @@ for (const block of blocks) {
 
     // strip the leading "- CATEGORY:" or "- kenney-x (n)" label, then asides
     let body = line.replace(/^-\s+[A-Za-z0-9/\- ]+?(\([^)]*\))?\s*:\s*/, "")
-                   .replace(/^-\s+kenney-[a-z0-9-]+\s+\(\d+\)\s+[^:]*:\s*/, "");
+                   .replace(/^-\s+[a-z][a-z0-9-]*\s+\(\d+\)\s+[^:]*:\s*/, "");
     if (body === line) body = line.replace(/^-\s+/, "");
     // drop any inline code sample — a snippet like `new THREE.Mesh…` is not names
     const brace = body.indexOf("{");

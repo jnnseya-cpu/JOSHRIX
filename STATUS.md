@@ -3,7 +3,66 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-08-20 (third reference game, played end to end by a test)
+Last updated: 2026-08-22 (the character library landed — 152 rigged models, 150 animated)
+
+---
+
+## The character library — landed 22 Aug
+
+Justin uploaded the Quaternius character bundle he bought. Twenty packs arrived;
+ten shipped glTF and were ingested, ten were 2017–2019 FBX/Blend-only and were
+dropped by the `_incoming/` filter. **152 rigged models, 150 of them carrying full
+skeletal clip sets**, in nine packs. The library is now 2,435 models / 34 packs,
+and the count of animated models went from 22 to 178.
+
+Three things had to be fixed before any of it was usable, and each one would have
+shipped silently:
+
+**1. Two packs were 812MB.** Quaternius' "Standard" tier ships 4096px PNG normal
+and ORM maps — one fantasy outfit was a **39MB GLB**, and 24 of them came to 738MB,
+more than the rest of the library combined. `tools/shrink-textures.mjs` now
+re-encodes embedded textures through Chromium's own canvas (no new dependency —
+the browser was already installed for the validator), capping at 1024px and
+converting to JPEG unless the alpha channel carries information. **738MB → 23MB
+and 73MB → 6MB, every model still loading with skeleton and textures intact.**
+It is idempotent, so it can be re-run over a pack safely.
+
+**2. Forty modular fragments were about to enter the catalogue.** Those two packs
+are modular: separate GLBs for arms, legs, boots, hair, pauldrons. The runtime has
+no bone-attachment API, so a game asking for `male_ranger_legs` renders a pair of
+floating trousers. Only the six assembled bodies were kept; the parts stay in
+`_incoming/` and come back with a re-ingest if the runtime ever grows attachment.
+
+**3. Forty-eight of the fifty-two main characters had black skin.** Quaternius'
+Nov 2019 glTF export writes the `Skin` material as baseColorFactor
+`0.013410447165369987` on all three channels — sRGB `#1F1F1F`. The exact same
+constant in 48 files, while the four that differ are the goblins and zombies whose
+green and grey skins came through correctly: an export fault, not art direction.
+Faces and hands rendered black. `tools/ingest-characters.mjs` now repairs it on
+the way in, using the skin tone the same artist ships in the 2022 Modular Men and
+Modular Women packs — byte-identical across both, so the repaired 2019 cast
+matches the rest of the library exactly. Verified by re-render in real Chromium.
+
+**A fix that was investigated and deliberately NOT made.** The runtime never sets
+`renderer.outputEncoding = sRGBEncoding`, so three r147 renders the whole platform
+in linear space — textbook-wrong. Setting it was tested against Midnight Post:
+the night delivery game came out looking like an overcast afternoon. The runtime's
+sky gradients, fog and light intensities were all authored against its own
+pipeline, so the "correct" change washes out every published game. **The pipeline
+is internally consistent and stays as it is.** If it is ever revisited it belongs
+in `joshrix3d-2.js` with the palettes re-tuned together, not as a one-line edit.
+
+The forge catalogue in `_gateway.ts` now carries LIBRARY 4 with every pack's exact
+filenames, measured heights and **exact clip names** — the Quaternius vocabulary is
+`Idle`/`Walk`/`Run`, capitalised, not the `lib/` lowercase vocabulary, and asking
+for a clip that does not exist leaves the character frozen. The old closing line
+"CHARACTERS ARE SCARCE" is gone; it was the sentence steering every build away from
+using people at all.
+
+Still on Justin's side: the **Kenney 3D bundle** and, more valuable, the **Kenney
+Audio library** — the platform has no sound library at all today. And the 2D
+sprite packs, which need `PACKS` extended in `tools/ingest-sprites.mjs` and the
+names added to the sprite catalogue in `GAME_SYSTEM`.
 
 ---
 
@@ -218,7 +277,7 @@ Everything asked for is committed and pushed. Nothing half-finished.
   start-to-finish by `tests/t26`. All three are on the arcade shelf and in the sitemap.
 - **JOSHRIX 3D runtime** (`assets/vendor/joshrix3d-1.js`) — owns canvas, loop, sky, ground,
   lights, shadows, overlays, HUD, input, audio, particles. Games write only the concept.
-- **2,273 models / 2,553 sprites**, every one load-tested in a browser before shipping.
+- **2,435 models / 2,553 sprites**, every one load-tested in a browser before shipping.
 - **`/features`** pillar page + 36 blog topics (22 feature-driven, 14 editorial).
 - **Cookieless analytics** + a funnel endpoint that says in plain words where acquisition breaks.
   Campaign clicks are tagged `?ref=newsletter` so email traffic is not counted as direct.

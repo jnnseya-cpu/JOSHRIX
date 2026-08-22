@@ -382,7 +382,7 @@ tagged, so email traffic is never miscounted as direct.
 
 ### Sources and confidence
 
-**Read from the codebase (facts):** 2,273 models · 2,553 sprites · 24 packs · 8 animated
+**Read from the codebase (facts):** 2,435 models · 2,553 sprites · 34 packs · 178 animated
 characters · plan prices £19/£49/£149/£399/£1,200 · commission 25%→7.5% · free grant 2,000 ACU ·
 ACU = £0.01 · ~£0.32 billed per 2D game, ~£0.49 per 3D · 22 marketed capabilities · 4× metered
 markup.

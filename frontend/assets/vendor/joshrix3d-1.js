@@ -28,6 +28,15 @@
  * the opposite of what a pinned URL is for. Each was a deliberate call, not a
  * habit: anything that changes what a game ASKED for still goes in v2.
  *
+ * COLOUR PIPELINE — a deliberate non-change, recorded so it is not "fixed" again.
+ * This renderer never sets outputEncoding = sRGBEncoding, so r147 writes linear
+ * values straight to the framebuffer. That is textbook-wrong and it is staying.
+ * Every sky gradient, fog colour and light intensity below was authored against
+ * this pipeline; setting the flag was tested against Midnight Post and turned a
+ * night delivery game into an overcast afternoon. The pipeline is internally
+ * consistent, and published games pin this file forever. If it is ever revisited
+ * it belongs in joshrix3d-2.js with the whole palette re-tuned alongside it.
+ *
  * Requires three.js r147 UMD and GLTFLoader to be loaded first.
  */
 (function (global) {

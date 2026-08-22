@@ -84,7 +84,7 @@ export default async function handler(_req: any, res: any) {
   const html = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>What JOSHRIX Studio Does — Every Feature, With The Specifics</title>
-<meta name="description" content="Every capability of JOSHRIX Studio: 2,273 3D models and 2,553 sprites included, metered pricing from £0.32 a game, 75-92.5% revenue share, mobile-money payouts, and refunds on failed builds.">
+<meta name="description" content="Every capability of JOSHRIX Studio: 2,435 3D models and 2,553 sprites included, metered pricing from £0.32 a game, 75-92.5% revenue share, mobile-money payouts, and refunds on failed builds.">
 <link rel="canonical" href="${SITE}/features">
 <meta property="og:type" content="website">
 <meta property="og:title" content="What JOSHRIX Studio Does — Every Feature">

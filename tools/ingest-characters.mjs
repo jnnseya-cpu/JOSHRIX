@@ -146,9 +146,44 @@ function injectTexture(glb, image) {
  * external images appended and pointed at by bufferView instead of by URI. The
  * mesh, the skeleton and the animations are copied verbatim, so a rig that
  * worked before is byte-identical after. */
+/* ---------- repair a known-broken source material ----------
+ *
+ * Quaternius' Nov 2019 character export writes the "Skin" material as
+ * baseColorFactor 0.013410447165369987 on all three channels — sRGB #1F1F1F,
+ * i.e. black. It is the same constant in 48 of the pack's 52 characters, so it
+ * is an export fault, not art direction: the four that differ are the goblins
+ * and zombies, whose green and grey skins came through correctly.
+ *
+ * Left alone it makes the largest human cast in the library render with black
+ * faces and black hands. Every other material in the pack — hair, clothing,
+ * belts, armour — is correct, so the whole defect is this one number.
+ *
+ * The replacement is not invented. It is the skin tone the same artist ships in
+ * the 2022 Modular Men and Modular Women packs, byte-identical across both, so
+ * the repaired 2019 cast matches the rest of the library exactly.
+ *
+ * Matched on the exact constant rather than on "is it dark", because plenty of
+ * materials here are meant to be near-black: Black, Visor, Eye_Black, Hair.
+ */
+const BROKEN_SKIN = 0.013410447165369987;
+const QUATERNIUS_SKIN = [0.6172067523002625, 0.4178851246833801, 0.23839758336544037];
+
+function repairMaterials(json) {
+  let fixed = 0;
+  for (const m of json.materials || []) {
+    if (!/^skin$/i.test(m.name || "")) continue;
+    const c = m.pbrMetallicRoughness?.baseColorFactor;
+    if (!c || !c.slice(0, 3).every((v) => Math.abs(v - BROKEN_SKIN) < 1e-9)) continue;
+    m.pbrMetallicRoughness.baseColorFactor = [...QUATERNIUS_SKIN, c[3] ?? 1];
+    fixed++;
+  }
+  return fixed;
+}
+
 function packGltf(gltfPath) {
   const dir = path.dirname(gltfPath);
   const json = JSON.parse(fs.readFileSync(gltfPath, "utf8"));
+  repairMaterials(json);
 
   const readUri = (uri) => {
     if (/^data:/i.test(uri)) return Buffer.from(uri.slice(uri.indexOf(",") + 1), "base64");
@@ -219,7 +254,7 @@ const slug = (s) => path.basename(s).replace(/\.[^.]+$/, "")
 
 /* Exported so tests can exercise the fiddly parts — clip naming, the embedded
    image scan and the GLB surgery — without running an ingest. */
-export { clipName, embeddedImage, injectTexture, slug, packGltf };
+export { clipName, embeddedImage, injectTexture, slug, packGltf, repairMaterials };
 
 /* ---------------------------------- run ----------------------------------- */
 const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
