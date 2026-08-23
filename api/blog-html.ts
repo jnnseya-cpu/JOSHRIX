@@ -5,7 +5,7 @@
  * Article schema — plus the article body with its internal links. This is what
  * gets JOSHRIX pages ranked and unfurling nicely when shared.
  */
-import { getDb, ensureBlogSchema, getBlogPost, listBlogPosts } from "./_ledger";
+import { getDb, ensureBlogSchema, getBlogPost, listBlogPosts, blogViews } from "./_ledger";
 import { autoLink, articleJsonLd, readingMinutes } from "./_seo";
 
 const SITE = "https://www.joshrix.com";
@@ -22,6 +22,12 @@ export default async function handler(req: any, res: any) {
     const post = await getBlogPost(sql, slug);
     if (!post) return notFound(res);
     const all = await listBlogPosts(sql, 60);
+    /* Read BEFORE this request's own beacon fires, so the number a reader sees
+       is the count of everyone before them rather than one that ticks over as
+       they arrive. Failure is silent: a missing count hides the line, it never
+       costs the article. */
+    let views = 0;
+    try { views = (await blogViews(sql, [slug]))[slug] ?? 0; } catch { /* show no count */ }
     const others = all.filter((p) => p.slug !== slug);
     const url = `${SITE}/blog/${post.slug}`;
     const published = new Date(post.created_at).toISOString();
@@ -75,6 +81,13 @@ ${post.keywords ? `<meta name="keywords" content="${esc(post.keywords)}">` : ""}
 <script type="application/ld+json">${jsonLd}</script>
 <link rel="stylesheet" href="/assets/joshrix.css">
 <script src="/assets/config.js"></script>
+<!-- THE REASON BLOG VIEW COUNTS WERE ALWAYS ZERO. Every page under frontend/
+     loads track.js, but this page is generated here and never did, so no post
+     has ever reported a view. blog.html (the index) was counted; the articles
+     themselves were invisible. -->
+<script src="/assets/track.js"></script>
+<script src="/assets/pixels.js"></script>
+<script src="/assets/consent.js" defer></script>
 <style>
   .post{max-width:760px;margin:0 auto;padding:0 1rem 3rem}
   .post h1{font-size:clamp(1.6rem,4.5vw,2.4rem);line-height:1.2;margin:.4rem 0 .6rem}
@@ -105,7 +118,7 @@ ${post.keywords ? `<meta name="keywords" content="${esc(post.keywords)}">` : ""}
   <div class="nav-right"><a class="btn btn-primary btn-sm" href="/studio.html">Launch Studio</a></div>
 </nav>
 <main class="jx post">
-  <p class="meta">JOSHRIX Blog · ${new Date(post.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} · ${mins} min read</p>
+  <p class="meta">JOSHRIX Blog · ${new Date(post.created_at).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} · ${mins} min read${views > 0 ? ` · ${views.toLocaleString("en-GB")} ${views === 1 ? "view" : "views"}` : ""}</p>
   <h1>${esc(post.title)}</h1>
   <article>${safeHtml}</article>
   ${others.length ? `<div class="more"><h2 style="font-size:1.1rem">Keep reading</h2>${others.slice(0, 6).map((p: any) => `<a href="/blog/${esc(p.slug)}">${esc(p.title)}</a>`).join("")}<p style="margin-top:1rem"><a href="/blog.html">All articles</a> · <a href="/studio.html">Create your own game</a> · <a href="/arcade.html">Play free games</a></p></div>` : `<div class="more"><p><a href="/blog.html">All articles</a> · <a href="/studio.html">Create your own game</a></p></div>`}

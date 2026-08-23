@@ -202,6 +202,60 @@ console.log('\n== the tag is on every page, and the money events are wired ==');
     /until you accept/i.test(priv) && /Meta Pixel/i.test(priv) && /Google tag/i.test(priv));
 }
 
+/* ---------------- 6. the pages the SERVER generates ---------------------- *
+ * This is the bug that produced "blog post view count isn't working": every
+ * page under frontend/ loaded track.js, and the article pages are generated in
+ * api/blog-html.ts, which never did. Nothing looked broken - a page that is not
+ * counted renders exactly like one that is - so the count was simply zero
+ * forever. A sweep over frontend/*.html could never have caught it. */
+console.log('\n== pages the server generates are counted too ==');
+{
+  const api = path.join(process.env.JOSHRIX_ROOT || process.cwd(), 'api');
+  const read = (f) => fs.readFileSync(path.join(api, f), 'utf8');
+
+  for (const f of ['blog-html.ts', 'features-hub.ts']) {
+    const src = read(f);
+    t(`${f} reports pageviews`, src.includes('/assets/track.js'));
+    t(`${f} carries the ad tags`, src.includes('/assets/pixels.js') && src.includes('/assets/consent.js'));
+  }
+
+  /* Exclusions, asserted so a later "add the beacon everywhere" sweep cannot
+     quietly undo the reasoning:
+     - unsubscribe is someone withdrawing consent; an ad pixel there is indefensible
+     - _engine builds a GAME, served inside /play and often embedded on other
+       people's sites. Putting the platform's advertising pixel inside creator
+       content would track that creator's players on our behalf, which is not
+       ours to do and is not what any of them consented to. */
+  const unsub = read('unsubscribe.ts');
+  t('unsubscribe is NOT tracked, and says why',
+    !unsub.includes('/assets/pixels.js') && /DELIBERATELY UNTRACKED/.test(unsub));
+  const engine = read('_engine.ts');
+  t('a generated GAME never carries the platform pixel',
+    !engine.includes('assets/pixels.js') && !engine.includes('assets/track.js'));
+}
+
+/* ---------------- 7. the view count is actually shown -------------------- */
+console.log('\n== a view count nobody can see is not a view count ==');
+{
+  const api = path.join(process.env.JOSHRIX_ROOT || process.cwd(), 'api');
+  const ledger = fs.readFileSync(path.join(api, '_ledger.ts'), 'utf8');
+  t('views are derived from the pageview beacon, not a second counter',
+    /export async function blogViews/.test(ledger) && /FROM pageviews/.test(ledger));
+  t('one query for every slug, not one per post',
+    /path = ANY\(/.test(ledger), 'a 60-post index must not be 60 round trips');
+  t('blog_posts gained no rival views column',
+    !/ALTER TABLE blog_posts[\s\S]{0,80}views/.test(ledger));
+
+  const agent = fs.readFileSync(path.join(api, 'blog-agent.ts'), 'utf8');
+  t('the public index returns a view count', /views: views\[/.test(agent));
+  const post = fs.readFileSync(path.join(api, 'blog-html.ts'), 'utf8');
+  t('the article page shows its own count', /blogViews\(sql, \[slug\]\)/.test(post));
+  const idx = fs.readFileSync(path.join(ROOT, 'blog.html'), 'utf8');
+  t('the blog index shows it on each card', /p\.views/.test(idx));
+  t('a post with no views yet shows no number rather than "0 views"',
+    /v > 0 \?/.test(idx));
+}
+
 console.log(`\n  ${pass} passed, ${fail} failed`);
 await browser.close();
 srv.close();

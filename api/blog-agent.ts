@@ -10,7 +10,7 @@
  * pages/games (dynamic linking), and ready-to-paste social captions.
  */
 import Anthropic from "@anthropic-ai/sdk";
-import { getDb, ensureBlogSchema, ensureGameSchema, saveBlogPost, getBlogPost, listBlogPosts, countBlogPosts, listApprovedGames } from "./_ledger";
+import { getDb, ensureBlogSchema, ensureGameSchema, saveBlogPost, getBlogPost, listBlogPosts, countBlogPosts, listApprovedGames, blogViews } from "./_ledger";
 
 const SITE = "https://www.joshrix.com";
 
@@ -145,8 +145,13 @@ export default async function handler(req: any, res: any) {
   if (req.method === "GET" && String(req.query?.public ?? "") === "1") {
     if (!sql) return res.status(200).json({ posts: [], mode: "no_db" });
     await ensureBlogSchema(sql);
-    const posts = (await listBlogPosts(sql)).map((p) => ({
-      slug: p.slug, title: p.title, description: p.description, excerpt: p.excerpt, createdAt: p.created_at, url: `/blog/${p.slug}`,
+    const rows = await listBlogPosts(sql);
+    // One query for every slug rather than one per post — see blogViews.
+    let views: Record<string, number> = {};
+    try { views = await blogViews(sql, rows.map((p: any) => p.slug)); } catch { /* a counter must never break the index */ }
+    const posts = rows.map((p) => ({
+      slug: p.slug, title: p.title, description: p.description, excerpt: p.excerpt, createdAt: p.created_at,
+      url: `/blog/${p.slug}`, views: views[p.slug] ?? 0,
     }));
     return res.status(200).json({ posts, count: posts.length });
   }

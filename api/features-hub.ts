@@ -133,7 +133,10 @@ export default async function handler(_req: any, res: any) {
   </section>
 </main>
 <script src="/assets/appnav.js"></script>
+<script src="/assets/config.js"></script>
 <script src="/assets/track.js"></script>
+<script src="/assets/pixels.js"></script>
+<script src="/assets/consent.js" defer></script>
 <script src="/assets/site.js"></script>
 </body></html>`;
 

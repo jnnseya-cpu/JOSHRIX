@@ -565,6 +565,31 @@ export async function listBlogPosts(sql: Sql, limit = 100) {
   return (await sql`SELECT slug, title, description, excerpt, created_at FROM blog_posts ORDER BY created_at DESC LIMIT ${limit}`) as any[];
 }
 
+/**
+ * Views per blog post, read from the pageview beacon rather than a counter on
+ * the post row.
+ *
+ * blog_posts has no views column and deliberately does not gain one: a second
+ * counter incremented from the article page would drift from the pageviews
+ * table the moment one of them failed, and there would be no way to tell which
+ * number was true. The beacon already records every path; a post's view count
+ * is just that table filtered to its URL.
+ *
+ * ONE query for every slug asked about, not one per post — a blog index of 60
+ * articles would otherwise be 60 round trips to render one page.
+ */
+export async function blogViews(sql: Sql, slugs: string[]): Promise<Record<string, number>> {
+  const out: Record<string, number> = {};
+  if (!slugs.length) return out;
+  const paths = slugs.map((s) => "/blog/" + s);
+  const rows = (await sql`
+    SELECT path, sum(views)::bigint AS views FROM pageviews
+    WHERE path = ANY(${paths}) GROUP BY path`) as Array<{ path: string; views: string | number }>;
+  for (const r of rows) out[String(r.path).replace(/^\/blog\//, "")] = Number(r.views ?? 0);
+  for (const s of slugs) if (!(s in out)) out[s] = 0;
+  return out;
+}
+
 export async function countBlogPosts(sql: Sql): Promise<number> {
   const rows = (await sql`SELECT count(*) AS n FROM blog_posts`) as Array<{ n: string | number }>;
   return Number(rows[0]?.n ?? 0);

@@ -44,6 +44,11 @@ const page = (title: string, body: string) => `<!DOCTYPE html><html lang="en"><h
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${title} — JOSHRIX Studio</title><link rel="stylesheet" href="/assets/joshrix.css">
 <meta name="robots" content="noindex"></head>
+<!-- DELIBERATELY UNTRACKED. This page is reached by someone withdrawing consent
+     to be emailed. Firing an advertising pixel at them in the same moment would
+     be indefensible, and counting the visit adds nothing anyone would act on.
+     tests/t28 asserts this stays untracked, so it cannot be "fixed" by a sweep
+     that adds the beacon everywhere. -->
 <body style="background:#0b0b14;color:#ececf4;font-family:system-ui,-apple-system,sans-serif">
 <main style="max-width:34rem;margin:0 auto;padding:4rem 1.25rem">
   <div style="height:3px;background:linear-gradient(90deg,#7C3AED,#22D3EE);border-radius:2px;margin-bottom:1.6rem"></div>

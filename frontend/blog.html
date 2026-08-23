@@ -62,7 +62,12 @@
       return;
     }
     list.innerHTML = posts.map(function(p){
-      return '<a class="postcard" href="' + esc(p.url) + '"><span class="date">' + new Date(p.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) + '</span><h2>' + esc(p.title) + '</h2><p>' + esc(p.excerpt || p.description) + '</p></a>';
+      /* Views are shown only once a post has any. "0 views" on a new article
+         is worse than no number at all — it tells a reader nobody came. */
+      var v = Number(p.views || 0);
+      var meta = new Date(p.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+        + (v > 0 ? ' · ' + v.toLocaleString() + (v === 1 ? ' view' : ' views') : '');
+      return '<a class="postcard" href="' + esc(p.url) + '"><span class="date">' + meta + '</span><h2>' + esc(p.title) + '</h2><p>' + esc(p.excerpt || p.description) + '</p></a>';
     }).join('');
   }).catch(function(){ list.innerHTML = '<p style="color:var(--muted,#9d9db3)">Could not load posts — refresh to retry.</p>'; });
 })();
