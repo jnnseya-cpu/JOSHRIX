@@ -112,5 +112,58 @@ console.log('\n== the hub page must not carry its own copy of the numbers ==');
     unbacked.length === 0, 'unbacked: ' + unbacked.join(', '));
 }
 
+/* ------------------------------------------------------------------ *
+ * Claims about things that do not exist.
+ *
+ * Four public pages stated as present fact that the Arcade shelf "ships
+ * inside the JOSHRIX Arcade apps on Google Play and the App Store". There is
+ * no app project in this repository at all, so those apps do not exist, and a
+ * visitor reading that was being told something untrue about the product they
+ * were being asked to pay for. It is the same class as the homepage promising
+ * "the first one is free" to accounts created with zero ACUs.
+ *
+ * This asserts the two together: the claim is absent, AND it is absent because
+ * nothing implements it. If an app project is ever added, this test starts
+ * failing and the copy can go back with it.
+ * ------------------------------------------------------------------ */
+console.log('\n== the site does not claim things that do not exist ==');
+{
+  const front = path.join(REPO, 'frontend');
+  const api = path.join(REPO, 'api');
+
+  const hasAppProject =
+    fs.existsSync(path.join(REPO, 'android')) ||
+    fs.existsSync(path.join(REPO, 'ios')) ||
+    fs.existsSync(path.join(REPO, 'capacitor.config.ts')) ||
+    fs.existsSync(path.join(REPO, 'capacitor.config.json')) ||
+    fs.readdirSync(api).some((f) => /capacitor|twa|apk|playstore|appstore/i.test(f));
+  t('there is still no Android or iOS app project in the repo', !hasAppProject,
+    'if one was added, restore the store-app copy along with it');
+
+  const claims = [];
+  for (const f of fs.readdirSync(front).filter((x) => x.endsWith('.html'))) {
+    const src = fs.readFileSync(path.join(front, f), 'utf8');
+    if (/Arcade apps on Google Play|apps on Google Play and the App Store/i.test(src)) claims.push(f);
+    if (/deployment to every target marketplace/i.test(src)) claims.push(f + ' (Steam/CDN claim)');
+  }
+  t('no page claims the store apps already exist', claims.length === 0, claims.join(', '));
+
+  /* The priced store lanes are NOT this. /api/distribution records a real
+     request, takes no money, and the copy describes a service done by hand -
+     selling a manual service is honest. Assert the endpoint is really there,
+     because THAT is what makes the difference. */
+  t('the store lanes are backed by a real request queue',
+    fs.existsSync(path.join(api, 'distribution.ts')));
+  t('and that queue takes no money at the point of request',
+    !/stripe|checkoutUrl|payment/i.test(fs.readFileSync(path.join(api, 'distribution.ts'), 'utf8')));
+
+  /* The homepage promise that a public signup is refused by the platform's own
+     rules. Fixed 22 Aug; asserted so it cannot return. */
+  const idx = fs.readFileSync(path.join(front, 'index.html'), 'utf8');
+  t('the homepage does not promise a free first forge',
+    !/first one is free/i.test(idx),
+    'a public signup is created with zero ACUs and a forge holds 150-250');
+}
+
 console.log(`\n  ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

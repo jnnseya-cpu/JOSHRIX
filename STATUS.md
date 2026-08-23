@@ -63,9 +63,21 @@ Three distribution routes, and the third is **not built**:
 The third route is written into the specs already — `PLATFORM.md` §127 promises "generate an
 Android package, prepare an iOS project", and `DATA-MODEL.md` carries
 `target: "web" | "android" | "ios" | "desktop" | "source"` — but **nothing in `api/`
-implements any of it.** `arcade.html` also tells visitors the shelf "ships inside the
-JOSHRIX Arcade apps on Google Play and the App Store", which is a claim about apps that
-do not exist. Both are marketing ahead of the code and should be treated as debt.
+implements any of it.** Treat the specs as intent, not as a description of the code.
+
+**Four false present-tense claims removed 22 Aug.** `arcade.html`, `pricing.html` and
+`studio.html` all told visitors the Arcade shelf "ships inside the JOSHRIX Arcade apps on
+Google Play and the App Store". There is no app project anywhere in this repo — no
+Capacitor config, no TWA, no Xcode project, nothing in `api/` — so those apps do not
+exist. `index.html` separately promised "single-click CDN deployment to every target
+marketplace — Steam, app stores". All four now describe what actually happens: install to
+the home screen, no store download. **If those store apps DO exist outside this repo, say
+so and the lines go back** — they were removed on the evidence in the repository.
+
+The three priced store lanes in `/studio` are NOT in that category and were left alone:
+`/api/distribution` records a real request with status `queued`, takes no money, and the
+copy describes a service fulfilled by hand. Selling a manual service is honest; claiming
+an app exists is not.
 
 Technically it is a wrapper job, not a rewrite: the games are self-contained HTML, so
 Android is a Trusted Web Activity or a Capacitor shell, and iOS is a WKWebView project the
@@ -404,8 +416,8 @@ provider while the game path had three). 20 assertions in `tests/t20-blueprint-j
 
 | # | Thing | Detail |
 |---|---|---|
-| 1 | **Upload the asset packs** | Still empty as of 20 Aug — `_incoming/` contains only its two READMEs. I cannot fetch them: quaternius.com, poly.pizza and mixamo.com are all blocked by the proxy (re-checked, all return 000). Kenney City Kit → `_incoming/` as a zip. Quaternius Characters/Monsters/Animals → `_incoming/characters/<pack>/` as folders, taking the **glTF** folder. Full steps in `frontend/assets/models3d/_incoming/characters/README.md`. **This is the only thing standing between the library and characters that do not look like Lego** — no code change fixes it. |
-| 2 | **Forge WonderVerse in 3D on the live site** | The sea and sky bugs are fixed and deployed. I cannot run a forge — no provider keys here, and the proxy blocks joshrix.com. Your own wallet predates the category change so it is still `tester`: press **refill** on `/wallet` for 20,000 ACUs, no admin key needed. Then send the `/api/forge-log` line — `build`, `provider`, `bytes`. |
+| 1 | ~~Upload the asset packs~~ | **DONE 22 Aug.** 152 rigged Quaternius models landed and are live. See the library section above. |
+| 2 | **Forge a 3D game and send the log** | Attempted 22 Aug: the first run died on a runtime TypeError (fixed), the second shipped two models on an empty field (a gate now refuses that). Still no build Justin has judged good. Send `/api/forge-log` — `provider`, `bytes`, `models` — or the file from **View Build Source**, which turns guessing into fixing. |
 | 2b | **Gate the legacy wallets** | Every account created before 18 Aug is still `tester` and can refill itself for free. One pass through `/admin` → "Revoke tester" on everyone who is not a real tester. |
 | 3 | **Set `NEWSLETTER_SECRET` in Vercel** | Any long random string. Without it the unsubscribe link still works, but the token is not signed, so anyone could unsubscribe another address. |
 | 4 | **Confirm the newsletter send** | It is live but has never sent to a real inbox. Run `GET /api/newsletter?dry=1` with `x-moderation-key` first — it reports the audience size and sends nothing. |
@@ -440,11 +452,13 @@ Everything asked for is committed and pushed. Nothing half-finished.
 
 ## Known gaps, stated plainly
 
-- **The forge has never produced a game Justin judged good.** Two runtime bugs that made every
-  3D build render an unrequested ocean over the creator's sky were only fixed on 14 Aug and have
-  not been tested through an actual forge run yet. That test is item 2 above.
-- **Only 10 human characters in the library**, all blocky. This is why output reads as Lego.
-  Fixed by item 1 above, not by any code change.
+- **The forge has still never produced a game Justin judged good.** This is the only thing that
+  matters and it is four weeks old. Two attempts on 22 Aug: one died on `G.get().material` being
+  undefined, one shipped a lone character and a crate on a bare disc in daylight. Both causes are
+  fixed — `G.tint()` exists and the engine floor now demands five library models — but "fixed"
+  means the failure cannot recur, not that the next build is good.
+- ~~Only 10 human characters~~ **152 rigged models, 178 animated, live since 22 Aug.** The library
+  is no longer the constraint; what the forge does with it is.
 - **Reading a real FBX is untested.** `tools/ingest-characters.mjs` handles `.glb` and `.gltf`
   with 40 passing tests; the FBX path cannot be tested without a real file.
 - **Zero customers.** SEO on a new domain is months, not weeks. The fast organic channel is
@@ -457,7 +471,7 @@ Everything asked for is committed and pushed. Nothing half-finished.
 | **Stripe Connect onboarding** | Until this is done, payouts leave by hand: the desk records the decision, you move the money, then mark it paid. Needs your Stripe account, not code. |
 | **Backup / restore drill** | Neon snapshots have never been restored. Take one manual snapshot before announcing. |
 | **Live payment cycle test** | `tests/live-payment-cycle.md` has never been run against real Stripe. Needs live keys. |
-| **No sound library at all** | There are **zero** audio files in `frontend/assets`. The runtime synthesises with an oscillator and speaks with the Web Speech API — which is why the games beep. The "705 sound files" were never ingested and there is no ingest tool for audio. |
+| ~~No sound library~~ | **CLOSED 22 Aug in code, not by a download.** `G.sfx()` is 20 designed sounds and `G.ambience()` is 7 looping beds, all synthesised — no files, no dependency, no page weight. The engine floor now refuses a 3D build where nothing the player does makes a sound. |
 | **2D port of the runtime** | The 3D runtime owns canvas, loop, lights, HUD, input. The 2D lane still has the model write all of that each time. |
 | **`GAP-ANALYSIS.md` is published at `/docs`** | It is a forensic list of the platform's own weaknesses, served publicly. Not a defect — a decision. Say if you want it unpublished. |
 
