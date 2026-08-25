@@ -11,7 +11,7 @@
  * through PACKAGING → SUBMITTED → IN STORE REVIEW → LIVE / NEEDS CHANGES.
  */
 import { getDb, ensureGameSchema, getGame, saveDistRequest } from "./_ledger";
-import { EMAIL_RE } from "./_guard";
+import { EMAIL_RE, clientIp, rateLimit, tooMany } from "./_guard";
 
 const LANES = ["dedicated", "own"];
 const STORES = ["android", "ios", "both"];
@@ -33,6 +33,17 @@ export default async function handler(req: any, res: any) {
   if (!sql) return res.status(503).json({ error: "Distribution queue activates when the database is connected.", mode: "no_db" });
 
   try {
+    // This queue is worked by a person, so flooding it costs staff time rather
+    // than compute — which makes it worth bounding even though it spends nothing.
+    // A gameId-less request needs no wallet and no game, so without this anyone
+    // could fill the pipeline with junk that has to be read before it is binned.
+    const rl = await rateLimit(sql, "dist:ip:" + clientIp(req), 10, 3600);
+    if (!rl.ok) return tooMany(res, rl.retryAfter, "distribution requests");
+    if (walletId) {
+      const wRl = await rateLimit(sql, "dist:w:" + String(walletId).slice(0, 80), 10, 3600);
+      if (!wRl.ok) return tooMany(res, wRl.retryAfter, "distribution requests on this account");
+    }
+
     await ensureGameSchema(sql);
     if (gameId) {
       const g = await getGame(sql, gameId);

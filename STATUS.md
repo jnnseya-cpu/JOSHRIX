@@ -3,7 +3,48 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-08-22 (character library landed; the runtime got a real sound engine)
+Last updated: 2026-08-25 (money-leak audit: twelve ways the platform worked for free, all closed)
+
+---
+
+## THE MONEY LEAKS — audited and closed, 25 Aug
+
+Justin: *"cancel all possible gaps, leaks, scenario, frauds, loopholes and everything else
+that will cause a loss."* Twelve were found. All twelve were live. Each now has a test that
+fails against the old code — verified by reverting the fix and watching the test go red.
+
+| # | The exploit | Where it was | Closed by |
+|---|---|---|---|
+| 1 | **Every paid game played free** at its public URL | `game-html.ts` served html for any approved game; `hasEntitlement()` existed and was called by nothing | entitlement gate on the play route |
+| 2 | **Forge → refund → publish = free game**, repeatable | `games.ts` saved first and settled "best-effort" after; `/api/forge-refund` is client-asserted | settle BEFORE save; a refunded build is re-collected or the publish is refused |
+| 3 | **One month of Studio bought 15% forever** | `seller_plan` frozen on the games row at listing time, read at settlement | commission read from the plan held at the moment of sale |
+| 4 | **Getting the plan wrong was cheaper than getting it right** | `?? "creator_pro"` (20%) in three files, under Creator's 25% | fallback is the dearest rate, derived from `PLANS` |
+| 5 | **A lapsed subscription never ended** | only `customer.subscription.deleted` handled; Stripe's "mark unpaid" dunning never deletes | `customer.subscription.updated` withdraws the plan |
+| 6 | **A refund left both sides paid** — buyer kept the game, seller kept the money | `charge.refunded` clawed back ACUs only | entitlements carry the payment intent; both sides reverse |
+| 7 | **Same-day cash-out on a stolen card** | nothing blocked self-purchase; earnings were withdrawable instantly | self-purchase refused; earnings clear for `EARNINGS_CLEARING_DAYS` |
+| 8 | **Unapproved builds previewed for strangers** | `!game.creator_wallet \|\|` in the preview check | ownership or moderation, no third case |
+| 9 | **Free unlimited AI whenever the database blinked** | `if (sql) { ...debit... }` in all four paid endpoints | `ledgerRequired()` — paid AI fails closed |
+| 10 | **A 100%-off coupon or a free trial granted full ACUs** | grants keyed to session metadata, not to the money | `grantCheck()` refuses a £0 settlement, honours real discounts |
+| 11 | **A plan changed in Stripe kept renewing at the old tier's ACUs** | subscription metadata is stamped at creation, never updated | the invoice amount identifies the plan; drift corrects the wallet |
+| 12 | **Paid withdrawals stayed `reserved` forever** | marking a payout paid updated only the request row | `settleReservation()` |
+
+**On the loophole Justin raised himself** — *"what if someone stops renewing and only tops
+up instead?"* That was #3, and it was real. It is now the reverse: the ACU price is the same
+either way (top-up is in fact **5× cheaper per ACU** than a plan), so the *only* thing a
+subscription buys is the commission rate — and that now stops the moment they stop paying.
+Cancelling costs them 25% instead of 15%. There is no longer an arbitrage.
+
+**Residual risk, stated plainly.** `EARNINGS_CLEARING_DAYS` is 14. UK card disputes can be
+raised up to 120 days out, so a patient fraudster can still outrun it; what 14 days stops is
+the same-day cash-out, which is the version that gets automated. Raise the constant if real
+dispute data says otherwise — it is read in one place.
+
+**Not closed, because it is a business decision and not a leak:** free (unpriced) games
+still play for anyone. That costs no provider money — the creator already paid to forge it —
+so it is a funnel choice, not a loss. See the free-play decision still waiting below.
+
+`tests/t29-leaks.js` (61) covers the ledger primitives, `tests/t30-paywall.js` (34) drives
+the real handlers. Suite: **32 files, 845 assertions, green.**
 
 ---
 
@@ -30,7 +71,7 @@ outward-facing, hard to reverse, and Justin's call, not mine:
 | `arcade.html` | "playable instantly, **free**, no account, no download" |
 | `index.html` | "Play One Now — **No Account**" · "no payment — it runs in this page" |
 | `pricing.html` | "JOSHRIX Arcade · **Free**" |
-| `play.html` / `/play/:id` | no wallet check anywhere — play is open to the world |
+| `play.html` / `/play/:id` | **partly closed 25 Aug** — a *priced* game now requires an entitlement; an *unpriced* one still plays for anyone |
 
 **THE DECISION WAITING FOR JUSTIN.** Does a stranger get to play ANYTHING before paying?
 It governs the whole funnel and cannot be inferred from the rule as stated:
@@ -422,6 +463,9 @@ provider while the game path had three). 20 assertions in `tests/t20-blueprint-j
 | 3 | **Set `NEWSLETTER_SECRET` in Vercel** | Any long random string. Without it the unsubscribe link still works, but the token is not signed, so anyone could unsubscribe another address. |
 | 4 | **Confirm the newsletter send** | It is live but has never sent to a real inbox. Run `GET /api/newsletter?dry=1` with `x-moderation-key` first — it reports the audience size and sends nothing. |
 | 5 | **Rotate the Neon password** | `npg_fK1p7jxceMgo` was pasted into chat earlier. Still outstanding. |
+| 6 | **Add three Stripe webhook events** | The leak fixes only fire if Stripe sends the events. In Developers → Webhooks, add **`customer.subscription.updated`**, **`invoice.payment_failed`** and confirm **`charge.refunded`** is on. Without `customer.subscription.updated` a lapsed subscription keeps its commission rate — leak #5 stays open no matter what the code says. |
+| 7 | **Check the dunning setting** | Billing → Subscriptions → "Manage failed payments". If it is set to **mark unpaid** rather than **cancel**, `customer.subscription.deleted` never fires at all. Either setting is now handled, but knowing which one is live tells you how long a non-payer keeps their plan. |
+| 8 | **Decide the free-play question** | Still open — see the top of this file. It is the one money question I have deliberately not answered for you, because it is a funnel decision rather than a leak. |
 
 ## Waiting on me — nothing
 
