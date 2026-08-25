@@ -121,7 +121,13 @@
 
   if (!id) { $('gTitle').textContent = 'No game selected'; showMsg('This link is missing a game id. Head to the Studio and forge one!', false); return; }
 
-  var pw = qs.get('w') || '';
+  // The wallet id proves who is asking: it is how the server recognises the
+  // creator previewing their own unapproved build, and how it recognises a buyer
+  // who owns a paid world. ?w= wins so a creator's preview link still works when
+  // opened in a browser that is not signed in.
+  var pw = qs.get('w') || (function(){
+    try { return (JSON.parse(localStorage.getItem('jx.profile') || '{}').serverWalletId) || ''; } catch (e) { return ''; }
+  })();
   fetch(API + '/api/game-html?id=' + encodeURIComponent(id) + (preview ? '&preview=1' : '') + (pw ? '&w=' + encodeURIComponent(pw) : ''))
     .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, status: r.status, j: j }; }); })
     .then(function(res){
@@ -162,6 +168,18 @@
           fsBtn.textContent = document.fullscreenElement ? '✕ Exit Fullscreen' : '⛶ Fullscreen';
         });
         track('play.session_start', { status: g.status, preview: preview });
+      } else if (g.locked) {
+        // Paid world, and this viewer does not own it. The server sends the
+        // price but never the game — so this panel is a shopfront, not a lock
+        // that JavaScript could be talked out of.
+        var price = typeof g.priceMinor === 'number' ? '£' + (g.priceMinor / 100).toFixed(2) : '';
+        $('frameMsg').innerHTML =
+          '<p><strong>' + (price ? price + ' — ' : '') + 'buy once, play anywhere.</strong></p>' +
+          '<p>' + (g.note || 'This world is on sale.') + '</p>' +
+          '<a class="btn btn-primary btn-sm" href="' + (g.buyUrl || '/marketplace.html') + '">Buy this world</a> ' +
+          '<a class="btn btn-sm" href="/studio.html">⚒ Forge your own</a>';
+        pill('review', price ? '🔒 ' + price : '🔒 On sale');
+        track('play.locked', { priceMinor: g.priceMinor || 0 });
       } else if (g.status === 'pending_review') {
         showMsg('This world is in moderation review. It goes live at this link the moment it\'s approved — check back soon.', false);
       } else {

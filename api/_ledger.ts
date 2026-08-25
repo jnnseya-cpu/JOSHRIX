@@ -230,6 +230,13 @@ export async function ensureGameSchema(sql: Sql) {
     stripe_session text UNIQUE,
     granted_at timestamptz NOT NULL DEFAULT now()
   )`;
+  // A refund arrives as charge.refunded, which carries a payment_intent and NOT
+  // the checkout session — so without this column a refunded purchase could not
+  // be found, and the buyer kept the game they had been paid back for.
+  await sql`ALTER TABLE entitlements ADD COLUMN IF NOT EXISTS payment_intent text`;
+  await sql`ALTER TABLE entitlements ADD COLUMN IF NOT EXISTS revoked_at timestamptz`;
+  await sql`CREATE INDEX IF NOT EXISTS entitlements_pi ON entitlements (payment_intent)`;
+  await sql`CREATE INDEX IF NOT EXISTS entitlements_buyer ON entitlements (game_id, buyer_wallet)`;
   await sql`CREATE TABLE IF NOT EXISTS forge_log (
     id bigserial PRIMARY KEY,
     provider text NOT NULL,
@@ -414,6 +421,54 @@ export async function releaseExpiredForgeHolds(sql: Sql, walletId: string, hours
   return total;
 }
 
+/**
+ * What a forge hold currently is: how much it costs to keep, and whether it has
+ * already been settled or handed back. Read by the publish path, which has to
+ * know the difference between "already paid for" and "refunded, so charge again".
+ */
+export async function getForgeCharge(sql: Sql, id: string, walletId: string) {
+  const rows = (await sql`SELECT id, amount, COALESCE(settle_amount, amount) AS settle_amount, accepted_at, refunded_at
+    FROM forge_charges WHERE id = ${id} AND wallet_id = ${walletId}`) as Array<{ id: string; amount: number; settle_amount: number; accepted_at: string | null; refunded_at: string | null }>;
+  return rows[0] ?? null;
+}
+
+/**
+ * Collect a forge that was REFUNDED and is now being kept after all.
+ *
+ * The hole this closes: /api/forge-refund is asserted by the client (its render
+ * watchdog reports the build drew nothing), and publishing used to save the game
+ * whether or not the charge could be collected. So forge -> refund -> publish
+ * was a free game, repeatable for as long as the rate limiter allowed, which
+ * made charge-on-accept optional for anyone who read the network tab.
+ *
+ * Refunding a build the creator then publishes is a contradiction: they are
+ * telling us it did not render and hosting it in the same breath. So the refund
+ * is reversed — settle_amount is debited afresh — and the row is marked accepted
+ * so it cannot be refunded a second time. Atomic: the debit and the state change
+ * both carry their guards, and a failed debit leaves the charge untouched.
+ *
+ * Returns the amount collected, or null when the wallet cannot cover it (the
+ * caller must then refuse the publish, not host it on credit).
+ */
+export async function recollectRefundedForge(sql: Sql, id: string, walletId: string): Promise<number | null> {
+  const charge = await getForgeCharge(sql, id, walletId);
+  if (!charge || charge.accepted_at || !charge.refunded_at) return null;
+  const settle = Math.min(Number(charge.settle_amount), Number(charge.amount));
+  if (settle <= 0) return 0;
+  const balance = await debitWallet(sql, walletId, settle);
+  if (balance === null) return null;                    // cannot pay — publish must refuse
+  const rows = (await sql`UPDATE forge_charges SET accepted_at = now(), refunded_at = NULL
+    WHERE id = ${id} AND wallet_id = ${walletId} AND accepted_at IS NULL AND refunded_at IS NOT NULL
+    RETURNING id`) as any[];
+  if (!rows.length) {
+    // Lost a race with another accept/recollect — give the money straight back
+    // rather than charging twice for one build.
+    await creditWallet(sql, walletId, settle);
+    return null;
+  }
+  return settle;
+}
+
 export async function claimForgeRefund(sql: Sql, id: string, walletId: string): Promise<number | null> {
   // A build that failed to render is never accepted, so this releases the whole
   // hold — and the accepted_at guard stops it double-refunding one already kept.
@@ -461,10 +516,12 @@ export async function saveGame(sql: Sql, g: { id: string; title: string; summary
     ON CONFLICT (id) DO NOTHING`;
 }
 
+/** `price_minor` rides along because the play route is the paywall: without it
+ *  the gate reads undefined and hands a paid game to anyone who asks. */
 export async function getGame(sql: Sql, id: string, withHtml = false) {
   const rows = withHtml
-    ? ((await sql`SELECT id, title, summary, language, status, plays, created_at, creator_email, creator_wallet, html FROM games WHERE id = ${id}`) as any[])
-    : ((await sql`SELECT id, title, summary, language, status, plays, created_at, creator_email, creator_wallet FROM games WHERE id = ${id}`) as any[]);
+    ? ((await sql`SELECT id, title, summary, language, status, plays, created_at, creator_email, creator_wallet, price_minor, html FROM games WHERE id = ${id}`) as any[])
+    : ((await sql`SELECT id, title, summary, language, status, plays, created_at, creator_email, creator_wallet, price_minor FROM games WHERE id = ${id}`) as any[]);
   return rows[0] ?? null;
 }
 
@@ -649,17 +706,35 @@ export async function setListingPrice(sql: Sql, gameId: string, walletId: string
   return rows.length > 0;
 }
 
-/** Grant a purchase exactly once per Stripe session (idempotent under retries). */
-export async function grantEntitlement(sql: Sql, e: { id: string; gameId: string; buyerWallet?: string | null; buyerEmail?: string | null; priceMinor: number; stripeSession: string }): Promise<boolean> {
-  const rows = (await sql`INSERT INTO entitlements (id, game_id, buyer_wallet, buyer_email, price_minor, stripe_session)
-    VALUES (${e.id}, ${e.gameId}, ${e.buyerWallet ?? null}, ${e.buyerEmail ?? null}, ${e.priceMinor}, ${e.stripeSession})
+/** Grant a purchase exactly once per Stripe session (idempotent under retries).
+ *  `paymentIntent` is what a later refund will arrive quoting, so it is stored
+ *  at grant time — there is no way to look it up afterwards. */
+export async function grantEntitlement(sql: Sql, e: { id: string; gameId: string; buyerWallet?: string | null; buyerEmail?: string | null; priceMinor: number; stripeSession: string; paymentIntent?: string | null }): Promise<boolean> {
+  const rows = (await sql`INSERT INTO entitlements (id, game_id, buyer_wallet, buyer_email, price_minor, stripe_session, payment_intent)
+    VALUES (${e.id}, ${e.gameId}, ${e.buyerWallet ?? null}, ${e.buyerEmail ?? null}, ${e.priceMinor}, ${e.stripeSession}, ${e.paymentIntent ?? null})
     ON CONFLICT (stripe_session) DO NOTHING RETURNING id`) as any[];
   return rows.length > 0;
 }
 
+/** Does this wallet own this game? A REVOKED entitlement is not ownership — a
+ *  buyer who charged back must lose access, or the refund is simply a discount
+ *  to zero that anyone can take. */
 export async function hasEntitlement(sql: Sql, gameId: string, walletId: string): Promise<boolean> {
-  const rows = (await sql`SELECT id FROM entitlements WHERE game_id = ${gameId} AND buyer_wallet = ${walletId} LIMIT 1`) as any[];
+  const rows = (await sql`SELECT id FROM entitlements
+    WHERE game_id = ${gameId} AND buyer_wallet = ${walletId} AND revoked_at IS NULL LIMIT 1`) as any[];
   return rows.length > 0;
+}
+
+/**
+ * A refund or chargeback landed. Withdraw the purchase, once, and report what
+ * it was worth so the seller's side can be reversed too. Single conditional
+ * UPDATE, so a Stripe retry cannot revoke twice and double-claw the seller.
+ */
+export async function revokeEntitlementByPaymentIntent(sql: Sql, paymentIntent: string) {
+  const rows = (await sql`UPDATE entitlements SET revoked_at = now()
+    WHERE payment_intent = ${paymentIntent} AND revoked_at IS NULL
+    RETURNING id, game_id, buyer_wallet, price_minor`) as Array<{ id: string; game_id: string; buyer_wallet: string | null; price_minor: number }>;
+  return rows[0] ?? null;
 }
 
 /* ---------------- creator earnings + payout requests ------------------------ */
@@ -686,17 +761,114 @@ export async function ensurePayoutSchema(sql: Sql) {
     reserved_minor bigint NOT NULL DEFAULT 0,
     paid_minor bigint NOT NULL DEFAULT 0
   )`;
+  // Money from a sale that has not yet outlived the chargeback window. It is the
+  // creator's, it shows in their dashboard, and it cannot be withdrawn — see
+  // EARNINGS_CLEARING_DAYS for why the platform cannot carry that risk.
+  await sql`ALTER TABLE creator_earnings ADD COLUMN IF NOT EXISTS clearing_minor bigint NOT NULL DEFAULT 0`;
+  await sql`ALTER TABLE creator_earnings ADD COLUMN IF NOT EXISTS clawed_back_minor bigint NOT NULL DEFAULT 0`;
+  await sql`CREATE TABLE IF NOT EXISTS earnings_holds (
+    id text PRIMARY KEY,
+    wallet_id text NOT NULL,
+    amount_minor bigint NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    clears_at timestamptz NOT NULL,
+    released_at timestamptz,
+    reversed_at timestamptz
+  )`;
+  await sql`CREATE INDEX IF NOT EXISTS earnings_holds_due ON earnings_holds (wallet_id, clears_at)`;
 }
 
-/** Credit a creator's withdrawable balance (called on settled marketplace sales). */
-export async function creditEarnings(sql: Sql, walletId: string, amountMinor: number) {
-  await sql`INSERT INTO creator_earnings (wallet_id, available_minor) VALUES (${walletId}, ${amountMinor})
-    ON CONFLICT (wallet_id) DO UPDATE SET available_minor = creator_earnings.available_minor + ${amountMinor}`;
+/**
+ * Credit a settled marketplace sale to the seller — into CLEARING, not into the
+ * withdrawable balance. `holdId` is the entitlement id, which is what a refund
+ * arrives able to identify, so a disputed sale can be reversed precisely rather
+ * than by clawing at a running total.
+ *
+ * Both statements are idempotent on holdId: a replayed webhook that slipped past
+ * the entitlement guard still cannot pay the seller twice.
+ */
+export async function creditEarnings(sql: Sql, walletId: string, amountMinor: number, opts?: { holdId?: string; clearingDays?: number }) {
+  const holdId = opts?.holdId;
+  const days = opts?.clearingDays ?? 0;
+  if (!holdId || days <= 0) {
+    // No hold identity or no clearing period configured: credit as before. This
+    // is the path for anything that is not a disputable card sale.
+    await sql`INSERT INTO creator_earnings (wallet_id, available_minor) VALUES (${walletId}, ${amountMinor})
+      ON CONFLICT (wallet_id) DO UPDATE SET available_minor = creator_earnings.available_minor + ${amountMinor}`;
+    return;
+  }
+  const rows = (await sql`INSERT INTO earnings_holds (id, wallet_id, amount_minor, clears_at)
+    VALUES (${holdId}, ${walletId}, ${amountMinor}, now() + make_interval(days => ${days}))
+    ON CONFLICT (id) DO NOTHING RETURNING id`) as any[];
+  if (!rows.length) return;   // already credited by an earlier delivery of this event
+  await sql`INSERT INTO creator_earnings (wallet_id, clearing_minor) VALUES (${walletId}, ${amountMinor})
+    ON CONFLICT (wallet_id) DO UPDATE SET clearing_minor = creator_earnings.clearing_minor + ${amountMinor}`;
+}
+
+/**
+ * Move matured holds into the withdrawable balance. Run lazily wherever earnings
+ * are read, so no cron is required and the figure a creator sees is always the
+ * figure they can actually request — the same pattern as releaseExpiredForgeHolds.
+ */
+export async function releaseClearedEarnings(sql: Sql, walletId: string): Promise<number> {
+  const rows = (await sql`UPDATE earnings_holds SET released_at = now()
+    WHERE wallet_id = ${walletId} AND released_at IS NULL AND reversed_at IS NULL AND clears_at <= now()
+    RETURNING amount_minor`) as Array<{ amount_minor: number }>;
+  const total = rows.reduce((n, r) => n + Number(r.amount_minor), 0);
+  if (total > 0) {
+    await sql`UPDATE creator_earnings
+      SET available_minor = available_minor + ${total}, clearing_minor = GREATEST(0, clearing_minor - ${total})
+      WHERE wallet_id = ${walletId}`;
+  }
+  return total;
+}
+
+/**
+ * Reverse one sale's earnings after a refund or chargeback.
+ *
+ * Three cases, and the order matters because it decides who absorbs the loss:
+ *   still clearing  -> take it straight back out of clearing. Costs nobody.
+ *   cleared, unspent-> take it out of available.
+ *   already paid out-> take what is left and report the SHORTFALL. That figure
+ *                      is a real debt to chase, and it is returned rather than
+ *                      swallowed so the operator alert can name it.
+ */
+export async function reverseEarnings(sql: Sql, holdId: string): Promise<{ walletId: string; amountMinor: number; fromClearing: number; fromAvailable: number; shortfallMinor: number } | null> {
+  const rows = (await sql`UPDATE earnings_holds SET reversed_at = now()
+    WHERE id = ${holdId} AND reversed_at IS NULL
+    RETURNING wallet_id, amount_minor, released_at`) as Array<{ wallet_id: string; amount_minor: number; released_at: string | null }>;
+  if (!rows.length) return null;
+  const walletId = rows[0].wallet_id, amountMinor = Number(rows[0].amount_minor);
+
+  if (!rows[0].released_at) {
+    // Never cleared, so it was never withdrawable — the clean case.
+    await sql`UPDATE creator_earnings SET clearing_minor = GREATEST(0, clearing_minor - ${amountMinor}) WHERE wallet_id = ${walletId}`;
+    return { walletId, amountMinor, fromClearing: amountMinor, fromAvailable: 0, shortfallMinor: 0 };
+  }
+  // Cleared. Take back as much as is still sitting there, never below zero — a
+  // negative balance would block every future payout for a debt they may not owe.
+  //
+  // The CTE snapshots the balance BEFORE the update: RETURNING sees post-update
+  // values, so "how much did we actually take" has to be read from `prev` or it
+  // reports the remainder instead of the amount.
+  const back = (await sql`
+    WITH prev AS (SELECT wallet_id, available_minor FROM creator_earnings WHERE wallet_id = ${walletId})
+    UPDATE creator_earnings ce
+    SET available_minor = GREATEST(0, ce.available_minor - ${amountMinor}),
+        clawed_back_minor = ce.clawed_back_minor + LEAST(prev.available_minor, ${amountMinor})
+    FROM prev
+    WHERE ce.wallet_id = prev.wallet_id
+    RETURNING LEAST(prev.available_minor, ${amountMinor}) AS taken`) as Array<{ taken: number }>;
+  const fromAvailable = Number(back[0]?.taken ?? 0);
+  return { walletId, amountMinor, fromClearing: 0, fromAvailable, shortfallMinor: amountMinor - fromAvailable };
 }
 
 export async function getEarnings(sql: Sql, walletId: string) {
-  const rows = (await sql`SELECT wallet_id, available_minor, reserved_minor, paid_minor FROM creator_earnings WHERE wallet_id = ${walletId}`) as any[];
-  return rows[0] ?? { wallet_id: walletId, available_minor: 0, reserved_minor: 0, paid_minor: 0 };
+  // Mature anything due before reporting, so "available" is never a figure that
+  // a payout request would then refuse.
+  try { await releaseClearedEarnings(sql, walletId); } catch { /* reporting must not fail on the sweep */ }
+  const rows = (await sql`SELECT wallet_id, available_minor, reserved_minor, paid_minor, clearing_minor FROM creator_earnings WHERE wallet_id = ${walletId}`) as any[];
+  return rows[0] ?? { wallet_id: walletId, available_minor: 0, reserved_minor: 0, paid_minor: 0, clearing_minor: 0 };
 }
 
 /**

@@ -5,12 +5,13 @@
  * Publishing IS the moment the creator accepts the build, so it is also the
  * moment the forge is paid for: the held ACUs settle to what the run actually
  * cost and the remainder is refunded. A build that is never published costs the
- * creator nothing.
+ * creator nothing — but a build that IS published always costs, which is why the
+ * settlement runs before the save and a publish that cannot collect is refused.
  * Every game enters the moderation queue (Build 3) before its /play/<id> URL
  * serves to the public; the creator can preview immediately via ?preview=1.
  */
 import { randomUUID } from "node:crypto";
-import { getDb, ensureGameSchema, saveGame, getWallet, countPendingByWallet, acceptForgeCharge, creditWallet } from "./_ledger";
+import { getDb, ensureGameSchema, saveGame, getWallet, countPendingByWallet, acceptForgeCharge, creditWallet, getForgeCharge, recollectRefundedForge } from "./_ledger";
 import { notify } from "./_notify";
 import { EMAIL_RE } from "./_guard";
 
@@ -63,6 +64,58 @@ export default async function handler(req: any, res: any) {
     // address — that would be an open relay); a valid body email may set the record.
     const creatorEmail = (email && EMAIL_RE.test(email) ? email : null) ?? wallet.email ?? null;
 
+    /* ---- ACCEPT: publishing is the creator keeping the build, so this is where
+       the forge is finally paid for — and it happens BEFORE the save.
+
+       It used to run afterwards, best-effort, on the reasoning that a billing
+       hiccup must never lose a game the creator had committed to. That was the
+       wrong trade: it also meant a publish went through when the charge could
+       NOT be collected, and /api/forge-refund is asserted by the client. Forge,
+       claim the render-failure refund, then publish, and the game was free —
+       repeatable, and visible to anyone reading the network tab.
+
+       So the order is inverted. Nothing is hosted until the run is paid for.
+       The creator is never charged for a build they walk away from — that
+       promise is untouched, because walking away is not publishing. ---- */
+    let acuCharged: number | undefined, acuRefunded: number | undefined;
+    if (!forgeId || typeof forgeId !== "string") {
+      return res.status(402).json({
+        error: "This build cannot be published because it is not linked to a forge run. Forge the game again from the Studio and publish that build.",
+        code: "forge_unlinked",
+      });
+    }
+    const settled = await acceptForgeCharge(sql, forgeId, walletId);
+    if (settled) {
+      acuCharged = settled.charged;
+      acuRefunded = settled.refund;
+      if (settled.refund > 0) await creditWallet(sql, walletId, settled.refund);
+    } else {
+      // The hold is gone: already settled, or refunded as a render failure. A
+      // refunded build being published is a contradiction — collect it again.
+      const charge = await getForgeCharge(sql, forgeId, walletId);
+      if (!charge) {
+        return res.status(402).json({
+          error: "That forge run does not belong to this wallet, so it cannot be published from here.",
+          code: "forge_unknown",
+        });
+      }
+      if (charge.accepted_at) {
+        acuCharged = Math.min(Number(charge.settle_amount), Number(charge.amount));  // already paid — republish of the same build
+      } else {
+        const collected = await recollectRefundedForge(sql, forgeId, walletId);
+        if (collected === null) {
+          const owed = Math.min(Number(charge.settle_amount), Number(charge.amount));
+          return res.status(402).json({
+            error: `This build was refunded as a failed render, so publishing it costs ${owed} ACUs to settle — and there aren't enough in the wallet. Top up at /wallet.html.`,
+            code: "forge_refunded_unpaid",
+            acuRequired: owed,
+          });
+        }
+        acuCharged = collected;
+        acuRefunded = 0;
+      }
+    }
+
     const id = "g-" + slug(title) + "-" + randomUUID().replace(/-/g, "").slice(0, 10);
     await saveGame(sql, {
       id,
@@ -73,21 +126,6 @@ export default async function handler(req: any, res: any) {
       creatorWallet: walletId,
       creatorEmail,
     });
-    // ACCEPT: publishing is the creator keeping the build, so this is where the
-    // forge is finally paid for. The hold settles to what the run actually cost
-    // and the remainder is credited back. Best-effort and AFTER the save — a
-    // billing hiccup must never lose a game the creator already committed to.
-    let acuCharged: number | undefined, acuRefunded: number | undefined;
-    if (forgeId && typeof forgeId === "string") {
-      try {
-        const settled = await acceptForgeCharge(sql, forgeId, walletId);
-        if (settled) {
-          acuCharged = settled.charged;
-          acuRefunded = settled.refund;
-          if (settled.refund > 0) await creditWallet(sql, walletId, settled.refund);
-        }
-      } catch { /* reconciliation catches strays; never block a publish on it */ }
-    }
 
     await notify("game.submitted", wallet.email ?? null, { game: title.trim().slice(0, 60) });
     return res.status(200).json({

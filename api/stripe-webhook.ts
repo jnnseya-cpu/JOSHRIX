@@ -4,12 +4,21 @@
  * we verify against STRIPE_WEBHOOK_SECRET on the RAW body, then act.
  * Setup (Stripe Dashboard → Developers → Webhooks → Add endpoint):
  *   URL:    https://<your-vercel-app>.vercel.app/api/stripe-webhook
- *   Events: checkout.session.completed, payment_intent.payment_failed, charge.refunded
+ *   Events: checkout.session.completed, invoice.paid, invoice.payment_succeeded,
+ *           invoice.payment_failed, customer.subscription.updated,
+ *           customer.subscription.deleted, payment_intent.payment_failed,
+ *           charge.refunded
  *   Then copy the signing secret into the STRIPE_WEBHOOK_SECRET env var.
+ *
+ * customer.subscription.updated is NOT optional. Whether a lapsed subscription
+ * is ever deleted depends on the dunning setting in Billing → Subscriptions →
+ * "Manage failed payments": only "cancel subscription" produces a deleted
+ * event. On "mark unpaid" — a common default — the subscription lives on in
+ * `unpaid` forever, and without the updated event the plan would never end.
  */
 import Stripe from "stripe";
-import { TOPUP_PACKAGES, topupPostings, PLANS, marketplaceSplit, salePostings } from "../shared/payments";
-import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet, setWalletPlan, markWalletPurchased, unclaimEvent, claimAcuClawback, clawbackWallet, getListing, grantEntitlement, ensurePayoutSchema, creditEarnings } from "./_ledger";
+import { TOPUP_PACKAGES, topupPostings, PLANS, marketplaceSplit, salePostings, effectiveSellerPlan, EARNINGS_CLEARING_DAYS } from "../shared/payments";
+import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet, setWalletPlan, markWalletPurchased, unclaimEvent, claimAcuClawback, clawbackWallet, getListing, grantEntitlement, ensurePayoutSchema, creditEarnings, getWallet, revokeEntitlementByPaymentIntent, reverseEarnings } from "./_ledger";
 import { notify } from "./_notify";
 
 // Vercel: disable body parsing so the raw payload is available for verification
@@ -83,6 +92,39 @@ export function handleStripeEvent(event: Stripe.Event) {
       }
       return { ok: true as const, action: "subscription_deleted_untyped", eventId: event.id };
     }
+    case "customer.subscription.updated": {
+      /**
+       * A subscription does not only end by being deleted, and this is the gap
+       * that let a plan outlive its payments.
+       *
+       * When a renewal fails Stripe moves the subscription to `past_due` and
+       * starts dunning. Whether it is ever DELETED depends on a dashboard
+       * setting: "cancel subscription" deletes it after the retries, but the
+       * default in many accounts is "mark unpaid", which leaves it alive
+       * forever. Handling only `deleted` therefore meant a subscriber who
+       * stopped paying could keep their plan — and their commission rate —
+       * indefinitely, with no event ever arriving to say otherwise.
+       *
+       * So the plan ends when the subscription stops being paid for, whichever
+       * state Stripe expresses that in.
+       */
+      const sub = event.data.object as any;
+      const md = sub.metadata || {};
+      const DEAD = ["past_due", "unpaid", "canceled", "incomplete_expired", "paused"];
+      if (md.kind === "plan_subscription" && md.walletId && DEAD.includes(String(sub.status))) {
+        return { ok: true as const, action: "plan_ended", eventId: event.id, walletId: md.walletId, reason: String(sub.status) };
+      }
+      return { ok: true as const, action: "subscription_updated_logged", eventId: event.id, status: String(sub.status ?? "") };
+    }
+    case "invoice.payment_failed": {
+      // The first signal that a renewal is in trouble. The plan is not withdrawn
+      // here — Stripe retries, and cancelling on a single failed card would
+      // punish a customer whose payment recovers a day later. The withdrawal
+      // comes from customer.subscription.updated above once dunning gives up.
+      const inv = event.data.object as any;
+      const md = inv.subscription_details?.metadata || inv.parent?.subscription_details?.metadata || inv.lines?.data?.[0]?.metadata || {};
+      return { ok: true as const, action: "invoice_payment_failed", eventId: event.id, walletId: md.walletId ?? "", planId: md.planId ?? "" };
+    }
     case "payment_intent.payment_failed":
       return { ok: true as const, action: "payment_failed_logged", eventId: event.id };
     case "charge.refunded": {
@@ -148,23 +190,40 @@ export default async function handler(req: any, res: any) {
           const listing = r.gameId ? await getListing(sql, r.gameId) : null;
           const priceMinor = Number(listing?.price_minor ?? r.priceMinor ?? 0);
           if (listing && priceMinor > 0) {
-            const sellerPlan = PLANS.find((p) => p.id === listing.seller_plan)?.id ?? "creator_pro";
+            // Commission is decided by the plan the seller holds AT SETTLEMENT.
+            // The listing's stored seller_plan is only a fallback for a wallet
+            // that cannot be read — never a rate a lapsed subscriber keeps.
+            const sellerWallet = listing.creator_wallet ? await getWallet(sql, listing.creator_wallet) : null;
+            const sellerPlan = effectiveSellerPlan(listing.seller_plan, sellerWallet ? ((sellerWallet as any).plan ?? "explorer") : null);
             const split = marketplaceSplit({ grossMinor: priceMinor, method: "card", sellerPlan, hasLineage: false });
+            const entitlementId = (session.id ?? event.id) + ":" + listing.id;
+            const paymentIntent = typeof (session as any).payment_intent === "string" ? (session as any).payment_intent : null;
             const granted = await grantEntitlement(sql, {
-              id: (session.id ?? event.id) + ":" + listing.id,
+              id: entitlementId,
               gameId: listing.id,
               buyerWallet: r.buyerWalletId || null,
               buyerEmail: email,
               priceMinor,
               stripeSession: session.id ?? event.id,
+              paymentIntent,   // the only handle a later refund will arrive with
             });
             if (granted) {
               await postTx(sql, "marketplace_sale", salePostings(split), { eventId: event.id, gameId: listing.id, session: session.id ?? "" });
-              // the seller's share becomes withdrawable earnings — only ever on a
-              // NEW entitlement, so a replayed webhook cannot pay them twice
-              if (listing.creator_wallet && split.creatorMinor > 0) {
+              // The seller's share becomes earnings — only ever on a NEW
+              // entitlement, so a replayed webhook cannot pay them twice — and it
+              // lands in CLEARING, not in the withdrawable balance, so a
+              // chargeback can still reach it. Self-purchases never pay out at
+              // all: checkout refuses them, and this is the second gate in case
+              // a session was created before that check existed.
+              const selfBought = !!r.buyerWalletId && r.buyerWalletId === listing.creator_wallet;
+              if (listing.creator_wallet && split.creatorMinor > 0 && !selfBought) {
                 await ensurePayoutSchema(sql);
-                await creditEarnings(sql, listing.creator_wallet, split.creatorMinor);
+                await creditEarnings(sql, listing.creator_wallet, split.creatorMinor, {
+                  holdId: entitlementId, clearingDays: EARNINGS_CLEARING_DAYS,
+                });
+              }
+              if (selfBought) {
+                console.warn(JSON.stringify({ selfPurchase: { gameId: listing.id, wallet: listing.creator_wallet, eventId: event.id } }));
               }
             }
           }
@@ -191,10 +250,20 @@ export default async function handler(req: any, res: any) {
           }
           await notify("subscription.renewed", email, { plan: plan?.name ?? "" });
         } else if (result.ok && (result as any).action === "plan_ended") {
+          // Back to explorer, which cannot sell — so the seller's commission
+          // reverts to the top of the ladder at the next sale, and checkout
+          // stops new sales of their listings until they resubscribe. The
+          // listings keep their prices; nothing is deleted by a lapsed payment.
           const wid = (result as any).walletId as string;
+          const why = (result as any).reason as string | undefined;
           await ensureGameSchema(sql);
           await setWalletPlan(sql, wid, "explorer");
+          console.log(JSON.stringify({ planEnded: { walletId: wid, reason: why ?? "deleted", eventId: event.id } }));
           await notify("subscription.cancelled", email, {});
+        } else if (result.ok && (result as any).action === "invoice_payment_failed") {
+          // Logged, not acted on: Stripe is still retrying. Recorded so a plan
+          // that later dies is traceable to the payment that started it.
+          console.warn(JSON.stringify({ invoicePaymentFailed: { walletId: (result as any).walletId || null, planId: (result as any).planId || null, eventId: event.id } }));
         } else if (result.ok && (result as any).action === "refund_recorded") {
           // reverse the revenue in the ledger and flag the operator for ACU clawback
           const amt = Number((result as any).amountMinor ?? 0);
@@ -208,22 +277,43 @@ export default async function handler(req: any, res: any) {
           // AI credit, or the platform pays the provider bill for compute it was
           // never paid for. Single-use per credit, never drives a balance negative.
           const ch = (event.data?.object ?? {}) as any;
+          const pi = typeof ch.payment_intent === "string" ? ch.payment_intent : null;
           let clawed: { acu: number; removed: number; walletId: string } | null = null;
           try {
             await ensureGameSchema(sql);
-            const credit = await claimAcuClawback(sql, {
-              paymentIntent: typeof ch.payment_intent === "string" ? ch.payment_intent : null,
-              stripeSession: null,
-            });
+            const credit = await claimAcuClawback(sql, { paymentIntent: pi, stripeSession: null });
             if (credit?.wallet_id) {
               const w = await clawbackWallet(sql, credit.wallet_id, Number(credit.acu));
               if (w) clawed = { acu: Number(credit.acu), removed: w.removed, walletId: credit.wallet_id };
             }
           } catch (e) { console.error(JSON.stringify({ clawbackError: String((e as any)?.message ?? e), eventId: event.id })); }
+
+          /* A REFUNDED MARKETPLACE SALE has a second half the ACU clawback never
+             touched: the buyer kept the game and the seller kept the money. So a
+             refund was a way to buy a world for nothing, and — with a stolen card
+             — a way to turn a chargeback into a withdrawal. Both sides reverse. */
+          let sale: string | null = null;
+          if (pi) {
+            try {
+              const revoked = await revokeEntitlementByPaymentIntent(sql, pi);
+              if (revoked) {
+                await ensurePayoutSchema(sql);
+                const rev = await reverseEarnings(sql, revoked.id);
+                sale = rev
+                  ? `sale of ${revoked.game_id} reversed — £${(rev.amountMinor / 100).toFixed(2)} recovered from ${rev.walletId}` +
+                    (rev.shortfallMinor > 0 ? `, £${(rev.shortfallMinor / 100).toFixed(2)} SHORTFALL (already withdrawn — debt to chase)` : " in full, before it cleared")
+                  : `entitlement for ${revoked.game_id} revoked; no earnings hold found to reverse`;
+              }
+            } catch (e) { console.error(JSON.stringify({ saleReversalError: String((e as any)?.message ?? e), eventId: event.id })); }
+          }
+
           await notify("executive.alert", process.env.CONTACT_INBOX || process.env.SMTP_USER || null, {
-            item: clawed
-              ? `Stripe refund £${(amt / 100).toFixed(2)} — ${clawed.removed} of ${clawed.acu} ACUs clawed back from ${clawed.walletId}${clawed.removed < clawed.acu ? " (rest already spent — shortfall to write off)" : ""} (event ${event.id})`
-              : `Stripe refund £${(amt / 100).toFixed(2)} — no matching ACU credit found; review manually (event ${event.id})`,
+            item: `Stripe refund £${(amt / 100).toFixed(2)} — ` + [
+              clawed
+                ? `${clawed.removed} of ${clawed.acu} ACUs clawed back from ${clawed.walletId}${clawed.removed < clawed.acu ? " (rest already spent — shortfall to write off)" : ""}`
+                : sale ? null : "no matching ACU credit found; review manually",
+              sale,
+            ].filter(Boolean).join("; ") + ` (event ${event.id})`,
           });
         } else if (result.ok && (result as any).action === "founder_pass") {
           await recordFounder(sql, { stripeSession: session.id ?? event.id, pass: (result as any).pass, email, amountMinor: (session.amount_total as number) ?? null });

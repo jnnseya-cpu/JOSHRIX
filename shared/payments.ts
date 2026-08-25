@@ -34,6 +34,63 @@ export const PLANS = [
 ] as const;
 export type PlanId = (typeof PLANS)[number]["id"];
 
+/* ---------------- commission authority --------------------------------------
+ * A lower commission is a DISCOUNT, and a discount must never be reachable by
+ * accident. Two rules make that true, and both live here because commission is
+ * the number this file exists to own.
+ */
+
+/** The rate charged when the seller's plan cannot be established — an unknown
+ *  plan id, a null column on a legacy listing, a lapsed subscription. It is the
+ *  HIGHEST commission on the ladder, derived rather than typed, so adding a plan
+ *  can never quietly make the unknown case cheaper. The old code defaulted to
+ *  creator_pro (20%), which was cheaper than Creator's 25%: a listing whose plan
+ *  we could not read paid LESS than the entry-level tier that we could. */
+export const DEFAULT_SELLER_PLAN: PlanId = PLANS
+  .filter((p) => p.commission !== null)
+  .reduce((worst, p) => (p.commission! > worst.commission! ? p : worst)).id;
+
+/**
+ * Which plan a sale settles at: THE ONE THE SELLER HOLDS RIGHT NOW.
+ *
+ * The listing also stores a `seller_plan`, stamped when the creator set their
+ * price, and that stored value used to be the settlement authority. It was
+ * justified as protecting a checkout already in flight from re-pricing under
+ * the buyer — but the buyer pays `price_minor`, which is a different stored
+ * column entirely. Commission only ever splits the SELLER's side, so freezing
+ * it protected nobody and cost us the obvious exploit: subscribe to Studio for
+ * one month, price every game at 15%, cancel, and keep selling at 15% forever
+ * on a £0 plan.
+ *
+ * So the stored plan is now a record of what the creator was quoted, shown back
+ * to them in the listing UI, and nothing more. Commission is a property of the
+ * subscription held at the moment of sale:
+ *
+ *   upgraded since listing  -> the cheaper rate applies at once, unprompted
+ *   downgraded or cancelled -> the dearer rate applies at once
+ *   no sellable plan at all -> DEFAULT_SELLER_PLAN, the top of the ladder
+ *
+ * `stored` is accepted only as a last resort for a seller whose wallet cannot
+ * be read at settlement (deleted account, database blip) — better to settle at
+ * a rate we once agreed than to fail the webhook and never pay the creator.
+ */
+export function effectiveSellerPlan(stored?: string | null, current?: string | null): PlanId {
+  if (canSell(current)) return current as PlanId;
+  if (current === null || current === undefined) {
+    // wallet unreadable — not "lapsed". Fall back to what was agreed, if valid.
+    if (canSell(stored)) return stored as PlanId;
+  }
+  return DEFAULT_SELLER_PLAN;
+}
+
+/** Can this plan sell on the marketplace at all? Explorer cannot, and the check
+ *  belongs here rather than being re-derived as `commission === null` at each
+ *  call site — one of which would eventually forget. */
+export function canSell(planId?: string | null): boolean {
+  const p = PLANS.find((x) => x.id === planId);
+  return !!p && p.commission !== null;
+}
+
 /* ---------------- who may hold AI credit without paying for it -------------
  * NO FREE AI is the standing rule, with exactly one carve-out: accounts WE
  * designate as testers. The distinction is the wallet category, and it is why
@@ -70,6 +127,23 @@ export const PaymentMethods = ["card", "bitripay", "mobile_money"] as const;
 export type PaymentMethod = (typeof PaymentMethods)[number];
 
 /* ---------------- pay-out: rails and rules ---------------------------------- */
+/**
+ * How long a marketplace sale sits before the seller can withdraw it.
+ *
+ * Without this the platform carries the whole chargeback risk: list at £5,000,
+ * buy it with a stolen card, withdraw the same afternoon, and the dispute
+ * arrives weeks later against money that has already left. The clearing period
+ * is what makes the fraud unprofitable — the payout is still here when the
+ * chargeback lands, so reversing it costs us nothing.
+ *
+ * 14 days is the trade-off, not a guarantee. UK card disputes can be raised up
+ * to 120 days out, so a long-tail chargeback can still outrun this; what it
+ * stops is the same-day cash-out, which is the version that actually gets
+ * automated. Raise it here — one constant, read by the ledger — if real dispute
+ * data says the tail matters more than creator patience.
+ */
+export const EARNINGS_CLEARING_DAYS = 14;
+
 export const PAYOUT = {
   minMinor: 1_000,               // £10 minimum withdrawal
   kycThresholdMinor: 10_000,     // KYC required once cumulative payouts exceed £100
@@ -162,7 +236,11 @@ export function marketplaceSplit(opts: {
   sellerPlan?: PlanId;
   hasLineage?: boolean;
 }) {
-  const plan = PLANS.find((p) => p.id === (opts.sellerPlan ?? "creator_pro"))!;
+  // An unreadable plan settles at the TOP of the ladder, never the middle of it.
+  // This used to be `?? "creator_pro"`, so a listing whose seller_plan was null
+  // or unrecognised paid 20% — less than the 25% an actual Creator subscriber
+  // pays. Getting the plan wrong must never be cheaper than getting it right.
+  const plan = PLANS.find((p) => p.id === opts.sellerPlan) ?? PLANS.find((p) => p.id === DEFAULT_SELLER_PLAN)!;
   if (plan.commission === null) throw new Error("This plan cannot sell on the marketplace");
   // Defence in depth: the schema enforces the floor at the edge, but this is the
   // money function — refuse outright rather than compute a negative payout for a

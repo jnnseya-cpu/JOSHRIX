@@ -9,8 +9,8 @@
  * amount, and the entitlement is granted ONLY by the verified webhook.
  */
 import Stripe from "stripe";
-import { CheckoutRequestSchema, marketplaceSplit, salePostings, MIN_LISTING_PRICE_MINOR, PLANS } from "../shared/payments";
-import { getDb, ensureGameSchema, getListing } from "./_ledger";
+import { CheckoutRequestSchema, marketplaceSplit, salePostings, MIN_LISTING_PRICE_MINOR, effectiveSellerPlan, canSell } from "../shared/payments";
+import { getDb, ensureGameSchema, getListing, getWallet } from "./_ledger";
 import { safeOrigin, clientIp, rateLimit, tooMany } from "./_guard";
 
 export default async function handler(req: any, res: any) {
@@ -57,7 +57,28 @@ export default async function handler(req: any, res: any) {
     if (!priceMinor || priceMinor < MIN_LISTING_PRICE_MINOR) {
       return res.status(409).json({ error: "This world has no valid sale price set by its creator." });
     }
-    const sellerPlan = PLANS.find((p) => p.id === listing.seller_plan)?.id ?? "creator_pro";
+
+    // SELF-PURCHASE. Buying your own listing routes real card money through the
+    // platform and back out as withdrawable earnings, which is the shape of a
+    // stolen-card cash-out: list high, buy from yourself, withdraw, let the
+    // chargeback land on us. There is no legitimate reason to buy a world you
+    // already own outright, so it is refused rather than merely flagged.
+    if (buyerWalletId && listing.creator_wallet && String(buyerWalletId) === listing.creator_wallet) {
+      return res.status(409).json({ error: "This is your own world — you already own it. Open it from your dashboard." });
+    }
+
+    // COMMISSION AUTHORITY: the plan the seller holds NOW, not the one frozen on
+    // the listing when they set the price. A lapsed seller cannot keep selling at
+    // the rate of a subscription they stopped paying for — see effectiveSellerPlan.
+    const sellerWallet = listing.creator_wallet ? await getWallet(sql, listing.creator_wallet) : null;
+    const currentPlan = sellerWallet ? ((sellerWallet as any).plan ?? "explorer") : null;
+    if (sellerWallet && !canSell(currentPlan)) {
+      // Explorer cannot sell. listing.ts enforces that when a price is SET; this
+      // enforces it continuously, so cancelling a plan takes the games off sale
+      // instead of leaving them selling at a rate nobody is paying for.
+      return res.status(409).json({ error: "This world is not on sale at the moment. Its creator's selling plan is not active." });
+    }
+    const sellerPlan = effectiveSellerPlan(listing.seller_plan, currentPlan);
     const payMethod = (method === "bitripay" || method === "mobile_money") ? method : "card";
     const split = marketplaceSplit({ grossMinor: priceMinor, method: payMethod, sellerPlan, hasLineage: false });
 
