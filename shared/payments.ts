@@ -123,6 +123,45 @@ export const TESTER_CEILING_ACU = 20_000;
  *  A tester who genuinely spends the ceiling tops back up a minute later. */
 export const TESTER_REFILL_COOLDOWN_SECONDS = 60;
 
+/**
+ * Did this settlement actually pay for what it is about to be credited?
+ *
+ * Everything we grant — top-up ACUs, a plan's monthly ACUs — is keyed off the
+ * package or plan named in the session METADATA, which our own server wrote and
+ * Stripe signed, so it cannot be forged. What it can be is DECOUPLED from the
+ * money, and in two ordinary ways that need no attacker at all:
+ *
+ *   a 100%-off promotion code    — metadata still says acu_1000, £0 arrives,
+ *                                  100,000 ACUs are credited for nothing
+ *   a free trial on a plan       — invoice.paid fires with amount_paid = 0 and
+ *                                  the month's ACUs are granted every cycle
+ *
+ * Both are things a marketing campaign switches on in the Stripe dashboard
+ * without touching this repo, so the code has to be the thing that notices.
+ *
+ * A partial discount is a normal commercial decision and is honoured in full —
+ * halving someone's ACUs because they used a valid coupon would make the coupon
+ * meaningless. A settlement of ZERO is not a discount, it is a giveaway, and it
+ * only ever happens by configuration. It is refused and reported.
+ */
+export function grantCheck(amountPaidMinor: number | null | undefined, listPriceMinor: number): {
+  grant: boolean; discounted: boolean; paidMinor: number; reason: string;
+} {
+  // Missing amount (an older API shape, a field Stripe did not send) is not
+  // evidence of non-payment — the event only exists because a charge settled.
+  if (amountPaidMinor === null || amountPaidMinor === undefined) {
+    return { grant: true, discounted: false, paidMinor: listPriceMinor, reason: "amount absent — trusting the settled event" };
+  }
+  const paid = Number(amountPaidMinor);
+  if (!Number.isFinite(paid) || paid <= 0) {
+    return { grant: false, discounted: true, paidMinor: 0, reason: "nothing was paid (100% discount, free trial, or a £0 invoice)" };
+  }
+  if (paid < listPriceMinor) {
+    return { grant: true, discounted: true, paidMinor: paid, reason: `discounted: £${(paid / 100).toFixed(2)} of £${(listPriceMinor / 100).toFixed(2)}` };
+  }
+  return { grant: true, discounted: false, paidMinor: paid, reason: "paid in full" };
+}
+
 export const PaymentMethods = ["card", "bitripay", "mobile_money"] as const;
 export type PaymentMethod = (typeof PaymentMethods)[number];
 

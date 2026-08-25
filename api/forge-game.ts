@@ -12,7 +12,7 @@ import { buildPlayableGame } from "./_engine";
 import { releaseExpiredForgeHolds, getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeHold, saveForgeResult, recordForgeLog } from "./_ledger";
 import { recordSecurityEvent } from "./_guard";
 import { scanConcept, sanitiseConcept } from "./_security";
-import { clientIp, rateLimit, tooMany, forgeDisabled } from "./_guard";
+import { clientIp, rateLimit, tooMany, forgeDisabled, ledgerRequired } from "./_guard";
 import type { GameBlueprint } from "../shared/contracts";
 
 /** Coerce whatever the client sends as a blueprint into the shape the engine needs. */
@@ -53,6 +53,8 @@ export default async function handler(req: any, res: any) {
   if (prompt.length > 20000) {
     return res.status(400).json({ error: "Prompt too long (max 20,000 chars)." });
   }
+  const _noLedger = ledgerRequired(getDb());
+  if (_noLedger) return res.status(503).json({ error: _noLedger, mode: "no_ledger" });
   const paused = forgeDisabled();
   if (paused) return res.status(503).json({ error: paused });
 

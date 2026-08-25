@@ -17,7 +17,7 @@
  * `unpaid` forever, and without the updated event the plan would never end.
  */
 import Stripe from "stripe";
-import { TOPUP_PACKAGES, topupPostings, PLANS, marketplaceSplit, salePostings, effectiveSellerPlan, EARNINGS_CLEARING_DAYS } from "../shared/payments";
+import { TOPUP_PACKAGES, topupPostings, PLANS, marketplaceSplit, salePostings, effectiveSellerPlan, EARNINGS_CLEARING_DAYS, grantCheck } from "../shared/payments";
 import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet, setWalletPlan, markWalletPurchased, unclaimEvent, claimAcuClawback, clawbackWallet, getListing, grantEntitlement, ensurePayoutSchema, creditEarnings, getWallet, revokeEntitlementByPaymentIntent, reverseEarnings } from "./_ledger";
 import { notify } from "./_notify";
 
@@ -79,7 +79,18 @@ export function handleStripeEvent(event: Stripe.Event) {
       const inv = event.data.object as any;
       const md = inv.subscription_details?.metadata || inv.parent?.subscription_details?.metadata || inv.lines?.data?.[0]?.metadata || {};
       if (md.kind === "plan_subscription" && inv.billing_reason !== "subscription_create") {
-        return { ok: true as const, action: "plan_renewed", eventId: event.id, planId: md.planId ?? "", walletId: md.walletId ?? "" };
+        // amount_paid rides along because the metadata planId is stamped when the
+        // subscription is CREATED and never updated afterwards. If the price is
+        // ever changed on a live subscription — a plan switch through Stripe's
+        // customer portal, a manual edit in the dashboard — the metadata still
+        // names the old plan, and the renewal would grant a Studio month's ACUs
+        // for a Creator month's money. The invoice amount is the fact; the
+        // metadata is only a label.
+        return {
+          ok: true as const, action: "plan_renewed", eventId: event.id,
+          planId: md.planId ?? "", walletId: md.walletId ?? "",
+          amountPaidMinor: typeof inv.amount_paid === "number" ? inv.amount_paid : null,
+        };
       }
       return { ok: true as const, action: "invoice_logged", eventId: event.id };
     }
@@ -167,7 +178,21 @@ export default async function handler(req: any, res: any) {
         const session = (event.data?.object ?? {}) as Stripe.Checkout.Session;
         const email = (session as any)?.customer_details?.email ?? null;
         if (result.ok && (result as any).action === "credit_acu") {
-          const r = result as { packageId: string; acu: number; ledger: { postings: Array<{ account: string; deltaMinor: number }> } };
+          const r = result as { packageId: string; acu: number; amountMinor: number; ledger: { postings: Array<{ account: string; deltaMinor: number }> } };
+          // Never credit AI for money that did not arrive — see grantCheck.
+          const gc = grantCheck((session as any).amount_total, r.amountMinor);
+          if (!gc.grant) {
+            console.error(JSON.stringify({ topupNotGranted: { packageId: r.packageId, reason: gc.reason, session: session.id ?? "", eventId: event.id } }));
+            await notify("executive.alert", process.env.CONTACT_INBOX || process.env.SMTP_USER || null, {
+              item: `Top-up ${r.packageId} settled at £0 — ${gc.reason}. ${r.acu.toLocaleString()} ACUs were NOT credited (event ${event.id}). If this was a deliberate 100% promotion, credit the wallet from /admin.`,
+            });
+            persisted = "yes";
+            console.log(JSON.stringify({ stripeWebhook: { ...result, persisted, granted: false } }));
+            return res.status(200).json({ received: true, persisted, granted: false, reason: gc.reason });
+          }
+          if (gc.discounted) {
+            console.warn(JSON.stringify({ topupDiscounted: { packageId: r.packageId, paidMinor: gc.paidMinor, listMinor: r.amountMinor, eventId: event.id } }));
+          }
           await postTx(sql, "acu_topup", r.ledger.postings, { eventId: event.id, session: session.id ?? "", packageId: r.packageId });
           await creditAcu(sql, {
             stripeSession: session.id ?? event.id, email, packageId: r.packageId, acu: r.acu,
@@ -235,18 +260,51 @@ export default async function handler(req: any, res: any) {
           const plan = PLANS.find((p) => p.id === planId);
           if (plan && wid) {
             await ensureGameSchema(sql);
+            // The PLAN is granted on the settled event — a discounted first month
+            // is still a real subscription, and the commission tier is what they
+            // bought. The ACUs are the part that costs us provider money, so they
+            // follow the money: a £0 first invoice (free trial, 100% coupon)
+            // activates the plan but grants no credit.
             await setWalletPlan(sql, wid, plan.id);
-            if (plan.monthlyAcu > 0) await creditWallet(sql, wid, plan.monthlyAcu);
             await markWalletPurchased(sql, wid);
+            const gc = grantCheck((session as any).amount_total, plan.monthlyMinor);
+            if (plan.monthlyAcu > 0 && gc.grant) {
+              await creditWallet(sql, wid, plan.monthlyAcu);
+            } else if (plan.monthlyAcu > 0) {
+              console.error(JSON.stringify({ planAcuNotGranted: { planId: plan.id, walletId: wid, reason: gc.reason, eventId: event.id } }));
+              await notify("executive.alert", process.env.CONTACT_INBOX || process.env.SMTP_USER || null, {
+                item: `${plan.name} activated for ${wid} on a £0 invoice — ${gc.reason}. Plan is live; ${plan.monthlyAcu.toLocaleString()} ACUs were NOT granted (event ${event.id}).`,
+              });
+            }
           }
           await notify("subscription.activated", email, { plan: plan?.name ?? planId });
         } else if (result.ok && (result as any).action === "plan_renewed") {
-          // monthly renewal: credit the plan's ACUs to the subscriber's wallet
-          const plan = PLANS.find((p) => p.id === (result as any).planId);
+          // Monthly renewal: credit the ACUs of the plan THE INVOICE PAID FOR.
+          const labelled = PLANS.find((p) => p.id === (result as any).planId);
           const wid = (result as any).walletId as string;
+          const paid = (result as any).amountPaidMinor as number | null;
+          // If the amount does not match the labelled plan, believe the money and
+          // find the plan it actually bought. An amount matching no plan at all
+          // (a proration, a partial credit) grants nothing and is reported.
+          const byAmount = typeof paid === "number" && paid > 0 ? PLANS.find((p) => p.monthlyMinor === paid) : null;
+          const plan = byAmount ?? labelled;
           if (plan && wid && plan.monthlyAcu > 0) {
             await ensureGameSchema(sql);
-            await creditWallet(sql, wid, plan.monthlyAcu);
+            const gc = grantCheck(paid, plan.monthlyMinor);
+            if (gc.grant) {
+              await creditWallet(sql, wid, plan.monthlyAcu);
+              // A plan switch made outside this codebase only becomes visible
+              // here, so the wallet's tier is corrected on the renewal that
+              // proves it — otherwise commission would keep using the old tier.
+              if (byAmount && labelled && byAmount.id !== labelled.id) {
+                await setWalletPlan(sql, wid, byAmount.id);
+                console.warn(JSON.stringify({ planDrift: { walletId: wid, metadataSaid: labelled.id, invoicePaidFor: byAmount.id, eventId: event.id } }));
+              }
+            } else {
+              console.error(JSON.stringify({ renewalAcuNotGranted: { walletId: wid, planId: plan.id, reason: gc.reason, eventId: event.id } }));
+            }
+          } else if (wid && typeof paid === "number" && paid > 0 && !byAmount && !labelled) {
+            console.error(JSON.stringify({ renewalUnmatched: { walletId: wid, paidMinor: paid, eventId: event.id } }));
           }
           await notify("subscription.renewed", email, { plan: plan?.name ?? "" });
         } else if (result.ok && (result as any).action === "plan_ended") {

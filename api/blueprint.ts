@@ -7,7 +7,7 @@
  * and refunded automatically if generation fails. 402 = not enough ACUs.
  */
 import { generateBlueprint, acuChargeForUsage, BLUEPRINT_ACU_CHARGE, BLUEPRINT_MIN_CHARGE } from "./_gateway";
-import { clientIp, rateLimit, tooMany, forgeDisabled } from "./_guard";
+import { clientIp, rateLimit, tooMany, forgeDisabled, ledgerRequired } from "./_guard";
 import { getDb, ensureGameSchema, debitWallet, creditWallet } from "./_ledger";
 
 export default async function handler(req: any, res: any) {
@@ -16,6 +16,8 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  const _noLedger = ledgerRequired(getDb());
+  if (_noLedger) return res.status(503).json({ error: _noLedger, mode: "no_ledger" });
   const _paused = forgeDisabled();
   if (_paused) return res.status(503).json({ error: _paused });
 

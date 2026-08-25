@@ -11,7 +11,7 @@
  * auto-refunds via the forge_charges ledger like any forge.
  */
 import { randomUUID } from "crypto";
-import { clientIp, rateLimit, tooMany, forgeDisabled } from "./_guard";
+import { clientIp, rateLimit, tooMany, forgeDisabled, ledgerRequired } from "./_guard";
 import { enhanceGameHtml, looksPlayable, acuChargeForUsage, ENHANCE_HOLD, FORGE_MIN_CHARGE } from "./_gateway";
 import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge, acceptForgeCharge } from "./_ledger";
 
@@ -21,6 +21,8 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type");
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
+  const _noLedger = ledgerRequired(getDb());
+  if (_noLedger) return res.status(503).json({ error: _noLedger, mode: "no_ledger" });
   const _paused = forgeDisabled();
   if (_paused) return res.status(503).json({ error: _paused });
 

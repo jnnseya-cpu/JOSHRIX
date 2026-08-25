@@ -884,6 +884,22 @@ export async function reserveForPayout(sql: Sql, walletId: string, amountMinor: 
   return rows.length > 0;
 }
 
+/**
+ * A payout actually executed. The money leaves `reserved` and lands in `paid`.
+ *
+ * Nothing did this before: `reserveForPayout` moved the amount out of available
+ * and into reserved, and marking the request paid updated only the request row.
+ * So `reserved_minor` grew for the lifetime of the account and never fell, which
+ * made the earnings table disagree with reality the first time anyone was paid —
+ * and reconciling a creator's balance against it would have shown money still
+ * held that had long since been sent.
+ */
+export async function settleReservation(sql: Sql, walletId: string, amountMinor: number) {
+  await sql`UPDATE creator_earnings
+    SET reserved_minor = GREATEST(0, reserved_minor - ${amountMinor}), paid_minor = paid_minor + ${amountMinor}
+    WHERE wallet_id = ${walletId}`;
+}
+
 /** Release a reservation when a payout is rejected or fails. */
 export async function releaseReservation(sql: Sql, walletId: string, amountMinor: number) {
   await sql`UPDATE creator_earnings

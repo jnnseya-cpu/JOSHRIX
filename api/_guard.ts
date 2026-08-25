@@ -125,6 +125,30 @@ export function forgeDisabled(): string | null {
   return null;
 }
 
+/**
+ * PAID AI FAILS CLOSED.
+ *
+ * Every endpoint that spends provider money guarded its wallet check with
+ * `if (sql) { ...debit... }`. That reads as "enforce billing when the ledger is
+ * configured", and in production it is — but it also means that the moment the
+ * ledger is NOT reachable, the wallet check, the balance check and the per-wallet
+ * rate limit all vanish together and the endpoint serves unlimited free AI to
+ * anyone who asks. A Neon outage, a missing DATABASE_URL on a preview deploy or
+ * a fat-fingered environment variable would each turn the platform into a free
+ * Claude proxy, and nothing would report it: the requests all return 200.
+ *
+ * A billing system that switches off when its database blinks is not a billing
+ * system. So the paid endpoints now refuse to run without a ledger. The cost of
+ * being wrong in this direction is an outage message; the cost of being wrong in
+ * the other direction is an unbounded provider bill.
+ *
+ * Returns a message to send back, or null when the ledger is healthy.
+ */
+export function ledgerRequired(sql: unknown): string | null {
+  if (sql) return null;
+  return "Game generation is briefly unavailable — the billing ledger is unreachable, and we do not run builds we cannot account for. Your ACUs are untouched. Please try again in a moment.";
+}
+
 /* ---------------- single-use nonces and the security event log ------------- */
 
 /**

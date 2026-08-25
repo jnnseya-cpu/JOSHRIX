@@ -12,7 +12,7 @@
  */
 import { generateGrowthCopy, acuChargeForUsage, GROWTH_HOLD, GROWTH_MIN_CHARGE } from "./_gateway";
 import { getDb, ensureGameSchema, debitWallet, creditWallet, getGame, listGamesByWallet } from "./_ledger";
-import { clientIp, rateLimit, tooMany, forgeDisabled } from "./_guard";
+import { clientIp, rateLimit, tooMany, forgeDisabled, ledgerRequired } from "./_guard";
 
 export const GROWTH_TOOLS = [
   "social_posts", "game_advert", "email_campaign", "landing_page",
@@ -27,6 +27,8 @@ export default async function handler(req: any, res: any) {
   if (req.method === "OPTIONS") return res.status(204).end();
   if (req.method !== "POST") return res.status(405).json({ error: "POST only" });
 
+  const _noLedger = ledgerRequired(getDb());
+  if (_noLedger) return res.status(503).json({ error: _noLedger, mode: "no_ledger" });
   const paused = forgeDisabled();
   if (paused) return res.status(503).json({ error: paused });
 

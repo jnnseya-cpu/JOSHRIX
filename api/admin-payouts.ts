@@ -9,7 +9,7 @@
  * single-use and records who made it, so money never moves without a name
  * attached to the call.
  */
-import { getDb, ensurePayoutSchema, listPayoutRequests, decidePayoutRequest, releaseReservation } from "./_ledger";
+import { getDb, ensurePayoutSchema, listPayoutRequests, decidePayoutRequest, releaseReservation, settleReservation } from "./_ledger";
 import { tooManyBadKeys } from "./_guard";
 
 const DECISIONS = ["approved", "rejected", "paid"] as const;
@@ -62,6 +62,12 @@ export default async function handler(req: any, res: any) {
       // a rejected withdrawal must return the money to the creator's balance
       if (decision === "rejected") {
         try { await releaseReservation(sql, row.wallet_id, Number(row.amount_minor)); } catch { /* reconciliation */ }
+      }
+      // ...and a paid one must stop being held. Without this the reservation sat
+      // in reserved_minor forever and the earnings table never matched what had
+      // actually been sent.
+      if (decision === "paid") {
+        try { await settleReservation(sql, row.wallet_id, Number(row.amount_minor)); } catch { /* reconciliation */ }
       }
       return res.status(200).json({
         ok: true, id: row.id, decision, walletId: row.wallet_id, amountMinor: Number(row.amount_minor),

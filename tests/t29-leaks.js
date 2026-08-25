@@ -162,6 +162,18 @@ function makeDb() {
       e.available_minor -= amt; e.reserved_minor += amt;
       return Promise.resolve([{ wallet_id: walletId }]);
     }
+    if (q.includes('SET reserved_minor = GREATEST') && q.includes('paid_minor = paid_minor + ')) {
+      const [amt, , walletId] = vals;                                        // settleReservation
+      const e = ear(walletId);
+      e.reserved_minor = Math.max(0, e.reserved_minor - amt); e.paid_minor += amt;
+      return Promise.resolve([]);
+    }
+    if (q.includes('SET available_minor = available_minor + ') && q.includes('reserved_minor = GREATEST')) {
+      const [amt, , walletId] = vals;                                        // releaseReservation
+      const e = ear(walletId);
+      e.available_minor += amt; e.reserved_minor = Math.max(0, e.reserved_minor - amt);
+      return Promise.resolve([]);
+    }
     if (q.includes('SET clearing_minor = GREATEST')) {
       const [amt, walletId] = vals;
       const e = ear(walletId);
@@ -362,6 +374,67 @@ console.log('\nearnings clear before they can be withdrawn');
     t('and never drives the balance negative', Number((await L.getEarnings(db4.sql, 'w-s4')).available_minor) >= 0);
 
     t('a reversal cannot be applied twice', await L.reverseEarnings(db4.sql, 'e4') === null);
+  })();
+}
+
+/* ================================================================== *
+ * 6. GRANTS FOLLOW THE MONEY — coupons, free trials, plan drift.
+ * ================================================================== */
+console.log('\nnothing is credited for money that did not arrive');
+{
+  // A 100%-off promotion code, or a free trial, leaves the metadata saying
+  // acu_1000 while £0 settles. Neither needs an attacker — both are switched
+  // on in the Stripe dashboard without touching this repo.
+  const zero = P.grantCheck(0, 10000);
+  t('a £0 settlement grants nothing', zero.grant === false);
+  t('and says why, so the alert can name it', /discount|trial|paid/i.test(zero.reason));
+  t('a null invoice is a £0 invoice', P.grantCheck(null, 10000).grant === true);   // absent != unpaid
+  t('a negative amount grants nothing', P.grantCheck(-500, 10000).grant === false);
+
+  const half = P.grantCheck(5000, 10000);
+  t('a genuine half-price coupon still grants in full', half.grant === true);
+  t('but is flagged as discounted', half.discounted === true);
+  t('paying in full is not flagged', P.grantCheck(10000, 10000).discounted === false);
+  t('overpaying is not flagged either', P.grantCheck(12000, 10000).grant === true);
+
+  // plan drift: the money names the plan, the metadata is only a label
+  const byAmount = P.PLANS.find((x) => x.monthlyMinor === 1900);
+  t('an invoice amount identifies the plan it paid for', byAmount && byAmount.id === 'creator');
+  t('no two plans share a price, so the amount is unambiguous',
+    new Set(P.PLANS.filter((x) => x.monthlyMinor > 0).map((x) => x.monthlyMinor)).size ===
+    P.PLANS.filter((x) => x.monthlyMinor > 0).length);
+}
+
+/* ================================================================== *
+ * 7. PAYOUT BOOKKEEPING — reserved money must stop being reserved.
+ * ================================================================== */
+console.log('\na paid withdrawal leaves the reserved column');
+{
+  const db = makeDb();
+  (async () => {
+    await L.creditEarnings(db.sql, 'w-p', 5000, { holdId: 'h1', clearingDays: P.EARNINGS_CLEARING_DAYS });
+    db.advanceDays(P.EARNINGS_CLEARING_DAYS + 1);
+    await L.getEarnings(db.sql, 'w-p');
+    await L.reserveForPayout(db.sql, 'w-p', 5000);
+    let e = await L.getEarnings(db.sql, 'w-p');
+    t('reserving moves it out of available', Number(e.available_minor) === 0 && Number(e.reserved_minor) === 5000);
+
+    await L.settleReservation(db.sql, 'w-p', 5000);
+    e = await L.getEarnings(db.sql, 'w-p');
+    t('paying moves it out of reserved', Number(e.reserved_minor) === 0);
+    t('and into paid', Number(e.paid_minor) === 5000);
+    t('and it is not returned to available', Number(e.available_minor) === 0);
+
+    // rejection is the other direction, and must not double-credit
+    const db2 = makeDb();
+    await L.creditEarnings(db2.sql, 'w-q', 5000, { holdId: 'h2', clearingDays: P.EARNINGS_CLEARING_DAYS });
+    db2.advanceDays(P.EARNINGS_CLEARING_DAYS + 1);
+    await L.getEarnings(db2.sql, 'w-q');
+    await L.reserveForPayout(db2.sql, 'w-q', 5000);
+    await L.releaseReservation(db2.sql, 'w-q', 5000);
+    const e2 = await L.getEarnings(db2.sql, 'w-q');
+    t('a rejected withdrawal comes back', Number(e2.available_minor) === 5000 && Number(e2.reserved_minor) === 0);
+    t('and is not also counted as paid', Number(e2.paid_minor) === 0);
   })();
 }
 
