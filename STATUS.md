@@ -34,14 +34,18 @@ either way (top-up is in fact **5× cheaper per ACU** than a plan), so the *only
 subscription buys is the commission rate — and that now stops the moment they stop paying.
 Cancelling costs them 25% instead of 15%. There is no longer an arbitrage.
 
-**Residual risk, stated plainly.** `EARNINGS_CLEARING_DAYS` is 14. UK card disputes can be
-raised up to 120 days out, so a patient fraudster can still outrun it; what 14 days stops is
-the same-day cash-out, which is the version that gets automated. Raise the constant if real
-dispute data says otherwise — it is read in one place.
+**Residual risk, accepted deliberately — Justin, 25 Aug: "keep both as they are."**
+`EARNINGS_CLEARING_DAYS` is **14**. UK card disputes can be raised up to 120 days out, so a
+patient fraudster can still outrun it; what 14 days stops is the same-day cash-out, which is
+the version that gets automated. Holding creator money for four months to catch the slow tail
+would cost more in creator trust than the tail is likely to cost in fraud. This is a judged
+trade-off, not an oversight. It is one constant, read in one place, if real dispute data ever
+says otherwise.
 
-**Not closed, because it is a business decision and not a leak:** free (unpriced) games
-still play for anyone. That costs no provider money — the creator already paid to forge it —
-so it is a funnel choice, not a loss. See the free-play decision still waiting below.
+**Free play: settled, and not a leak.** An unpriced game still plays for anyone; a priced one
+requires an entitlement. The creator chooses by pricing it or not. An unpriced play spends no
+provider money — the forge was already paid for — so this is a funnel decision, and Justin
+made it. Full reasoning in the next section.
 
 `tests/t29-leaks.js` (61) covers the ledger primitives, `tests/t30-paywall.js` (34) drives
 the real handlers. Suite: **32 files, 845 assertions, green.**
@@ -73,18 +77,27 @@ outward-facing, hard to reverse, and Justin's call, not mine:
 | `pricing.html` | "JOSHRIX Arcade · **Free**" |
 | `play.html` / `/play/:id` | **partly closed 25 Aug** — a *priced* game now requires an entitlement; an *unpriced* one still plays for anyone |
 
-**THE DECISION WAITING FOR JUSTIN.** Does a stranger get to play ANYTHING before paying?
-It governs the whole funnel and cannot be inferred from the rule as stated:
+**DECIDED — Justin, 25 Aug: "keep both as they are."** The question was put to him with the
+leak audit, alongside the clearing window. His answer settles it:
 
-- **Nothing free at all** — every game requires an account with credit. Cleanest read of
-  the rule. Costs the shop window: GO-TO-MARKET's press story is "a stranger plays a
-  Nairobi student's game from a link", and `/api/seo` + the sitemap are built to send
-  strangers to playable pages.
-- **A demo is free, the catalogue is paid** — the three reference games stay open as the
-  shop window; every creator game requires purchase. Protects creator earnings, keeps
-  acquisition, and is what the marketplace lane already implies.
+> **A game the creator has PRICED requires an entitlement. A game with no price plays for
+> anyone.** The creator decides which, by pricing it or not.
 
-Until he says which, the arcade stays as it is. Do not paywall it on inference.
+This is the second option below, generalised — the shop window is not a hand-picked list of
+demos, it is every game its creator chose to leave open. It costs the platform nothing:
+the forge was already paid for, so an unpriced play spends no provider money. It keeps the
+GO-TO-MARKET press story ("a stranger plays a Nairobi student's game from a link"), keeps
+`/api/seo` and the sitemap pointing at pages that actually play, and it protects creator
+earnings, because the games that earn are exactly the games that are gated.
+
+**So the arcade copy in the table above is now accurate, not a contradiction** — an arcade
+of unpriced games IS free, and says so honestly. Do not "fix" it. The rule at the top of
+this section governs *building, creating and selling*, and for *playing* it governs the
+priced catalogue. That distinction is Justin's, made here, and is not to be re-derived.
+
+The alternative he rejected, recorded so it is not re-proposed: **nothing free at all** —
+every game requiring an account with credit. Cleanest read of the 22 Aug rule as literally
+worded, and rejected because it closes the shop window the whole funnel depends on.
 
 ---
 
@@ -465,7 +478,7 @@ provider while the game path had three). 20 assertions in `tests/t20-blueprint-j
 | 5 | **Rotate the Neon password** | `npg_fK1p7jxceMgo` was pasted into chat earlier. Still outstanding. |
 | 6 | **Add three Stripe webhook events** | The leak fixes only fire if Stripe sends the events. In Developers → Webhooks, add **`customer.subscription.updated`**, **`invoice.payment_failed`** and confirm **`charge.refunded`** is on. Without `customer.subscription.updated` a lapsed subscription keeps its commission rate — leak #5 stays open no matter what the code says. |
 | 7 | **Check the dunning setting** | Billing → Subscriptions → "Manage failed payments". If it is set to **mark unpaid** rather than **cancel**, `customer.subscription.deleted` never fires at all. Either setting is now handled, but knowing which one is live tells you how long a non-payer keeps their plan. |
-| 8 | **Decide the free-play question** | Still open — see the top of this file. It is the one money question I have deliberately not answered for you, because it is a funnel decision rather than a leak. |
+| ~~8~~ | ~~Decide the free-play question~~ | **DECIDED 25 Aug: "keep both as they are."** Priced games need an entitlement, unpriced games play for anyone, and the 14-day clearing window stands. Both recorded at the top of this file — do not reopen either on inference. |
 
 ## Waiting on me — nothing
 
@@ -507,6 +520,14 @@ Everything asked for is committed and pushed. Nothing half-finished.
   with 40 passing tests; the FBX path cannot be tested without a real file.
 - **Zero customers.** SEO on a new domain is months, not weeks. The fast organic channel is
   shareable game links, which depends on the forge working.
+- **`t26` is still intermittent — roughly 1 full-suite run in 3.** It passes every time on its
+  own and fails only under the load of the whole suite, always on the same assertion (the
+  autopilot delivering 1 parcel of 8). I paced it off `G.elapsed` rather than wall-clock on
+  22 Aug, which fixed the worst of it but not all of it: the browser is still competing with
+  two other Playwright files for CPU, and a starved autopilot steers badly. It is a test
+  problem, not a game problem — Midnight Post plays correctly every time a human or a
+  standalone run drives it. Not chased further because nothing in the money work touches it,
+  but it should not be read as a green suite until it stops.
 
 ## Still open, and honestly named
 

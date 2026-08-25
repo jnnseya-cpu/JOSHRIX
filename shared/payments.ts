@@ -175,11 +175,13 @@ export type PaymentMethod = (typeof PaymentMethods)[number];
  * is what makes the fraud unprofitable — the payout is still here when the
  * chargeback lands, so reversing it costs us nothing.
  *
- * 14 days is the trade-off, not a guarantee. UK card disputes can be raised up
- * to 120 days out, so a long-tail chargeback can still outrun this; what it
- * stops is the same-day cash-out, which is the version that actually gets
- * automated. Raise it here — one constant, read by the ledger — if real dispute
- * data says the tail matters more than creator patience.
+ * 14 days is the trade-off, not a guarantee, and it is a DECIDED one (25 Aug):
+ * UK card disputes can be raised up to 120 days out, so a long-tail chargeback
+ * can still outrun this. What it stops is the same-day cash-out, which is the
+ * version that actually gets automated. Holding creator money for four months
+ * to catch the slow tail would cost more in creator trust than the tail is
+ * likely to cost in fraud — so this number is a judgement, not a placeholder.
+ * Change it here, and only on real dispute data.
  */
 export const EARNINGS_CLEARING_DAYS = 14;
 
