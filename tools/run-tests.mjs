@@ -57,6 +57,11 @@ copyInto(path.join(ROOT, 'shared'), path.join(WS, 'src', 'shared'), ['.ts']);
 fs.writeFileSync(path.join(WS, 'tsconfig.json'), JSON.stringify({
   compilerOptions: {
     target: 'es2022', module: 'commonjs', moduleResolution: 'node',
+    // moduleResolution 'node' (node10) is what CommonJS output wants, and newer
+    // tsc deprecates the name rather than the behaviour. Silence it explicitly:
+    // without this the build prints "1 type error(s)" on every single run, and a
+    // permanent expected error is how a real one goes unnoticed.
+    ignoreDeprecations: '6.0',
     // The handlers are type-checked by Vercel on deploy; here the job is to
     // EMIT runnable JS for the assertions, so a library typing mismatch in a
     // vendored SDK must not stop the money tests from running.

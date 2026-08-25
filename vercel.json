@@ -4,6 +4,10 @@
   "outputDirectory": "frontend",
   "rewrites": [
     {
+      "source": "/v1/payments/stripe-webhook",
+      "destination": "/api/stripe-webhook"
+    },
+    {
       "source": "/features",
       "destination": "/api/features-hub"
     },
