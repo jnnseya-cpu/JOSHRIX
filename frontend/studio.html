@@ -466,6 +466,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--stroke);padding:1.
 <footer>© 2026 JOSHRIX Studio — Forge Studio prototype. Create Worlds. Build Games. Own the Future.</footer>
 
 <script src="assets/config.js"></script>
+<script src="assets/auth.js"></script>
 <script src="assets/store.js"></script>
 <script>
 (() => {
@@ -509,7 +510,8 @@ walletReady = (async () => {
     let prof = {}; try { prof = JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (e) {}
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
     const r = await fetch(base + '/api/wallet-init', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      // identity: the server resolves the wallet from this token, not from the email
+      method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, await (window.jxAuthHeaders ? window.jxAuthHeaders() : {})),
       body: JSON.stringify({ walletId: prof.serverWalletId || undefined, email: prof.email || undefined, name: prof.displayName || prof.handle || undefined,
         // only wallet CREATION runs the human check, so only that path pays the CPU cost
         human: prof.serverWalletId ? undefined : (window.joshrixHuman ? await window.joshrixHuman(base) : undefined) }),

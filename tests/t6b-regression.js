@@ -24,15 +24,19 @@ t('anonymous wallets are still issued (flow unbroken)', new Set(ids).size===20);
 wallets.clear();
 const first=await post({email:'creator@example.com', name:'Creator'});
 t('first signed-in request creates a wallet with NO credit', first.balance===0 && !!first.walletId, JSON.stringify(first));
-let ids2=[first.walletId], minted=0;
-for(let i=0;i<20;i++){const b=await post({email:'creator@example.com'}); ids2.push(b.walletId); if(b.created) minted++;}
-t('20 repeats on the SAME email create no second wallet', new Set(ids2).size===1, 'distinct wallets: '+new Set(ids2).size);
+/* The cap is unchanged — one address, one wallet row — but repeating the
+   address no longer RETURNS that wallet. Handing the id back to whoever typed
+   the email was the P0: a walletId is the bearer secret for the account. */
+let minted=0, leaked=0;
+for(let i=0;i<20;i++){const b=await post({email:'creator@example.com'}); if(b.created) minted++; if(b.walletId===first.walletId) leaked++;}
+t('20 repeats on the SAME email create no second wallet', wallets.size===1, 'wallet rows: '+wallets.size);
 t('no repeat mints a new account', minted===0, 'minted '+minted);
+t('and no repeat hands back the existing wallet id', leaked===0, leaked+' of 20 leaked the account');
 
-console.log('\n  case/whitespace variants must not bypass the cap:');
+console.log('\n  case/whitespace variants must not bypass the cap, or leak the account:');
 for (const v of ['Creator@Example.com','  creator@example.com  ','CREATOR@EXAMPLE.COM']) {
   const b=await post({email:v});
-  t(`variant ${JSON.stringify(v)} returns the same wallet`, b.walletId===first.walletId, 'got '+b.walletId);
+  t(`variant ${JSON.stringify(v)} does not leak the wallet`, b.walletId!==first.walletId, 'got '+b.walletId);
 }
 console.log('\n  malformed emails get no grant:');
 for (const bad of ['notanemail','a@b','@x.com','x@.com','','   ', 'a@b.c'.repeat(60)]) {

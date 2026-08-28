@@ -136,8 +136,8 @@
   };
   showAcu(p.acu || 0, p.testerAcuGranted ? '🧪 TESTER GRANT' : '');
   if (p.serverWalletId) {
-    fetch(API + '/api/wallet-init', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ walletId: p.serverWalletId }), signal: AbortSignal.timeout(8000) })
+    (window.jxAuthHeaders ? window.jxAuthHeaders() : Promise.resolve({})).then((auth) => fetch(API + '/api/wallet-init', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, auth),
+      body: JSON.stringify({ walletId: p.serverWalletId }), signal: AbortSignal.timeout(8000) }))
       .then(r => r.json()).then(j => {
         if (j && j.mode === 'live') {
           const CAT = { tester: '🧪 TESTER', purchased: 'PURCHASED', standard: 'ACCOUNT' };

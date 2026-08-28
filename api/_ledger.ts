@@ -199,6 +199,14 @@ export async function ensureGameSchema(sql: Sql) {
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT 'explorer'`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS name text`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS last_refill_at timestamptz`;
+  // The Firebase uid that owns this wallet. Identity binds to the UID, not the
+  // email: an address can be reassigned or changed, a uid cannot. Nullable
+  // because every wallet predates this column — they bind on first verified
+  // sign-in (see claimWalletForUid). UNIQUE so one Firebase account can never
+  // end up holding two wallets, which is the duplicate-identity problem the
+  // one-wallet-per-email rule existed to prevent.
+  await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS firebase_uid text`;
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS wallets_firebase_uid ON wallets (firebase_uid) WHERE firebase_uid IS NOT NULL`;
   await sql`CREATE TABLE IF NOT EXISTS forge_results (
     ticket text PRIMARY KEY,
     wallet_id text,
@@ -477,6 +485,51 @@ export async function claimForgeRefund(sql: Sql, id: string, walletId: string): 
     WHERE id = ${id} AND wallet_id = ${walletId} AND refunded_at IS NULL AND accepted_at IS NULL
     RETURNING amount`) as Array<{ amount: number }>;
   return rows.length ? Number(rows[0].amount) : null;
+}
+
+/**
+ * The wallet a verified Firebase user owns — and, on first sight of them, the
+ * act of binding it.
+ *
+ * This is the whole identity migration, and it runs itself. Every wallet in the
+ * table predates the firebase_uid column, so:
+ *
+ *   already bound to this uid  -> return it. The steady state.
+ *   unbound, email matches     -> bind it now and return it. Runs ONCE per user,
+ *                                 on their first verified sign-in.
+ *   bound to a DIFFERENT uid   -> refuse. Two Firebase accounts claiming one
+ *                                 wallet is either a support case or an attack;
+ *                                 either way it is not something to guess at.
+ *
+ * The email arm only fires for an address Google has verified as belonging to
+ * the caller — that is the difference between this and the takeover it replaces.
+ * The bind is conditional on firebase_uid IS NULL, so two concurrent sign-ins
+ * cannot both claim the same wallet.
+ */
+export async function claimWalletForUid(sql: Sql, uid: string, verifiedEmail: string | null) {
+  const bound = (await sql`SELECT id, balance, category, email, name, plan, firebase_uid
+    FROM wallets WHERE firebase_uid = ${uid}`) as any[];
+  if (bound.length) return bound[0];
+
+  if (!verifiedEmail) return null;
+  const rows = (await sql`
+    UPDATE wallets SET firebase_uid = ${uid}
+    WHERE lower(email) = lower(${verifiedEmail}) AND firebase_uid IS NULL
+    RETURNING id, balance, category, email, name, plan, firebase_uid`) as any[];
+  return rows[0] ?? null;
+}
+
+/** Bind a freshly created wallet to the user who created it. */
+export async function setWalletUid(sql: Sql, id: string, uid: string): Promise<boolean> {
+  const rows = (await sql`UPDATE wallets SET firebase_uid = ${uid}
+    WHERE id = ${id} AND firebase_uid IS NULL RETURNING id`) as any[];
+  return rows.length > 0;
+}
+
+/** Who owns this wallet, for checking a caller against it. */
+export async function walletOwnerUid(sql: Sql, id: string): Promise<string | null> {
+  const rows = (await sql`SELECT firebase_uid FROM wallets WHERE id = ${id}`) as Array<{ firebase_uid: string | null }>;
+  return rows.length ? rows[0].firebase_uid : null;
 }
 
 export async function getWallet(sql: Sql, id: string) {

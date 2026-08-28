@@ -107,6 +107,7 @@ table.jx td:first-child{white-space:nowrap}
 </main>
 <footer class="jx"><p>© 2026 JOSHRIX Studio — Wallet. Create Worlds. Build Games. Own the Future.</p></footer>
 <script src="assets/config.js"></script>
+<script src="assets/auth.js"></script>
 <script src="assets/human.js"></script>
 <script src="assets/appnav.js"></script>
 <script src="assets/track.js"></script>
@@ -150,8 +151,20 @@ $('btnPayout').addEventListener('click', async () => {
   const instant = railSel === 'bank_transfer_instant';
   r.textContent = 'Submitting payout request…';
   try {
-    const resp = await fetch(API + '/api/payout', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ amountMinor: amt, rail, instant, destinationRef: 'tok_demo_dest_2941' }), signal: AbortSignal.timeout(7000) });
+    // walletId identifies the earnings account and the token proves it is
+    // yours — the server checks the wallet's owner against the signed-in user,
+    // because this endpoint takes both the account to debit and the destination
+    // to pay from the same request.
+    let _p = {}; try { _p = JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (e) {}
+    const resp = await fetch(API + '/api/payout', {
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, await (window.jxAuthHeaders ? window.jxAuthHeaders() : {})),
+      // TODO(payout-destination): destinationRef is still a placeholder. Real
+      // withdrawals need a tokenised bank/mobile-money destination collected and
+      // stored per creator; until that exists this button cannot pay anyone, and
+      // the operator queue at /admin is the only thing that moves money.
+      body: JSON.stringify({ walletId: _p.serverWalletId || undefined, amountMinor: amt, rail, instant, destinationRef: 'tok_demo_dest_2941' }),
+      signal: AbortSignal.timeout(7000) });
     const j = await resp.json();
     r.textContent = resp.ok
       ? `✓ ${j.payout.status} — £${(j.payout.amountMinor/100).toFixed(2)} via ${j.payout.rail}${j.payout.instant?' (instant)':''}\nfee £${(j.payout.feeMinor/100).toFixed(2)} → you receive £${(j.payout.netMinor/100).toFixed(2)} · ETA ${j.payout.etaDays} day(s)${j.payout.kycRequired?'\n⚠ KYC verification required for this amount':''}`
@@ -213,8 +226,8 @@ const applyLocalAcu = (skipBalance, serverCategory) => {
       e.preventDefault();
       try { navigator.clipboard.writeText(prof.serverWalletId); $('wWidCopy').textContent = '✓ copied'; setTimeout(() => { $('wWidCopy').textContent = 'copy'; }, 1500); } catch (err) {}
     });
-    fetch(API + '/api/wallet-init', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ walletId: prof.serverWalletId, email: prof.email || undefined, name: prof.displayName || prof.handle || undefined }), signal: AbortSignal.timeout(8000) })
+    (window.jxAuthHeaders ? window.jxAuthHeaders() : Promise.resolve({})).then((auth) => fetch(API + '/api/wallet-init', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, auth),
+      body: JSON.stringify({ walletId: prof.serverWalletId, email: prof.email || undefined, name: prof.displayName || prof.handle || undefined }), signal: AbortSignal.timeout(8000) }))
       .then(r => r.json()).then(j => {
         if (j && j.mode === 'live') {
           $('wAcu').textContent = Number(j.balance).toLocaleString();

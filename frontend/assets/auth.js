@@ -9,6 +9,26 @@
  * result is completed on return via getRedirectResult. Desktop keeps the popup
  * and falls back to redirect automatically if the popup is blocked.
  */
+/**
+ * The server now verifies identity, so every call that reaches a wallet must
+ * carry the Firebase ID token. This helper is defined FIRST, outside the
+ * configuration and test-mode early returns below, because those paths still
+ * make API calls and the helper must exist (returning {}) rather than throw.
+ *
+ * Always await it at call time, never cache the header: Firebase ID tokens
+ * expire after an hour and getIdToken() silently refreshes them.
+ */
+window.jxAuthHeaders = async function () {
+  try {
+    var a = window.jxAuth;
+    if (a && typeof a.idToken === 'function') {
+      var t = await a.idToken();
+      if (t) return { Authorization: 'Bearer ' + t };
+    }
+  } catch (e) { /* signed out, offline, or Firebase not configured */ }
+  return {};
+};
+
 (function () {
   // ?test=1 → tester mode: skip Firebase entirely, accounts live on this device.
   // The flag persists for the session so navigation keeps you in test mode.

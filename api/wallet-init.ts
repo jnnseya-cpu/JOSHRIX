@@ -13,7 +13,8 @@
  * Without DATABASE_URL responds { mode: "no_db" } so the client keeps its local sim.
  */
 import { randomUUID } from "node:crypto";
-import { getDb, ensureGameSchema, createWallet, getWallet, getWalletByEmail, refillTesterWallet, deleteWallet, updateWalletIdentity } from "./_ledger";
+import { getDb, ensureGameSchema, createWallet, getWallet, getWalletByEmail, refillTesterWallet, deleteWallet, updateWalletIdentity, claimWalletForUid, setWalletUid, walletOwnerUid } from "./_ledger";
+import { callerIdentity } from "./_auth";
 import { normalizeEmail, clientIp, rateLimit, tooMany, claimNonce, recordSecurityEvent } from "./_guard";
 import { verifyHuman, isDisposableEmail, humanVerifyConfigured } from "./_human";
 import { DEFAULT_WALLET_CATEGORY, TESTER_CEILING_ACU, TESTER_REFILL_COOLDOWN_SECONDS } from "../shared/payments";
@@ -42,6 +43,18 @@ export default async function handler(req: any, res: any) {
       if (!walletId) return res.status(400).json({ error: "walletId required for delete" });
       const w = await getWallet(sql, walletId);
       if (!w) return res.status(200).json({ mode: "live", deleted: false, walletId });
+      // Deletion is destructive and irreversible, so it is the one place a bare
+      // walletId is not enough: once a wallet is bound to a Firebase account,
+      // only that account may close it. Unbound wallets (anonymous, pre-dating
+      // identity) stay closable by whoever holds the id — that is all the
+      // ownership evidence that exists for them.
+      const ownerUid = await walletOwnerUid(sql, walletId);
+      if (ownerUid) {
+        const caller = await callerIdentity(req);
+        if (!caller || caller.uid !== ownerUid) {
+          return res.status(401).json({ error: "Sign in to close this account.", code: "auth_required" });
+        }
+      }
       // Anyone who has not paid may close their own account. Only a PURCHASED
       // wallet routes through support, because deleting it would silently
       // forfeit a real balance that is owed a refund first.
@@ -93,14 +106,46 @@ export default async function handler(req: any, res: any) {
         note: "Sign in with a verified email, then top up at /wallet to forge.",
       });
     }
-    const existing = await getWalletByEmail(sql, addr);
-    if (existing) {
-      // this address already has its one grant — hand back the SAME wallet
-      if (name) { try { await updateWalletIdentity(sql, existing.id, { name: name.slice(0, 80), email: addr }); } catch { /* best-effort */ } }
-      return res.status(200).json({
-        mode: "live", walletId: existing.id, balance: Number(existing.balance),
-        category: existing.category, plan: existing.plan ?? "explorer", created: false,
-      });
+    /* ---------------------------------------------------------------------
+       RESOLVING AN EMAIL TO AN EXISTING WALLET REQUIRES PROOF OF THE EMAIL.
+
+       This block used to look the address up and return the wallet id to
+       whoever asked. A walletId is the bearer secret for the whole account —
+       forging, publishing, pricing listings, and POST /api/payout, which takes
+       the wallet and the payout destination from the same unauthenticated
+       body. So knowing a person's email address was enough to withdraw their
+       earnings to your own account. The human-verification check sat BELOW this
+       return and only ever guarded creating a new wallet, so nothing stood in
+       the way.
+
+       Now the caller must present a Firebase ID token that Google signed, and
+       the wallet is resolved from the uid inside it. Possession of the address
+       proves nothing; possession of the account proves everything.
+       --------------------------------------------------------------------- */
+    const caller = await callerIdentity(req);
+    if (caller) {
+      const owned = await claimWalletForUid(sql, caller.uid, caller.email);
+      if (owned) {
+        if (name) { try { await updateWalletIdentity(sql, owned.id, { name: name.slice(0, 80), email: owned.email ?? addr }); } catch { /* best-effort */ } }
+        return res.status(200).json({
+          mode: "live", walletId: owned.id, balance: Number(owned.balance),
+          category: owned.category, plan: owned.plan ?? "explorer", created: false,
+        });
+      }
+      // A verified user with no wallet yet falls through and gets one minted
+      // below, bound to their uid.
+    } else {
+      const existing = await getWalletByEmail(sql, addr);
+      if (existing) {
+        // The address is taken and the caller has not proved it is theirs. Say
+        // so without confirming anything: this must not become an oracle for
+        // "does this person have an account", and it must never return the id.
+        await recordSecurityEvent(sql, "wallet_claim_unverified", "block", { ip: clientIp(req), email: addr });
+        return res.status(401).json({
+          error: "Sign in to reach this account. An email address on its own is not proof of who you are, so we cannot hand over a wallet for it.",
+          code: "auth_required",
+        });
+      }
     }
     /* NEW ACCOUNT. It mints no credit — public wallets start at zero — so these
        checks are not protecting a grant. They protect the accounts table and the
@@ -128,6 +173,10 @@ export default async function handler(req: any, res: any) {
 
     const id = "w-" + randomUUID().replace(/-/g, "").slice(0, 20);
     await createWallet(sql, id, 0, DEFAULT_WALLET_CATEGORY, addr, name?.slice(0, 80) ?? null);
+    // Bind at birth when we know who they are, so this wallet never has to be
+    // claimed by email later — the migration path exists only for the wallets
+    // that predate it.
+    if (caller) { try { await setWalletUid(sql, id, caller.uid); } catch { /* bind on next sign-in */ } }
     return res.status(200).json({
       mode: "live", walletId: id, balance: 0, category: DEFAULT_WALLET_CATEGORY, plan: "explorer", created: true,
       note: "Top up at /wallet to forge your first game.",

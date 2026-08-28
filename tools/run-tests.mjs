@@ -61,7 +61,9 @@ fs.writeFileSync(path.join(WS, 'tsconfig.json'), JSON.stringify({
     // tsc deprecates the name rather than the behaviour. Silence it explicitly:
     // without this the build prints "1 type error(s)" on every single run, and a
     // permanent expected error is how a real one goes unnoticed.
-    ignoreDeprecations: '6.0',
+    // "5.0", not the "6.0" that tsc's own error message suggests — 5.9 rejects
+    // that value outright. Verified against the installed compiler, not guessed.
+    ignoreDeprecations: '5.0',
     // The handlers are type-checked by Vercel on deploy; here the job is to
     // EMIT runnable JS for the assertions, so a library typing mismatch in a
     // vendored SDK must not stop the money tests from running.

@@ -14,7 +14,9 @@
  */
 import { randomUUID } from "node:crypto";
 import { PayoutRequestSchema, PAYOUT, payoutFeeMinor, payoutPostings } from "../shared/payments";
-import { getDb, ensurePayoutSchema, getEarnings, reserveForPayout, savePayoutRequest } from "./_ledger";
+import { getDb, ensurePayoutSchema, ensureGameSchema, getEarnings, reserveForPayout, savePayoutRequest, walletOwnerUid } from "./_ledger";
+import { callerIdentity } from "./_auth";
+import { clientIp, recordSecurityEvent } from "./_guard";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -50,6 +52,37 @@ export default async function handler(req: any, res: any) {
 
   try {
     await ensurePayoutSchema(sql);
+    await ensureGameSchema(sql);
+
+    /* MONEY OUT IS THE ONE PLACE WITH NO GRACE PERIOD.
+       This endpoint takes the wallet to debit AND the destination to pay, both
+       from the request body. Before identity was verified, anyone who obtained
+       a walletId — and /api/wallet-init would hand one over for an email
+       address — could send a creator's earnings to their own account. So a
+       withdrawal requires a Firebase token proving the caller owns the wallet.
+
+       A wallet with no firebase_uid has never been signed into since identity
+       shipped. It cannot prove ownership, so it cannot withdraw: the creator
+       signs in once, the wallet binds, and the payout goes through. That is a
+       far better failure than paying the wrong person. */
+    const caller = await callerIdentity(req);
+    const ownerUid = await walletOwnerUid(sql, walletId);
+    if (!caller) {
+      return res.status(401).json({ error: "Sign in to withdraw your earnings.", code: "auth_required", queued: false });
+    }
+    if (!ownerUid) {
+      return res.status(401).json({
+        error: "Sign in once on this account before withdrawing — this wallet has not been linked to your sign-in yet. Open the Studio while signed in, then request the payout again.",
+        code: "wallet_unlinked", queued: false,
+      });
+    }
+    if (ownerUid !== caller.uid) {
+      await recordSecurityEvent(sql, "payout_wallet_mismatch", "block", {
+        ip: clientIp(req), walletId, callerUid: caller.uid,
+      });
+      return res.status(403).json({ error: "That wallet does not belong to this account.", code: "not_your_wallet", queued: false });
+    }
+
     const bal = await getEarnings(sql, walletId);
     const available = Number(bal.available_minor ?? 0);
     if (available < amountMinor) {

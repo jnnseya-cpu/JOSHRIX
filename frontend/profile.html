@@ -138,8 +138,8 @@
   const API = (window.JOSHRIX_API_BASE || '');
   $('prAcu').textContent = (p.acu || 0).toLocaleString();
   if (p.serverWalletId) {
-    fetch(API + '/api/wallet-init', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ walletId: p.serverWalletId, email: p.email || undefined, name: p.displayName || p.handle || undefined }), signal: AbortSignal.timeout(8000) })
+    (window.jxAuthHeaders ? window.jxAuthHeaders() : Promise.resolve({})).then((auth) => fetch(API + '/api/wallet-init', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, auth),
+      body: JSON.stringify({ walletId: p.serverWalletId, email: p.email || undefined, name: p.displayName || p.handle || undefined }), signal: AbortSignal.timeout(8000) }))
       .then(r => r.json()).then(j => {
         if (j && j.mode === 'live' && typeof j.balance === 'number') {
           $('prAcu').textContent = Number(j.balance).toLocaleString();
@@ -166,7 +166,7 @@
     msg.textContent = 'Deleting…';
     try {
       if (p.serverWalletId) {
-        await fetch(API + '/api/wallet-init', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        await fetch(API + '/api/wallet-init', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, await (window.jxAuthHeaders ? window.jxAuthHeaders() : {})),
           body: JSON.stringify({ walletId: p.serverWalletId, action: 'delete' }), signal: AbortSignal.timeout(10000) });
       }
     } catch (e) { /* wallet delete best-effort; local wipe proceeds */ }

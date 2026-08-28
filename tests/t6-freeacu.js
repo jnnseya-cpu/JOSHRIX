@@ -136,15 +136,29 @@ console.log('\n== a public signup is worth nothing to farm ==');
   t('the response says how to get credit', /top up/i.test(verified.body.note || ''));
 }
 
-console.log('\n== one person, one wallet (identity, not credit) ==');
+console.log('\n== one person, one wallet — and an email is not proof of identity ==');
 {
+  /* This used to assert that every variant of an address returned the SAME
+     wallet id. It did — to anybody who typed the address, which was the P0:
+     a walletId is the bearer secret for the account, so the "identity control"
+     was handing accounts out. The rule survives, the mechanism changed: a
+     variant address still cannot mint a second wallet, but reaching the first
+     one now needs a signed-in caller. */
   wallets.clear();
-  const ids = [];
-  for (const e of ['alice@gmail.com', 'alice+1@gmail.com', 'a.l.i.c.e@gmail.com', 'ALICE@gmail.com']) {
-    ids.push((await post(walletInit, { email: e })).body.walletId);
+  const first = (await post(walletInit, { email: 'alice@gmail.com' })).body.walletId;
+  t('the first signup gets a wallet', !!first);
+
+  const later = [];
+  for (const e of ['alice+1@gmail.com', 'a.l.i.c.e@gmail.com', 'ALICE@gmail.com']) {
+    later.push(await post(walletInit, { email: e }));
   }
-  t('+tags, dots and case all resolve to ONE wallet', new Set(ids).size === 1,
-    `got ${new Set(ids).size} distinct wallets`);
+  t('+tags, dots and case still create NO second wallet', wallets.size === 1,
+    `${wallets.size} wallet rows exist`);
+  t('and none of them returns the existing wallet id',
+    later.every((r) => r.body.walletId !== first),
+    'an email address must never yield the account it belongs to');
+  t('each is refused as unauthenticated', later.every((r) => r.code === 401),
+    later.map((r) => r.code).join(','));
 }
 
 console.log('\n== refill is refused to everyone who is not a designated tester ==');

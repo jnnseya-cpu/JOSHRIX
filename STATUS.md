@@ -3,7 +3,67 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-08-25 (money-leak audit: twelve ways the platform worked for free, all closed)
+Last updated: 2026-08-28 (P0 account takeover closed — identity is now verified server-side)
+
+---
+
+## P0 — ANYONE COULD TAKE ANY ACCOUNT WITH AN EMAIL ADDRESS. Closed 28 Aug.
+
+Found during the launch audit, while mapping a lesser finding. It was live.
+
+```
+POST /api/wallet-init  {"email":"victim@example.com"}
+→ {"walletId":"w-…","balance":9000,"category":"purchased","plan":"studio"}
+```
+
+No password, no token, no proof of ownership. `wallet-init` looked the address up
+and **handed back the walletId** — which was the bearer secret for the entire
+account. Three things made it worse than it reads:
+
+- The human-verification check sat *below* that lookup. It only ever guarded
+  creating a NEW wallet, so the takeover path never reached it.
+- `normalizeEmail` collapses `+tags` and gmail dots, so it *widened* the match.
+- `POST /api/payout` takes the wallet to debit **and the destination to pay**
+  from the same body. Knowing an email address was enough to send a creator's
+  earnings to your own account.
+
+**The fix: a Firebase ID token is now the credential; walletId is a database key
+that proves nothing.** The frontend had exposed `jxAuth.idToken()` since it was
+written — `grep -rln firebase api/` returned nothing, so the backend simply never
+asked. `api/_auth.ts` verifies the token against Google's certs with `node:crypto`
+(no new dependency: firebase-admin would pull a large tree into every function to
+do the same four checks).
+
+Wallets bind to the Firebase **uid**, not the email — an address can be
+reassigned, a uid cannot. The migration runs itself: a legacy wallet binds on its
+owner's first verified sign-in, and once bound a second account cannot claim it.
+
+| Where | Now |
+|---|---|
+| `wallet-init` email → wallet | Requires a verified token. Unauthenticated → **401**, logged as `wallet_claim_unverified` |
+| `wallet-init` delete | Bound wallets need their owner |
+| `payout` | Token required, and the wallet's owner must match the caller |
+| anonymous wallet creation | **Unchanged** — the signed-out funnel still works |
+
+**What this deliberately breaks.** Reaching an existing wallet now requires
+signing in. If Firebase is down or a user cannot sign in, they cannot reach their
+wallet on a new device. That is the trade Justin approved (option A): the hole
+shuts immediately, at the cost of a page refresh for anyone on a stale cached
+page. There is no email fallback, because the email fallback *was* the hole.
+
+`tests/t33-auth.js` (40) drives the real endpoint with nothing but the victim's
+address and asserts the refusal — verified red against the old code, where it
+returned the wallet. It also covers `alg:none`, tampered signatures, a token from
+another Firebase project, expiry, and future-dated tokens. `tests/_authstub.js`
+mints tokens with a local RSA key so the signature check is real.
+
+**Still open from this finding:** `?w=<walletId>` remains in preview URLs
+(`api/games.ts`) and in `game-html` / `forge-result` / `growth-analytics`. It is
+no longer a credential for the *account*, but it still grants access to a game,
+so it should move to the token too. Also: `wallet.html`'s payout button sends a
+hardcoded `destinationRef: 'tok_demo_dest_2941'` — real withdrawals need a
+tokenised destination collected per creator, so that button cannot pay anyone
+yet and the operator queue at `/admin` is the only thing that moves money.
 
 ---
 

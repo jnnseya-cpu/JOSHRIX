@@ -63,11 +63,16 @@ const first=await post({email:'alice@gmail.com'});
 // Signups are unfunded now, so the thing worth farming is WALLETS, not credit:
 // duplicates would split one creator's games, balance and receipts in two.
 t('a public signup is created unfunded', first.balance===0, JSON.stringify(first));
+/* The bypass being tested is DUPLICATE ACCOUNTS, and it is still closed: no
+   variant mints a second wallet. What changed is that a variant no longer
+   returns the original either — an email address is not proof of identity, and
+   the walletId it used to hand back is the account's bearer secret. */
 let minted=0;
 for(const v of ['alice+1@gmail.com','alice+spam@gmail.com','a.l.i.c.e@gmail.com','ALICE@GMAIL.COM','alice+9@googlemail.com']){
   const b=await post({email:v});
   if(b.created) minted++;
-  t(`${v.padEnd(26)} -> same wallet, no new account`, b.walletId===first.walletId, `got ${b.walletId} bal ${b.balance}`);
+  t(`${v.padEnd(26)} -> no new account, no account leaked`,
+    b.walletId!==first.walletId && !b.created, `got ${b.walletId} bal ${b.balance}`);
 }
 t('total extra wallets minted via tag variants = 0', minted===0, 'minted '+minted);
 console.log(`\n  ${pass} passed, ${fail} failed`);
