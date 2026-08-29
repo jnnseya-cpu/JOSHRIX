@@ -21,6 +21,9 @@
  *   1. the sky gradient, which was compressed into a band no camera could see
  *   2. the sea, which every game got whether it asked or not
  *   3. the horizon skirt, because the ground disc's rim met the sky unfogged
+ *   4. WASD and the arrow keys, which were recorded into `keys` and then never
+ *      applied to anything — so keyboard input did nothing in every 3D game
+ *      built on this runtime, while the How-To-Play line promised it worked
  *
  * All three correct behaviour no game ever asked for, and all three are
  * invisible to a game that was not suffering from them. Forking would have
@@ -505,6 +508,45 @@
       if ((e.key === " " || e.key === "Enter") && G.state !== "play") { e.preventDefault(); start(); }
     });
     addEventListener("keyup", function (e) { keys[e.key.toLowerCase()] = false; });
+
+    /**
+     * WASD AND THE ARROW KEYS STEER. (v1 exception 4 — see the header.)
+     *
+     * `keys` was recorded and then never used: nothing in the runtime moved
+     * `target`, so keyboard input did precisely nothing in every 3D game ever
+     * built on it. Meanwhile the runtime's own How-To-Play line promises "drag
+     * or use WASD", and the prompt handed to the model states that the pointer
+     * and WASD both steer G.target. So a desktop player pressed a key, watched
+     * nothing happen, and correctly concluded the game was broken.
+     *
+     * Steering the SAME target the pointer writes to is what makes this work
+     * for every existing game at once: they already follow G.target, so they
+     * gain keyboard control without changing a line. A game that never reads
+     * target is unaffected, and a game nobody plays with the keyboard cannot
+     * tell the difference — which is the bar this file sets for fixing v1 in
+     * place rather than forking.
+     */
+    function steerFromKeys(dt) {
+      var dx = 0, dz = 0;
+      if (keys.w || keys.arrowup) dz -= 1;
+      if (keys.s || keys.arrowdown) dz += 1;
+      if (keys.a || keys.arrowleft) dx -= 1;
+      if (keys.d || keys.arrowright) dx += 1;
+      if (!dx && !dz) return;
+      var len = Math.sqrt(dx * dx + dz * dz);            // no diagonal speed bonus
+      // Camera-relative, so "up" is away from the viewer whichever way the
+      // chase camera has swung round — screen-relative is what players expect.
+      var yaw = Math.atan2(camera.position.x - target.x, camera.position.z - target.z);
+      var sin = Math.sin(yaw), cos = Math.cos(yaw);
+      var nx = (dx / len), nz = (dz / len);
+      var wx = nx * cos + nz * sin, wz = nz * cos - nx * sin;
+      var speed = playR * 0.75;                          // cross the arena in ~2.7s
+      target.x += wx * speed * dt;
+      target.z += wz * speed * dt;
+      var r = Math.sqrt(target.x * target.x + target.z * target.z);
+      if (r > playR) { target.x *= playR / r; target.z *= playR / r; }
+      target.y = 0;
+    }
     renderer.domElement.addEventListener("pointerdown", function (e) { dragging = true; pointTo(e.clientX, e.clientY); });
     renderer.domElement.addEventListener("pointermove", function (e) { if (dragging) pointTo(e.clientX, e.clientY); });
     addEventListener("pointerup", function () { dragging = false; });
@@ -884,6 +926,7 @@
       try {
         if (G.state === "play") {
           G.elapsed += dt;
+          steerFromKeys(dt);
           for (var i = 0; i < updateHandlers.length; i++) updateHandlers[i](G, dt);
         }
 

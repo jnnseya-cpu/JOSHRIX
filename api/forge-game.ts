@@ -9,6 +9,7 @@
 import { randomUUID } from "crypto";
 import { generateGameHtml, looksPlayable, countLibraryModels, acuChargeForUsage, FORGE_GAME_ACU_CHARGE, FORGE_GAME_3D_ACU_CHARGE, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE } from "./_gateway";
 import { buildPlayableGame } from "./_engine";
+import { buildPlayable3dGame } from "./_engine3d";
 import { releaseExpiredForgeHolds, getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeHold, saveForgeResult, recordForgeLog } from "./_ledger";
 import { recordSecurityEvent } from "./_guard";
 import { scanConcept, sanitiseConcept } from "./_security";
@@ -130,7 +131,12 @@ export default async function handler(req: any, res: any) {
     //      blueprint. If the bespoke build fails to render client-side, the Studio
     //      swaps to this fallback and auto-refunds — a blank screen is impossible.
     const bp = coerceBlueprint(blueprint, prompt, title, summary, language);
-    const engineHtml = buildPlayableGame(bp);
+    // A 3D forge gets a 3D engine build. This line used to be
+    // buildPlayableGame(bp) unconditionally, so when the AI failed — or its
+    // build failed to render and the Studio swapped to the fallback — a
+    // creator who asked for a 3D world received a 2D paddle game with their
+    // title on it. That is what "it only makes short character games" was.
+    const engineHtml = is3d ? buildPlayable3dGame(bp) : buildPlayableGame(bp);
     let html = engineHtml;
     let provider = "engine";
     let fallbackHtml: string | undefined;
