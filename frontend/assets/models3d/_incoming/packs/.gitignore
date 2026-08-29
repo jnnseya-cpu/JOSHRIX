@@ -1,0 +1,39 @@
+# DROP A WHOLE STATIC 3D PACK IN HERE (props, buildings, vehicles, scenery —
+# anything that is not an animated character; those go in ../characters/).
+#
+# Why this exists rather than dropping straight into ../../packs/: THAT folder's
+# .gitignore keeps only .glb .gltf .bin .obj .mtl and silently discards
+# everything else, textures included. An .obj or .gltf without its .png is a
+# model that loads as a blank grey shape, and the loss is silent — git simply
+# never mentions the files it ignored. This folder keeps the textures too, so
+# the ingest can pack them into the .glb before anything reaches packs/.
+#
+# Everything here is excluded from the Vercel deploy by .vercelignore, so size
+# here costs git history, never page load.
+
+# ignore everything...
+*
+
+# ...but descend into directories so nested models are still found
+!*/
+
+# ...and keep the model formats the ingest reads
+!*.glb
+!*.gltf
+!*.bin
+!*.obj
+!*.mtl
+
+# textures a .gltf/.obj references by filename — WITHOUT THESE THE MODEL IS BLANK
+!*.png
+!*.jpg
+!*.jpeg
+
+# licences are small and belong with the assets they cover
+!LICENSE*
+!License*
+!license*
+!*.txt
+
+!README.md
+!.gitignore

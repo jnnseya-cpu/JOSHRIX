@@ -1,0 +1,37 @@
+# DROP A WHOLE 2D SPRITE PACK IN HERE.
+#
+# Sprite bundles ship the same art several times over: individual PNGs, a packed
+# atlas, an SVG source set, vector .ai/.eps originals, preview sheets and print
+# resolution copies. The ingest reads the raster art and the atlas descriptors;
+# the vector sources are usually larger than everything else combined and no
+# browser game loads them.
+#
+# Excluded from the Vercel deploy by .vercelignore, so size here costs git
+# history only — but git history is PERMANENT, so it still costs.
+
+# ignore everything...
+*
+
+# ...but descend into directories
+!*/
+
+# ...and keep the art itself
+!*.png
+!*.jpg
+!*.jpeg
+!*.svg
+
+# atlas descriptors — a spritesheet without its .xml/.json is one big image
+# nobody can cut up
+!*.xml
+!*.json
+!*.fnt
+
+# licences
+!LICENSE*
+!License*
+!license*
+!*.txt
+
+!README.md
+!.gitignore
