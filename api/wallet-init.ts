@@ -14,6 +14,7 @@
  */
 import { randomUUID } from "node:crypto";
 import { getDb, ensureGameSchema, createWallet, getWallet, getWalletByEmail, refillTesterWallet, deleteWallet, updateWalletIdentity, claimWalletForUid, setWalletUid, walletOwnerUid } from "./_ledger";
+import { ensureReferralSchema, attributeReferral } from "./_ledger";
 import { callerIdentity } from "./_auth";
 import { normalizeEmail, clientIp, rateLimit, tooMany, claimNonce, recordSecurityEvent } from "./_guard";
 import { verifyHuman, isDisposableEmail, humanVerifyConfigured } from "./_human";
@@ -34,7 +35,7 @@ export default async function handler(req: any, res: any) {
   const rl = await rateLimit(sql, "wallet-init:" + clientIp(req), 20, 3600);
   if (!rl.ok) return tooMany(res, rl.retryAfter, "wallet requests");
 
-  const { walletId, email, name, action, human } = (req.body ?? {}) as Record<string, any>;
+  const { walletId, email, name, action, human, ref } = (req.body ?? {}) as Record<string, any>;
 
   try {
     await ensureGameSchema(sql);
@@ -177,8 +178,21 @@ export default async function handler(req: any, res: any) {
     // claimed by email later — the migration path exists only for the wallets
     // that predate it.
     if (caller) { try { await setWalletUid(sql, id, caller.uid); } catch { /* bind on next sign-in */ } }
+    // REFERRAL ATTRIBUTION. `ref` rides in from the ?ref= on the link the
+    // partner shared. It is recorded ONLY here, at account creation, and the
+    // table's primary key makes it permanent: an account belongs to one
+    // partner and cannot be re-attributed later to whoever is offering more.
+    // Self-referral is refused inside attributeReferral.
+    let referredBy: string | undefined;
+    if (typeof ref === "string" && /^JX-[A-Z0-9_-]{2,24}$/i.test(ref)) {
+      try {
+        await ensureReferralSchema(sql);
+        if (await attributeReferral(sql, id, ref.toUpperCase())) referredBy = ref.toUpperCase();
+      } catch { /* a failed attribution must never block a signup */ }
+    }
     return res.status(200).json({
       mode: "live", walletId: id, balance: 0, category: DEFAULT_WALLET_CATEGORY, plan: "explorer", created: true,
+      ...(referredBy ? { referredBy } : {}),
       note: "Top up at /wallet to forge your first game.",
     });
   } catch (err: any) {

@@ -18,7 +18,8 @@
  */
 import Stripe from "stripe";
 import { TOPUP_PACKAGES, topupPostings, PLANS, marketplaceSplit, salePostings, effectiveSellerPlan, EARNINGS_CLEARING_DAYS, grantCheck } from "../shared/payments";
-import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet, setWalletPlan, markWalletPurchased, unclaimEvent, claimAcuClawback, clawbackWallet, getListing, grantEntitlement, ensurePayoutSchema, creditEarnings, getWallet, revokeEntitlementByPaymentIntent, reverseEarnings } from "./_ledger";
+import { REFERRAL_REWARD_ACU } from "../shared/growth";
+import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet, setWalletPlan, markWalletPurchased, unclaimEvent, claimAcuClawback, clawbackWallet, getListing, grantEntitlement, ensurePayoutSchema, creditEarnings, getWallet, revokeEntitlementByPaymentIntent, reverseEarnings, ensureReferralSchema, convertReferral } from "./_ledger";
 import { notify } from "./_notify";
 
 // Vercel: disable body parsing so the raw payload is available for verification
@@ -29,6 +30,29 @@ async function rawBody(req: any): Promise<Buffer> {
   const chunks: Buffer[] = [];
   for await (const chunk of req) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
   return Buffer.concat(chunks);
+}
+
+/**
+ * A referred account paid for the first time — credit the partner who brought
+ * them. This is the moment the Growth Partner Programme becomes real: before
+ * it, /api/referrals minted links and nothing ever paid out on one.
+ *
+ * convertReferral only ever returns a referrer ONCE per referred account, so a
+ * customer's second and tenth purchase pay nobody again — the reward is for
+ * bringing a paying customer, not for their spending. Best-effort by design:
+ * a failure here must never fail the settlement that just credited a customer.
+ */
+async function payReferrer(sql: any, buyerWallet: string, eventId: string) {
+  try {
+    await ensureReferralSchema(sql);
+    const conv = await convertReferral(sql, buyerWallet, REFERRAL_REWARD_ACU);
+    if (!conv) return;
+    await creditWallet(sql, conv.referrer_wallet, REFERRAL_REWARD_ACU);
+    console.log(JSON.stringify({ referralPaid: { referrer: conv.referrer_wallet, code: conv.code, acu: REFERRAL_REWARD_ACU, eventId } }));
+    await notify("referral.converted", null, { acu: String(REFERRAL_REWARD_ACU) });
+  } catch (e) {
+    console.error(JSON.stringify({ referralPayError: String((e as any)?.message ?? e), eventId }));
+  }
 }
 
 /** Shared event routing — also used by the Firebase function. */
@@ -205,6 +229,7 @@ export default async function handler(req: any, res: any) {
             await ensureGameSchema(sql);
             await creditWallet(sql, walletId, r.acu);
             await markWalletPurchased(sql, walletId);   // paid wallets leave tester status forever
+            await payReferrer(sql, walletId, event.id);
           }
           await notify("acu.topup.successful", email, { amount: r.acu.toLocaleString() });
         } else if (result.ok && (result as any).action === "marketplace_sale") {
@@ -267,6 +292,9 @@ export default async function handler(req: any, res: any) {
             // activates the plan but grants no credit.
             await setWalletPlan(sql, wid, plan.id);
             await markWalletPurchased(sql, wid);
+            // A subscription is a first payment too — the partner who brought
+            // this customer is owed the same reward as on a top-up.
+            await payReferrer(sql, wid, event.id);
             const gc = grantCheck((session as any).amount_total, plan.monthlyMinor);
             if (plan.monthlyAcu > 0 && gc.grant) {
               await creditWallet(sql, wid, plan.monthlyAcu);

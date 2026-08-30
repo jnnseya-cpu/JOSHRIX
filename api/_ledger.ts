@@ -994,6 +994,148 @@ export async function decidePayoutRequest(sql: Sql, id: string, status: "approve
   return rows[0] ?? null;
 }
 
+/* ---------------- Forge Graph: telemetry that is actually kept -------------- */
+
+/**
+ * The Forge Graph is described everywhere as the platform's data moat, and
+ * /api/telemetry validated every event and then THREW IT AWAY — it answered
+ * `{ mode: "demo" }` and stored nothing, while play.html, studio.html and
+ * embed.js all faithfully posted to it. Months of "the moat only accrues if
+ * collection starts with the first user" collecting nothing.
+ *
+ * Columns are the questions the graph exists to answer: which event, whose
+ * session, which game, in what language, with the event's own payload. `props`
+ * is jsonb so a new event type needs no migration.
+ */
+export async function ensureTelemetrySchema(sql: Sql) {
+  await sql`CREATE TABLE IF NOT EXISTS telemetry_events (
+    id bigserial PRIMARY KEY,
+    event text NOT NULL,
+    session_id text NOT NULL,
+    game_id text,
+    language text,
+    props jsonb,
+    client_ts timestamptz,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`;
+  await sql`CREATE INDEX IF NOT EXISTS telemetry_event_time ON telemetry_events (event, created_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS telemetry_game ON telemetry_events (game_id) WHERE game_id IS NOT NULL`;
+}
+
+/** Write a batch. One statement per event keeps a single malformed row from
+ *  losing the whole batch — telemetry must never be the thing that breaks. */
+export async function recordTelemetry(
+  sql: Sql,
+  events: Array<{ event: string; sessionId: string; ts?: number; gameId?: string; language?: string; props?: unknown }>,
+): Promise<number> {
+  let written = 0;
+  for (const e of events) {
+    try {
+      await sql`INSERT INTO telemetry_events (event, session_id, game_id, language, props, client_ts)
+        VALUES (${e.event}, ${e.sessionId.slice(0, 64)}, ${e.gameId ?? null}, ${e.language ?? null},
+                ${JSON.stringify(e.props ?? {})}::jsonb,
+                ${e.ts ? new Date(e.ts).toISOString() : null})`;
+      written++;
+    } catch { /* one bad row must not lose the batch */ }
+  }
+  return written;
+}
+
+/** What the graph has actually seen — used by /api/telemetry's own response and
+ *  by the admin view, so "is anything being collected" is answerable. */
+export async function telemetrySummary(sql: Sql, days = 30) {
+  return (await sql`SELECT event, count(*)::int AS n, max(created_at) AS last_seen
+    FROM telemetry_events WHERE created_at > now() - make_interval(days => ${days})
+    GROUP BY event ORDER BY n DESC LIMIT 40`) as Array<{ event: string; n: number; last_seen: string }>;
+}
+
+/* ---------------- referrals: attribution that persists ---------------------- */
+
+/**
+ * The Growth Partner Programme was a specification with no implementation.
+ * POST /api/referrals minted a code, returned `{ mode: "demo" }` and recorded
+ * nothing — so /referrals handed people a link that could never pay them, while
+ * the same endpoint's GET described a reward ladder and a 1% lifetime
+ * commission in detail.
+ *
+ * These three tables are the whole mechanism: who owns a code, who arrived on
+ * one, and whether that arrival ever paid.
+ */
+export async function ensureReferralSchema(sql: Sql) {
+  await sql`CREATE TABLE IF NOT EXISTS referral_codes (
+    code text PRIMARY KEY,
+    wallet_id text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`;
+  // One code per wallet: a partner with several codes cannot be reasoned about,
+  // and the ladder counts referrals per PARTNER, not per link.
+  await sql`CREATE UNIQUE INDEX IF NOT EXISTS referral_codes_wallet ON referral_codes (wallet_id)`;
+  await sql`CREATE TABLE IF NOT EXISTS referrals (
+    referred_wallet text PRIMARY KEY,
+    code text NOT NULL,
+    referrer_wallet text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    converted_at timestamptz,
+    reward_acu integer NOT NULL DEFAULT 0
+  )`;
+  await sql`CREATE INDEX IF NOT EXISTS referrals_referrer ON referrals (referrer_wallet)`;
+}
+
+/** Claim a code for a wallet, or return the one it already has. Idempotent, so
+ *  a partner reloading the page never mints a second link. */
+export async function claimReferralCode(sql: Sql, walletId: string, code: string): Promise<{ code: string; created: boolean } | null> {
+  const mine = (await sql`SELECT code FROM referral_codes WHERE wallet_id = ${walletId}`) as Array<{ code: string }>;
+  if (mine.length) return { code: mine[0].code, created: false };
+  const rows = (await sql`INSERT INTO referral_codes (code, wallet_id) VALUES (${code}, ${walletId})
+    ON CONFLICT (code) DO NOTHING RETURNING code`) as Array<{ code: string }>;
+  if (!rows.length) return null;                        // that handle is taken
+  return { code: rows[0].code, created: true };
+}
+
+export async function referrerForCode(sql: Sql, code: string): Promise<string | null> {
+  const rows = (await sql`SELECT wallet_id FROM referral_codes WHERE code = ${code}`) as Array<{ wallet_id: string }>;
+  return rows.length ? rows[0].wallet_id : null;
+}
+
+/**
+ * Attribute a new account to a code, once and forever.
+ *
+ * PRIMARY KEY on referred_wallet is the anti-fraud guard: an account can be
+ * referred by exactly one partner, and cannot be re-attributed later to
+ * whoever is offering the most. Self-referral is refused outright — it is the
+ * first thing anyone tries.
+ */
+export async function attributeReferral(sql: Sql, referredWallet: string, code: string): Promise<boolean> {
+  const referrer = await referrerForCode(sql, code);
+  if (!referrer || referrer === referredWallet) return false;
+  const rows = (await sql`INSERT INTO referrals (referred_wallet, code, referrer_wallet)
+    VALUES (${referredWallet}, ${code}, ${referrer})
+    ON CONFLICT (referred_wallet) DO NOTHING RETURNING referred_wallet`) as any[];
+  return rows.length > 0;
+}
+
+/**
+ * The referred account paid for the first time. Marks the conversion once and
+ * returns the referrer to reward — null if there was no referral, or if this
+ * one has already converted, so a second purchase never pays twice.
+ */
+export async function convertReferral(sql: Sql, referredWallet: string, rewardAcu: number) {
+  const rows = (await sql`UPDATE referrals SET converted_at = now(), reward_acu = ${rewardAcu}
+    WHERE referred_wallet = ${referredWallet} AND converted_at IS NULL
+    RETURNING referrer_wallet, code`) as Array<{ referrer_wallet: string; code: string }>;
+  return rows[0] ?? null;
+}
+
+/** A partner's real standing: how many they brought, how many paid, what they earned. */
+export async function referralStats(sql: Sql, walletId: string) {
+  const rows = (await sql`SELECT
+      count(*)::int AS referred,
+      count(converted_at)::int AS converted,
+      COALESCE(sum(reward_acu), 0)::int AS acu_earned
+    FROM referrals WHERE referrer_wallet = ${walletId}`) as Array<{ referred: number; converted: number; acu_earned: number }>;
+  return rows[0] ?? { referred: 0, converted: 0, acu_earned: 0 };
+}
+
 /* ---------------- newsletter: subscription state + send idempotency --------- */
 
 /**

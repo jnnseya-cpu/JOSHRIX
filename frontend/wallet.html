@@ -163,7 +163,7 @@ $('btnPayout').addEventListener('click', async () => {
       // withdrawals need a tokenised bank/mobile-money destination collected and
       // stored per creator; until that exists this button cannot pay anyone, and
       // the operator queue at /admin is the only thing that moves money.
-      body: JSON.stringify({ walletId: _p.serverWalletId || undefined, amountMinor: amt, rail, instant, destinationRef: 'tok_demo_dest_2941' }),
+      body: JSON.stringify({ walletId: _p.serverWalletId || undefined, amountMinor: amt, rail, instant, destinationRef: 'tok_demo_dest_2941'}),
       signal: AbortSignal.timeout(7000) });
     const j = await resp.json();
     r.textContent = resp.ok
@@ -195,7 +195,7 @@ const applyLocalAcu = (skipBalance, serverCategory) => {
           if (prof.serverWalletId) {
             try {
               const rr = await fetch(API + '/api/wallet-init', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ walletId: prof.serverWalletId, action: 'refill' }), signal: AbortSignal.timeout(8000) });
+                body: JSON.stringify({ walletId: prof.serverWalletId, action: 'refill' , ref: (window.jxRef&&window.jxRef())}), signal: AbortSignal.timeout(8000) });
               const jj = await rr.json().catch(() => null);
               if (rr.ok && jj && typeof jj.balance === 'number') {
                 prof.acu = jj.balance; localStorage.setItem('jx.profile', JSON.stringify(prof));
@@ -227,7 +227,7 @@ const applyLocalAcu = (skipBalance, serverCategory) => {
       try { navigator.clipboard.writeText(prof.serverWalletId); $('wWidCopy').textContent = '✓ copied'; setTimeout(() => { $('wWidCopy').textContent = 'copy'; }, 1500); } catch (err) {}
     });
     (window.jxAuthHeaders ? window.jxAuthHeaders() : Promise.resolve({})).then((auth) => fetch(API + '/api/wallet-init', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, auth),
-      body: JSON.stringify({ walletId: prof.serverWalletId, email: prof.email || undefined, name: prof.displayName || prof.handle || undefined }), signal: AbortSignal.timeout(8000) }))
+      body: JSON.stringify({ walletId: prof.serverWalletId, email: prof.email || undefined, name: prof.displayName || prof.handle || undefined , ref: (window.jxRef&&window.jxRef())}), signal: AbortSignal.timeout(8000) }))
       .then(r => r.json()).then(j => {
         if (j && j.mode === 'live') {
           $('wAcu').textContent = Number(j.balance).toLocaleString();

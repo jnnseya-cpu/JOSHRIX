@@ -139,7 +139,7 @@
   $('prAcu').textContent = (p.acu || 0).toLocaleString();
   if (p.serverWalletId) {
     (window.jxAuthHeaders ? window.jxAuthHeaders() : Promise.resolve({})).then((auth) => fetch(API + '/api/wallet-init', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, auth),
-      body: JSON.stringify({ walletId: p.serverWalletId, email: p.email || undefined, name: p.displayName || p.handle || undefined }), signal: AbortSignal.timeout(8000) }))
+      body: JSON.stringify({ walletId: p.serverWalletId, email: p.email || undefined, name: p.displayName || p.handle || undefined , ref: (window.jxRef&&window.jxRef())}), signal: AbortSignal.timeout(8000) }))
       .then(r => r.json()).then(j => {
         if (j && j.mode === 'live' && typeof j.balance === 'number') {
           $('prAcu').textContent = Number(j.balance).toLocaleString();
@@ -149,7 +149,7 @@
   }
   if (p.serverWalletId) {
     fetch(API + '/api/my-games', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ walletId: p.serverWalletId }), signal: AbortSignal.timeout(8000) })
+      body: JSON.stringify({ walletId: p.serverWalletId}), signal: AbortSignal.timeout(8000) })
       .then(r => r.json()).then(j => {
         const games = (j && j.games) || [];
         $('prGames').textContent = games.length;
@@ -167,7 +167,7 @@
     try {
       if (p.serverWalletId) {
         await fetch(API + '/api/wallet-init', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, await (window.jxAuthHeaders ? window.jxAuthHeaders() : {})),
-          body: JSON.stringify({ walletId: p.serverWalletId, action: 'delete' }), signal: AbortSignal.timeout(10000) });
+          body: JSON.stringify({ walletId: p.serverWalletId, action: 'delete' , ref: (window.jxRef&&window.jxRef())}), signal: AbortSignal.timeout(10000) });
       }
     } catch (e) { /* wallet delete best-effort; local wipe proceeds */ }
     try { if (window.jxAuth && window.jxAuth.enabled) { const a = await window.jxAuth.ready; await a.signOut(); } } catch (e) {}

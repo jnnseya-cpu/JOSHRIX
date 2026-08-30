@@ -19,6 +19,29 @@ export const GROWTH = {
   commissionUnlockAfterPaidReferrals: 20,
 } as const;
 
+/**
+ * What a partner is actually paid when a referral converts, in ACUs.
+ *
+ * The ladder below said "ACU bonus" and named no figure, and nothing anywhere
+ * paid one — the whole programme was a description. This is the number the
+ * ledger now credits, so the promise and the payment come from the same
+ * constant and cannot drift apart.
+ *
+ * ACUs rather than cash by design: cash needs KYC, a validation window and a
+ * payout rail (see GROWTH.kycRequired and validationDays), which is what the
+ * 20-referral commission unlock is for. A credit costs us provider time we
+ * already price at a 4x markup, and it can be granted the moment money lands.
+ */
+export const REFERRAL_REWARD_ACU = 100;
+
+/** Paid referrals → the status shown on /referrals. Derived from the ladder so
+ *  a rung added below is reflected everywhere without a second list. */
+export function referralStatus(paidReferrals: number): string {
+  let status = "Referrer";
+  for (const rung of GROWTH_LADDER) if (paidReferrals >= rung.paidReferrals) status = rung.status;
+  return status;
+}
+
 /** The reward ladder — paid referrals → status → reward. */
 export const GROWTH_LADDER = [
   { paidReferrals: 1, status: "Starter", reward: "ACU bonus" },

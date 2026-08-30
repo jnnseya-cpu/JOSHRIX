@@ -60,7 +60,7 @@
 
   <h2 class="jx reveal">The Reward Ladder</h2>
   <table class="jx reveal"><thead><tr><th>Paid referrals</th><th>Status</th><th>Reward</th></tr></thead><tbody>
-    <tr><td>1</td><td><b>Starter</b></td><td>ACU bonus</td></tr>
+    <tr><td>1</td><td><b>Starter</b></td><td>100 ACUs per paid referral</td></tr>
     <tr><td>5</td><td><b>Connector</b></td><td>More ACUs + badge</td></tr>
     <tr><td>10</td><td><b>Builder</b></td><td>Premium feature access</td></tr>
     <tr><td>20</td><td><b>Verified Growth Referrer</b></td><td>🔓 Unlock 1% lifetime commission</td></tr>
@@ -126,6 +126,7 @@
   <a href="terms.html">Terms</a><a href="privacy.html">Privacy</a><a href="refunds.html">Refunds</a>
 </div>
 <script src="assets/config.js"></script>
+<script src="assets/auth.js"></script>
 <script src="assets/appnav.js"></script>
 <script src="assets/track.js"></script>
 <script src="assets/pixels.js"></script>
@@ -139,12 +140,23 @@ $('btnRefMake').addEventListener('click', async () => {
   if (!handle) { $('refMsg').textContent = 'Choose a handle first (letters, numbers, dashes).'; return; }
   $('refMsg').textContent = 'Creating…';
   try {
+    // A referral link earns real ACUs, so it belongs to an account: the wallet
+    // identifies it and the token proves the account is yours.
+    let prof = {}; try { prof = JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (e) {}
     const r = await fetch((window.JOSHRIX_API_BASE || '') + '/api/referrals', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ handle }), signal: AbortSignal.timeout(8000)
+      method: 'POST',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, await (window.jxAuthHeaders ? window.jxAuthHeaders() : {})),
+      body: JSON.stringify({ handle, walletId: prof.serverWalletId || undefined }), signal: AbortSignal.timeout(8000)
     });
     const j = await r.json();
-    if (r.ok && j.link) { $('refLink').value = j.link; $('refMsg').textContent = '✓ Link ready — attribution activates as tracking goes live.'; }
+    if (r.ok && j.link) {
+      $('refLink').value = j.link;
+      const s = j.stats || {};
+      $('refMsg').textContent = (j.created ? '✓ Link created. ' : '✓ Your link. ')
+        + s.referred + ' signed up · ' + s.paid + ' paid · ' + s.acuEarned + ' ACUs earned'
+        + (s.status ? ' · ' + s.status : '')
+        + '. You earn ' + s.rewardPerConversion + ' ACUs the first time someone you referred pays.';
+    }
     else $('refMsg').textContent = '⚠ ' + (j.error || 'Could not create the link');
   } catch (e) { $('refMsg').textContent = '⚠ Could not reach the server.'; }
 });

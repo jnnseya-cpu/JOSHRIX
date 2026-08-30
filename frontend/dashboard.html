@@ -137,7 +137,7 @@
   showAcu(p.acu || 0, p.testerAcuGranted ? '🧪 TESTER GRANT' : '');
   if (p.serverWalletId) {
     (window.jxAuthHeaders ? window.jxAuthHeaders() : Promise.resolve({})).then((auth) => fetch(API + '/api/wallet-init', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, auth),
-      body: JSON.stringify({ walletId: p.serverWalletId }), signal: AbortSignal.timeout(8000) }))
+      body: JSON.stringify({ walletId: p.serverWalletId , ref: (window.jxRef&&window.jxRef())}), signal: AbortSignal.timeout(8000) }))
       .then(r => r.json()).then(j => {
         if (j && j.mode === 'live') {
           const CAT = { tester: '🧪 TESTER', purchased: 'PURCHASED', standard: 'ACCOUNT' };
@@ -154,7 +154,7 @@
   if (!p.serverWalletId) { body.innerHTML = emptyRow; }
   else {
     fetch(API + '/api/my-games', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ walletId: p.serverWalletId }), signal: AbortSignal.timeout(8000) })
+      body: JSON.stringify({ walletId: p.serverWalletId}), signal: AbortSignal.timeout(8000) })
       .then(r => r.json()).then(j => {
         const games = (j && j.games) || [];
         $('mGames').textContent = games.length;
@@ -192,7 +192,7 @@
           btn.disabled = true; msg.style.color = 'var(--muted)'; msg.textContent = 'saving…';
           try { JX.track('list_game'); } catch (e) {}
           fetch(API + '/api/listing', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ walletId: p.serverWalletId, gameId: g.id, priceMinor }), signal: AbortSignal.timeout(10000) })
+            body: JSON.stringify({ walletId: p.serverWalletId, gameId: g.id, priceMinor}), signal: AbortSignal.timeout(10000) })
             .then(r => r.json().then(j => ({ ok: r.ok, j })))
             .then(({ ok, j }) => {
               btn.disabled = false;
