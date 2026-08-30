@@ -89,10 +89,27 @@ table.jx td:first-child{white-space:nowrap}
         <option value="bitripay">BitriPay — 0.5% · next day</option>
         <option value="mobile_money">Mobile money — 1.5% · next day</option>
       </select></div>
+      <div><label for="poDest">Send to</label><select id="poDest"><option value="">— add a destination below —</option></select></div>
       <div><button class="btn btn-primary" id="btnPayout" style="width:100%">⬇ Request Payout</button></div>
     </div>
-    <p class="sub" style="color:var(--muted);font-weight:500;margin-top:.8rem">Minimum £10 · KYC verification at £100 cumulative · destinations are tokenised, never stored raw.</p>
+    <p class="sub" style="color:var(--muted);font-weight:500;margin-top:.8rem">Minimum £10 · KYC verification at £100 cumulative · your account reference is encrypted and only ever shown as its last four characters.</p>
     <div class="result" id="payoutResult"></div>
+
+    <div style="margin-top:1.4rem;border-top:1px solid var(--stroke);padding-top:1.2rem">
+      <h3 style="font-size:.8rem">Your payout destinations</h3>
+      <div id="destList" style="color:var(--muted);font-size:.92rem;margin-bottom:.9rem">Loading…</div>
+      <div class="frow">
+        <div><label for="dRail">Rail</label><select id="dRail">
+          <option value="bank_transfer">Bank transfer</option>
+          <option value="bitripay">BitriPay</option>
+          <option value="mobile_money">Mobile money</option>
+        </select></div>
+        <div><label for="dLabel">Label</label><input id="dLabel" maxlength="40" placeholder="e.g. Barclays current"></div>
+        <div><label for="dRef">Account reference</label><input id="dRef" maxlength="64" placeholder="IBAN, account number or mobile number" autocomplete="off"></div>
+        <div><button class="btn btn-ghost" id="btnAddDest" style="width:100%">+ Add destination</button></div>
+      </div>
+      <div class="result" id="destResult"></div>
+    </div>
   </div>
 
   <div class="pane reveal">
@@ -143,36 +160,93 @@ PKGS.forEach(([p, id], i) => {
   });
   g.appendChild(d);
 });
+const walletOf = () => { try { return (JSON.parse(localStorage.getItem('jx.profile') || '{}').serverWalletId) || ''; } catch (e) { return ''; } };
+const authHeaders = async () => Object.assign({ 'Content-Type': 'application/json' }, await (window.jxAuthHeaders ? window.jxAuthHeaders() : {}));
+
+/* Your saved destinations. The account reference itself is encrypted server-side
+   and never comes back — only the label you chose and the last four characters,
+   which is enough to tell two accounts apart and useless to anyone else. */
+async function loadDestinations() {
+  const list = $('destList'), sel = $('poDest'), w = walletOf();
+  if (!w) { list.textContent = 'Open the Studio once to create your account, then add a destination here.'; return; }
+  try {
+    const r = await fetch(API + '/api/payout-destination?walletId=' + encodeURIComponent(w), { headers: await authHeaders() });
+    const j = await r.json();
+    if (!r.ok) { list.textContent = j.error || 'Could not load your destinations.'; return; }
+    const ds = j.destinations || [];
+    sel.innerHTML = ds.length
+      ? ds.map(d => '<option value="' + d.id + '" data-rail="' + d.rail + '">' + d.label + ' ••••' + d.endsWith + '</option>').join('')
+      : '<option value="">— add a destination below —</option>';
+    list.innerHTML = ds.length
+      ? ds.map(d => '<div style="display:flex;gap:.6rem;align-items:center;margin:.3rem 0">'
+          + '<code style="color:var(--cyan)">' + d.label + ' ••••' + d.endsWith + '</code>'
+          + '<span style="font-size:.8rem">' + d.rail.replace(/_/g, ' ') + '</span>'
+          + '<button class="btn btn-ghost btn-sm" data-del="' + d.id + '">Remove</button></div>').join('')
+      : (j.configured === false
+          ? '⚠ The server cannot store destinations yet — PAYOUT_SECRET is not set, and an account number will not be saved unencrypted.'
+          : 'No destinations yet. Add one below and it becomes selectable above.');
+    list.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', async () => {
+      b.disabled = true;
+      await fetch(API + '/api/payout-destination', { method: 'DELETE', headers: await authHeaders(),
+        body: JSON.stringify({ walletId: w, id: b.getAttribute('data-del') }) });
+      loadDestinations();
+    }));
+  } catch (e) { list.textContent = 'Could not reach the server.'; }
+}
+
+$('btnAddDest').addEventListener('click', async () => {
+  const r = $('destResult'); r.style.display = 'block';
+  const w = walletOf();
+  if (!w) { r.textContent = '✕ Open the Studio once first — a destination belongs to an account.'; return; }
+  const reference = $('dRef').value.trim();
+  if (!reference) { r.textContent = '✕ Enter the account reference to pay into.'; return; }
+  r.textContent = 'Saving…';
+  try {
+    const resp = await fetch(API + '/api/payout-destination', { method: 'POST', headers: await authHeaders(),
+      body: JSON.stringify({ walletId: w, rail: $('dRail').value, label: $('dLabel').value.trim(), reference }),
+      signal: AbortSignal.timeout(8000) });
+    const j = await resp.json();
+    if (resp.ok) {
+      $('dRef').value = '';                    // never leave it on screen
+      r.textContent = '✓ Saved as ' + j.destination.label + ' ••••' + j.destination.endsWith + '. It is encrypted and never shown in full again.';
+      loadDestinations();
+    } else r.textContent = '✕ ' + (j.error || 'Could not save that destination.');
+  } catch (e) { r.textContent = '✕ Could not reach the server.'; }
+});
+
 $('btnPayout').addEventListener('click', async () => {
   const r = $('payoutResult'); r.style.display = 'block';
   const amt = parseInt($('poAmt').value, 10);
   const railSel = $('poRail').value;
   const rail = railSel === 'bank_transfer_instant' ? 'bank_transfer' : railSel;
   const instant = railSel === 'bank_transfer_instant';
+  const destinationId = $('poDest').value;
+  if (!destinationId) { r.textContent = '✕ Add a payout destination first — we need to know where to send the money.'; return; }
   r.textContent = 'Submitting payout request…';
   try {
-    // walletId identifies the earnings account and the token proves it is
-    // yours — the server checks the wallet's owner against the signed-in user,
-    // because this endpoint takes both the account to debit and the destination
-    // to pay from the same request.
-    let _p = {}; try { _p = JSON.parse(localStorage.getItem('jx.profile') || '{}'); } catch (e) {}
+    /* walletId names the earnings account, the token proves it is yours, and
+       destinationId names one of YOUR saved destinations — the server checks
+       all three, because this endpoint decides both whose money moves and
+       where it lands. */
     const resp = await fetch(API + '/api/payout', {
-      method: 'POST',
-      headers: Object.assign({ 'Content-Type': 'application/json' }, await (window.jxAuthHeaders ? window.jxAuthHeaders() : {})),
-      // TODO(payout-destination): destinationRef is still a placeholder. Real
-      // withdrawals need a tokenised bank/mobile-money destination collected and
-      // stored per creator; until that exists this button cannot pay anyone, and
-      // the operator queue at /admin is the only thing that moves money.
-      body: JSON.stringify({ walletId: _p.serverWalletId || undefined, amountMinor: amt, rail, instant, destinationRef: 'tok_demo_dest_2941'}),
-      signal: AbortSignal.timeout(7000) });
+      method: 'POST', headers: await authHeaders(),
+      body: JSON.stringify({ walletId: walletOf() || undefined, amountMinor: amt, rail, instant, destinationId }),
+      signal: AbortSignal.timeout(8000) });
     const j = await resp.json();
     r.textContent = resp.ok
-      ? `✓ ${j.payout.status} — £${(j.payout.amountMinor/100).toFixed(2)} via ${j.payout.rail}${j.payout.instant?' (instant)':''}\nfee £${(j.payout.feeMinor/100).toFixed(2)} → you receive £${(j.payout.netMinor/100).toFixed(2)} · ETA ${j.payout.etaDays} day(s)${j.payout.kycRequired?'\n⚠ KYC verification required for this amount':''}`
-      : '✕ ' + (j.error || 'failed');
+      ? '\u2713 ' + j.payout.status + ' \u2014 \u00a3' + (j.payout.amountMinor/100).toFixed(2) + ' via ' + j.payout.rail + (j.payout.instant ? ' (instant)' : '')
+        + '\nto ' + j.payout.destination.label + ' \u2022\u2022\u2022\u2022' + j.payout.destination.endsWith
+        + '\nfee \u00a3' + (j.payout.feeMinor/100).toFixed(2) + ' \u2192 you receive \u00a3' + (j.payout.netMinor/100).toFixed(2) + ' \u00b7 ETA ' + j.payout.etaDays + ' day(s)'
+        + (j.payout.kycRequired ? '\n\u26a0 KYC verification required for this amount' : '')
+      : '\u2715 ' + (j.error || 'failed');
   } catch (e) {
-    r.textContent = '✓ demo (offline) — payout request would be queued for the next settlement run';
+    // Never report a queued payout that was not queued. The old handler
+    // answered "\u2713 demo (offline) \u2014 payout request would be queued", which is a
+    // success message for a request that never reached the server.
+    r.textContent = '\u2715 Could not reach the server \u2014 nothing was requested. Try again in a moment.';
   }
 });
+loadDestinations();
 /* The refill link appears only when the SERVER says this wallet is a designated
    tester — free credit is not a client-side decision. The local jx.profile flag
    only stands in offline/demo mode, where there is no real balance to be wrong

@@ -34,12 +34,31 @@ export const GROWTH = {
  */
 export const REFERRAL_REWARD_ACU = 100;
 
-/** Paid referrals → the status shown on /referrals. Derived from the ladder so
- *  a rung added below is reflected everywhere without a second list. */
-export function referralStatus(paidReferrals: number): string {
-  let status = "Referrer";
-  for (const rung of GROWTH_LADDER) if (paidReferrals >= rung.paidReferrals) status = rung.status;
-  return status;
+/**
+ * VERIFIED NET REVENUE, as far as it can honestly be computed today.
+ *
+ * NET_REVENUE_DEDUCTIONS below lists nine deductions. Three of them are
+ * event-driven and are handled by REVERSING the commission when they happen
+ * rather than by predicting them: refunds, chargebacks and fraud deductions.
+ * Two are already excluded because commission is computed from what Stripe
+ * actually settled, not from the list price: discounts and promotional value.
+ *
+ * That leaves payment fees, which are computed, and VAT, which is NOT — the
+ * platform does not yet split tax out of a settlement, so this figure is
+ * slightly HIGH wherever VAT applies and the 1% is therefore slightly generous.
+ * It is stated here rather than hidden because a partner reading the page is
+ * owed a real definition, and because the correct fix is tax handling, not a
+ * fudge factor. Once settlements carry a tax breakdown, subtract it here and
+ * nowhere else.
+ */
+export function verifiedNetRevenueMinor(amountPaidMinor: number, method: "card" | "bitripay" | "mobile_money" = "card"): number {
+  const fees: Record<string, { rate: number; fixedMinor: number }> = {
+    card: { rate: 0.014, fixedMinor: 20 },
+    bitripay: { rate: 0.01, fixedMinor: 0 },
+    mobile_money: { rate: 0.02, fixedMinor: 0 },
+  };
+  const f = fees[method] ?? fees.card;
+  return Math.max(0, amountPaidMinor - (Math.round(amountPaidMinor * f.rate) + f.fixedMinor));
 }
 
 /** The reward ladder — paid referrals → status → reward. */

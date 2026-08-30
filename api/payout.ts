@@ -1,6 +1,6 @@
 /**
  * POST /api/payout — creator withdrawal request.
- * Body: { walletId, amountMinor, rail, instant?, destinationRef }
+ * Body: { walletId, amountMinor, rail, instant?, destinationId }
  *
  * What this DOES do: verify the creator actually has the earnings, reserve them
  * atomically (so the same money cannot be withdrawn twice by concurrent
@@ -14,7 +14,8 @@
  */
 import { randomUUID } from "node:crypto";
 import { PayoutRequestSchema, PAYOUT, payoutFeeMinor, payoutPostings } from "../shared/payments";
-import { getDb, ensurePayoutSchema, ensureGameSchema, getEarnings, reserveForPayout, savePayoutRequest, walletOwnerUid } from "./_ledger";
+import { getDb, ensurePayoutSchema, ensureGameSchema, getEarnings, reserveForPayout, savePayoutRequest, walletOwnerUid,
+  ensurePayoutDestinationSchema, getPayoutDestination, ensureCommissionSchema, releaseClearedCommission } from "./_ledger";
 import { callerIdentity } from "./_auth";
 import { clientIp, recordSecurityEvent } from "./_guard";
 
@@ -28,7 +29,7 @@ export default async function handler(req: any, res: any) {
   const parsed = PayoutRequestSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: "Invalid payout request", issues: parsed.error.issues.slice(0, 3) });
 
-  const { amountMinor, rail, instant, destinationRef } = parsed.data;
+  const { amountMinor, rail, instant, destinationId } = parsed.data;
   const walletId = typeof req.body?.walletId === "string" ? req.body.walletId : "";
   if (!walletId) return res.status(400).json({ error: "walletId required — payouts are tied to the earning account." });
   if (amountMinor < PAYOUT.minMinor) {
@@ -83,6 +84,31 @@ export default async function handler(req: any, res: any) {
       return res.status(403).json({ error: "That wallet does not belong to this account.", code: "not_your_wallet", queued: false });
     }
 
+    /* WHERE THE MONEY GOES. This used to be a `destinationRef` string taken
+       straight from the request body, and the wallet page sent the hard-coded
+       literal "tok_demo_dest_2941" — so every payout request in the system
+       carried the same fake and none of them could ever have paid anyone.
+       A withdrawal now names one of the caller's own saved destinations, and
+       getPayoutDestination scopes the lookup to their wallet, so a guessed id
+       reaches nothing. */
+    await ensurePayoutDestinationSchema(sql);
+    const destId = destinationId;
+    const dest = await getPayoutDestination(sql, destId, walletId);
+    if (!dest) {
+      return res.status(404).json({ error: "No such payout destination on this account.", code: "unknown_destination", queued: false });
+    }
+    if (dest.rail !== rail) {
+      return res.status(400).json({
+        error: `That destination is set up for ${dest.rail.replace(/_/g, " ")}, not ${rail.replace(/_/g, " ")}.`,
+        code: "rail_mismatch", queued: false,
+      });
+    }
+
+    /* Accrued referral commission that has finished its validation window
+       becomes withdrawable at the same moment as anything else — otherwise a
+       partner would see a balance they could not request. */
+    try { await ensureCommissionSchema(sql); await releaseClearedCommission(sql, walletId); } catch { /* sweep must not block a payout */ }
+
     const bal = await getEarnings(sql, walletId);
     const available = Number(bal.available_minor ?? 0);
     if (available < amountMinor) {
@@ -98,7 +124,7 @@ export default async function handler(req: any, res: any) {
     }
 
     const id = "po_" + randomUUID().replace(/-/g, "").slice(0, 18);
-    await savePayoutRequest(sql, { id, walletId, amountMinor, feeMinor, netMinor, rail, destinationRef, kycRequired });
+    await savePayoutRequest(sql, { id, walletId, amountMinor, feeMinor, netMinor, rail, destinationRef: dest.id, kycRequired });
 
     return res.status(202).json({
       queued: true,
@@ -106,7 +132,9 @@ export default async function handler(req: any, res: any) {
         id, status: "requested", rail, instant: !!instant,
         amountMinor, feeMinor, netMinor,
         etaDays: instant ? 0 : PAYOUT.rails[rail].etaDays,
-        destinationRef: destinationRef.slice(0, 8) + "…",   // never echo full destinations
+        // The saved destination, by its label and last four — the reference
+        // itself is encrypted and is never returned to anybody, owner included.
+        destination: { id: dest.id, label: dest.label, endsWith: dest.last4, rail: dest.rail },
         kycRequired,
       },
       ledger: { kind: "payout", postings: payoutPostings(amountMinor, feeMinor) },

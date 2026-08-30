@@ -253,7 +253,12 @@ export const PayoutRequestSchema = z.object({
   amountMinor: z.number().int().positive(),
   rail: z.enum(Object.keys(PAYOUT.rails) as [PayoutRail, ...PayoutRail[]]),
   instant: z.boolean().optional(), // bank_transfer only
-  destinationRef: z.string().min(3).max(120), // tokenised destination, never raw account data
+  /** Which of the creator's SAVED destinations to pay. Never the account
+   *  reference itself: that is encrypted at rest and is decrypted only by the
+   *  operator releasing the payout. This field used to be `destinationRef`, a
+   *  raw string taken from the request body — and the wallet page sent the
+   *  hard-coded literal "tok_demo_dest_2941" on every request. */
+  destinationId: z.string().min(3).max(64),
 });
 
 /* ---------------- split mathematics (pure, tested) -------------------------- */

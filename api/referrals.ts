@@ -6,7 +6,7 @@
  *        production wires signup attribution + Trust Score checks)
  */
 import { z } from "zod";
-import { GROWTH, GROWTH_LADDER, NET_REVENUE_DEDUCTIONS, NEVER_COMMISSIONABLE, FRAUD_SIGNALS, REWARD_PATH, RISK_PATH, REFERRAL_REWARD_ACU, referralStatus } from "../shared/growth";
+import { GROWTH, GROWTH_LADDER, NET_REVENUE_DEDUCTIONS, NEVER_COMMISSIONABLE, FRAUD_SIGNALS, REWARD_PATH, RISK_PATH, REFERRAL_REWARD_ACU, statusForPaidReferrals } from "../shared/growth";
 import { getDb, ensureReferralSchema, claimReferralCode, referralStats, walletOwnerUid } from "./_ledger";
 import { callerIdentity } from "./_auth";
 
@@ -61,7 +61,7 @@ export default function handler(req: any, res: any) {
           referred: stats.referred,
           paid: stats.converted,
           acuEarned: stats.acu_earned,
-          status: referralStatus(stats.converted),
+          status: statusForPaidReferrals(stats.converted),
           rewardPerConversion: REFERRAL_REWARD_ACU,
           commissionUnlocksAfter: GROWTH.commissionUnlockAfterPaidReferrals,
         },

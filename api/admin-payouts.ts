@@ -9,7 +9,9 @@
  * single-use and records who made it, so money never moves without a name
  * attached to the call.
  */
-import { getDb, ensurePayoutSchema, listPayoutRequests, decidePayoutRequest, releaseReservation, settleReservation } from "./_ledger";
+import { getDb, ensurePayoutSchema, listPayoutRequests, decidePayoutRequest, releaseReservation, settleReservation,
+  ensurePayoutDestinationSchema, getPayoutDestinationForRelease } from "./_ledger";
+import { decryptSecret } from "./_secrets";
 import { tooManyBadKeys } from "./_guard";
 
 const DECISIONS = ["approved", "rejected", "paid"] as const;
@@ -69,8 +71,24 @@ export default async function handler(req: any, res: any) {
       if (decision === "paid") {
         try { await settleReservation(sql, row.wallet_id, Number(row.amount_minor)); } catch { /* reconciliation */ }
       }
+      /* THE ONE PLACE THE DESTINATION IS DECRYPTED. The operator releasing a
+         payout is the only party who needs the actual account reference, and
+         only at this moment. It is returned on approve/paid, never on reject,
+         and never anywhere else in the platform — not even to its owner. */
+      let payTo: { rail: string; label: string; reference: string } | undefined;
+      if (decision !== "rejected" && row.destination_ref) {
+        try {
+          await ensurePayoutDestinationSchema(sql);
+          const d = await getPayoutDestinationForRelease(sql, row.destination_ref);
+          const ref = d ? decryptSecret(d.enc) : null;
+          if (d && ref) payTo = { rail: d.rail, label: d.label, reference: ref };
+        } catch { /* the decision stands even if the reference cannot be read */ }
+      }
+
       return res.status(200).json({
         ok: true, id: row.id, decision, walletId: row.wallet_id, amountMinor: Number(row.amount_minor),
+        ...(payTo ? { payTo } : {}),
+        ...(decision !== "rejected" && !payTo ? { warning: "No readable destination is attached to this request — check PAYOUT_SECRET is the same value the destination was saved under." } : {}),
         note: decision === "paid"
           ? "Marked paid — confirm the funds actually left the payout rail."
           : decision === "rejected" ? "Rejected — the reservation was returned to the creator's available balance."

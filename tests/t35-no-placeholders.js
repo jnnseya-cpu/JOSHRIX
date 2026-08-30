@@ -201,10 +201,10 @@ console.log('\nwhat the page promises is what the ledger pays');
   t('the page no longer says attribution is still to come',
     !/attribution activates|tracking goes live/i.test(page));
   t('status is derived from the ladder, not a second list',
-    growth.referralStatus(0) === 'Referrer' &&
-    growth.referralStatus(1) === 'Starter' &&
-    growth.referralStatus(20) === 'Verified Growth Referrer' &&
-    growth.referralStatus(1000) === 'Elite Referrer');
+    growth.statusForPaidReferrals(0) === 'Member' &&
+    growth.statusForPaidReferrals(1) === 'Starter' &&
+    growth.statusForPaidReferrals(20) === 'Verified Growth Referrer' &&
+    growth.statusForPaidReferrals(1000) === 'Elite Referrer');
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

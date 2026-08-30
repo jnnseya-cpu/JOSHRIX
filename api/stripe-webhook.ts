@@ -18,8 +18,9 @@
  */
 import Stripe from "stripe";
 import { TOPUP_PACKAGES, topupPostings, PLANS, marketplaceSplit, salePostings, effectiveSellerPlan, EARNINGS_CLEARING_DAYS, grantCheck } from "../shared/payments";
-import { REFERRAL_REWARD_ACU } from "../shared/growth";
-import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet, setWalletPlan, markWalletPurchased, unclaimEvent, claimAcuClawback, clawbackWallet, getListing, grantEntitlement, ensurePayoutSchema, creditEarnings, getWallet, revokeEntitlementByPaymentIntent, reverseEarnings, ensureReferralSchema, convertReferral } from "./_ledger";
+import { REFERRAL_REWARD_ACU, GROWTH, verifiedNetRevenueMinor, commissionMinor } from "../shared/growth";
+import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet, setWalletPlan, markWalletPurchased, unclaimEvent, claimAcuClawback, clawbackWallet, getListing, grantEntitlement, ensurePayoutSchema, creditEarnings, getWallet, revokeEntitlementByPaymentIntent, reverseEarnings, ensureReferralSchema, convertReferral, referrerForWallet, referralStats,
+  ensureCommissionSchema, commissionEarnedFromCustomer, recordCommission, reverseCommissionForPaymentIntent } from "./_ledger";
 import { notify } from "./_notify";
 
 // Vercel: disable body parsing so the raw payload is available for verification
@@ -52,6 +53,52 @@ async function payReferrer(sql: any, buyerWallet: string, eventId: string) {
     await notify("referral.converted", null, { acu: String(REFERRAL_REWARD_ACU) });
   } catch (e) {
     console.error(JSON.stringify({ referralPayError: String((e as any)?.message ?? e), eventId }));
+  }
+}
+
+/**
+ * THE 1% LIFETIME COMMISSION. Runs on every settled payment by a referred
+ * customer, not only the first — that is what "lifetime" means.
+ *
+ * Four rules from shared/growth.ts, all enforced here rather than described:
+ *   unlock  — nothing accrues until the partner has GROWTH
+ *             .commissionUnlockAfterPaidReferrals paid referrals
+ *   net     — 1% of VERIFIED NET revenue, not of the price
+ *   cap     — GROWTH.perCustomerLifetimeCapMinor per referred customer, ever
+ *   clear   — held for the validation window before it is withdrawable, so a
+ *             refund arriving three weeks later takes it back instead of
+ *             having already been paid out
+ *
+ * Booked against the Stripe event id, which is UNIQUE on the table, so a
+ * replayed webhook books one commission rather than two.
+ */
+async function accrueCommission(sql: any, buyerWallet: string, amountPaidMinor: number, eventId: string, paymentIntent: string | null) {
+  try {
+    if (!buyerWallet || !(amountPaidMinor > 0)) return;
+    await ensureReferralSchema(sql);
+    const referrer = await referrerForWallet(sql, buyerWallet);
+    if (!referrer) return;
+
+    const stats = await referralStats(sql, referrer);
+    if (stats.converted < GROWTH.commissionUnlockAfterPaidReferrals) return;   // not unlocked yet
+
+    await ensureCommissionSchema(sql);
+    const already = await commissionEarnedFromCustomer(sql, referrer, buyerWallet);
+    const net = verifiedNetRevenueMinor(amountPaidMinor, "card");
+    const commission = commissionMinor(net, already);
+    if (commission <= 0) return;                                               // capped out, or rounds to nothing
+
+    const booked = await recordCommission(sql, {
+      id: "rc_" + eventId.slice(-24),
+      referrerWallet: referrer, referredWallet: buyerWallet, sourceEvent: eventId,
+      grossMinor: amountPaidMinor, netMinor: net, commissionMinor: commission,
+      validationDays: GROWTH.validationDays[0], paymentIntent,
+    });
+    if (booked) {
+      console.log(JSON.stringify({ commissionAccrued: { referrer, customer: buyerWallet, grossMinor: amountPaidMinor, netMinor: net, commissionMinor: commission, eventId } }));
+    }
+  } catch (e) {
+    console.error(JSON.stringify({ commissionError: String((e as any)?.message ?? e), eventId }));
   }
 }
 
@@ -114,6 +161,8 @@ export function handleStripeEvent(event: Stripe.Event) {
           ok: true as const, action: "plan_renewed", eventId: event.id,
           planId: md.planId ?? "", walletId: md.walletId ?? "",
           amountPaidMinor: typeof inv.amount_paid === "number" ? inv.amount_paid : null,
+          // needed so a later refund can find the commission this renewal books
+          paymentIntent: typeof inv.payment_intent === "string" ? inv.payment_intent : null,
         };
       }
       return { ok: true as const, action: "invoice_logged", eventId: event.id };
@@ -230,6 +279,7 @@ export default async function handler(req: any, res: any) {
             await creditWallet(sql, walletId, r.acu);
             await markWalletPurchased(sql, walletId);   // paid wallets leave tester status forever
             await payReferrer(sql, walletId, event.id);
+            await accrueCommission(sql, walletId, gc.paidMinor, event.id, typeof (session as any).payment_intent === "string" ? (session as any).payment_intent : null);
           }
           await notify("acu.topup.successful", email, { amount: r.acu.toLocaleString() });
         } else if (result.ok && (result as any).action === "marketplace_sale") {
@@ -295,6 +345,7 @@ export default async function handler(req: any, res: any) {
             // A subscription is a first payment too — the partner who brought
             // this customer is owed the same reward as on a top-up.
             await payReferrer(sql, wid, event.id);
+            await accrueCommission(sql, wid, grantCheck((session as any).amount_total, plan.monthlyMinor).paidMinor, event.id, typeof (session as any).payment_intent === "string" ? (session as any).payment_intent : null);
             const gc = grantCheck((session as any).amount_total, plan.monthlyMinor);
             if (plan.monthlyAcu > 0 && gc.grant) {
               await creditWallet(sql, wid, plan.monthlyAcu);
@@ -324,6 +375,9 @@ export default async function handler(req: any, res: any) {
               // A plan switch made outside this codebase only becomes visible
               // here, so the wallet's tier is corrected on the renewal that
               // proves it — otherwise commission would keep using the old tier.
+              // A renewal is lifetime revenue — "1% lifetime" means every month
+              // they stay, not only the month they joined.
+              await accrueCommission(sql, wid, paid ?? plan.monthlyMinor, event.id, (result as any).paymentIntent ?? null);
               if (byAmount && labelled && byAmount.id !== labelled.id) {
                 await setWalletPlan(sql, wid, byAmount.id);
                 console.warn(JSON.stringify({ planDrift: { walletId: wid, metadataSaid: labelled.id, invoicePaidFor: byAmount.id, eventId: event.id } }));
@@ -378,6 +432,18 @@ export default async function handler(req: any, res: any) {
              touched: the buyer kept the game and the seller kept the money. So a
              refund was a way to buy a world for nothing, and — with a stolen card
              — a way to turn a chargeback into a withdrawal. Both sides reverse. */
+          // Commission accrued on a payment that has now been refunded is not
+          // earned. Reversing it is the reason it clears before it is paid.
+          let commissionNote: string | null = null;
+          try {
+            await ensureCommissionSchema(sql);
+            const rev = pi ? await reverseCommissionForPaymentIntent(sql, pi) : null;
+            if (rev) {
+              commissionNote = `referral commission £${(Number(rev.commission_minor) / 100).toFixed(2)} reversed for ${rev.referrer_wallet}`
+                + (rev.released_at ? " (ALREADY RELEASED — recover from future earnings)" : " before it cleared");
+            }
+          } catch (e) { console.error(JSON.stringify({ commissionReverseError: String((e as any)?.message ?? e), eventId: event.id })); }
+
           let sale: string | null = null;
           if (pi) {
             try {
@@ -399,6 +465,7 @@ export default async function handler(req: any, res: any) {
                 ? `${clawed.removed} of ${clawed.acu} ACUs clawed back from ${clawed.walletId}${clawed.removed < clawed.acu ? " (rest already spent — shortfall to write off)" : ""}`
                 : sale ? null : "no matching ACU credit found; review manually",
               sale,
+              commissionNote,
             ].filter(Boolean).join("; ") + ` (event ${event.id})`,
           });
         } else if (result.ok && (result as any).action === "founder_pass") {

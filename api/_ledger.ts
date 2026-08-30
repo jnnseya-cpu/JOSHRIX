@@ -990,7 +990,7 @@ export async function listPayoutRequests(sql: Sql, status = "requested", limit =
 export async function decidePayoutRequest(sql: Sql, id: string, status: "approved" | "rejected" | "paid", by: string, note?: string | null) {
   const from = status === "paid" ? ["requested", "approved"] : ["requested"];
   const rows = (await sql`UPDATE payout_requests SET status = ${status}, decided_at = now(), decided_by = ${by}, note = ${note ?? null}
-    WHERE id = ${id} AND status = ANY(${from}) RETURNING id, wallet_id, amount_minor, status`) as any[];
+    WHERE id = ${id} AND status = ANY(${from}) RETURNING id, wallet_id, amount_minor, status, destination_ref`) as any[];
   return rows[0] ?? null;
 }
 
@@ -1092,6 +1092,13 @@ export async function claimReferralCode(sql: Sql, walletId: string, code: string
   return { code: rows[0].code, created: true };
 }
 
+/** Who introduced this customer — the lookup the lifetime commission runs on,
+ *  for every payment they ever make, not only their first. */
+export async function referrerForWallet(sql: Sql, referredWallet: string): Promise<string | null> {
+  const rows = (await sql`SELECT referrer_wallet FROM referrals WHERE referred_wallet = ${referredWallet}`) as Array<{ referrer_wallet: string }>;
+  return rows.length ? rows[0].referrer_wallet : null;
+}
+
 export async function referrerForCode(sql: Sql, code: string): Promise<string | null> {
   const rows = (await sql`SELECT wallet_id FROM referral_codes WHERE code = ${code}`) as Array<{ wallet_id: string }>;
   return rows.length ? rows[0].wallet_id : null;
@@ -1124,6 +1131,163 @@ export async function convertReferral(sql: Sql, referredWallet: string, rewardAc
     WHERE referred_wallet = ${referredWallet} AND converted_at IS NULL
     RETURNING referrer_wallet, code`) as Array<{ referrer_wallet: string; code: string }>;
   return rows[0] ?? null;
+}
+
+/**
+ * THE 1% LIFETIME COMMISSION — the cash tier, which until now was a promise on
+ * a public page with no implementation behind it.
+ *
+ * Accrued, not paid. Every settled payment by a referred customer books a
+ * commission row that CLEARS after GROWTH.validationDays before it becomes
+ * withdrawable, for the same reason marketplace earnings clear: a refund or a
+ * chargeback lands weeks after the payment, and paying commission on money we
+ * later hand back is a loss with no recovery.
+ *
+ * `source_event` is the Stripe event id and is UNIQUE, so a replayed webhook
+ * books one commission, not two.
+ */
+export async function ensureCommissionSchema(sql: Sql) {
+  await sql`CREATE TABLE IF NOT EXISTS referral_commissions (
+    id text PRIMARY KEY,
+    referrer_wallet text NOT NULL,
+    referred_wallet text NOT NULL,
+    source_event text NOT NULL UNIQUE,
+    gross_minor bigint NOT NULL,
+    net_minor bigint NOT NULL,
+    commission_minor bigint NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    clears_at timestamptz NOT NULL,
+    released_at timestamptz,
+    reversed_at timestamptz
+  )`;
+  // A refund arrives as charge.refunded with its OWN event id, not the payment's,
+  // so a commission can only be found again by the payment intent behind it.
+  await sql`ALTER TABLE referral_commissions ADD COLUMN IF NOT EXISTS payment_intent text`;
+  await sql`CREATE INDEX IF NOT EXISTS commissions_pi ON referral_commissions (payment_intent)`;
+  await sql`CREATE INDEX IF NOT EXISTS commissions_due ON referral_commissions (referrer_wallet, clears_at)`;
+  await sql`CREATE INDEX IF NOT EXISTS commissions_customer ON referral_commissions (referred_wallet)`;
+}
+
+/** What this partner has already earned from THIS customer — the £20,000
+ *  lifetime-per-customer cap is meaningless without it. */
+export async function commissionEarnedFromCustomer(sql: Sql, referrerWallet: string, referredWallet: string): Promise<number> {
+  const rows = (await sql`SELECT COALESCE(sum(commission_minor), 0)::bigint AS total
+    FROM referral_commissions
+    WHERE referrer_wallet = ${referrerWallet} AND referred_wallet = ${referredWallet} AND reversed_at IS NULL`) as Array<{ total: number }>;
+  return Number(rows[0]?.total ?? 0);
+}
+
+/** Book one commission. Returns null when the event was already booked. */
+export async function recordCommission(sql: Sql, c: {
+  id: string; referrerWallet: string; referredWallet: string; sourceEvent: string;
+  grossMinor: number; netMinor: number; commissionMinor: number; validationDays: number;
+  paymentIntent?: string | null;
+}): Promise<boolean> {
+  const rows = (await sql`INSERT INTO referral_commissions
+    (id, referrer_wallet, referred_wallet, source_event, gross_minor, net_minor, commission_minor, clears_at, payment_intent)
+    VALUES (${c.id}, ${c.referrerWallet}, ${c.referredWallet}, ${c.sourceEvent},
+            ${c.grossMinor}, ${c.netMinor}, ${c.commissionMinor}, now() + make_interval(days => ${c.validationDays}),
+            ${c.paymentIntent ?? null})
+    ON CONFLICT (source_event) DO NOTHING RETURNING id`) as any[];
+  return rows.length > 0;
+}
+
+/**
+ * Move matured commission into withdrawable earnings. Lazy, like every other
+ * clearing sweep here, so no cron is required and the figure a partner sees is
+ * the figure they can request.
+ */
+export async function releaseClearedCommission(sql: Sql, referrerWallet: string): Promise<number> {
+  const rows = (await sql`UPDATE referral_commissions SET released_at = now()
+    WHERE referrer_wallet = ${referrerWallet} AND released_at IS NULL AND reversed_at IS NULL AND clears_at <= now()
+    RETURNING commission_minor`) as Array<{ commission_minor: number }>;
+  const total = rows.reduce((n, r) => n + Number(r.commission_minor), 0);
+  if (total > 0) await creditEarnings(sql, referrerWallet, total);
+  return total;
+}
+
+/**
+ * A refund or chargeback on the customer's payment takes the commission back.
+ *
+ * Keyed on the PAYMENT INTENT, not the event id: charge.refunded carries its
+ * own event id, so looking the commission up by that would never match the
+ * payment event it was booked against — the commission would quietly survive
+ * the refund that cancelled the revenue it came from.
+ */
+export async function reverseCommissionForPaymentIntent(sql: Sql, paymentIntent: string) {
+  const rows = (await sql`UPDATE referral_commissions SET reversed_at = now()
+    WHERE payment_intent = ${paymentIntent} AND reversed_at IS NULL
+    RETURNING referrer_wallet, commission_minor, released_at`) as Array<{ referrer_wallet: string; commission_minor: number; released_at: string | null }>;
+  return rows[0] ?? null;
+}
+
+export async function commissionSummary(sql: Sql, referrerWallet: string) {
+  const rows = (await sql`SELECT
+      COALESCE(sum(commission_minor) FILTER (WHERE released_at IS NULL AND reversed_at IS NULL), 0)::bigint AS pending_minor,
+      COALESCE(sum(commission_minor) FILTER (WHERE released_at IS NOT NULL AND reversed_at IS NULL), 0)::bigint AS released_minor
+    FROM referral_commissions WHERE referrer_wallet = ${referrerWallet}`) as any[];
+  return { pendingMinor: Number(rows[0]?.pending_minor ?? 0), releasedMinor: Number(rows[0]?.released_minor ?? 0) };
+}
+
+/* ---------------- payout destinations: where the money actually goes -------- */
+
+/**
+ * Until now /api/payout took a raw `destinationRef` in the request body, and
+ * the wallet page sent the literal string "tok_demo_dest_2941" — so no
+ * withdrawal could ever pay anybody, and the one screen that offered it was
+ * sending hard-coded fake data.
+ *
+ * A destination is genuinely sensitive: an IBAN or a mobile-money number is
+ * enough to attempt fraud with. So the reference is stored ENCRYPTED with
+ * AES-256-GCM under PAYOUT_SECRET, and only the last four characters are ever
+ * returned to anyone — including the owner. The operator releasing a payout
+ * decrypts it at that moment, with the admin credential, and nowhere else.
+ *
+ * Without PAYOUT_SECRET set, adding a destination is REFUSED rather than
+ * stored in the clear. Failing closed on this is not optional.
+ */
+export async function ensurePayoutDestinationSchema(sql: Sql) {
+  await sql`CREATE TABLE IF NOT EXISTS payout_destinations (
+    id text PRIMARY KEY,
+    wallet_id text NOT NULL,
+    rail text NOT NULL,
+    label text NOT NULL,
+    enc text NOT NULL,
+    last4 text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    deleted_at timestamptz
+  )`;
+  await sql`CREATE INDEX IF NOT EXISTS payout_dest_wallet ON payout_destinations (wallet_id) WHERE deleted_at IS NULL`;
+}
+
+export async function savePayoutDestination(sql: Sql, d: { id: string; walletId: string; rail: string; label: string; enc: string; last4: string }) {
+  await sql`INSERT INTO payout_destinations (id, wallet_id, rail, label, enc, last4)
+    VALUES (${d.id}, ${d.walletId}, ${d.rail}, ${d.label}, ${d.enc}, ${d.last4})`;
+}
+
+/** The owner's view: never the reference itself, only enough to recognise it. */
+export async function listPayoutDestinations(sql: Sql, walletId: string) {
+  return (await sql`SELECT id, rail, label, last4, created_at FROM payout_destinations
+    WHERE wallet_id = ${walletId} AND deleted_at IS NULL ORDER BY created_at DESC LIMIT 20`) as Array<{ id: string; rail: string; label: string; last4: string; created_at: string }>;
+}
+
+/** Used by the payout request to confirm the destination is this wallet's. */
+export async function getPayoutDestination(sql: Sql, id: string, walletId: string) {
+  const rows = (await sql`SELECT id, rail, label, enc, last4 FROM payout_destinations
+    WHERE id = ${id} AND wallet_id = ${walletId} AND deleted_at IS NULL`) as Array<{ id: string; rail: string; label: string; enc: string; last4: string }>;
+  return rows[0] ?? null;
+}
+
+/** Operator-only, at the moment of release. */
+export async function getPayoutDestinationForRelease(sql: Sql, id: string) {
+  const rows = (await sql`SELECT id, wallet_id, rail, label, enc, last4 FROM payout_destinations WHERE id = ${id}`) as any[];
+  return rows[0] ?? null;
+}
+
+export async function deletePayoutDestination(sql: Sql, id: string, walletId: string): Promise<boolean> {
+  const rows = (await sql`UPDATE payout_destinations SET deleted_at = now()
+    WHERE id = ${id} AND wallet_id = ${walletId} AND deleted_at IS NULL RETURNING id`) as any[];
+  return rows.length > 0;
 }
 
 /** A partner's real standing: how many they brought, how many paid, what they earned. */
