@@ -99,15 +99,26 @@ const human = (n) => n > 1e9 ? (n / 1e9).toFixed(2) + " GB"
 
 /** Pack folders are the leaves worth reporting on: a drop folder's immediate
  *  children, except that a whole bundle ("Characters and Animals") is itself a
- *  folder of packs, so descend one level when a child holds only directories. */
-function packFolders(base) {
+ *  folder of packs and should be reported pack by pack.
+ *
+ *  "Holds only directories" is NOT the test — it splits a pack that ships
+ *  FBX/ beside Blend/ into two, then reports the textures-only half as LOST.
+ *  A folder is a bundle only when EVERY child is a self-sufficient pack, i.e.
+ *  every one of them contains a loadable model. Old/ qualifies (two real
+ *  packs); Knight Character Animated/ does not (its Blend/ holds textures for
+ *  the models in its FBX/), so it stays one pack. Erring toward "one pack"
+ *  is deliberate — it can never invent a false LOST. */
+function packFolders(base, isSprite = false) {
+  const hasModel = (dir) => walk(dir).some((f) => (isSprite ? SPRITE : MODEL).test(f));
   const out = [];
   for (const e of fs.readdirSync(base, { withFileTypes: true })) {
     if (!e.isDirectory()) continue;
     const p = path.join(base, e.name);
     const kids = fs.readdirSync(p, { withFileTypes: true });
-    const allDirs = kids.length > 0 && kids.every((k) => k.isDirectory());
-    if (allDirs) out.push(...kids.map((k) => path.join(p, k.name)));
+    const subdirs = kids.filter((k) => k.isDirectory());
+    const bundle = kids.length > 0 && subdirs.length === kids.length && subdirs.length > 1
+      && subdirs.every((k) => hasModel(path.join(p, k.name)));
+    if (bundle) out.push(...subdirs.map((k) => path.join(p, k.name)));
     else out.push(p);
   }
   return out.sort();
@@ -130,7 +141,7 @@ const oversize = [];
 
 for (const drop of drops) {
   const label = path.relative(process.cwd(), drop);
-  const packs = packFolders(drop);
+  const packs = packFolders(drop, drop === SPRITES);
   console.log(`\n${label}${packs.length ? "" : "   (empty)"}`);
 
   for (const pack of packs) {
