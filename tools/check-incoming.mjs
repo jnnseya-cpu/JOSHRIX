@@ -33,6 +33,12 @@ const MODEL = /\.(glb|gltf|fbx|obj)$/i;
 const SPRITE = /\.(png|jpe?g|svg)$/i;
 const TEXTURE = /\.(png|jpe?g|bin|mtl)$/i;
 
+/* GitHub REJECTS a push containing any file over 100 MB — the whole push, not
+   the file. Quaternius' "Standard" tier already produced a 39 MB GLB from
+   4096px maps, so this is within reach, and finding out from a rejected push
+   means unpicking a commit rather than moving one file. */
+const GITHUB_FILE_LIMIT = 100 * 1024 * 1024;
+
 function walk(dir, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, e.name);
@@ -120,6 +126,7 @@ if (!drops.length) {
 }
 
 let lost = 0, kept = 0, dropped = 0, kbytes = 0;
+const oversize = [];
 
 for (const drop of drops) {
   const label = path.relative(process.cwd(), drop);
@@ -131,7 +138,12 @@ for (const drop of drops) {
     if (!files.length) { console.log(`  ${"(empty folder)".padEnd(46)}  —`); continue; }
     const ign = ignoredSet(files);
     const keep = files.filter((f) => !ign.has(path.resolve(f)));
-    const bytes = keep.reduce((n, f) => n + fs.statSync(f).size, 0);
+    let bytes = 0;
+    for (const f of keep) {
+      const size = fs.statSync(f).size;
+      bytes += size;
+      if (size > GITHUB_FILE_LIMIT) oversize.push({ file: path.relative(process.cwd(), f), size });
+    }
 
     const isSprite = drop === SPRITES;
     const models = keep.filter((f) => (isSprite ? SPRITE : MODEL).test(f)).length;
@@ -159,9 +171,16 @@ for (const drop of drops) {
 }
 
 console.log(`\n${kept} files kept (${human(kbytes)}), ${dropped} dropped by .gitignore`);
+
+if (oversize.length) {
+  console.log(`\n${oversize.length} file${oversize.length === 1 ? " is" : "s are"} over GitHub's 100 MB limit.`);
+  console.log(`GitHub rejects the entire push, not just the file. Move ${oversize.length === 1 ? "it" : "them"} out before committing:`);
+  for (const o of oversize.slice(0, 10)) console.log(`  ${human(o.size).padStart(8)}  ${o.file}`);
+  if (oversize.length > 10) console.log(`  ...and ${oversize.length - 10} more`);
+}
 if (lost) {
   console.log(`\n${lost} pack${lost === 1 ? "" : "s"} would land unplayable.`);
   console.log(`A pack that ships FBX only belongs in`);
   console.log(`frontend/assets/models3d/_incoming/characters-fbx/, which keeps every format.`);
 }
-process.exit(lost ? 1 : 0);
+process.exit(lost || oversize.length ? 1 : 0);
