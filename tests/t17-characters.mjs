@@ -12,7 +12,8 @@
  *   npm i three@0.160.0
  *   node tests/t17-characters.mjs
  */
-import { clipName, embeddedImage, injectTexture, slug, packGltf, repairMaterials } from "../tools/ingest-characters.mjs";
+import { clipName, embeddedImage, injectTexture, slug, packGltf, repairMaterials, detachImage } from "../tools/ingest-characters.mjs";
+import { resolveAsset } from "../tools/_assets.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
@@ -225,6 +226,66 @@ t("a document with no materials does not throw", repairMaterials({}) === 0);
     }
   }
   t(`no shipped model carries the broken Skin constant (${checked} checked)`, dark === 0, dark + " still black");
+}
+
+/* ------------------------------------------------------------------ *
+ * A REFERENCED FILE THAT IS NOT WHERE THE glTF SAYS IT IS
+ *
+ * Universal Base Characters shipped with its .gltf asking for
+ * "T_Eye_Normal_png.png" while the pack contains "T_Eye_Normal.png" — the
+ * exporter appended _png to some names and not others. That is 18 characters
+ * whose eye and hair normals silently 404 at play time, on a pack that has
+ * been in the repository since 22 Aug and looked complete.
+ * ------------------------------------------------------------------ */
+console.log("\n== a texture the exporter misnamed is still found ==");
+{
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "resolve-"));
+  fs.mkdirSync(path.join(dir, "Textures"), { recursive: true });
+  const real = path.join(dir, "Textures", "T_Eye_Normal.png");
+  fs.writeFileSync(real, Buffer.from("not-really-a-png"));
+
+  t("the exact path wins when it exists",
+    resolveAsset(dir, "Textures/T_Eye_Normal.png") === real);
+  t("the exporter's spurious _png suffix is stripped",
+    resolveAsset(dir, "Textures/T_Eye_Normal_png.png") === real);
+  t("a texture moved to another folder is still found by name",
+    resolveAsset(dir, "T_Eye_Normal_png.png", [real]) === real);
+  t("case is not allowed to lose a file on a case-sensitive filesystem",
+    resolveAsset(dir, "t_eye_NORMAL.png", [real]) === real);
+  // Leniency must have a floor: inventing a match would ship the wrong picture.
+  t("a file that genuinely is not there resolves to null",
+    resolveAsset(dir, "Textures/T_Nothing.png", [real]) === null);
+  t("a different texture is never substituted",
+    resolveAsset(dir, "Textures/T_Hair_1_Normal.png", [real]) === null);
+  fs.rmSync(dir, { recursive: true, force: true });
+}
+
+console.log("\n== an unreadable texture is detached, not left dangling ==");
+{
+  // Leaving the uri in place exports a GLB that fetches a file which is not
+  // inside it — a 404 for every character built from the pack.
+  const doc = {
+    images: [{ uri: "gone.png" }, { uri: "here.png" }],
+    textures: [{ source: 0 }, { source: 1 }],
+    materials: [{
+      name: "Body",
+      pbrMetallicRoughness: { baseColorTexture: { index: 1 }, metallicRoughnessTexture: { index: 0 } },
+      normalTexture: { index: 0 },
+      emissiveTexture: { index: 1 },
+    }],
+  };
+  detachImage(doc, 0);
+  const m = doc.materials[0];
+  t("the missing normal map slot is removed", m.normalTexture === undefined);
+  t("the missing roughness slot is removed", m.pbrMetallicRoughness.metallicRoughnessTexture === undefined);
+  t("the texture that IS present is untouched", m.pbrMetallicRoughness.baseColorTexture?.index === 1);
+  t("...and so is every other slot using it", m.emissiveTexture?.index === 1);
+  // Deleting from images[] would repoint every texture after it at the wrong
+  // picture, which is worse than the missing map it was trying to fix.
+  t("indices are never renumbered", doc.images.length === 2 && doc.textures[1].source === 1);
+  t("detaching an image nothing uses does nothing", (detachImage(doc, 7), doc.materials[0].emissiveTexture?.index === 1));
+  t("a document with no materials does not throw",
+    (detachImage({ images: [{ uri: "x" }], textures: [{ source: 0 }] }, 0), true));
 }
 
 console.log(`\n  ${pass} passed, ${fail} failed`);

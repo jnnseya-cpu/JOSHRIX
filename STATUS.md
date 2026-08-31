@@ -236,9 +236,11 @@ because I got it wrong in conversation and cost him a round trip.
 | **Kenney** | 22 kits, **2,119 models** — in since before this session | 6 packs, **2,553 sprites** — in | none |
 | **Quaternius** | 9 packs, **152 rigged models**, 150 animated — landed 22 Aug | — | none |
 
-Nothing further needs uploading for models or sprites. The **only** asset class the
-platform has never had is audio — and as of 22 Aug that is closed in code rather than
-by a download (below), so there is now no outstanding upload at all.
+**Corrected 31 Aug: this was wrong.** "Nothing further needs uploading" assumed
+the 22 Aug upload was complete. It was not — 18 of the 28 Quaternius character
+packs never made it (see the character-library section below), so the Quaternius
+row above counts 9 packs out of a possible 27. Those 18 are the outstanding
+upload. Kenney's static and sprite packs, and audio, remain settled.
 
 ---
 
@@ -288,6 +290,36 @@ ten shipped glTF and were ingested, ten were 2017–2019 FBX/Blend-only and were
 dropped by the `_incoming/` filter. **152 rigged models, 150 of them carrying full
 skeletal clip sets**, in nine packs. The library is now 2,435 models / 34 packs,
 and the count of animated models went from 22 to 178.
+
+### Correction, 31 Aug — it was 28 packs, not 20
+
+Photographs of the source drive show **28** folders in `Characters and Animals`.
+Twenty reached git. **Eight never appeared at all**: every file in them matched
+the `.gitignore`, and git cannot record a folder with no surviving files, so
+they vanished with no error and nothing in `git status` to see. Combined with
+the ten that arrived as a bare `Preview.png`, **18 of 28 packs are missing** and
+it took nine days to notice, because nothing was checking.
+
+Three things changed so this cannot recur:
+
+- **`tools/check-incoming.mjs`** — asks `git check-ignore` itself, then prints
+  one line per pack: files kept, files discarded, and whether what survives is a
+  playable model or an orphaned preview. Exits non-zero if any pack would land
+  unplayable, so it can gate a commit.
+- **`_incoming/characters-fbx/` now keeps every model format**, not FBX alone.
+  Guessing a pack's format wrong cost eight packs; uploading a duplicate costs
+  some history. The ingest prefers glTF and skips the FBX beside it.
+- **`resolveAsset()` in `tools/_assets.mjs`**, shared by the ingest and the
+  checker so neither can drift. It found a defect in a pack that has looked
+  complete since 22 Aug: `Universal Base Characters` has `.gltf` files asking
+  for `T_Eye_Normal_png.png` while the pack ships `T_Eye_Normal.png` — the
+  exporter appended `_png` to some names and not others, so 18 characters were
+  404ing their eye and hair normals at play time. A texture that genuinely
+  cannot be found now has its material slot detached rather than exported as a
+  dangling `uri`.
+
+The 18 missing packs are named in `_incoming/characters-fbx/README.md`.
+**Not yet uploaded** — Justin has the drive; the runbook is `UPLOADING-ASSETS.md`.
 
 Three things had to be fixed before any of it was usable, and each one would have
 shipped silently:
@@ -530,7 +562,7 @@ provider while the game path had three). 20 assertions in `tests/t20-blueprint-j
 
 | # | Thing | Detail |
 |---|---|---|
-| 1 | ~~Upload the asset packs~~ | **DONE 22 Aug.** 152 rigged Quaternius models landed and are live. See the library section above. |
+| 1 | Upload the asset packs | **PART DONE.** 152 rigged Quaternius models landed 22 Aug and are live — but that was 10 of 28 character packs. **18 are still missing**, 8 of them having vanished silently into the `.gitignore`. Justin has the drive; `UPLOADING-ASSETS.md` is the runbook and `node tools/check-incoming.mjs` verifies the next upload before it is committed. |
 | 2 | **Forge a 3D game and send the log** | Attempted 22 Aug: the first run died on a runtime TypeError (fixed), the second shipped two models on an empty field (a gate now refuses that). Still no build Justin has judged good. Send `/api/forge-log` — `provider`, `bytes`, `models` — or the file from **View Build Source**, which turns guessing into fixing. |
 | 2b | **Gate the legacy wallets** | Every account created before 18 Aug is still `tester` and can refill itself for free. One pass through `/admin` → "Revoke tester" on everyone who is not a real tester. |
 | 3 | **Set `NEWSLETTER_SECRET` in Vercel** | Any long random string. Without it the unsubscribe link still works, but the token is not signed, so anyone could unsubscribe another address. |

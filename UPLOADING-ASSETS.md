@@ -39,7 +39,7 @@ without git ever mentioning them.
 | What you have | Drop it in | What is kept |
 |---|---|---|
 | **Animated 3D characters** that ship a glTF folder | `frontend/assets/models3d/_incoming/characters/` | `.glb` `.gltf` `.bin` `.png` `.jpg` |
-| **Animated characters with NO glTF** — FBX only | `frontend/assets/models3d/_incoming/characters-fbx/` | `.fbx` `.png` `.jpg` |
+| **Animated characters — anything you are unsure about** | `frontend/assets/models3d/_incoming/characters-fbx/` | `.glb` `.gltf` `.bin` `.fbx` `.png` `.jpg` |
 | **Static 3D packs** (props, buildings, scenery, vehicles) | `frontend/assets/models3d/_incoming/packs/` | `.glb` `.gltf` `.bin` `.obj` `.mtl` `.png` `.jpg` |
 | **2D sprites** (spritesheets, tiles, icons, UI) | `frontend/assets/sprites/_incoming/` | `.png` `.jpg` `.svg` `.xml` `.json` `.fnt` |
 
@@ -51,15 +51,33 @@ nothing warns you. The `_incoming/` folders above exist precisely to stop that.
 Everything under `_incoming/` is excluded from the Vercel deploy by
 `.vercelignore`, so it costs git history but never page-load time.
 
-### Already done — do not re-upload
+### Check what actually landed — always
 
-`Characters and Animals` from the Quaternius bundle is **already in the
-repository**, all 20 subfolders, 736 MB. Copying it again does nothing.
+```bash
+node tools/check-incoming.mjs
+```
 
-Ten of those twenty were ingested and are live. The other ten arrived as nothing
-but a stray `Preview.png`, because they are 2017-2019 packs that ship **FBX
-only** and the filter excludes FBX. Those ten — and only those ten — go in
-`_incoming/characters-fbx/`; they are listed in that folder's README.
+One line per pack: how many files git keeps, how many it discards, and whether
+what survives is a playable model or an orphaned preview image. It exits
+non-zero if any pack would land unplayable, so it can gate a commit.
+
+**Run it before you commit, not after.** This is the whole point:
+
+### What went wrong on 22 Aug, and the state now
+
+All 28 packs of `Characters and Animals` were copied in. **10 arrived complete
+and are live. 10 arrived as nothing but a stray `Preview.png`. 8 never appeared
+in the repository at all** — every file in them matched the `.gitignore`, and
+git cannot record a folder with no surviving files, so they vanished with no
+error and nothing in `git status` to notice.
+
+That is 18 of 28 packs missing, and it took nine days to find out, because
+nothing was checking. `check-incoming.mjs` is that check.
+
+**The 18 go in `frontend/assets/models3d/_incoming/characters-fbx/`**, which
+keeps every format — glTF, FBX and textures alike — so you never have to work
+out what a pack ships. That folder's README names all 18, and names the 10
+already in that you must not copy again.
 
 ---
 

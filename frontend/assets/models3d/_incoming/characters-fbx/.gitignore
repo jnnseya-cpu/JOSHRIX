@@ -1,23 +1,22 @@
-# FBX-ONLY CHARACTER PACKS. The deliberate exception, and the only place .fbx
-# is accepted anywhere in this repository.
+# THE PACKS THAT ARRIVED EMPTY. Drop them here and stop thinking about formats.
 #
-# ../characters/.gitignore excludes FBX on purpose: a pack that ships BOTH glTF
-# and FBX carries the FBX as a pure duplicate, and .blend sources are often
-# larger than every model combined. That rule is right, and it is why ten of the
-# twenty Quaternius character packs arrived as nothing but a stray Preview.png —
-# the 2017-2019 packs (Zombie, Robot, Enemy Pack, Fruit Characters, the Animated
-# Men/Women sets, Posed Background Characters) predate Quaternius shipping glTF
-# and have no other format to offer.
+# This folder exists because of a real failure. On 22 Aug all 28 Quaternius
+# character packs were copied in; 20 folders reached git and only 10 of those
+# carried a model. The other 10 arrived as a stray Preview.png and 8 never
+# appeared at all — because ../characters/.gitignore keeps glTF and drops
+# everything else, and git cannot store a folder with no surviving files. No
+# error, no warning, nine days before anyone noticed.
 #
-# So this folder exists for the packs that would otherwise be lost, and NOTHING
-# ELSE. If a pack has a glTF folder, it belongs in ../characters/ — putting it
-# here uploads the same characters twice, in the heavier format.
+# So the rule here is the opposite one: keep EVERY format the ingest can read,
+# and let the ingest decide which to use. Uploading a duplicate wastes some
+# history; losing a pack silently wastes weeks.
 #
-# tools/ingest-characters.mjs converts FBX and injects the texture beside it, or
-# pulls a baked-in texture out of the FBX binary. That path is written and
-# tested against synthetic input; it has never run on a real FBX, so the first
-# pack through it gets checked model by model in a browser before anything
-# reaches the forge.
+#   tools/ingest-characters.mjs prefers .glb, then .gltf, then .fbx, and skips
+#   an FBX whose glTF it has already packed — so a pack that ships both is
+#   ingested losslessly and the FBX is ignored rather than overwriting it.
+#
+# Run `node tools/check-incoming.mjs` after any upload. It prints, per pack,
+# what git actually kept and names any folder that will vanish.
 
 # ignore everything...
 *
@@ -25,8 +24,13 @@
 # ...but descend into directories
 !*/
 
-# ...and keep FBX and the textures it references
+# ...and keep every model format, because guessing wrong loses the pack
+!*.glb
+!*.gltf
+!*.bin
 !*.fbx
+
+# textures a .gltf references by filename, and the FBX sibling textures
 !*.png
 !*.jpg
 !*.jpeg

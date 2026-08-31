@@ -39,6 +39,7 @@ import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
 import fs from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { resolveAsset } from "./_assets.mjs";
 
 const SRC = path.resolve(process.argv[2] || "frontend/assets/models3d/_incoming/characters");
 const PACK = process.argv[3] || "characters-hd";
@@ -180,14 +181,35 @@ function repairMaterials(json) {
   return fixed;
 }
 
-function packGltf(gltfPath) {
+/* Remove every material slot pointing at an image that could not be read, so
+ * the exported GLB contains no reference to a file that is not inside it.
+ * Indices are left alone deliberately — deleting an entry from images[] would
+ * silently repoint every texture after it at the wrong picture. */
+const TEX_SLOTS = ["baseColorTexture", "metallicRoughnessTexture"];
+function detachImage(json, imageIndex) {
+  const dead = new Set((json.textures || [])
+    .map((t, i) => (t.source === imageIndex ? i : -1)).filter((i) => i >= 0));
+  if (!dead.size) return;
+  for (const m of json.materials || []) {
+    for (const s of ["normalTexture", "occlusionTexture", "emissiveTexture"]) {
+      if (m[s] && dead.has(m[s].index)) delete m[s];
+    }
+    const p = m.pbrMetallicRoughness;
+    if (!p) continue;
+    for (const s of TEX_SLOTS) if (p[s] && dead.has(p[s].index)) delete p[s];
+  }
+}
+
+function packGltf(gltfPath, index) {
   const dir = path.dirname(gltfPath);
   const json = JSON.parse(fs.readFileSync(gltfPath, "utf8"));
   repairMaterials(json);
 
   const readUri = (uri) => {
     if (/^data:/i.test(uri)) return Buffer.from(uri.slice(uri.indexOf(",") + 1), "base64");
-    return fs.readFileSync(path.join(dir, decodeURIComponent(uri)));
+    const at = resolveAsset(dir, uri, index);
+    if (!at) throw new Error(`referenced file not found: ${uri}`);
+    return fs.readFileSync(at);
   };
 
   const chunks = [];
@@ -212,10 +234,16 @@ function packGltf(gltfPath) {
 
   // 3. external images move in as views; a GLB may not reference a file
   const MIME = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg" };
-  for (const img of json.images || []) {
+  for (const [i, img] of (json.images || []).entries()) {
     if (img.bufferView !== undefined || !img.uri) continue;
     let data, mime;
-    try { data = readUri(img.uri); } catch { continue; }        // a missing texture must not sink the model
+    // A missing texture must not sink the model — but leaving the uri in place
+    // ships a GLB that fetches a file which does not exist, so every character
+    // built from the pack 404s on load. Detach the slot instead: the material
+    // renders without that one map, which is a visible-quality decision, not a
+    // broken asset.
+    try { data = readUri(img.uri); }
+    catch { detachImage(json, i); continue; }
     mime = /^data:/i.test(img.uri)
       ? (img.uri.slice(5, img.uri.indexOf(";")) || "image/png")
       : (MIME[path.extname(img.uri).toLowerCase()] || "image/png");
@@ -254,7 +282,7 @@ const slug = (s) => path.basename(s).replace(/\.[^.]+$/, "")
 
 /* Exported so tests can exercise the fiddly parts — clip naming, the embedded
    image scan and the GLB surgery — without running an ingest. */
-export { clipName, embeddedImage, injectTexture, slug, packGltf, repairMaterials };
+export { clipName, embeddedImage, injectTexture, slug, packGltf, repairMaterials, resolveAsset, detachImage };
 
 /* ---------------------------------- run ----------------------------------- */
 const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
@@ -282,13 +310,18 @@ for (const f of glbs) {
 for (const f of gltfs) {
   const name = slug(f) + ".glb";
   try {
-    const out = packGltf(f);
+    const out = packGltf(f, files);
     fs.writeFileSync(path.join(OUT, name), out);
     made.push({ name, bytes: out.length, how: "packed", clips: ["(as authored)"] });
   } catch (e) { skipped.push(`${path.basename(f)}: ${e.message.slice(0, 90)}`); }
 }
 
-/* ---- 2/3. FBX path ---- */
+/* ---- 2/3. FBX path ----
+ * A pack that ships BOTH formats writes the same slug twice, and because this
+ * runs after the lossless paths the FBX conversion silently overwrote the
+ * authored glTF with a re-exported, re-scaled, UV-flipped copy of itself. The
+ * lossless output always wins. */
+const lossless = new Set(made.map((m) => m.name));
 if (fbxs.length) {
   const loader = new FBXLoader();
   const exporter = new GLTFExporter();
@@ -299,6 +332,7 @@ if (fbxs.length) {
   const shared = [];
   const bodies = [];
   for (const f of fbxs) {
+    if (lossless.has(slug(f) + ".glb")) { skipped.push(`${path.basename(f)}: glTF already ingested — FBX is the duplicate`); continue; }
     let obj;
     try { obj = loader.parse(fs.readFileSync(f).buffer, path.dirname(f) + path.sep); }
     catch (e) { skipped.push(`${path.basename(f)}: ${e.message.slice(0, 90)}`); continue; }
