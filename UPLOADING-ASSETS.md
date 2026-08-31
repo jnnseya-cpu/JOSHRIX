@@ -38,7 +38,8 @@ without git ever mentioning them.
 
 | What you have | Drop it in | What is kept |
 |---|---|---|
-| **Animated 3D characters** (people, creatures — anything with a walk cycle) | `frontend/assets/models3d/_incoming/characters/` | `.glb` `.gltf` `.bin` `.png` `.jpg` |
+| **Animated 3D characters** that ship a glTF folder | `frontend/assets/models3d/_incoming/characters/` | `.glb` `.gltf` `.bin` `.png` `.jpg` |
+| **Animated characters with NO glTF** — FBX only | `frontend/assets/models3d/_incoming/characters-fbx/` | `.fbx` `.png` `.jpg` |
 | **Static 3D packs** (props, buildings, scenery, vehicles) | `frontend/assets/models3d/_incoming/packs/` | `.glb` `.gltf` `.bin` `.obj` `.mtl` `.png` `.jpg` |
 | **2D sprites** (spritesheets, tiles, icons, UI) | `frontend/assets/sprites/_incoming/` | `.png` `.jpg` `.svg` `.xml` `.json` `.fnt` |
 
@@ -49,6 +50,16 @@ nothing warns you. The `_incoming/` folders above exist precisely to stop that.
 
 Everything under `_incoming/` is excluded from the Vercel deploy by
 `.vercelignore`, so it costs git history but never page-load time.
+
+### Already done — do not re-upload
+
+`Characters and Animals` from the Quaternius bundle is **already in the
+repository**, all 20 subfolders, 736 MB. Copying it again does nothing.
+
+Ten of those twenty were ingested and are live. The other ten arrived as nothing
+but a stray `Preview.png`, because they are 2017-2019 packs that ship **FBX
+only** and the filter excludes FBX. Those ten — and only those ten — go in
+`_incoming/characters-fbx/`; they are listed in that folder's README.
 
 ---
 

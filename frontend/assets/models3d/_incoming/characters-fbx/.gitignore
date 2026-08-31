@@ -1,0 +1,38 @@
+# FBX-ONLY CHARACTER PACKS. The deliberate exception, and the only place .fbx
+# is accepted anywhere in this repository.
+#
+# ../characters/.gitignore excludes FBX on purpose: a pack that ships BOTH glTF
+# and FBX carries the FBX as a pure duplicate, and .blend sources are often
+# larger than every model combined. That rule is right, and it is why ten of the
+# twenty Quaternius character packs arrived as nothing but a stray Preview.png —
+# the 2017-2019 packs (Zombie, Robot, Enemy Pack, Fruit Characters, the Animated
+# Men/Women sets, Posed Background Characters) predate Quaternius shipping glTF
+# and have no other format to offer.
+#
+# So this folder exists for the packs that would otherwise be lost, and NOTHING
+# ELSE. If a pack has a glTF folder, it belongs in ../characters/ — putting it
+# here uploads the same characters twice, in the heavier format.
+#
+# tools/ingest-characters.mjs converts FBX and injects the texture beside it, or
+# pulls a baked-in texture out of the FBX binary. That path is written and
+# tested against synthetic input; it has never run on a real FBX, so the first
+# pack through it gets checked model by model in a browser before anything
+# reaches the forge.
+
+# ignore everything...
+*
+
+# ...but descend into directories
+!*/
+
+# ...and keep FBX and the textures it references
+!*.fbx
+!*.png
+!*.jpg
+!*.jpeg
+
+!LICENSE*
+!License*
+!license*
+!README.md
+!.gitignore
