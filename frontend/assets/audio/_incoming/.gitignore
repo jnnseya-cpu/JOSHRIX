@@ -1,0 +1,42 @@
+# DROP AUDIO PACKS IN HERE. This is the only folder in the repository that
+# keeps sound files at all.
+#
+# It exists because of a near miss. The Quaternius bundle contains an Audio
+# folder, 27 MB on disk — and measured against the rules for
+# models3d/_incoming/packs it came to ZERO, because that folder keeps model and
+# image formats and nothing else. Moved there, every sound would have been
+# discarded without a word, which is precisely how eight character packs
+# vanished on 22 Aug and were not noticed for nine days.
+#
+# The runtime synthesises its effects (see the sound engine in
+# joshrix3d-1.js), so nothing here is load-bearing yet — but a real recorded
+# sample is a thing the platform has never had, and losing one to a filter
+# would be losing it for nothing.
+#
+# Run `node tools/check-incoming.mjs audio` after any upload; it prints what
+# survives, per pack, and names anything that would land empty.
+
+# ignore everything...
+*
+
+# ...but descend into directories
+!*/
+
+# ...and keep the formats a browser can actually play
+!*.wav
+!*.ogg
+!*.mp3
+!*.m4a
+!*.flac
+!*.aac
+!*.opus
+!*.webm
+
+# licence files travel with the assets they cover
+!LICENSE*
+!License*
+!license*
+!*.txt
+
+!README.md
+!.gitignore

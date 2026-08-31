@@ -26,12 +26,19 @@ import { resolveAsset } from "./_assets.mjs";
 
 const ROOT = path.resolve("frontend/assets/models3d/_incoming");
 const SPRITES = path.resolve("frontend/assets/sprites/_incoming");
+const AUDIO = path.resolve("frontend/assets/audio/_incoming");
 
 /* what each pipeline can actually load — a folder holding none of these is a
    folder holding no game content, whatever its file count says */
 const MODEL = /\.(glb|gltf|fbx|obj)$/i;
 const SPRITE = /\.(png|jpe?g|svg)$/i;
+const SOUND = /\.(wav|ogg|mp3|m4a|flac|aac|opus|webm)$/i;
 const TEXTURE = /\.(png|jpe?g|bin|mtl)$/i;
+
+/** What counts as "the thing this pack is for" depends on the drop folder: a
+ *  models pack with only textures is lost, and so is a sound pack with only a
+ *  readme. Getting this wrong is how a 27 MB audio pack measures as zero. */
+const wanted = (drop) => drop === SPRITES ? SPRITE : drop === AUDIO ? SOUND : MODEL;
 
 /* GitHub REJECTS a push containing any file over 100 MB — the whole push, not
    the file. Quaternius' "Standard" tier already produced a 39 MB GLB from
@@ -108,8 +115,8 @@ const human = (n) => n > 1e9 ? (n / 1e9).toFixed(2) + " GB"
  *  packs); Knight Character Animated/ does not (its Blend/ holds textures for
  *  the models in its FBX/), so it stays one pack. Erring toward "one pack"
  *  is deliberate — it can never invent a false LOST. */
-function packFolders(base, isSprite = false) {
-  const hasModel = (dir) => walk(dir).some((f) => (isSprite ? SPRITE : MODEL).test(f));
+function packFolders(base, want = MODEL) {
+  const hasModel = (dir) => walk(dir).some((f) => want.test(f));
   const out = [];
   for (const e of fs.readdirSync(base, { withFileTypes: true })) {
     if (!e.isDirectory()) continue;
@@ -129,6 +136,7 @@ const drops = [
   ...(fs.existsSync(ROOT) ? fs.readdirSync(ROOT, { withFileTypes: true })
     .filter((e) => e.isDirectory()).map((e) => path.join(ROOT, e.name)) : []),
   ...(fs.existsSync(SPRITES) ? [SPRITES] : []),
+  ...(fs.existsSync(AUDIO) ? [AUDIO] : []),
 ].filter((d) => !only || path.basename(d) === only);
 
 if (!drops.length) {
@@ -141,7 +149,8 @@ const oversize = [];
 
 for (const drop of drops) {
   const label = path.relative(process.cwd(), drop);
-  const packs = packFolders(drop, drop === SPRITES);
+  const want = wanted(drop);
+  const packs = packFolders(drop, want);
   console.log(`\n${label}${packs.length ? "" : "   (empty)"}`);
 
   for (const pack of packs) {
@@ -156,8 +165,7 @@ for (const drop of drops) {
       if (size > GITHUB_FILE_LIMIT) oversize.push({ file: path.relative(process.cwd(), f), size });
     }
 
-    const isSprite = drop === SPRITES;
-    const models = keep.filter((f) => (isSprite ? SPRITE : MODEL).test(f)).length;
+    const models = keep.filter((f) => want.test(f)).length;
     const keptSet = new Set(keep.map((f) => path.resolve(f)));
     const fatal = new Set(), cosmetic = new Set();
     for (const g of keep.filter((f) => /\.gltf$/i.test(f))) {
@@ -172,10 +180,11 @@ for (const drop of drops) {
     // tool exists to name — it looks uploaded and contains nothing
     const some = (s) => [...s].slice(0, 2).join(", ") + (s.size > 2 ? `, +${s.size - 2}` : "");
     let verdict;
-    if (models === 0) { verdict = "LOST — nothing loadable survives"; lost++; }
+    const noun = drop === AUDIO ? "sound" : drop === SPRITES ? "sprite" : "model";
+    if (models === 0) { verdict = "LOST — nothing playable survives"; lost++; }
     else if (fatal.size) { verdict = `${models} models, but geometry is missing (${some(fatal)})`; lost++; }
     else if (cosmetic.size) { verdict = `${models} models, playable; ${cosmetic.size} texture${cosmetic.size === 1 ? "" : "s"} absent (${some(cosmetic)})`; }
-    else verdict = `${models} model${models === 1 ? "" : "s"}, complete`;
+    else verdict = `${models} ${noun}${models === 1 ? "" : "s"}, complete`;
 
     console.log(`  ${path.basename(pack).slice(0, 46).padEnd(46)}  ${String(keep.length).padStart(5)} kept ${String(files.length - keep.length).padStart(6)} dropped ${human(bytes).padStart(8)}  ${verdict}`);
   }
