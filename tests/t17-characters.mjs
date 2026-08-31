@@ -12,7 +12,7 @@
  *   npm i three@0.160.0
  *   node tests/t17-characters.mjs
  */
-import { clipName, embeddedImage, injectTexture, slug, packGltf, repairMaterials, detachImage } from "../tools/ingest-characters.mjs";
+import { clipName, embeddedImage, injectTexture, slug, packGltf, repairMaterials, detachImage, dedupeClips } from "../tools/ingest-characters.mjs";
 import { resolveAsset } from "../tools/_assets.mjs";
 import fs from "node:fs";
 import path from "node:path";
@@ -237,6 +237,48 @@ t("a document with no materials does not throw", repairMaterials({}) === 0);
  * whose eye and hair normals silently 404 at play time, on a pack that has
  * been in the repository since 22 Aug and looked complete.
  * ------------------------------------------------------------------ */
+/* ------------------------------------------------------------------ *
+ * WHAT THE FIRST REAL FBX INGEST TAUGHT US
+ *
+ * 152 characters converted from real Quaternius FBX. Two clip-naming faults
+ * showed up that synthetic input could never have produced, and both make an
+ * animation unreachable — the exact failure this file was written to catch.
+ * ------------------------------------------------------------------ */
+console.log("\n== the rig's name is not part of the clip's name ==");
+{
+  // Blender writes "Armature|Sitting"; Quaternius' zombie writes
+  // "Zombie|ZombieBite". Left alone a game asking for "sit" finds nothing.
+  t("'Armature|Sitting' -> sit", clipName("Armature|Sitting") === "sit", clipName("Armature|Sitting"));
+  t("'Zombie|ZombieBite' -> attack", clipName("Zombie|ZombieBite") === "attack", clipName("Zombie|ZombieBite"));
+  t("'Zombie|ZombieCrawl' -> crawl", clipName("Zombie|ZombieCrawl") === "crawl", clipName("Zombie|ZombieCrawl"));
+  t("'Armature|PickUp' -> pickup", clipName("Armature|PickUp") === "pickup", clipName("Armature|PickUp"));
+  t("a name with no pipe is unaffected", clipName("Walking") === "walk");
+  t("only the rig prefix is stripped, not the whole name",
+    clipName("Rig|SomethingUnusual") === "somethingunusual", clipName("Rig|SomethingUnusual"));
+  t("a pipe never survives into a clip name", !clipName("A|B|Running").includes("|"));
+  t("fish get a name a game can ask for", clipName("Swimming") === "swim");
+  t("and so do birds", clipName("Flying") === "fly");
+}
+
+console.log("\n== two clips cannot share one name ==");
+{
+  // animated_woman arrived as idle,jump,die,run,walk,idle,jump,... — a game
+  // looks a clip up by name and gets whichever the loader happened to see
+  // first, so the other is dead weight in the file and unreachable.
+  const c = (name, duration) => ({ name, duration });
+  const out = dedupeClips([c("idle", 1), c("jump", 2), c("idle", 4), c("run", 3), c("jump", 0.5)]);
+  t("each name appears once", out.length === 3, JSON.stringify(out.map((x) => x.name)));
+  t("the longest idle wins — the stub is the transition, not the animation",
+    out.find((x) => x.name === "idle").duration === 4);
+  t("the longest jump wins regardless of order",
+    out.find((x) => x.name === "jump").duration === 2);
+  t("a clip that was already unique is untouched",
+    out.find((x) => x.name === "run").duration === 3);
+  t("order is stable — first appearance decides position",
+    out.map((x) => x.name).join(",") === "idle,jump,run", out.map((x) => x.name).join(","));
+  t("no clips in, no clips out", dedupeClips([]).length === 0);
+}
+
 console.log("\n== a texture the exporter misnamed is still found ==");
 {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "resolve-"));

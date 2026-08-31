@@ -31236,6 +31236,2346 @@
         }
       ]
     },
+    "quaternius-fbx": {
+      "license": "CC0 1.0 — Quaternius (quaternius.com)",
+      "models": [
+        {
+          "file": "packs/quaternius-fbx/alien.glb",
+          "tags": [
+            "space",
+            "scifi"
+          ],
+          "bytes": 1509632,
+          "height": 1.873,
+          "width": 2.136,
+          "depth": 0.785,
+          "tris": 3778,
+          "clips": [
+            "idle",
+            "run",
+            "jump",
+            "swim",
+            "die",
+            "attack",
+            "alien_clapping",
+            "sit",
+            "walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/alien_helmet.glb",
+          "tags": [
+            "space",
+            "scifi"
+          ],
+          "bytes": 1703860,
+          "height": 1.878,
+          "width": 2.001,
+          "depth": 0.879,
+          "tris": 4896,
+          "clips": [
+            "walk",
+            "attack",
+            "alien_clapping",
+            "run",
+            "jump",
+            "swim",
+            "idle",
+            "die",
+            "sit"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/anglerfish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 347056,
+          "height": 1.849,
+          "width": 2.089,
+          "depth": 3.035,
+          "tris": 1862,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/animated_human.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 1095660,
+          "height": 1.947,
+          "width": 0.369,
+          "depth": 2.074,
+          "tris": 1578,
+          "clips": [
+            "working",
+            "idle",
+            "die",
+            "attack",
+            "armatureaction_002",
+            "run",
+            "jump",
+            "walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/animated_woman.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1188484,
+          "height": 1.883,
+          "width": 0.349,
+          "depth": 1.711,
+          "tris": 1908,
+          "clips": [
+            "idle",
+            "jump",
+            "die",
+            "run",
+            "walk",
+            "sit",
+            "pickup",
+            "attack"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/animated_woman_smooth.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1188448,
+          "height": 1.883,
+          "width": 0.349,
+          "depth": 1.711,
+          "tris": 1908,
+          "clips": [
+            "jump",
+            "die",
+            "pickup",
+            "idle",
+            "walk",
+            "sit",
+            "attack",
+            "run"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/apatosaurus.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 667628,
+          "height": 1.962,
+          "width": 0.943,
+          "depth": 8.356,
+          "tris": 1434,
+          "clips": [
+            "walk",
+            "attack",
+            "idle",
+            "jump",
+            "run",
+            "die"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/armored_catfish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 319244,
+          "height": 1.863,
+          "width": 2.824,
+          "depth": 4.486,
+          "tris": 1466,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/avocado.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 338288,
+          "height": 1.85,
+          "width": 0.739,
+          "depth": 2.044,
+          "tris": 1029,
+          "clips": [
+            "idle",
+            "wave"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/avocado_flatshaded.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 338276,
+          "height": 1.85,
+          "width": 0.739,
+          "depth": 2.044,
+          "tris": 1029,
+          "clips": [
+            "wave",
+            "idle"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/banana.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 302404,
+          "height": 1.85,
+          "width": 1.259,
+          "depth": 1.689,
+          "tris": 828,
+          "clips": [
+            "wave",
+            "idle"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/bat.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 465416,
+          "height": 1.606,
+          "width": 1.076,
+          "depth": 1.699,
+          "tris": 1046,
+          "clips": [
+            "attack",
+            "bat_hit",
+            "fly",
+            "die"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/betta.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 283024,
+          "height": 1.855,
+          "width": 1.685,
+          "depth": 3.067,
+          "tris": 1456,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/bird.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 67196,
+          "height": 1.883,
+          "width": 1.105,
+          "depth": 2.164,
+          "tris": 158,
+          "clips": [
+            "armatureaction"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/black_lion_fish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 388964,
+          "height": 1.839,
+          "width": 1.165,
+          "depth": 2.089,
+          "tris": 1974,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/blobfish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 278308,
+          "height": 1.832,
+          "width": 2.66,
+          "depth": 3.512,
+          "tris": 1316,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/blue_goldfish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 325324,
+          "height": 1.79,
+          "width": 1.311,
+          "depth": 2.256,
+          "tris": 1590,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/blue_tang.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 289428,
+          "height": 1.856,
+          "width": 2.094,
+          "depth": 3.1,
+          "tris": 1342,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/boat.glb",
+          "tags": [
+            "vehicle"
+          ],
+          "bytes": 26992,
+          "height": 1.85,
+          "width": 4.298,
+          "depth": 8.295,
+          "tris": 224
+        },
+        {
+          "file": "packs/quaternius-fbx/butterfly_fish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 289536,
+          "height": 1.854,
+          "width": 2.179,
+          "depth": 3.096,
+          "tris": 1374,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/cardinal_fish.glb",
+          "tags": [
+            "animal",
+            "creature",
+            "vehicle"
+          ],
+          "bytes": 293952,
+          "height": 1.856,
+          "width": 1.409,
+          "depth": 3.082,
+          "tris": 1388,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/cat.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 274312,
+          "height": 1.83,
+          "width": 2.344,
+          "depth": 0.588,
+          "tris": 807,
+          "clips": [
+            "idle",
+            "walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/chick.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 84164,
+          "height": 1.957,
+          "width": 1.742,
+          "depth": 1.094,
+          "tris": 250,
+          "clips": [
+            "armatureaction_002"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/clownfish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 329460,
+          "height": 1.836,
+          "width": 2.662,
+          "depth": 3.182,
+          "tris": 1530,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/club.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 53728,
+          "height": 1.85,
+          "width": 0.536,
+          "depth": 0.528,
+          "tris": 456
+        },
+        {
+          "file": "packs/quaternius-fbx/coral_grouper.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 303576,
+          "height": 1.806,
+          "width": 2.24,
+          "depth": 3.717,
+          "tris": 1588,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/cowfish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 273280,
+          "height": 1.711,
+          "width": 2.581,
+          "depth": 4.284,
+          "tris": 1390,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/dock_long.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 139528,
+          "height": 1.85,
+          "width": 2.184,
+          "depth": 5.142,
+          "tris": 1688
+        },
+        {
+          "file": "packs/quaternius-fbx/dock_long_no_rope.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 123072,
+          "height": 1.85,
+          "width": 3.01,
+          "depth": 7.086,
+          "tris": 1484
+        },
+        {
+          "file": "packs/quaternius-fbx/dock_stairs.glb",
+          "tags": [
+            "prop",
+            "structure"
+          ],
+          "bytes": 54420,
+          "height": 1.85,
+          "width": 2.11,
+          "depth": 2.298,
+          "tris": 628
+        },
+        {
+          "file": "packs/quaternius-fbx/dock_wide.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 139528,
+          "height": 1.85,
+          "width": 3.523,
+          "depth": 5.224,
+          "tris": 1688
+        },
+        {
+          "file": "packs/quaternius-fbx/dog.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 221156,
+          "height": 1.871,
+          "width": 2.95,
+          "depth": 0.908,
+          "tris": 602,
+          "clips": [
+            "walk",
+            "idle"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/dolphin.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 122432,
+          "height": 1.835,
+          "width": 2.018,
+          "depth": 5.68,
+          "tris": 440,
+          "clips": [
+            "swim"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/dragon.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 504736,
+          "height": 2.014,
+          "width": 1.782,
+          "depth": 1.94,
+          "tris": 1344,
+          "clips": [
+            "fly",
+            "attack",
+            "die",
+            "dragon_hit"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/eagle.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 3965848,
+          "height": 0.462,
+          "width": 3.907,
+          "depth": 1.612,
+          "tris": 24800,
+          "clips": [
+            "idle",
+            "fly"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/female_alternative.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 866964,
+          "height": 1.85,
+          "width": 1.998,
+          "depth": 0.375,
+          "tris": 2004,
+          "clips": [
+            "run",
+            "idle",
+            "die",
+            "walk",
+            "attack",
+            "female_clapping",
+            "sit",
+            "jump"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/female_casual.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 971884,
+          "height": 1.858,
+          "width": 2.006,
+          "depth": 0.388,
+          "tris": 2776,
+          "clips": [
+            "jump",
+            "attack",
+            "run",
+            "idle",
+            "walk",
+            "die",
+            "female_clapping",
+            "sit"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/female_dress.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 828024,
+          "height": 1.863,
+          "width": 1.998,
+          "depth": 0.521,
+          "tris": 1786,
+          "clips": [
+            "jump",
+            "attack",
+            "run",
+            "idle",
+            "walk",
+            "die",
+            "female_clapping",
+            "sit"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/female_hairstyle_1.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 37872,
+          "height": 1.85,
+          "width": 1.525,
+          "depth": 1.628,
+          "tris": 375
+        },
+        {
+          "file": "packs/quaternius-fbx/female_hairstyle_2.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 37868,
+          "height": 1.85,
+          "width": 1.379,
+          "depth": 1.247,
+          "tris": 375
+        },
+        {
+          "file": "packs/quaternius-fbx/female_hairstyle_3.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 27496,
+          "height": 1.85,
+          "width": 1.85,
+          "depth": 1.974,
+          "tris": 267
+        },
+        {
+          "file": "packs/quaternius-fbx/female_hairstyle_4.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 35912,
+          "height": 1.85,
+          "width": 1.269,
+          "depth": 1.909,
+          "tris": 315
+        },
+        {
+          "file": "packs/quaternius-fbx/female_looking_up.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 158916,
+          "height": 1.85,
+          "width": 0.703,
+          "depth": 0.549,
+          "tris": 1304
+        },
+        {
+          "file": "packs/quaternius-fbx/female_picking_up.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 164244,
+          "height": 1.85,
+          "width": 0.883,
+          "depth": 1.709,
+          "tris": 1356
+        },
+        {
+          "file": "packs/quaternius-fbx/female_running.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 161088,
+          "height": 1.85,
+          "width": 0.418,
+          "depth": 1.032,
+          "tris": 1330
+        },
+        {
+          "file": "packs/quaternius-fbx/female_sitting.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 164232,
+          "height": 1.85,
+          "width": 0.635,
+          "depth": 0.878,
+          "tris": 1356
+        },
+        {
+          "file": "packs/quaternius-fbx/female_sitting_cheering.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 164156,
+          "height": 1.85,
+          "width": 0.61,
+          "depth": 0.833,
+          "tris": 1355
+        },
+        {
+          "file": "packs/quaternius-fbx/female_standing.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 164244,
+          "height": 1.85,
+          "width": 0.507,
+          "depth": 0.35,
+          "tris": 1356
+        },
+        {
+          "file": "packs/quaternius-fbx/female_standing_covering_eyes.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 164268,
+          "height": 1.85,
+          "width": 0.501,
+          "depth": 0.462,
+          "tris": 1356
+        },
+        {
+          "file": "packs/quaternius-fbx/female_standing_hips.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 158828,
+          "height": 1.85,
+          "width": 0.716,
+          "depth": 0.346,
+          "tris": 1303
+        },
+        {
+          "file": "packs/quaternius-fbx/female_tank_top.glb",
+          "tags": [
+            "vehicle"
+          ],
+          "bytes": 910244,
+          "height": 1.863,
+          "width": 1.998,
+          "depth": 0.38,
+          "tris": 1983,
+          "clips": [
+            "jump",
+            "attack",
+            "run",
+            "idle",
+            "walk",
+            "die",
+            "female_clapping",
+            "sit"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/female_walking.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 164240,
+          "height": 1.85,
+          "width": 0.528,
+          "depth": 0.675,
+          "tris": 1356
+        },
+        {
+          "file": "packs/quaternius-fbx/fish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 82580,
+          "height": 1.844,
+          "width": 1.705,
+          "depth": 4.916,
+          "tris": 304,
+          "clips": [
+            "armatureaction"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/fish1.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 136108,
+          "height": 1.863,
+          "width": 0.806,
+          "depth": 5.578,
+          "tris": 544,
+          "clips": [
+            "swim"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/fish2.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 122128,
+          "height": 1.868,
+          "width": 0.391,
+          "depth": 3,
+          "tris": 502,
+          "clips": [
+            "swim"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/fish3.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 147912,
+          "height": 1.839,
+          "width": 0.435,
+          "depth": 3.564,
+          "tris": 686,
+          "clips": [
+            "swim"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/fishing_rod_lvl1.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 25768,
+          "height": 1.85,
+          "width": 0.061,
+          "depth": 0.169,
+          "tris": 308
+        },
+        {
+          "file": "packs/quaternius-fbx/fishing_rod_lvl2.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 44064,
+          "height": 1.85,
+          "width": 0.137,
+          "depth": 0.145,
+          "tris": 522
+        },
+        {
+          "file": "packs/quaternius-fbx/fishing_rod_lvl3.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 74532,
+          "height": 1.85,
+          "width": 0.101,
+          "depth": 0.121,
+          "tris": 910
+        },
+        {
+          "file": "packs/quaternius-fbx/fishing_rod_lvl4.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 73384,
+          "height": 1.85,
+          "width": 0.165,
+          "depth": 0.118,
+          "tris": 898
+        },
+        {
+          "file": "packs/quaternius-fbx/fishing_rod_lvl5.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 95372,
+          "height": 1.85,
+          "width": 0.165,
+          "depth": 0.12,
+          "tris": 1174
+        },
+        {
+          "file": "packs/quaternius-fbx/flatfish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 333124,
+          "height": 1.853,
+          "width": 0.958,
+          "depth": 2.17,
+          "tris": 1638,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/flower_horn.glb",
+          "tags": [
+            "foliage",
+            "nature"
+          ],
+          "bytes": 293432,
+          "height": 1.836,
+          "width": 1.959,
+          "depth": 3.309,
+          "tris": 1490,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/frog.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 995836,
+          "height": 1.938,
+          "width": 4.521,
+          "depth": 4.146,
+          "tris": 4920,
+          "clips": [
+            "jump",
+            "idle",
+            "die",
+            "attack"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/goblin.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 654832,
+          "height": 1.85,
+          "width": 2.121,
+          "depth": 0.346,
+          "tris": 1308,
+          "clips": [
+            "run",
+            "attack",
+            "idle",
+            "walk",
+            "die",
+            "jump",
+            "goblin_roll"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/goblin_shark.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 271688,
+          "height": 1.844,
+          "width": 2.607,
+          "depth": 3.101,
+          "tris": 1270,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/goldfish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 325576,
+          "height": 1.79,
+          "width": 1.311,
+          "depth": 2.256,
+          "tris": 1590,
+          "clips": [
+            "swim",
+            "out_of_water",
+            "attack",
+            "die"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/helmet1.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 74012,
+          "height": 1.85,
+          "width": 1.761,
+          "depth": 1.743,
+          "tris": 568
+        },
+        {
+          "file": "packs/quaternius-fbx/helmet2.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 57140,
+          "height": 1.85,
+          "width": 1.347,
+          "depth": 1.459,
+          "tris": 772
+        },
+        {
+          "file": "packs/quaternius-fbx/helmet3.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 97280,
+          "height": 1.85,
+          "width": 1.256,
+          "depth": 1.438,
+          "tris": 656
+        },
+        {
+          "file": "packs/quaternius-fbx/humphead.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 293384,
+          "height": 1.854,
+          "width": 2.347,
+          "depth": 3.346,
+          "tris": 1410,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/katana.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 56848,
+          "height": 1.85,
+          "width": 0.155,
+          "depth": 0.288,
+          "tris": 496
+        },
+        {
+          "file": "packs/quaternius-fbx/knight_character.glb",
+          "tags": [
+            "character",
+            "humanoid"
+          ],
+          "bytes": 650944,
+          "height": 1.854,
+          "width": 2.251,
+          "depth": 0.457,
+          "tris": 956,
+          "clips": [
+            "idle",
+            "jump",
+            "run",
+            "die",
+            "walk",
+            "roll",
+            "roll_sword"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/koi.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 308616,
+          "height": 1.853,
+          "width": 1.316,
+          "depth": 2.347,
+          "tris": 1494,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/lionfish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 383980,
+          "height": 1.839,
+          "width": 1.362,
+          "depth": 2.253,
+          "tris": 1938,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/lure_1.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 70964,
+          "height": 1.85,
+          "width": 5.598,
+          "depth": 1.85,
+          "tris": 872
+        },
+        {
+          "file": "packs/quaternius-fbx/lure_2.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 74544,
+          "height": 1.85,
+          "width": 5.598,
+          "depth": 1.85,
+          "tris": 878
+        },
+        {
+          "file": "packs/quaternius-fbx/lure_3.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 86128,
+          "height": 1.85,
+          "width": 5.598,
+          "depth": 1.85,
+          "tris": 872
+        },
+        {
+          "file": "packs/quaternius-fbx/lure_4.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 80160,
+          "height": 1.85,
+          "width": 5.598,
+          "depth": 1.85,
+          "tris": 872
+        },
+        {
+          "file": "packs/quaternius-fbx/lure_5.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 74488,
+          "height": 1.85,
+          "width": 5.598,
+          "depth": 1.85,
+          "tris": 878
+        },
+        {
+          "file": "packs/quaternius-fbx/lure_6.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 87652,
+          "height": 1.85,
+          "width": 5.598,
+          "depth": 1.85,
+          "tris": 872
+        },
+        {
+          "file": "packs/quaternius-fbx/male_casual.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 831704,
+          "height": 1.856,
+          "width": 1.992,
+          "depth": 0.361,
+          "tris": 1846,
+          "clips": [
+            "walk",
+            "run",
+            "die",
+            "idle",
+            "sit",
+            "jump",
+            "attack",
+            "man_clapping"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/male_hairstyle_1.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 18364,
+          "height": 1.85,
+          "width": 1.499,
+          "depth": 1.527,
+          "tris": 172
+        },
+        {
+          "file": "packs/quaternius-fbx/male_hairstyle_2.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 19908,
+          "height": 1.85,
+          "width": 1.772,
+          "depth": 2.017,
+          "tris": 188
+        },
+        {
+          "file": "packs/quaternius-fbx/male_hairstyle_3.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 22960,
+          "height": 1.85,
+          "width": 1.526,
+          "depth": 1.754,
+          "tris": 220
+        },
+        {
+          "file": "packs/quaternius-fbx/male_hairstyle_4.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 19280,
+          "height": 1.85,
+          "width": 2.297,
+          "depth": 2.651,
+          "tris": 180
+        },
+        {
+          "file": "packs/quaternius-fbx/male_long_sleeve.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 845472,
+          "height": 1.861,
+          "width": 1.998,
+          "depth": 0.395,
+          "tris": 1964,
+          "clips": [
+            "walk",
+            "run",
+            "die",
+            "idle",
+            "sit",
+            "jump",
+            "attack",
+            "man_clapping"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/male_looking_up.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 112376,
+          "height": 1.85,
+          "width": 0.997,
+          "depth": 0.594,
+          "tris": 885
+        },
+        {
+          "file": "packs/quaternius-fbx/male_picking_up.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 112528,
+          "height": 1.85,
+          "width": 1.265,
+          "depth": 1.715,
+          "tris": 887
+        },
+        {
+          "file": "packs/quaternius-fbx/male_running.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 112684,
+          "height": 1.85,
+          "width": 0.584,
+          "depth": 1.066,
+          "tris": 888
+        },
+        {
+          "file": "packs/quaternius-fbx/male_shirt.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 841404,
+          "height": 1.849,
+          "width": 1.985,
+          "depth": 0.36,
+          "tris": 1848,
+          "clips": [
+            "walk",
+            "run",
+            "die",
+            "idle",
+            "sit",
+            "jump",
+            "attack",
+            "man_clapping"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/male_sitting.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 112624,
+          "height": 1.85,
+          "width": 0.748,
+          "depth": 0.849,
+          "tris": 888
+        },
+        {
+          "file": "packs/quaternius-fbx/male_sitting_cheering.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 112700,
+          "height": 1.85,
+          "width": 0.741,
+          "depth": 0.813,
+          "tris": 888
+        },
+        {
+          "file": "packs/quaternius-fbx/male_standing.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 112620,
+          "height": 1.85,
+          "width": 0.598,
+          "depth": 0.334,
+          "tris": 888
+        },
+        {
+          "file": "packs/quaternius-fbx/male_standing_covering_eyes.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 112652,
+          "height": 1.85,
+          "width": 0.69,
+          "depth": 0.445,
+          "tris": 888
+        },
+        {
+          "file": "packs/quaternius-fbx/male_standing_hips.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 112632,
+          "height": 1.85,
+          "width": 0.961,
+          "depth": 0.349,
+          "tris": 888
+        },
+        {
+          "file": "packs/quaternius-fbx/male_standing_waving.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 112636,
+          "height": 1.85,
+          "width": 0.648,
+          "depth": 0.324,
+          "tris": 888
+        },
+        {
+          "file": "packs/quaternius-fbx/male_suit.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 927736,
+          "height": 1.855,
+          "width": 1.991,
+          "depth": 0.403,
+          "tris": 2052,
+          "clips": [
+            "walk",
+            "run",
+            "die",
+            "idle",
+            "sit",
+            "jump",
+            "attack",
+            "man_clapping"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/male_walking.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 112620,
+          "height": 1.85,
+          "width": 0.586,
+          "depth": 0.702,
+          "tris": 888
+        },
+        {
+          "file": "packs/quaternius-fbx/mandarin_fish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 301276,
+          "height": 1.856,
+          "width": 2.519,
+          "depth": 4.229,
+          "tris": 1378,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/manta_ray.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 176972,
+          "height": 1.136,
+          "width": 7.101,
+          "depth": 9.927,
+          "tris": 696,
+          "clips": [
+            "swim"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/moorish_idol.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 293044,
+          "height": 1.853,
+          "width": 2.096,
+          "depth": 2.753,
+          "tris": 1428,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/parasaurolophus.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 618488,
+          "height": 1.922,
+          "width": 0.627,
+          "depth": 4.011,
+          "tris": 1414,
+          "clips": [
+            "walk",
+            "attack",
+            "run",
+            "jump",
+            "die",
+            "idle"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/parrot_fish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 289960,
+          "height": 1.843,
+          "width": 2.362,
+          "depth": 3.51,
+          "tris": 1352,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/peach.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 392880,
+          "height": 1.85,
+          "width": 0.726,
+          "depth": 2.492,
+          "tris": 1355,
+          "clips": [
+            "wave",
+            "idle"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/pineapple.glb",
+          "tags": [
+            "tree",
+            "nature"
+          ],
+          "bytes": 328804,
+          "height": 1.85,
+          "width": 0.778,
+          "depth": 1.921,
+          "tris": 980,
+          "clips": [
+            "wave",
+            "idle"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/piranha.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 315080,
+          "height": 1.85,
+          "width": 0.895,
+          "depth": 3.275,
+          "tris": 1388,
+          "clips": [
+            "swim",
+            "attack"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/puffer.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 438824,
+          "height": 1.802,
+          "width": 2.381,
+          "depth": 2.762,
+          "tris": 2142,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/rat.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 988224,
+          "height": 1.889,
+          "width": 1.225,
+          "depth": 5.751,
+          "tris": 4004,
+          "clips": [
+            "walk",
+            "idle",
+            "run",
+            "die",
+            "attack",
+            "jump"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/red_fox.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 150320,
+          "height": 1.737,
+          "width": 1.167,
+          "depth": 3.953,
+          "tris": 490,
+          "clips": [
+            "armatureaction"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/red_snapper.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 292196,
+          "height": 1.853,
+          "width": 2.189,
+          "depth": 3.632,
+          "tris": 1416,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/robot.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1285500,
+          "height": 1.85,
+          "width": 2.64,
+          "depth": 1.12,
+          "tris": 3236,
+          "clips": [
+            "robot_no",
+            "sit",
+            "attack",
+            "dance",
+            "idle",
+            "walk",
+            "robot_yes",
+            "robot_wave",
+            "die",
+            "run",
+            "robot_thumbsup",
+            "jump"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/royal_gramma.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 284664,
+          "height": 1.855,
+          "width": 2.518,
+          "depth": 4.227,
+          "tris": 1378,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/shark.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 150164,
+          "height": 1.819,
+          "width": 2.045,
+          "depth": 5.555,
+          "tris": 644,
+          "clips": [
+            "swim"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/short_sword.glb",
+          "tags": [
+            "weapon",
+            "prop"
+          ],
+          "bytes": 58324,
+          "height": 1.85,
+          "width": 0.43,
+          "depth": 0.116,
+          "tris": 510
+        },
+        {
+          "file": "packs/quaternius-fbx/shoulder_pads.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 13476,
+          "height": 1.85,
+          "width": 10.514,
+          "depth": 4.141,
+          "tris": 96
+        },
+        {
+          "file": "packs/quaternius-fbx/skeleton.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 405288,
+          "height": 1.883,
+          "width": 1.704,
+          "depth": 0.492,
+          "tris": 1810,
+          "clips": [
+            "attack",
+            "die",
+            "run",
+            "skeleton_spawn",
+            "idle"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/smooth_female_alternative.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1624284,
+          "height": 1.865,
+          "width": 2,
+          "depth": 0.372,
+          "tris": 7040,
+          "clips": [
+            "jump",
+            "attack",
+            "run",
+            "idle",
+            "walk",
+            "die",
+            "female_clapping",
+            "sit"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/smooth_female_casual.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1649028,
+          "height": 1.865,
+          "width": 1.999,
+          "depth": 0.384,
+          "tris": 7240,
+          "clips": [
+            "jump",
+            "attack",
+            "run",
+            "idle",
+            "walk",
+            "die",
+            "female_clapping",
+            "sit"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/smooth_female_dress.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1710888,
+          "height": 1.866,
+          "width": 1.989,
+          "depth": 0.504,
+          "tris": 7658,
+          "clips": [
+            "jump",
+            "attack",
+            "run",
+            "idle",
+            "walk",
+            "die",
+            "female_clapping",
+            "sit"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/smooth_female_tank_top.glb",
+          "tags": [
+            "vehicle"
+          ],
+          "bytes": 1677864,
+          "height": 1.865,
+          "width": 1.986,
+          "depth": 0.375,
+          "tris": 6383,
+          "clips": [
+            "jump",
+            "attack",
+            "run",
+            "idle",
+            "walk",
+            "die",
+            "female_clapping",
+            "sit"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/smooth_male_casual.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1745752,
+          "height": 1.857,
+          "width": 1.981,
+          "depth": 0.353,
+          "tris": 7930,
+          "clips": [
+            "walk",
+            "run",
+            "die",
+            "idle",
+            "sit",
+            "jump",
+            "attack",
+            "man_clapping"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/smooth_male_long_sleeve.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1812640,
+          "height": 1.863,
+          "width": 1.987,
+          "depth": 0.386,
+          "tris": 8402,
+          "clips": [
+            "walk",
+            "run",
+            "die",
+            "idle",
+            "sit",
+            "jump",
+            "attack",
+            "man_clapping"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/smooth_male_shirt.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 1760540,
+          "height": 1.854,
+          "width": 1.977,
+          "depth": 0.352,
+          "tris": 7958,
+          "clips": [
+            "walk",
+            "run",
+            "die",
+            "idle",
+            "sit",
+            "jump",
+            "attack",
+            "man_clapping"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/smooth_male_suit.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 2099392,
+          "height": 1.856,
+          "width": 1.98,
+          "depth": 0.395,
+          "tris": 8772,
+          "clips": [
+            "walk",
+            "run",
+            "die",
+            "idle",
+            "sit",
+            "jump",
+            "attack",
+            "man_clapping"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/snake.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 389852,
+          "height": 1.766,
+          "width": 0.613,
+          "depth": 1.675,
+          "tris": 1618,
+          "clips": [
+            "walk",
+            "idle",
+            "attack",
+            "jump"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/snake_angry.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 404756,
+          "height": 1.793,
+          "width": 0.619,
+          "depth": 1.691,
+          "tris": 1714,
+          "clips": [
+            "attack",
+            "idle",
+            "jump",
+            "walk"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/spider.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 838280,
+          "height": 1.801,
+          "width": 5.485,
+          "depth": 4.869,
+          "tris": 2712,
+          "clips": [
+            "attack",
+            "idle",
+            "die",
+            "walk",
+            "jump"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/stegosaurus.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 815724,
+          "height": 1.87,
+          "width": 0.829,
+          "depth": 4.062,
+          "tris": 2280,
+          "clips": [
+            "idle",
+            "run",
+            "jump",
+            "walk",
+            "die",
+            "attack"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/sunfish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 279396,
+          "height": 1.855,
+          "width": 1.038,
+          "depth": 1.214,
+          "tris": 1430,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/sword.glb",
+          "tags": [
+            "weapon",
+            "prop"
+          ],
+          "bytes": 66128,
+          "height": 1.85,
+          "width": 0.328,
+          "depth": 0.097,
+          "tris": 524
+        },
+        {
+          "file": "packs/quaternius-fbx/swordfish.glb",
+          "tags": [
+            "weapon",
+            "prop",
+            "animal",
+            "creature"
+          ],
+          "bytes": 291156,
+          "height": 1.844,
+          "width": 1.734,
+          "depth": 3.112,
+          "tris": 1384,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/tang.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 315056,
+          "height": 1.848,
+          "width": 2.234,
+          "depth": 2.906,
+          "tris": 1520,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/tetra.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 283444,
+          "height": 1.804,
+          "width": 3.066,
+          "depth": 5.43,
+          "tris": 1386,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/trex.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 676004,
+          "height": 1.919,
+          "width": 1.002,
+          "depth": 3.911,
+          "tris": 1820,
+          "clips": [
+            "jump",
+            "attack",
+            "idle",
+            "walk",
+            "run",
+            "die"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/triceratops.glb",
+          "tags": [
+            "biome",
+            "nature"
+          ],
+          "bytes": 607544,
+          "height": 1.907,
+          "width": 0.589,
+          "depth": 2.325,
+          "tris": 1326,
+          "clips": [
+            "die",
+            "run",
+            "walk",
+            "idle",
+            "jump",
+            "attack"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/tuna.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 304340,
+          "height": 1.855,
+          "width": 2.058,
+          "depth": 2.969,
+          "tris": 1446,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/turbot.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 308812,
+          "height": 1.86,
+          "width": 0.988,
+          "depth": 2.183,
+          "tris": 1626,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/velociraptor.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 582252,
+          "height": 1.679,
+          "width": 0.803,
+          "depth": 4.043,
+          "tris": 1248,
+          "clips": [
+            "jump",
+            "idle",
+            "run",
+            "walk",
+            "attack",
+            "die"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/wasp.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 818420,
+          "height": 2.621,
+          "width": 2.51,
+          "depth": 1.655,
+          "tris": 3736,
+          "clips": [
+            "die",
+            "fly",
+            "attack"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/watermelon.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 537692,
+          "height": 1.849,
+          "width": 2.898,
+          "depth": 0.475,
+          "tris": 2184,
+          "clips": [
+            "wave",
+            "idle"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/whale.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 201184,
+          "height": 1.817,
+          "width": 2.04,
+          "depth": 5.75,
+          "tris": 954,
+          "clips": [
+            "armatureaction"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/wolf.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 223796,
+          "height": 1.869,
+          "width": 3.518,
+          "depth": 0.779,
+          "tris": 622,
+          "clips": [
+            "walk",
+            "idle"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/woman_standing_waving.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 161588,
+          "height": 1.85,
+          "width": 0.467,
+          "depth": 0.309,
+          "tris": 1330
+        },
+        {
+          "file": "packs/quaternius-fbx/worm.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 20960,
+          "height": 1.85,
+          "width": 1.89,
+          "depth": 1.648,
+          "tris": 240
+        },
+        {
+          "file": "packs/quaternius-fbx/yellow_tang.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 265524,
+          "height": 1.855,
+          "width": 2.092,
+          "depth": 2.901,
+          "tris": 1342,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/zebra_clown_fish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 326920,
+          "height": 1.841,
+          "width": 2.647,
+          "depth": 3.23,
+          "tris": 1530,
+          "clips": [
+            "swim",
+            "attack",
+            "die",
+            "out_of_water"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/zombie.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 1003312,
+          "height": 2.14,
+          "width": 0.448,
+          "depth": 2.01,
+          "tris": 2116,
+          "clips": [
+            "run",
+            "attack",
+            "crawl",
+            "walk",
+            "idle"
+          ]
+        },
+        {
+          "file": "packs/quaternius-fbx/zombie_smooth.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 1003328,
+          "height": 2.14,
+          "width": 0.448,
+          "depth": 2.01,
+          "tris": 2116,
+          "clips": [
+            "crawl",
+            "idle",
+            "attack",
+            "run",
+            "walk"
+          ]
+        }
+      ]
+    },
     "quaternius-mechs": {
       "license": "CC0 1.0 — Quaternius (quaternius.com)",
       "models": [

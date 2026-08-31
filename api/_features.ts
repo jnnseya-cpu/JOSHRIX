@@ -13,6 +13,29 @@
  * once. `tests/t16-features.js` asserts the countable ones against the repo.
  */
 
+/**
+ * The library's size, in ONE place.
+ *
+ * These numbers were written out longhand in four files — this one, the AI
+ * gateway's prompt, the features hub's meta description and a comment in
+ * sitemap.ts. When 152 characters landed on 31 Aug, three of the four silently
+ * became false, and the one guarded by a test was the only one that said so.
+ *
+ * `tests/t16-features.js` checks these against the actual contents of
+ * `frontend/assets/models3d/packs`, so after any ingest the failing test names
+ * the number to change and there is exactly one place to change it.
+ */
+export const LIBRARY = {
+  models: 2584,
+  packs: 35,
+  /** rigged characters carrying skeletal clips, not merely posed */
+  animated: 274,
+  sprites: 2553,
+} as const;
+
+/** "2,584" — the form every marketing claim uses. */
+export const n = (v: number) => v.toLocaleString("en-GB");
+
 export type Feature = {
   /** URL-safe id; also the blog slug hint and the hub anchor. */
   id: string;
@@ -53,23 +76,23 @@ export const FEATURES: Feature[] = [
   },
   {
     id: "model-library",
-    name: "2,435 game-ready 3D models, included",
+    name: `${n(LIBRARY.models)} game-ready 3D models, included`,
     group: "Assets",
     keywords: ["free 3D game assets", "CC0 low poly models", "game art without an artist"],
     proof: [
-      "2,435 GLB models across 34 packs, every one load-tested in a real browser before it shipped.",
-      "Includes 178 rigged, textured, animated characters, creatures and animals — humans, monsters, mounts and mechs, with full skeletal clip sets.",
+      `${n(LIBRARY.models)} GLB models across ${LIBRARY.packs} packs, every one load-tested in a real browser before it shipped.`,
+      `Includes ${LIBRARY.animated} rigged, textured, animated characters, creatures and animals — humans, monsters, mounts and mechs, with full skeletal clip sets.`,
       "All CC0, so a creator owns the output outright with no attribution burden.",
     ],
     href: "/studio",
   },
   {
     id: "sprite-library",
-    name: "2,553 2D sprites, included",
+    name: `${n(LIBRARY.sprites)} 2D sprites, included`,
     group: "Assets",
     keywords: ["free 2D game sprites", "CC0 platformer art", "game sprites no artist"],
     proof: [
-      "2,553 CC0 PNG sprites across six packs, every one decoded in a real browser before shipping.",
+      `${n(LIBRARY.sprites)} CC0 PNG sprites across six packs, every one decoded in a real browser before shipping.`,
       "A complete side-scroller set: six biomes of ground tiles, three players with 11-frame walk cycles, animated enemies, pickups, hazards and a HUD.",
     ],
     href: "/studio",

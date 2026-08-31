@@ -318,8 +318,40 @@ Three things changed so this cannot recur:
   cannot be found now has its material slot detached rather than exported as a
   dangling `uri`.
 
-The 18 missing packs are named in `_incoming/characters-fbx/README.md`.
-**Not yet uploaded** — Justin has the drive; the runbook is `UPLOADING-ASSETS.md`.
+### Landed 31 Aug — 17 of the 18, and the FBX path proven on real files
+
+Justin pushed them (`12aba4ff`): **193 files, 94 MB, 152 models, every pack
+complete** by `check-incoming`. Only `Farm Animals Animated - Jun 2018` did not
+move — its folder name on disk differs from the one in the runbook, so the
+`move` found nothing. It is still in `_incoming/characters/`.
+
+`tools/ingest-characters.mjs` then ran its **FBX path on real files for the
+first time** — the branch that could not be tested because the filter excluding
+FBX was the reason no FBX had ever reached the repository. It found three real
+defects, all now fixed:
+
+- **Five animals were lost to `window is not defined`.** FBXLoader reads
+  `window.innerWidth` to compute a camera's aspect ratio, and every FBX in the
+  2016 Animals Pack ships a camera. `tools/gltf-export-polyfill.mjs` now
+  supplies a minimal `window`; Chick, Fish, Red Fox, Whale and bird converted.
+  147 → 152.
+- **Clip names carried the rig's name.** Blender writes `Armature|Sitting`,
+  Quaternius' zombie writes `Zombie|ZombieBite`. A game asks for a clip by
+  name, so every one of those animations was unreachable. `clipName()` strips
+  the prefix, and the vocabulary gained swim, fly, crawl, sit and pickup —
+  clips these packs actually contain and had no name for.
+- **Clips collided.** `animated_woman` arrived as
+  `idle,jump,die,run,walk,idle,jump,…`; the loader returns whichever it saw
+  first and the other is unreachable weight. `dedupeClips()` keeps the longest
+  per name — the authored animation rather than a transition stub. That file is
+  now `idle,jump,die,run,walk,sit,pickup,attack` and 180 KB smaller.
+
+`tools/validate-models.mjs` then loaded **all 2,584 models through a real
+GLTFLoader in a real browser: 2,584 loaded, 0 failed**, and wrote the measured
+heights, footprints and clip names back into the manifest. The library is
+**2,584 models / 35 packs**, and animated models went **178 → 274**.
+
+15 new assertions in t17. The FBX branch is no longer "written but unproven".
 
 Three things had to be fixed before any of it was usable, and each one would have
 shipped silently:

@@ -8,6 +8,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { Script } from "node:vm";
 import { GameBlueprintSchema, type GameBlueprint, ACU } from "../shared/contracts";
 import { wrapUntrusted, scanGeneratedHtml, describeVerdict } from "./_security";
+import { LIBRARY, n as num } from "./_features";
 
 const SYSTEM = `You are the JOSHRIX Idea Agent. From the creator's game description, produce a commercial game blueprint.
 The creator may write in ANY language. Detect their language (or honour an explicitly requested one) and write ALL
@@ -350,7 +351,7 @@ ${RUNTIME_SAFETY}
 
 MODEL LIBRARY — reference list, below. It is a parts catalogue, not a brief. Pick the handful your concept needs and move on; a build that lists beautiful models and forgets the gameplay above has failed.
 LOAD AT LEAST FIVE DIFFERENT MODELS, and use G.scatter to repeat the scenery ones. This is a hard gate, not advice: a build with a character and one crate on an empty ground disc is REFUSED. The three reference games shipping on this platform each load twelve to thirteen. If the concept names specific models, use those first — the creator picked them.
-JOSHRIX MODEL LIBRARY — 2,435 hosted low-poly GLB models across four libraries, every one verified to load.
+JOSHRIX MODEL LIBRARY — ${num(LIBRARY.models)} hosted low-poly GLB models across four libraries, every one verified to load.
 SCALE — READ THIS BEFORE PLACING ANYTHING. The three libraries are NOT built at the same scale, and mixing them raw is the most common way a 3D build looks broken:
 · LIBRARY 1 (lib/) is metric — a character is ~2 units tall, so 1 unit ≈ 1 metre.
 · LIBRARY 3 (Kenney packs/) is grid-based — 1 unit is one grid cell. A wall is 1.0 tall, a car 1.1, a big tree ~1.3, a tower section 1.0.

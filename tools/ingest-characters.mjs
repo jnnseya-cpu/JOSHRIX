@@ -53,14 +53,39 @@ const CLIP_ALIASES = [
   [/walk/i, "walk"],
   [/run|jog|sprint/i, "run"],
   [/jump|leap/i, "jump"],
-  [/attack|punch|kick|slash|shoot/i, "attack"],
+  [/attack|punch|kick|slash|shoot|bite/i, "attack"],
   [/death|die|dying/i, "die"],
   [/danc/i, "dance"],
+  // added once real Quaternius FBX went through: these clips exist in the
+  // packs and had no name a game could ask for
+  [/swim/i, "swim"],
+  [/fly|flap/i, "fly"],
+  [/crawl/i, "crawl"],
+  [/sit/i, "sit"],
+  [/pick\s*up|grab/i, "pickup"],
 ];
 function clipName(raw) {
-  const s = String(raw || "").replace(/mixamo\.com/gi, " ").replace(/[_\-.]/g, " ");
+  /* Blender exports a clip as "Armature|Sitting" and Quaternius' zombie as
+     "Zombie|ZombieBite" — the rig's name, a pipe, then the clip. Left in, the
+     name never matches an alias and a game asking for "sit" finds nothing, so
+     the prefix goes before anything else is decided. */
+  const s = String(raw || "").replace(/^.*\|/, "")
+    .replace(/mixamo\.com/gi, " ").replace(/[_\-.]/g, " ");
   for (const [re, name] of CLIP_ALIASES) if (re.test(s)) return name;
-  return s.trim().toLowerCase().replace(/\s+/g, "_") || "idle";
+  return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "idle";
+}
+
+/** Two clips that both resolve to "idle" leave one of them unreachable — a
+ *  game looks a clip up by name and gets whichever the loader saw first. Keep
+ *  the longest for each name, which is the fully authored one rather than a
+ *  stub or a transition. */
+function dedupeClips(clips) {
+  const best = new Map();
+  for (const c of clips) {
+    const prev = best.get(c.name);
+    if (!prev || c.duration > prev.duration) best.set(c.name, c);
+  }
+  return [...best.values()];
 }
 
 /** The real clip is the longest; FBX exports carry a two-keyframe "Targeting
@@ -282,7 +307,7 @@ const slug = (s) => path.basename(s).replace(/\.[^.]+$/, "")
 
 /* Exported so tests can exercise the fiddly parts — clip naming, the embedded
    image scan and the GLB surgery — without running an ingest. */
-export { clipName, embeddedImage, injectTexture, slug, packGltf, repairMaterials, resolveAsset, detachImage };
+export { clipName, embeddedImage, injectTexture, slug, packGltf, repairMaterials, resolveAsset, detachImage, dedupeClips };
 
 /* ---------------------------------- run ----------------------------------- */
 const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
@@ -349,7 +374,7 @@ if (fbxs.length) {
     const { file, obj } = body;
     const own = (obj.animations || []).map((c) => { c.name = clipName(c.name); return c; })
       .filter((c) => c.duration > 0.2);          // drop the two-keyframe pose clips
-    const clips = own.length ? own : shared;
+    const clips = dedupeClips(own.length ? own : shared);
 
     const size = new THREE.Vector3();
     new THREE.Box3().setFromObject(obj).getSize(size);
