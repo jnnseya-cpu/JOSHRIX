@@ -75,6 +75,73 @@ function clipName(raw) {
   return s.trim().toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "idle";
 }
 
+/* A preview render is not a skin. Injecting one as a character's texture is
+ * worse than shipping it untextured, and the artist's "TextureTutorial.png"
+ * sits in the same folder as the real map. */
+const NOT_A_SKIN = /preview|thumb|screenshot|render|banner|logo|tutorial|normal|rough|metal|_ao\b|emis|specular|opacity/i;
+
+/**
+ * Find the texture a model actually uses.
+ *
+ * Quaternius puts the model in `<pack>/FBX/` and its texture in `<pack>/` or
+ * `<pack>/Blends/` — never beside the model. The original search required the
+ * image to live under the FBX's OWN directory, so it matched nothing, for
+ * every pack: all 159 characters exported with no texture at all and the
+ * zombie shipped white despite its ZombieTexture.png being right there.
+ *
+ * So climb to the PACK and search that, preferring a texture named after the
+ * model — "ZombieTexture.png" for Zombie.fbx rather than a packmate's map.
+ *
+ * The climb has to stop at the pack or it does real damage. Climbing to the
+ * drop folder gave the Alien, whose pack ships no texture at all, some other
+ * pack's skin; climbing one level from `Old/` would put a fish texture on a
+ * cat. A supplier marks the boundary for us: a pack is the folder holding the
+ * format directories, so the first ancestor containing an `FBX/` or `Blends/`
+ * is where the search runs and stops. A pack with no texture returns null,
+ * which is the honest answer.
+ */
+const FORMAT_DIR = /^(fbx|gltf|glb|obj|blend|blends|textures?|source|sources)$/i;
+
+/* Names a supplier gives a map that covers the whole model, as opposed to one
+   prop on it. "ClothedDarkSkin" and "ZombieTexture" qualify; "Tie" does not. */
+const WHOLE_BODY_MAP = /texture|skin|albedo|basecolou?r|diffuse|colou?r|atlas|palette/i;
+
+function findTexture(file, files, root) {
+  const key = slug(file);
+  const score = (f) => {
+    const b = slug(f);
+    return (b.includes(key) || key.includes(b)) ? 2 : 0;
+  };
+  const stop = path.resolve(root);
+  let dir = path.resolve(path.dirname(file));
+  for (;;) {
+    // the pack is whichever comes first: a folder holding format directories,
+    // or a direct child of the drop folder (a pack that keeps its models loose
+    // has no FBX/ to recognise it by)
+    const atPack = dir === stop || path.dirname(dir) === stop
+      || fs.readdirSync(dir, { withFileTypes: true })
+        .some((e) => e.isDirectory() && FORMAT_DIR.test(e.name));
+    if (atPack) {
+      const here = files.filter((f) => /\.(png|jpe?g)$/i.test(f)
+        && path.resolve(f).startsWith(dir + path.sep)
+        && !NOT_A_SKIN.test(path.basename(f)));
+      if (!here.length) return null;
+      here.sort((a, b) => score(b) - score(a) || a.length - b.length);
+      /* A texture must be named for the model, or name itself as a whole-body
+         map. "Animated Men Characters" ships exactly one usable PNG — Tie.png,
+         the map for a tie — so "the pack's only image" is not good enough: it
+         stretched a tie over an entire character and produced a white man
+         wearing a dark smear. An unrelated image is worse than none, because
+         without one the model at least keeps its own material colours. */
+      return score(here[0]) > 0 || WHOLE_BODY_MAP.test(path.basename(here[0]))
+        ? here[0] : null;
+    }
+    const up = path.dirname(dir);
+    if (up === dir) return null;
+    dir = up;
+  }
+}
+
 /** Two clips that both resolve to "idle" leave one of them unreachable — a
  *  game looks a clip up by name and gets whichever the loader saw first. Keep
  *  the longest for each name, which is the fully authored one rather than a
@@ -307,7 +374,7 @@ const slug = (s) => path.basename(s).replace(/\.[^.]+$/, "")
 
 /* Exported so tests can exercise the fiddly parts — clip naming, the embedded
    image scan and the GLB surgery — without running an ingest. */
-export { clipName, embeddedImage, injectTexture, slug, packGltf, repairMaterials, resolveAsset, detachImage, dedupeClips };
+export { clipName, embeddedImage, injectTexture, slug, packGltf, repairMaterials, resolveAsset, detachImage, dedupeClips, findTexture };
 
 /* ---------------------------------- run ----------------------------------- */
 const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
@@ -382,6 +449,24 @@ if (fbxs.length) {
     const holder = new THREE.Group();
     holder.add(obj); holder.scale.setScalar(scale); holder.updateMatrixWorld(true);
 
+    /* A model with no UV coordinates cannot use a texture at all, and most of
+       these packs are exactly that: flat per-material colours, or vertex
+       colours, and nothing to map an image onto. Deciding this BEFORE the
+       materials are rebuilt is what lets the two cases keep their colour. */
+    let hasUV = false, hasVertexColour = false;
+    obj.traverse((n) => {
+      if (!n.isMesh && !n.isSkinnedMesh) return;
+      if (n.geometry?.attributes?.uv) hasUV = true;
+      if (n.geometry?.attributes?.color) hasVertexColour = true;
+    });
+
+    // texture: one named for this model inside its pack, else one baked into
+    // the FBX (Mixamo does that). Only worth looking for if there are UVs.
+    const skin = hasUV ? findTexture(file, files, SRC) : null;
+    let image = skin
+      ? { data: fs.readFileSync(skin), mime: /\.png$/i.test(skin) ? "image/png" : "image/jpeg" }
+      : (hasUV ? embeddedImage(fs.readFileSync(file)) : null);
+
     const flipped = new Set();
     obj.traverse((n) => {
       if (!n.isMesh && !n.isSkinnedMesh) return;
@@ -391,7 +476,27 @@ if (fbxs.length) {
         uv.needsUpdate = true; flipped.add(uv);
       }
       const mats = Array.isArray(n.material) ? n.material : [n.material];
-      const conv = mats.map(() => new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, metalness: 0 }));
+      /* FBX materials are Phong, which glTF cannot express, so they are rebuilt
+         as PBR. Rebuilding them as flat WHITE, which is what this did, threw
+         away the only colour most of these models have: the robot and the men
+         and women carry neither texture nor vertex colours, just a material
+         colour each, and all of them exported as white ghosts.
+         The colour is dropped only when a texture is injected over it, so the
+         texture is not tinted by a factor the artist never intended. */
+      const conv = mats.map((m) => {
+        const s = new THREE.MeshStandardMaterial({
+          color: image ? 0xffffff : (m?.color ? m.color.clone() : 0xffffff),
+          vertexColors: !!m?.vertexColors,
+          roughness: 0.85, metalness: 0,
+        });
+        /* Quaternius exports these packs with emissive set EQUAL to diffuse —
+           the fish, the dragon, the hairstyles. Dropping it renders them at
+           half the light the artist saw, which is why the Tang came out a
+           near-black blob instead of a navy fish. glTF has emissiveFactor, so
+           carry it across rather than second-guessing the source. */
+        if (!image && m?.emissive && m.emissive.getHex() !== 0) s.emissive.copy(m.emissive);
+        return s;
+      });
       n.material = Array.isArray(n.material) ? conv : conv[0];
     });
 
@@ -401,17 +506,13 @@ if (fbxs.length) {
         exporter.parse(holder, res, rej, { binary: true, animations: clips })));
     } catch (e) { skipped.push(`${path.basename(file)}: export failed — ${e.message.slice(0, 80)}`); continue; }
 
-    // texture: a sibling image first, then whatever is baked into the FBX
-    const sibling = files.find((f) => /\.(png|jpe?g)$/i.test(f) &&
-      path.dirname(f).startsWith(path.dirname(file)) && !/normal|rough|metal|ao|emis/i.test(f));
-    let image = sibling
-      ? { data: fs.readFileSync(sibling), mime: /\.png$/i.test(sibling) ? "image/png" : "image/jpeg" }
-      : embeddedImage(fs.readFileSync(file));
     if (image) {
       try { out = injectTexture(out, image); }
       catch (e) { console.log(`  ! ${path.basename(file)}: ${e.message} — writing untextured`); }
-    } else {
-      console.log(`  ! ${path.basename(file)}: no texture found — writing untextured`);
+    } else if (hasUV) {
+      // UVs but nothing to map onto them is the one case that really is a
+      // loss — the pack shipped no texture and the FBX carries none either.
+      console.log(`  ! ${path.basename(file)}: has UVs but no texture found — flat colour only`);
     }
 
     const name = slug(file) + ".glb";

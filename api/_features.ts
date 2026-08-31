@@ -26,14 +26,14 @@
  * the number to change and there is exactly one place to change it.
  */
 export const LIBRARY = {
-  models: 2584,
+  models: 2591,
   packs: 35,
   /** rigged characters carrying skeletal clips, not merely posed */
-  animated: 274,
+  animated: 281,
   sprites: 2553,
 } as const;
 
-/** "2,584" — the form every marketing claim uses. */
+/** "2,591" — the form every marketing claim uses. */
 export const n = (v: number) => v.toLocaleString("en-GB");
 
 export type Feature = {

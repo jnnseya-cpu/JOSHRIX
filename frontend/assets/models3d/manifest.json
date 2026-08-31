@@ -31245,7 +31245,7 @@
             "space",
             "scifi"
           ],
-          "bytes": 1509632,
+          "bytes": 1510460,
           "height": 1.873,
           "width": 2.136,
           "depth": 0.785,
@@ -31268,7 +31268,7 @@
             "space",
             "scifi"
           ],
-          "bytes": 1703860,
+          "bytes": 1704688,
           "height": 1.878,
           "width": 2.001,
           "depth": 0.879,
@@ -31291,7 +31291,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 347056,
+          "bytes": 348008,
           "height": 1.849,
           "width": 2.089,
           "depth": 3.035,
@@ -31309,7 +31309,7 @@
             "character",
             "humanoid"
           ],
-          "bytes": 1095660,
+          "bytes": 1096124,
           "height": 1.947,
           "width": 0.369,
           "depth": 2.074,
@@ -31330,7 +31330,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 1188484,
+          "bytes": 1188968,
           "height": 1.883,
           "width": 0.349,
           "depth": 1.711,
@@ -31351,7 +31351,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 1188448,
+          "bytes": 1188936,
           "height": 1.883,
           "width": 0.349,
           "depth": 1.711,
@@ -31372,7 +31372,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 667628,
+          "bytes": 667964,
           "height": 1.962,
           "width": 0.943,
           "depth": 8.356,
@@ -31392,7 +31392,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 319244,
+          "bytes": 319752,
           "height": 1.863,
           "width": 2.824,
           "depth": 4.486,
@@ -31409,7 +31409,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 338288,
+          "bytes": 525020,
           "height": 1.85,
           "width": 0.739,
           "depth": 2.044,
@@ -31439,7 +31439,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 302404,
+          "bytes": 302884,
           "height": 1.85,
           "width": 1.259,
           "depth": 1.689,
@@ -31454,7 +31454,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 465416,
+          "bytes": 466280,
           "height": 1.606,
           "width": 1.076,
           "depth": 1.699,
@@ -31471,7 +31471,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 283024,
+          "bytes": 283536,
           "height": 1.855,
           "width": 1.685,
           "depth": 3.067,
@@ -31504,7 +31504,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 388964,
+          "bytes": 389644,
           "height": 1.839,
           "width": 1.165,
           "depth": 2.089,
@@ -31522,7 +31522,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 278308,
+          "bytes": 278800,
           "height": 1.832,
           "width": 2.66,
           "depth": 3.512,
@@ -31540,7 +31540,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 325324,
+          "bytes": 326312,
           "height": 1.79,
           "width": 1.311,
           "depth": 2.256,
@@ -31557,7 +31557,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 289428,
+          "bytes": 290096,
           "height": 1.856,
           "width": 2.094,
           "depth": 3.1,
@@ -31574,7 +31574,7 @@
           "tags": [
             "vehicle"
           ],
-          "bytes": 26992,
+          "bytes": 27324,
           "height": 1.85,
           "width": 4.298,
           "depth": 8.295,
@@ -31586,7 +31586,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 289536,
+          "bytes": 290196,
           "height": 1.854,
           "width": 2.179,
           "depth": 3.096,
@@ -31605,7 +31605,7 @@
             "creature",
             "vehicle"
           ],
-          "bytes": 293952,
+          "bytes": 294616,
           "height": 1.856,
           "width": 1.409,
           "depth": 3.082,
@@ -31653,7 +31653,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 329460,
+          "bytes": 330132,
           "height": 1.836,
           "width": 2.662,
           "depth": 3.182,
@@ -31670,7 +31670,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 53728,
+          "bytes": 54068,
           "height": 1.85,
           "width": 0.536,
           "depth": 0.528,
@@ -31681,7 +31681,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 303576,
+          "bytes": 304072,
           "height": 1.806,
           "width": 2.24,
           "depth": 3.717,
@@ -31694,12 +31694,31 @@
           ]
         },
         {
+          "file": "packs/quaternius-fbx/cow.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 480424,
+          "height": 1.85,
+          "width": 0.808,
+          "depth": 3.296,
+          "tris": 796,
+          "clips": [
+            "walk",
+            "die",
+            "jump",
+            "idle",
+            "run"
+          ]
+        },
+        {
           "file": "packs/quaternius-fbx/cowfish.glb",
           "tags": [
             "animal",
             "creature"
           ],
-          "bytes": 273280,
+          "bytes": 273952,
           "height": 1.711,
           "width": 2.581,
           "depth": 4.284,
@@ -31716,7 +31735,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 139528,
+          "bytes": 140016,
           "height": 1.85,
           "width": 2.184,
           "depth": 5.142,
@@ -31727,7 +31746,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 123072,
+          "bytes": 123396,
           "height": 1.85,
           "width": 3.01,
           "depth": 7.086,
@@ -31739,7 +31758,7 @@
             "prop",
             "structure"
           ],
-          "bytes": 54420,
+          "bytes": 54744,
           "height": 1.85,
           "width": 2.11,
           "depth": 2.298,
@@ -31750,7 +31769,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 139528,
+          "bytes": 140016,
           "height": 1.85,
           "width": 3.523,
           "depth": 5.224,
@@ -31777,7 +31796,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 122432,
+          "bytes": 122756,
           "height": 1.835,
           "width": 2.018,
           "depth": 5.68,
@@ -31793,7 +31812,7 @@
             "character",
             "creature"
           ],
-          "bytes": 504736,
+          "bytes": 505752,
           "height": 2.014,
           "width": 1.782,
           "depth": 1.94,
@@ -31825,7 +31844,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 866964,
+          "bytes": 868636,
           "height": 1.85,
           "width": 1.998,
           "depth": 0.375,
@@ -31846,7 +31865,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 971884,
+          "bytes": 973220,
           "height": 1.858,
           "width": 2.006,
           "depth": 0.388,
@@ -31867,7 +31886,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 828024,
+          "bytes": 828860,
           "height": 1.863,
           "width": 1.998,
           "depth": 0.521,
@@ -31888,7 +31907,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 37872,
+          "bytes": 38036,
           "height": 1.85,
           "width": 1.525,
           "depth": 1.628,
@@ -31899,7 +31918,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 37868,
+          "bytes": 38036,
           "height": 1.85,
           "width": 1.379,
           "depth": 1.247,
@@ -31910,7 +31929,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 27496,
+          "bytes": 27664,
           "height": 1.85,
           "width": 1.85,
           "depth": 1.974,
@@ -31921,7 +31940,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 35912,
+          "bytes": 36236,
           "height": 1.85,
           "width": 1.269,
           "depth": 1.909,
@@ -31932,7 +31951,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 158916,
+          "bytes": 159572,
           "height": 1.85,
           "width": 0.703,
           "depth": 0.549,
@@ -31943,7 +31962,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 164244,
+          "bytes": 164900,
           "height": 1.85,
           "width": 0.883,
           "depth": 1.709,
@@ -31954,7 +31973,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 161088,
+          "bytes": 161744,
           "height": 1.85,
           "width": 0.418,
           "depth": 1.032,
@@ -31965,7 +31984,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 164232,
+          "bytes": 164888,
           "height": 1.85,
           "width": 0.635,
           "depth": 0.878,
@@ -31976,7 +31995,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 164156,
+          "bytes": 164812,
           "height": 1.85,
           "width": 0.61,
           "depth": 0.833,
@@ -31987,7 +32006,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 164244,
+          "bytes": 164900,
           "height": 1.85,
           "width": 0.507,
           "depth": 0.35,
@@ -31998,7 +32017,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 164268,
+          "bytes": 164924,
           "height": 1.85,
           "width": 0.501,
           "depth": 0.462,
@@ -32009,7 +32028,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 158828,
+          "bytes": 159484,
           "height": 1.85,
           "width": 0.716,
           "depth": 0.346,
@@ -32020,7 +32039,7 @@
           "tags": [
             "vehicle"
           ],
-          "bytes": 910244,
+          "bytes": 911408,
           "height": 1.863,
           "width": 1.998,
           "depth": 0.38,
@@ -32041,7 +32060,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 164240,
+          "bytes": 164896,
           "height": 1.85,
           "width": 0.528,
           "depth": 0.675,
@@ -32053,7 +32072,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 82580,
+          "bytes": 83056,
           "height": 1.844,
           "width": 1.705,
           "depth": 4.916,
@@ -32068,7 +32087,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 136108,
+          "bytes": 136588,
           "height": 1.863,
           "width": 0.806,
           "depth": 5.578,
@@ -32083,7 +32102,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 122128,
+          "bytes": 122572,
           "height": 1.868,
           "width": 0.391,
           "depth": 3,
@@ -32098,7 +32117,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 147912,
+          "bytes": 148404,
           "height": 1.839,
           "width": 0.435,
           "depth": 3.564,
@@ -32113,7 +32132,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 25768,
+          "bytes": 25932,
           "height": 1.85,
           "width": 0.061,
           "depth": 0.169,
@@ -32125,7 +32144,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 44064,
+          "bytes": 44392,
           "height": 1.85,
           "width": 0.137,
           "depth": 0.145,
@@ -32137,7 +32156,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 74532,
+          "bytes": 74872,
           "height": 1.85,
           "width": 0.101,
           "depth": 0.121,
@@ -32149,7 +32168,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 73384,
+          "bytes": 73720,
           "height": 1.85,
           "width": 0.165,
           "depth": 0.118,
@@ -32161,7 +32180,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 95372,
+          "bytes": 95676,
           "height": 1.85,
           "width": 0.165,
           "depth": 0.12,
@@ -32173,7 +32192,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 333124,
+          "bytes": 333960,
           "height": 1.853,
           "width": 0.958,
           "depth": 2.17,
@@ -32191,7 +32210,7 @@
             "foliage",
             "nature"
           ],
-          "bytes": 293432,
+          "bytes": 294112,
           "height": 1.836,
           "width": 1.959,
           "depth": 3.309,
@@ -32208,7 +32227,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 995836,
+          "bytes": 996500,
           "height": 1.938,
           "width": 4.521,
           "depth": 4.146,
@@ -32227,7 +32246,7 @@
             "character",
             "creature"
           ],
-          "bytes": 654832,
+          "bytes": 655840,
           "height": 1.85,
           "width": 2.121,
           "depth": 0.346,
@@ -32249,7 +32268,7 @@
             "character",
             "creature"
           ],
-          "bytes": 271688,
+          "bytes": 272368,
           "height": 1.844,
           "width": 2.607,
           "depth": 3.101,
@@ -32267,7 +32286,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 325576,
+          "bytes": 326544,
           "height": 1.79,
           "width": 1.311,
           "depth": 2.256,
@@ -32284,7 +32303,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 74012,
+          "bytes": 74332,
           "height": 1.85,
           "width": 1.761,
           "depth": 1.743,
@@ -32295,7 +32314,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 57140,
+          "bytes": 57304,
           "height": 1.85,
           "width": 1.347,
           "depth": 1.459,
@@ -32306,18 +32325,37 @@
           "tags": [
             "prop"
           ],
-          "bytes": 97280,
+          "bytes": 97760,
           "height": 1.85,
           "width": 1.256,
           "depth": 1.438,
           "tris": 656
         },
         {
+          "file": "packs/quaternius-fbx/horse.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 437272,
+          "height": 1.85,
+          "width": 0.688,
+          "depth": 2.474,
+          "tris": 690,
+          "clips": [
+            "walk",
+            "die",
+            "jump",
+            "idle",
+            "run"
+          ]
+        },
+        {
           "file": "packs/quaternius-fbx/humphead.glb",
           "tags": [
             "prop"
           ],
-          "bytes": 293384,
+          "bytes": 294060,
           "height": 1.854,
           "width": 2.347,
           "depth": 3.346,
@@ -32334,7 +32372,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 56848,
+          "bytes": 57344,
           "height": 1.85,
           "width": 0.155,
           "depth": 0.288,
@@ -32346,7 +32384,7 @@
             "character",
             "humanoid"
           ],
-          "bytes": 650944,
+          "bytes": 651432,
           "height": 1.854,
           "width": 2.251,
           "depth": 0.457,
@@ -32366,7 +32404,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 308616,
+          "bytes": 309444,
           "height": 1.853,
           "width": 1.316,
           "depth": 2.347,
@@ -32384,7 +32422,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 383980,
+          "bytes": 384652,
           "height": 1.839,
           "width": 1.362,
           "depth": 2.253,
@@ -32397,11 +32435,26 @@
           ]
         },
         {
+          "file": "packs/quaternius-fbx/llama.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 263828,
+          "height": 1.848,
+          "width": 0.498,
+          "depth": 1.551,
+          "tris": 662,
+          "clips": [
+            "jump",
+            "idle"
+          ]
+        },
+        {
           "file": "packs/quaternius-fbx/lure_1.glb",
           "tags": [
             "prop"
           ],
-          "bytes": 70964,
+          "bytes": 71464,
           "height": 1.85,
           "width": 5.598,
           "depth": 1.85,
@@ -32412,7 +32465,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 74544,
+          "bytes": 75208,
           "height": 1.85,
           "width": 5.598,
           "depth": 1.85,
@@ -32423,7 +32476,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 86128,
+          "bytes": 86632,
           "height": 1.85,
           "width": 5.598,
           "depth": 1.85,
@@ -32434,7 +32487,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 80160,
+          "bytes": 81148,
           "height": 1.85,
           "width": 5.598,
           "depth": 1.85,
@@ -32445,7 +32498,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 74488,
+          "bytes": 75156,
           "height": 1.85,
           "width": 5.598,
           "depth": 1.85,
@@ -32456,7 +32509,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 87652,
+          "bytes": 88604,
           "height": 1.85,
           "width": 5.598,
           "depth": 1.85,
@@ -32467,7 +32520,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 831704,
+          "bytes": 832692,
           "height": 1.856,
           "width": 1.992,
           "depth": 0.361,
@@ -32488,7 +32541,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 18364,
+          "bytes": 18528,
           "height": 1.85,
           "width": 1.499,
           "depth": 1.527,
@@ -32499,7 +32552,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 19908,
+          "bytes": 20076,
           "height": 1.85,
           "width": 1.772,
           "depth": 2.017,
@@ -32510,7 +32563,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 22960,
+          "bytes": 23128,
           "height": 1.85,
           "width": 1.526,
           "depth": 1.754,
@@ -32521,7 +32574,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 19280,
+          "bytes": 19448,
           "height": 1.85,
           "width": 2.297,
           "depth": 2.651,
@@ -32532,7 +32585,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 845472,
+          "bytes": 846308,
           "height": 1.861,
           "width": 1.998,
           "depth": 0.395,
@@ -32553,7 +32606,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 112376,
+          "bytes": 113032,
           "height": 1.85,
           "width": 0.997,
           "depth": 0.594,
@@ -32564,7 +32617,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 112528,
+          "bytes": 113184,
           "height": 1.85,
           "width": 1.265,
           "depth": 1.715,
@@ -32575,7 +32628,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 112684,
+          "bytes": 113340,
           "height": 1.85,
           "width": 0.584,
           "depth": 1.066,
@@ -32586,7 +32639,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 841404,
+          "bytes": 842904,
           "height": 1.849,
           "width": 1.985,
           "depth": 0.36,
@@ -32607,7 +32660,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 112624,
+          "bytes": 113280,
           "height": 1.85,
           "width": 0.748,
           "depth": 0.849,
@@ -32618,7 +32671,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 112700,
+          "bytes": 113356,
           "height": 1.85,
           "width": 0.741,
           "depth": 0.813,
@@ -32629,7 +32682,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 112620,
+          "bytes": 113276,
           "height": 1.85,
           "width": 0.598,
           "depth": 0.334,
@@ -32640,7 +32693,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 112652,
+          "bytes": 113308,
           "height": 1.85,
           "width": 0.69,
           "depth": 0.445,
@@ -32651,7 +32704,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 112632,
+          "bytes": 113288,
           "height": 1.85,
           "width": 0.961,
           "depth": 0.349,
@@ -32662,7 +32715,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 112636,
+          "bytes": 113292,
           "height": 1.85,
           "width": 0.648,
           "depth": 0.324,
@@ -32673,7 +32726,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 927736,
+          "bytes": 928716,
           "height": 1.855,
           "width": 1.991,
           "depth": 0.403,
@@ -32694,7 +32747,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 112620,
+          "bytes": 113276,
           "height": 1.85,
           "width": 0.586,
           "depth": 0.702,
@@ -32706,7 +32759,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 301276,
+          "bytes": 301952,
           "height": 1.856,
           "width": 2.519,
           "depth": 4.229,
@@ -32723,7 +32776,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 176972,
+          "bytes": 177140,
           "height": 1.136,
           "width": 7.101,
           "depth": 9.927,
@@ -32737,7 +32790,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 293044,
+          "bytes": 293544,
           "height": 1.853,
           "width": 2.096,
           "depth": 2.753,
@@ -32754,7 +32807,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 618488,
+          "bytes": 618980,
           "height": 1.922,
           "width": 0.627,
           "depth": 4.011,
@@ -32774,7 +32827,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 289960,
+          "bytes": 290756,
           "height": 1.843,
           "width": 2.362,
           "depth": 3.51,
@@ -32791,7 +32844,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 392880,
+          "bytes": 393368,
           "height": 1.85,
           "width": 0.726,
           "depth": 2.492,
@@ -32802,12 +32855,27 @@
           ]
         },
         {
+          "file": "packs/quaternius-fbx/pig.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 233572,
+          "height": 1.856,
+          "width": 1.339,
+          "depth": 3.956,
+          "tris": 562,
+          "clips": [
+            "jump",
+            "idle"
+          ]
+        },
+        {
           "file": "packs/quaternius-fbx/pineapple.glb",
           "tags": [
             "tree",
             "nature"
           ],
-          "bytes": 328804,
+          "bytes": 329280,
           "height": 1.85,
           "width": 0.778,
           "depth": 1.921,
@@ -32837,7 +32905,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 438824,
+          "bytes": 439812,
           "height": 1.802,
           "width": 2.381,
           "depth": 2.762,
@@ -32850,11 +32918,26 @@
           ]
         },
         {
+          "file": "packs/quaternius-fbx/pug.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 228656,
+          "height": 1.854,
+          "width": 1.014,
+          "depth": 2.447,
+          "tris": 644,
+          "clips": [
+            "jump",
+            "idle"
+          ]
+        },
+        {
           "file": "packs/quaternius-fbx/rat.glb",
           "tags": [
             "prop"
           ],
-          "bytes": 988224,
+          "bytes": 988552,
           "height": 1.889,
           "width": 1.225,
           "depth": 5.751,
@@ -32888,7 +32971,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 292196,
+          "bytes": 292856,
           "height": 1.853,
           "width": 2.189,
           "depth": 3.632,
@@ -32905,7 +32988,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 1285500,
+          "bytes": 1288564,
           "height": 1.85,
           "width": 2.64,
           "depth": 1.12,
@@ -32930,7 +33013,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 284664,
+          "bytes": 285336,
           "height": 1.855,
           "width": 2.518,
           "depth": 4.227,
@@ -32947,7 +33030,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 150164,
+          "bytes": 150476,
           "height": 1.819,
           "width": 2.045,
           "depth": 5.555,
@@ -32957,12 +33040,28 @@
           ]
         },
         {
+          "file": "packs/quaternius-fbx/sheep.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 246576,
+          "height": 1.848,
+          "width": 0.942,
+          "depth": 2.509,
+          "tris": 612,
+          "clips": [
+            "jump",
+            "idle"
+          ]
+        },
+        {
           "file": "packs/quaternius-fbx/short_sword.glb",
           "tags": [
             "weapon",
             "prop"
           ],
-          "bytes": 58324,
+          "bytes": 58820,
           "height": 1.85,
           "width": 0.43,
           "depth": 0.116,
@@ -32973,7 +33072,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 13476,
+          "bytes": 13636,
           "height": 1.85,
           "width": 10.514,
           "depth": 4.141,
@@ -32986,7 +33085,7 @@
             "character",
             "creature"
           ],
-          "bytes": 405288,
+          "bytes": 405448,
           "height": 1.883,
           "width": 1.704,
           "depth": 0.492,
@@ -33004,7 +33103,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 1624284,
+          "bytes": 1625956,
           "height": 1.865,
           "width": 2,
           "depth": 0.372,
@@ -33025,7 +33124,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 1649028,
+          "bytes": 1650364,
           "height": 1.865,
           "width": 1.999,
           "depth": 0.384,
@@ -33046,7 +33145,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 1710888,
+          "bytes": 1711720,
           "height": 1.866,
           "width": 1.989,
           "depth": 0.504,
@@ -33067,7 +33166,7 @@
           "tags": [
             "vehicle"
           ],
-          "bytes": 1677864,
+          "bytes": 1679032,
           "height": 1.865,
           "width": 1.986,
           "depth": 0.375,
@@ -33088,7 +33187,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 1745752,
+          "bytes": 1746740,
           "height": 1.857,
           "width": 1.981,
           "depth": 0.353,
@@ -33109,7 +33208,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 1812640,
+          "bytes": 1813476,
           "height": 1.863,
           "width": 1.987,
           "depth": 0.386,
@@ -33130,7 +33229,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 1760540,
+          "bytes": 1762036,
           "height": 1.854,
           "width": 1.977,
           "depth": 0.352,
@@ -33151,7 +33250,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 2099392,
+          "bytes": 2100372,
           "height": 1.856,
           "width": 1.98,
           "depth": 0.395,
@@ -33172,7 +33271,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 389852,
+          "bytes": 390876,
           "height": 1.766,
           "width": 0.613,
           "depth": 1.675,
@@ -33189,7 +33288,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 404756,
+          "bytes": 405780,
           "height": 1.793,
           "width": 0.619,
           "depth": 1.691,
@@ -33208,7 +33307,7 @@
             "character",
             "creature"
           ],
-          "bytes": 838280,
+          "bytes": 838616,
           "height": 1.801,
           "width": 5.485,
           "depth": 4.869,
@@ -33226,7 +33325,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 815724,
+          "bytes": 816220,
           "height": 1.87,
           "width": 0.829,
           "depth": 4.062,
@@ -33246,7 +33345,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 279396,
+          "bytes": 279888,
           "height": 1.855,
           "width": 1.038,
           "depth": 1.214,
@@ -33264,7 +33363,7 @@
             "weapon",
             "prop"
           ],
-          "bytes": 66128,
+          "bytes": 66784,
           "height": 1.85,
           "width": 0.328,
           "depth": 0.097,
@@ -33278,7 +33377,7 @@
             "animal",
             "creature"
           ],
-          "bytes": 291156,
+          "bytes": 291828,
           "height": 1.844,
           "width": 1.734,
           "depth": 3.112,
@@ -33295,7 +33394,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 315056,
+          "bytes": 315888,
           "height": 1.848,
           "width": 2.234,
           "depth": 2.906,
@@ -33312,7 +33411,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 283444,
+          "bytes": 284120,
           "height": 1.804,
           "width": 3.066,
           "depth": 5.43,
@@ -33329,7 +33428,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 676004,
+          "bytes": 676832,
           "height": 1.919,
           "width": 1.002,
           "depth": 3.911,
@@ -33349,7 +33448,7 @@
             "biome",
             "nature"
           ],
-          "bytes": 607544,
+          "bytes": 608040,
           "height": 1.907,
           "width": 0.589,
           "depth": 2.325,
@@ -33368,7 +33467,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 304340,
+          "bytes": 305176,
           "height": 1.855,
           "width": 2.058,
           "depth": 2.969,
@@ -33385,7 +33484,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 308812,
+          "bytes": 309476,
           "height": 1.86,
           "width": 0.988,
           "depth": 2.183,
@@ -33402,7 +33501,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 582252,
+          "bytes": 582760,
           "height": 1.679,
           "width": 0.803,
           "depth": 4.043,
@@ -33421,7 +33520,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 818420,
+          "bytes": 819072,
           "height": 2.621,
           "width": 2.51,
           "depth": 1.655,
@@ -33437,7 +33536,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 537692,
+          "bytes": 538188,
           "height": 1.849,
           "width": 2.898,
           "depth": 0.475,
@@ -33482,7 +33581,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 161588,
+          "bytes": 162244,
           "height": 1.85,
           "width": 0.467,
           "depth": 0.309,
@@ -33493,7 +33592,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 20960,
+          "bytes": 21300,
           "height": 1.85,
           "width": 1.89,
           "depth": 1.648,
@@ -33504,7 +33603,7 @@
           "tags": [
             "prop"
           ],
-          "bytes": 265524,
+          "bytes": 266024,
           "height": 1.855,
           "width": 2.092,
           "depth": 2.901,
@@ -33517,12 +33616,30 @@
           ]
         },
         {
+          "file": "packs/quaternius-fbx/zebra.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 621012,
+          "height": 1.849,
+          "width": 0.672,
+          "depth": 2.415,
+          "tris": 1354,
+          "clips": [
+            "walk",
+            "die",
+            "jump",
+            "idle",
+            "run"
+          ]
+        },
+        {
           "file": "packs/quaternius-fbx/zebra_clown_fish.glb",
           "tags": [
             "animal",
             "creature"
           ],
-          "bytes": 326920,
+          "bytes": 327436,
           "height": 1.841,
           "width": 2.647,
           "depth": 3.23,
@@ -33541,7 +33658,7 @@
             "character",
             "creature"
           ],
-          "bytes": 1003312,
+          "bytes": 1003812,
           "height": 2.14,
           "width": 0.448,
           "depth": 2.01,
@@ -33561,7 +33678,7 @@
             "character",
             "creature"
           ],
-          "bytes": 1003328,
+          "bytes": 1003832,
           "height": 2.14,
           "width": 0.448,
           "depth": 2.01,

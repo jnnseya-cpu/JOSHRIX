@@ -346,10 +346,35 @@ defects, all now fixed:
   per name — the authored animation rather than a transition stub. That file is
   now `idle,jump,die,run,walk,sit,pickup,attack` and 180 KB smaller.
 
-`tools/validate-models.mjs` then loaded **all 2,584 models through a real
-GLTFLoader in a real browser: 2,584 loaded, 0 failed**, and wrote the measured
-heights, footprints and clip names back into the manifest. The library is
-**2,584 models / 35 packs**, and animated models went **178 → 274**.
+### Then: looking at them, which found four more
+
+`validate-models.mjs` passed all 2,591 — and it was still wrong, because
+**"loads" and "looks right" are different claims.** `tools/contact-sheet.mjs`
+(new) renders a pack to a single labelled image on a mid-grey ground, and the
+first sheet showed characters that had validated perfectly rendering as white
+and black silhouettes.
+
+- **Every one of the 159 lost its texture.** The lookup required the image to
+  sit under the model's OWN folder, but Quaternius puts models in `<pack>/FBX/`
+  and textures in `<pack>/Blends/`. It matched nothing, ever. The search now
+  climbs to the pack — and stops there: climbing to the drop folder handed the
+  Alien another pack's skin, and one level from `Old/` would put a fish texture
+  on a cat.
+- **Materials were rebuilt flat white**, discarding the only colour most of
+  these models have. The robot, the men and the women carry no texture and no
+  vertex colours, just a material colour each, and all exported as white ghosts.
+- **`emissive` was dropped.** Quaternius exports these packs with emissive set
+  equal to diffuse, so the fish, dragon and hairstyles rendered at half the
+  light the artist saw.
+- **A tie was stretched over a whole man.** `Animated Men Characters` ships one
+  usable PNG — `Tie.png` — and "the pack's only image" was enough to make it a
+  full-body skin. A texture must now be named for the model or name itself as a
+  whole-body map.
+
+Final: **2,591 models / 35 packs, 2,591 loaded 0 failed, animated 178 → 281.**
+Ten models from the superseded 2016–17 `Old` packs are genuinely white in the
+source FBX — white materials, no UVs, no vertex colours — so there is no colour
+to recover.
 
 15 new assertions in t17. The FBX branch is no longer "written but unproven".
 
