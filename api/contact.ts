@@ -44,7 +44,7 @@ export default async function handler(req: any, res: any) {
 
   // header-injection-safe subject (no CR/LF ever reaches the mail headers)
   const subject = stripHeader(`[Contact · ${(topic || "General").slice(0, 40)}] ${name.slice(0, 60)}`);
-  const html = `<!DOCTYPE html><html><body style="margin:0;background:#131519;font-family:system-ui,sans-serif;color:#ececf4">
+  const html = `<!DOCTYPE html><html><body style="margin:0;background:#0F1117;font-family:system-ui,sans-serif;color:#ececf4">
 <div style="max-width:560px;margin:0 auto;padding:26px 20px">
   <p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9d9db3;margin:0 0 6px">joshrix.com contact form</p>
   <h1 style="font-size:18px;margin:0 0 14px">${esc(subject)}</h1>

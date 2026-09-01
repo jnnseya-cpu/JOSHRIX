@@ -90,7 +90,7 @@ export default async function handler(_req: any, res: any) {
 <meta property="og:title" content="What JOSHRIX Studio Does — Every Feature">
 <meta property="og:url" content="${SITE}/features">
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#0B0C0E">
+<meta name="theme-color" content="#07080B">
 <link rel="stylesheet" href="/assets/joshrix.css">
 <script type="application/ld+json">${JSON.stringify(jsonLd)}</script>
 <style>
@@ -101,10 +101,10 @@ export default async function handler(_req: any, res: any) {
   .fx-card{border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;background:rgba(255,255,255,.02)}
   .fx-card h3{margin:0 0 .6rem;font-size:1.05rem;line-height:1.35}
   .fx-card h3 a{color:var(--text,#e7e7f2);text-decoration:none}
-  .fx-card h3 a:hover{color:var(--cyan,#E4813C)}
+  .fx-card h3 a:hover{color:var(--cyan,#D92D3F)}
   .fx-card ul{margin:0;padding-left:1.05rem;color:var(--muted,#9d9db3);font-size:.9rem;line-height:1.6}
   .fx-links{display:flex;gap:.9rem;flex-wrap:wrap;margin-top:.9rem;font-size:.85rem}
-  .fx-go{color:var(--cyan,#E4813C);text-decoration:none;font-weight:600}
+  .fx-go{color:var(--cyan,#D92D3F);text-decoration:none;font-weight:600}
   .fx-read{color:#a78bfa;text-decoration:none}
   .fx-soon{color:var(--muted,#9d9db3);opacity:.7}
 </style></head><body>

@@ -68,10 +68,10 @@
   var css = [
     ".jx-navbtn{position:fixed;top:9px;right:12px;z-index:9998;width:42px;height:42px;",
     "display:flex;align-items:center;justify-content:center;border-radius:var(--r-sm,6px);cursor:pointer;",
-    "background:var(--ink-raised,#131519);border:1px solid var(--line,#22262E);color:var(--text,#ECEDEF);",
+    "background:var(--ink-raised,#0F1117);border:1px solid var(--line,#1D212B);color:var(--text,#EDEFF3);",
     "font-size:17px;line-height:1;padding:0;transition:background .15s,border-color .15s}",
-    ".jx-navbtn:hover{background:var(--ink-high,#191C21);border-color:var(--line-strong,#333945)}",
-    ".jx-navbtn:focus-visible{outline:2px solid var(--ember,#E4813C);outline-offset:2px}",
+    ".jx-navbtn:hover{background:var(--ink-high,#151822);border-color:var(--line-strong,#2C323F)}",
+    ".jx-navbtn:focus-visible{outline:2px solid var(--ember,#D92D3F);outline-offset:2px}",
     // The button was fixed at every width, so on desktop it sat on top of the
     // nav's own Launch Studio button and clipped it. Above 960px the full nav
     // links are visible and this is redundant.
@@ -80,21 +80,21 @@
     ".jx-navwrap[data-open='1']{display:block}",
     ".jx-navscrim{position:absolute;inset:0;background:rgba(5,6,7,.66)}",
     ".jx-navpanel{position:absolute;top:0;right:0;bottom:0;width:min(320px,86vw);overflow-y:auto;",
-    "background:var(--ink-raised,#131519);border-left:1px solid var(--line,#22262E);padding:14px 12px 28px;",
+    "background:var(--ink-raised,#0F1117);border-left:1px solid var(--line,#1D212B);padding:14px 12px 28px;",
     "box-shadow:-18px 0 48px rgba(0,0,0,.55)}",
     ".jx-navhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}",
-    ".jx-navhead b{color:var(--text,#ECEDEF);font-size:14px;letter-spacing:-.01em;text-transform:none;font-weight:700}",
-    ".jx-navclose{background:none;border:0;color:var(--text-3,#6C7280);font-size:24px;cursor:pointer;padding:4px 8px;line-height:1}",
-    ".jx-navclose:hover{color:var(--text,#ECEDEF)}",
+    ".jx-navhead b{color:var(--text,#EDEFF3);font-size:14px;letter-spacing:-.01em;text-transform:none;font-weight:700}",
+    ".jx-navclose{background:none;border:0;color:var(--text-3,#6A7180);font-size:24px;cursor:pointer;padding:4px 8px;line-height:1}",
+    ".jx-navclose:hover{color:var(--text,#EDEFF3)}",
     ".jx-navback{display:block;width:100%;text-align:left;margin:8px 0 4px;padding:10px 12px;border-radius:var(--r-sm,6px);",
-    "background:transparent;border:1px solid var(--line-strong,#333945);color:var(--text,#ECEDEF);font-size:14px;cursor:pointer}",
-    ".jx-navgrp{margin-top:16px;margin-bottom:2px;color:var(--text-3,#6C7280);font-size:11px;",
+    "background:transparent;border:1px solid var(--line-strong,#2C323F);color:var(--text,#EDEFF3);font-size:14px;cursor:pointer}",
+    ".jx-navgrp{margin-top:16px;margin-bottom:2px;color:var(--text-3,#6A7180);font-size:11px;",
     "letter-spacing:.08em;text-transform:uppercase;font-family:var(--mono,ui-monospace,monospace)}",
-    ".jx-navpanel a{display:block;padding:9px 12px;margin-top:2px;border-radius:var(--r-sm,6px);color:var(--text-2,#A5AAB4);",
+    ".jx-navpanel a{display:block;padding:9px 12px;margin-top:2px;border-radius:var(--r-sm,6px);color:var(--text-2,#A2A8B5);",
     "text-decoration:none;font-size:14px;border:1px solid transparent}",
-    ".jx-navpanel a:hover{background:rgba(255,255,255,.05);color:var(--text,#ECEDEF)}",
-    ".jx-navpanel a[aria-current='page']{background:var(--ember-dim,rgba(228,129,60,.11));",
-    "border-color:var(--ember-line,rgba(228,129,60,.34));color:var(--text,#ECEDEF)}",
+    ".jx-navpanel a:hover{background:rgba(255,255,255,.05);color:var(--text,#EDEFF3)}",
+    ".jx-navpanel a[aria-current='page']{background:var(--ember-dim,rgba(217,45,63,.11));",
+    "border-color:var(--ember-line,rgba(217,45,63,.34));color:var(--text,#EDEFF3)}",
   ].join("");
 
   function build() {

@@ -10,6 +10,13 @@
  * lit by the same three-light rig the game runtime uses, so the picture cannot
  * drift from the product.
  *
+ * It renders a SCENE, not a line-up. Six figures on a flat strip is a catalogue
+ * page; what a games platform needs above the fold is key art. So the cast is
+ * staged in depth on a ground plane, lit the way a film unit lights: a hard key
+ * from behind-left throwing long shadows toward camera, a cold ambient fill in
+ * the shadows, and a hot signal-red rim picking out every silhouette against
+ * the dark. Fog falls off with distance so the back of the frame recedes.
+ *
  * Transparent background, so the page's own ground shows through and the image
  * costs nothing when the palette changes.
  */
@@ -55,8 +62,9 @@ const server = http.createServer((req, res) => {
 });
 await new Promise((r) => server.listen(PORT, "127.0.0.1", r));
 
-const CELL = 300, H = 420;
-const W = CELL * CAST.length;
+/* 21:9. A letterbox is the cheapest cinematic signal there is, and it happens
+   to be the shape the space under a hero headline actually wants. */
+const W = 2100, H = 620;
 const browser = await chromium.launch({
   executablePath: "/opt/pw-browsers/chromium",
   args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader"],
@@ -76,7 +84,7 @@ if (!await page.evaluate(() => typeof THREE !== "undefined" && !!THREE.GLTFLoade
   console.error("three.js failed to load"); process.exit(1);
 }
 
-const missing = await page.evaluate(async ({ port, cast, W, H, CELL }) => {
+const missing = await page.evaluate(async ({ port, cast, W, H }) => {
   const bad = [];
   /* Load EVERY model before drawing anything. Awaiting between draws yields to
      the event loop, the browser composites, and WebGL discards the drawing
@@ -96,35 +104,82 @@ const missing = await page.evaluate(async ({ port, cast, W, H, CELL }) => {
   r.setSize(W, H, false);
   r.setPixelRatio(2);
   if ("outputColorSpace" in r) r.outputColorSpace = THREE.SRGBColorSpace;
-  r.setScissorTest(true);
+  r.shadowMap.enabled = true;
+  r.shadowMap.type = THREE.PCFSoftShadowMap;
+  if ("toneMapping" in r) { r.toneMapping = THREE.ACESFilmicToneMapping; r.toneMappingExposure = 1.0; }
 
-  for (let i = 0; i < loaded.length; i++) {
+  const scene = new THREE.Scene();
+
+  /* KEY — hard, from behind and to the left, so shadows rake toward camera.
+     Front-lighting is what makes a render look like a product photo. */
+  const key = new THREE.DirectionalLight(0xfff1e0, 2.6);
+  key.position.set(-9, 11, -6);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.left = -16; key.shadow.camera.right = 16;
+  key.shadow.camera.top = 16; key.shadow.camera.bottom = -16;
+  key.shadow.camera.near = 1; key.shadow.camera.far = 60;
+  key.shadow.bias = -0.0012;
+  scene.add(key);
+
+  // AMBIENT — cold, and weak. Shadows that go blue are the whole grade.
+  scene.add(new THREE.HemisphereLight(0x9FB4D8, 0x07080B, 0.46));
+
+  // RIM — the signal red, low and behind, separating every silhouette
+  const rim = new THREE.DirectionalLight(0xD92D3F, 3.0);
+  rim.position.set(10, 3.2, -5.5);
+  scene.add(rim);
+
+  // a soft warm bounce from camera-right so the fronts are not black
+  const bounce = new THREE.DirectionalLight(0xE8CBB4, 0.62);
+  bounce.position.set(6, 3, 8);
+  scene.add(bounce);
+
+  /* A LIT floor plane is the wrong tool: near the camera it catches the fill and
+     the rim and comes out a pale mauve slab with visible edges, which is the
+     opposite of cinematic. ShadowMaterial renders ONLY where something is in
+     shadow and is transparent everywhere else — so the cast throws real,
+     raking shadows onto the page's own ground with no rectangle around them. */
+  const floor = new THREE.Mesh(
+    new THREE.PlaneGeometry(90, 90),
+    new THREE.ShadowMaterial({ opacity: 0.72 })
+  );
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  /* Stage the cast along a shallow arc rather than a line, with the tallest
+     figures set back. A line-up is a catalogue; an arc is a scene. */
+  const N = loaded.length;
+  const SPREAD = 13.5;
+  for (let i = 0; i < N; i++) {
     const { spec, gltf } = loaded[i];
-    const scene = new THREE.Scene();
-    gltf.scene.rotation.y = spec.yaw || 0;
-    scene.add(gltf.scene);
-    // the runtime's rig, so the cast is lit the way the games are
-    scene.add(new THREE.HemisphereLight(0xffffff, 0x5a5f6a, 1.35));
-    const key = new THREE.DirectionalLight(0xfff2e2, 1.9); key.position.set(4, 7, 5); scene.add(key);
-    const fill = new THREE.DirectionalLight(0xc9d2e0, 0.55); fill.position.set(-5, 2, -4); scene.add(fill);
+    const o = gltf.scene;
+    o.traverse((n) => { if (n.isMesh || n.isSkinnedMesh) { n.castShadow = true; n.receiveShadow = true; } });
 
-    const box = new THREE.Box3().setFromObject(gltf.scene);
-    const size = box.getSize(new THREE.Vector3()), mid = box.getCenter(new THREE.Vector3());
-    const span = Math.max(size.x, size.y, size.z) || 1;
-    const cam = new THREE.PerspectiveCamera(30, CELL / H, span / 100, span * 100);
-    // a shallow three-quarter view: face-on reads as a spec sheet, and the
-    // slight downward angle is how a player actually sees a character
-    const d = (span * 2.6) / spec.scale;
-    cam.position.set(mid.x + d * 0.55, mid.y + d * 0.30, mid.z + d * 0.85);
-    cam.lookAt(mid.x, mid.y - size.y * spec.y, mid.z);
+    // normalise every model to a common height, then apply its own scale — the
+    // packs are built at wildly different scales and a raw composite is chaos
+    const b0 = new THREE.Box3().setFromObject(o);
+    const s0 = b0.getSize(new THREE.Vector3());
+    const unit = 2.0 / (s0.y || 1);
+    o.scale.setScalar(unit * (spec.scale || 1));
 
-    const x = i * CELL;   // cells are laid out by draw order, not by cast index
-    r.setViewport(x, 0, CELL, H);
-    r.setScissor(x, 0, CELL, H);
-    r.render(scene, cam);
+    const b1 = new THREE.Box3().setFromObject(o);
+    const t = N === 1 ? 0.5 : i / (N - 1);
+    o.position.x = (t - 0.5) * SPREAD;
+    o.position.z = -Math.abs(t - 0.5) * 5.2;      // the arc: ends pushed back
+    o.position.y = -b1.min.y;                      // stand every figure on the floor
+    o.rotation.y = spec.yaw || 0;
+    scene.add(o);
   }
+
+  /* A low camera looking slightly up is heroic; a high one is a diagram. */
+  const cam = new THREE.PerspectiveCamera(24, W / H, 0.5, 200);
+  cam.position.set(0.5, 1.55, 12.4);
+  cam.lookAt(0, 1.02, -1.0);
+  r.render(scene, cam);
   return bad;
-}, { port: PORT, cast: CAST, W, H, CELL });
+}, { port: PORT, cast: CAST, W, H });
 
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
 if (OUT.endsWith(".webp")) {

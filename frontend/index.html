@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.webmanifest">
 <script src="/assets/splash.js" defer></script>
-<meta name="theme-color" content="#0B0C0E">
+<meta name="theme-color" content="#07080B">
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -41,7 +41,7 @@ body{background:var(--ink);color:var(--text-2)}
 nav{position:fixed;top:0;left:0;right:0;z-index:50;height:60px;
   display:flex;align-items:center;justify-content:space-between;gap:2rem;
   padding:0 clamp(1rem,4vw,2.5rem);
-  background:rgba(11,12,14,.86);backdrop-filter:saturate(180%) blur(14px);
+  background:rgba(7,8,11,.88);backdrop-filter:saturate(180%) blur(14px);
   border-bottom:1px solid var(--line)}
 .brand{display:flex;align-items:center;gap:.6rem;text-decoration:none;flex:none}
 .brand svg{width:26px;height:26px;filter:none}
@@ -77,10 +77,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:50;height:60px;
   clip-path:none;animation:none;box-shadow:none;
   transition:background .15s,border-color .15s,color .15s,transform .15s}
 .btn:active{transform:translateY(1px)}
-.btn-primary{background:var(--ember);color:#1A0E05;border-color:var(--ember);
+.btn-primary{background:var(--signal);color:#FFFFFF;border-color:var(--signal);
   background-size:auto;animation:none}
 .btn-primary::after{display:none}
-.btn-primary:hover{background:var(--ember-hi);border-color:var(--ember-hi);transform:none;box-shadow:none}
+.btn-primary:hover{background:var(--signal-hi);border-color:var(--signal-hi);transform:none;box-shadow:none}
 .btn-ghost{background:transparent;color:var(--text);border-color:var(--line-strong)}
 .btn-ghost:hover{background:rgba(255,255,255,.05);border-color:#454C59;color:var(--text)}
 
@@ -135,10 +135,10 @@ h1 .fill,h1 .grad,h1 .outline{
    starfield: a platform that ships game-ready models should show game-ready
    models. */
 .hero-cast{margin-top:3.5rem;padding-top:2.5rem;border-top:1px solid var(--line)}
-.hero-cast img{display:block;width:100%;max-width:1000px;height:auto;
+.hero-cast img{display:block;width:100%;height:auto;
   /* the figures are lit from above-left; a soft floor shadow under them keeps
      them standing on something instead of floating */
-  filter:drop-shadow(0 18px 22px rgba(0,0,0,.55))}
+  filter:none}
 .hero-cast figcaption{margin-top:1rem;color:var(--text-3);font-size:.875rem}
 .hero-cast figcaption b{color:var(--text-2);font-weight:500}
 @media(max-width:720px){.hero-cast{margin-top:2.5rem;padding-top:2rem}}
@@ -147,9 +147,9 @@ h1 .fill,h1 .grad,h1 .outline{
 section{position:relative;z-index:2;max-width:1120px;margin:0 auto;
   padding:5rem clamp(1.15rem,4vw,2rem)}
 .sec-tag{font-family:var(--mono);font-size:.6875rem;font-weight:500;letter-spacing:.12em;
-  text-transform:uppercase;color:var(--ember);display:flex;align-items:center;gap:.5rem;
+  text-transform:uppercase;color:var(--signal);display:flex;align-items:center;gap:.5rem;
   margin-bottom:.9rem}
-.sec-tag::before{content:"";width:14px;height:1px;background:var(--ember);box-shadow:none;flex:none}
+.sec-tag::before{content:"";width:14px;height:1px;background:var(--signal);box-shadow:none;flex:none}
 h2{font-family:var(--sans);font-weight:600;text-transform:none;
   font-size:clamp(1.6rem,3.2vw,2.2rem);line-height:1.15;letter-spacing:-.028em;
   color:var(--text);text-shadow:none;text-wrap:balance;max-width:22ch}
@@ -201,7 +201,7 @@ h2 .grad{background:none;-webkit-background-clip:initial;background-clip:initial
 .module:hover{background:var(--ink-high)}
 .module h3{font-family:var(--sans);font-weight:600;font-size:.8125rem;letter-spacing:0;
   text-transform:none;color:var(--text);display:flex;align-items:center;gap:.45rem;margin-bottom:.4rem}
-.module h3 .st{width:6px;height:6px;border-radius:50%;background:var(--ember);box-shadow:none;flex:none}
+.module h3 .st{width:6px;height:6px;border-radius:50%;background:var(--signal);box-shadow:none;flex:none}
 .module p{color:var(--text-2);font-size:.875rem;line-height:1.55}
 .module .viz{margin-top:.85rem}
 .module .bar-row{display:flex;align-items:center;gap:.6rem;margin-top:.4rem;
@@ -209,7 +209,7 @@ h2 .grad{background:none;-webkit-background-clip:initial;background-clip:initial
 .module .bar-row b{font-weight:400;color:var(--text-2);min-width:3.4rem;
   font-variant-numeric:tabular-nums}
 .module .bar{flex:1;height:4px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden}
-.module .bar i{display:block;height:100%;width:0;border-radius:99px;background:var(--ember);
+.module .bar i{display:block;height:100%;width:0;border-radius:99px;background:var(--signal);
   box-shadow:none;transition:width 1.1s cubic-bezier(.2,0,0,1)}
 .module.in .bar i{width:var(--w,60%)}
 .module .bar.warn i{background:var(--warn)}
@@ -234,7 +234,7 @@ h2 .grad{background:none;-webkit-background-clip:initial;background-clip:initial
   background-image:linear-gradient(rgba(255,255,255,.03) 1px,transparent 1px),
     linear-gradient(90deg,rgba(255,255,255,.03) 1px,transparent 1px);
   background-size:26px 26px;opacity:1;animation:none;filter:none}
-.world .veil{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(11,12,14,.85))}
+.world .veil{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(7,8,11,.88))}
 .world .meta{position:relative;padding:1rem 1.1rem 1.15rem}
 .world .genre{font-family:var(--mono);font-size:.625rem;letter-spacing:.08em;
   text-transform:uppercase;color:var(--text-3)}
@@ -248,7 +248,7 @@ h2 .grad{background:none;-webkit-background-clip:initial;background-clip:initial
 .world:hover .enter svg{transform:translateX(3px)}
 .world .live{position:absolute;top:.8rem;left:.9rem;z-index:2;display:inline-flex;align-items:center;
   gap:.35rem;font-family:var(--mono);font-size:.625rem;letter-spacing:.06em;text-transform:uppercase;
-  color:var(--text);background:rgba(11,12,14,.72);border:1px solid var(--line);
+  color:var(--text);background:rgba(7,8,11,.78);border:1px solid var(--line);
   border-radius:999px;padding:.2rem .5rem}
 .world .live .dot{width:5px;height:5px;border-radius:50%;background:var(--ok);box-shadow:none}
 
@@ -288,9 +288,9 @@ h2 .grad{background:none;-webkit-background-clip:initial;background-clip:initial
 .try-name{font-size:1.125rem;font-weight:600;letter-spacing:-.015em}
 .try-meta{font-family:var(--mono);font-size:.75rem;color:var(--text-3);letter-spacing:.04em}
 .try-go{margin-top:.75rem;display:inline-flex;align-items:center;gap:.4rem;
-  background:var(--ember);color:#1A0E05;border-radius:var(--r-sm);
+  background:var(--signal);color:#FFFFFF;border-radius:var(--r-sm);
   padding:.6rem 1.1rem;font-weight:600;font-size:.9375rem;box-shadow:none;transition:background .15s}
-.try-poster:hover .try-go{background:var(--ember-hi);transform:none}
+.try-poster:hover .try-go{background:var(--signal-hi);transform:none}
 .try-foot{margin-top:.9rem;color:var(--text-3);font-size:.875rem}
 
 /* ------------------------------------------------------------ marquee ---- */
@@ -346,12 +346,12 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <defs>
     <linearGradient id="uiGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#F0975B"/>
-      <stop offset="100%" stop-color="#E4813C"/>
+      <stop offset="0%" stop-color="#E8455A"/>
+      <stop offset="100%" stop-color="#D92D3F"/>
     </linearGradient>
     <linearGradient id="jxGrad" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#E4813C"/>
-      <stop offset="100%" stop-color="#E4813C"/>
+      <stop offset="0%" stop-color="#D92D3F"/>
+      <stop offset="100%" stop-color="#D92D3F"/>
     </linearGradient>
   </defs>
 </svg>
@@ -395,7 +395,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
     <a class="btn btn-ghost" href="studio.html">Start Forging</a>
   </div>
   <figure class="hero-cast reveal">
-  <img src="assets/hero-cast.webp" width="1800" height="420" loading="eager" decoding="async"
+  <img src="assets/hero-cast.webp" width="2100" height="620" loading="eager" decoding="async"
        alt="Six models from the JOSHRIX library: a golden knight, a zombie, a robot, a winged monster, a cow and a race car.">
   <figcaption><b>Six of 2,591 models</b> that ship with every account — rendered from the actual library, not illustrated.</figcaption>
 </figure>
@@ -577,7 +577,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
   <h2 class="reveal">Forged In <span class="grad">JOSHRIX Studio</span></h2>
   <p class="sec-sub reveal">Live universes forged by the operator community — from raw concept to global deployment in a single forge cycle. Playable now, evolving nightly.</p>
   <div class="worlds" id="realWorlds">
-    <p class="sec-sub" id="worldsEmpty" style="display:none">No public worlds yet — moderation-approved games appear here the moment they go live. <a href="studio.html" style="color:var(--cyan,#E4813C)">Be the first to forge one.</a></p>
+    <p class="sec-sub" id="worldsEmpty" style="display:none">No public worlds yet — moderation-approved games appear here the moment they go live. <a href="studio.html" style="color:var(--cyan,#D92D3F)">Be the first to forge one.</a></p>
   </div>
   <script>
   /* Real data only: featured worlds are the community's actual approved games. */
@@ -702,7 +702,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
       z: Math.random() * 0.8 + 0.2,
       r: Math.random() * 1.4 + 0.3,
       tw: Math.random() * Math.PI * 2,
-      hue: Math.random() < 0.18 ? 'rgba(228,129,60,' : (Math.random() < 0.3 ? 'rgba(240,151,91,' : 'rgba(244,244,250,')
+      hue: Math.random() < 0.18 ? 'rgba(217,45,63,' : (Math.random() < 0.3 ? 'rgba(232,69,90,' : 'rgba(244,244,250,')
     }));
   }
   size();
@@ -731,8 +731,8 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
       m.x += m.vx; m.y += m.vy; m.life -= 0.008;
       if (m.life <= 0 || m.y > H + 60) { meteors.splice(i, 1); continue; }
       const g = cx.createLinearGradient(m.x, m.y, m.x - m.vx * 14, m.y - m.vy * 14);
-      g.addColorStop(0, 'rgba(228,129,60,' + 0.85 * m.life + ')');
-      g.addColorStop(1, 'rgba(228,129,60,0)');
+      g.addColorStop(0, 'rgba(217,45,63,' + 0.85 * m.life + ')');
+      g.addColorStop(1, 'rgba(217,45,63,0)');
       cx.strokeStyle = g;
       cx.lineWidth = 2 * devicePixelRatio;
       cx.beginPath();

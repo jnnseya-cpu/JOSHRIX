@@ -17,12 +17,14 @@
    Vercel, the Unreal and Unity editors, Stripe's dashboard. What those share
    is restraint, and it is the restraint that reads as expensive:
 
-     · ONE accent, and it earns its place. Ember, because this product's own
-       word for building a game is "forge". It appears on primary actions and
-       on live state. It is never a gradient and never a glow.
-     · Neutrals with a warm bias rather than the blue-black-plus-purple-haze
-       that says "sci-fi template". Depth comes from hairlines and honest
-       black shadow, the way a real surface catches light.
+     · ONE accent, and it earns its place. A saturated signal red — the colour
+       games have used for threat, energy and the thing you must look at since
+       Doom. It appears on primary actions and on live state, never as a
+       gradient and never as a glow.
+     · Cool shadows. A film grade puts blue in the dark and heat in the key,
+       which is why the ground is a blue-black rather than a neutral grey and
+       why the accent reads hot against it. Depth comes from hairlines and
+       honest black shadow, the way a real surface catches light.
      · Sentence case. Uppercase is reserved for small labels that genuinely
        label something — a table header, an eyebrow — never for headlines.
      · Type does the work: Archivo across the whole interface, one superfamily
@@ -49,26 +51,32 @@
   src:url(fonts/jetbrains-mono-var.woff2) format('woff2')}
 
 :root{
-  /* ground — neutral graphite, very slightly warm, no blue or violet cast */
-  --ink:#0B0C0E;
-  --ink-raised:#131519;
-  --ink-high:#191C21;
-  --ink-sunk:#070809;
+  /* Ground — blue-black, the colour a shadow actually is once a scene is
+     graded. Against it a warm accent reads as light rather than as paint. */
+  --ink:#07080B;
+  --ink-raised:#0F1117;
+  --ink-high:#151822;
+  --ink-sunk:#050609;
 
   /* hairlines. --line is the default; --line-strong is for a border that has
      to be seen rather than merely felt (focus, active, an emphasised panel) */
-  --line:#22262E;
-  --line-strong:#333945;
+  --line:#1D212B;
+  --line-strong:#2C323F;
 
-  --text:#ECEDEF;
-  --text-2:#A5AAB4;      /* body copy and secondary UI */
-  --text-3:#6C7280;      /* labels, captions, disabled */
+  --text:#EDEFF3;
+  --text-2:#A2A8B5;      /* body copy and secondary UI */
+  --text-3:#6A7180;      /* labels, captions, disabled */
 
-  /* the one accent */
-  --ember:#E4813C;
-  --ember-hi:#F0975B;
-  --ember-dim:rgba(228,129,60,.11);
-  --ember-line:rgba(228,129,60,.34);
+  /* The one accent. #D92D3F rather than a brighter scarlet is deliberate:
+     white text on it clears 4.7:1, so a primary button is readable as well as
+     striking. `--ember` survives as an alias because the token was called that
+     for one commit and something may still reach for it. */
+  --signal:#D92D3F;
+  --signal-hi:#E8455A;
+  --signal-dim:rgba(217,45,63,.11);
+  --signal-line:rgba(217,45,63,.34);
+  --ember:var(--signal);
+  --ember-hi:var(--signal-hi);
 
   /* state. Deliberately desaturated: these carry meaning, so they must not
      compete with the accent or with each other. */
@@ -90,10 +98,10 @@
      `linear-gradient(90deg, var(--violet), var(--cyan))` now resolves to a
      single flat colour, which is exactly the intended outcome — the gradients
      disappear without editing the markup that asked for them. */
-  --violet:var(--ember);
-  --violet-hot:var(--ember-hi);
-  --magenta:var(--ember-hi);
-  --cyan:var(--ember);
+  --violet:var(--signal);
+  --violet-hot:var(--signal-hi);
+  --magenta:var(--signal-hi);
+  --cyan:var(--signal);
   --glow-violet:transparent;
 
   --void:var(--ink);
@@ -134,7 +142,7 @@ body{
   -moz-osx-font-smoothing:grayscale;
   font-feature-settings:"kern" 1;
 }
-::selection{background:rgba(228,129,60,.28);color:var(--text)}
+::selection{background:rgba(217,45,63,.28);color:var(--text)}
 
 /* A scrollbar is chrome, not a feature. */
 ::-webkit-scrollbar{width:11px;height:11px}
@@ -143,9 +151,9 @@ body{
 ::-webkit-scrollbar-thumb:hover{background:#3A414D}
 
 a{color:var(--text);text-decoration-color:var(--line-strong);text-underline-offset:3px}
-a:hover{text-decoration-color:var(--ember)}
+a:hover{text-decoration-color:var(--signal)}
 
-:focus-visible{outline:2px solid var(--ember);outline-offset:2px;border-radius:3px}
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px;border-radius:3px}
 
 /* The starfield and the noise layer are the two most template-ish elements on
    the page. The markup still carries them on every page, so rather than edit
@@ -161,7 +169,7 @@ nav.jx{
   position:fixed;top:0;left:0;right:0;z-index:50;
   display:flex;align-items:center;justify-content:space-between;gap:1rem;
   padding:0 clamp(1rem,4vw,2.5rem);height:60px;
-  background:rgba(11,12,14,.86);
+  background:rgba(7,8,11,.88);
   backdrop-filter:saturate(180%) blur(14px);
   border-bottom:1px solid var(--line);
 }
@@ -210,8 +218,8 @@ nav.jx{
 .btn:active{transform:translateY(1px)}
 /* Primary is solid ember — one confident block of colour, no gradient, no
    glow, no clipped corner, no animation. */
-.btn-primary{background:var(--ember);color:#1A0E05;border-color:var(--ember)}
-.btn-primary:hover{background:var(--ember-hi);border-color:var(--ember-hi)}
+.btn-primary{background:var(--signal);color:#FFFFFF;border-color:var(--signal)}
+.btn-primary:hover{background:var(--signal-hi);border-color:var(--signal-hi)}
 .btn-ghost{background:transparent;color:var(--text);border-color:var(--line-strong)}
 .btn-ghost:hover{background:rgba(255,255,255,.05);border-color:#454C59}
 .btn-sm{padding:.4rem .8rem;font-size:.8rem}
@@ -227,10 +235,10 @@ main.jx{
    rule and the 0.45em tracking that made it shout. */
 .sec-tag{
   font-family:var(--mono);font-size:.7rem;font-weight:500;letter-spacing:.14em;
-  text-transform:uppercase;color:var(--ember);
+  text-transform:uppercase;color:var(--signal);
   display:flex;align-items:center;gap:.55rem;margin-bottom:1rem;
 }
-.sec-tag::before{content:"";width:14px;height:1px;background:var(--ember);box-shadow:none;flex:none}
+.sec-tag::before{content:"";width:14px;height:1px;background:var(--signal);box-shadow:none;flex:none}
 
 h1.jx{
   font-family:var(--sans);font-weight:700;text-transform:none;
@@ -331,7 +339,7 @@ table.jx tr:hover td{background:rgba(255,255,255,.022)}
 .module:hover{background:var(--ink-high)}
 .module h3{font-family:var(--sans);font-weight:600;font-size:.8125rem;letter-spacing:0;
   text-transform:none;display:flex;align-items:center;gap:.45rem;margin-bottom:.4rem;color:var(--text)}
-.module h3 .st{width:6px;height:6px;border-radius:50%;background:var(--ember);box-shadow:none;flex:none}
+.module h3 .st{width:6px;height:6px;border-radius:50%;background:var(--signal);box-shadow:none;flex:none}
 .module p{color:var(--text-2);font-size:.875rem;line-height:1.55}
 /* the headline number was a white-to-lilac gradient; a measurement is mono
    and tabular, and that alone makes a dashboard look built rather than drawn */
@@ -341,7 +349,7 @@ table.jx tr:hover td{background:rgba(255,255,255,.022)}
 .module .readout{font-family:var(--mono);font-size:.6875rem;letter-spacing:.04em;color:var(--text-3);margin-top:.45rem}
 
 .bar{height:4px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:.6rem}
-.bar i{display:block;height:100%;border-radius:99px;background:var(--ember);box-shadow:none}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--signal);box-shadow:none}
 .bar.ok i{background:var(--ok)}
 .bar.warn i{background:var(--warn)}
 
@@ -358,7 +366,7 @@ input.jx,select.jx,textarea.jx{
 }
 input.jx::placeholder,textarea.jx::placeholder{color:var(--text-3)}
 input.jx:focus,select.jx:focus,textarea.jx:focus{
-  border-color:var(--ember);box-shadow:0 0 0 3px var(--ember-dim)}
+  border-color:var(--signal);box-shadow:0 0 0 3px var(--signal-dim)}
 textarea.jx{min-height:110px;resize:vertical;line-height:1.6}
 .form .hint{font-size:.875rem;color:var(--text-3);font-weight:400;margin-top:.85rem;line-height:1.55}
 
@@ -366,7 +374,7 @@ textarea.jx{min-height:110px;resize:vertical;line-height:1.6}
 .acct{cursor:pointer;border:1px solid var(--line);border-radius:var(--r);padding:1.05rem;
   background:var(--ink-raised);transition:border-color .15s,background .15s}
 .acct:hover{border-color:var(--line-strong);background:var(--ink-high)}
-.acct.sel{border-color:var(--ember);background:var(--ember-dim);box-shadow:none}
+.acct.sel{border-color:var(--signal);background:var(--signal-dim);box-shadow:none}
 .acct h4{font-family:var(--sans);font-size:.9375rem;font-weight:600;letter-spacing:-.01em;
   text-transform:none;margin-bottom:.3rem;color:var(--text)}
 .acct p{color:var(--text-2);font-size:.875rem;line-height:1.5}
@@ -407,10 +415,10 @@ textarea.jx{min-height:110px;resize:vertical;line-height:1.6}
 /* the violet ◆ becomes a hairline tick mark — quieter, and it reads as a list
    rather than as ornament */
 .tier li::before{content:"";position:absolute;left:0;top:.85em;width:7px;height:1px;background:var(--line-strong)}
-.tier.featured{border-color:var(--ember-line);box-shadow:var(--shadow)}
+.tier.featured{border-color:var(--signal-line);box-shadow:var(--shadow)}
 .tier .flag{position:absolute;top:1.1rem;right:1.1rem;font-family:var(--mono);font-size:.625rem;
-  letter-spacing:.06em;text-transform:uppercase;color:var(--ember);
-  border:1px solid var(--ember-line);border-radius:999px;padding:.2rem .55rem;background:var(--ember-dim)}
+  letter-spacing:.06em;text-transform:uppercase;color:var(--signal);
+  border:1px solid var(--signal-line);border-radius:999px;padding:.2rem .55rem;background:var(--signal-dim)}
 
 /* -------------------------------------------------------------- steps ---- */
 .step-row{display:flex;gap:1rem;margin-top:.75rem;border:1px solid var(--line);border-radius:var(--r);

@@ -16,20 +16,20 @@ const esc = (s: unknown) => String(s ?? "").replace(/[<>&"]/g, (c) => ({ "<": "&
 
 /** Branded email shell — hex logo, gradient rule, dark theme, footer notices. */
 export function renderEmail(subject: string, eventName: string, mandatory: boolean): string {
-  return `<!DOCTYPE html><html><body style="margin:0;background:#131519;font-family:system-ui,-apple-system,sans-serif;color:#ececf4">
+  return `<!DOCTYPE html><html><body style="margin:0;background:#0F1117;font-family:system-ui,-apple-system,sans-serif;color:#ececf4">
 <div style="max-width:560px;margin:0 auto;padding:28px 20px">
   <table role="presentation" style="width:100%"><tr>
-    <td style="width:42px"><div style="width:34px;height:34px;background:#E4813C;border-radius:8px;text-align:center;line-height:34px;font-weight:800;color:#fff">JX</div></td>
-    <td style="font-weight:800;letter-spacing:.08em">JOSHRIX <span style="color:#6C7280">STUDIO</span></td>
+    <td style="width:42px"><div style="width:34px;height:34px;background:#D92D3F;border-radius:8px;text-align:center;line-height:34px;font-weight:800;color:#fff">JX</div></td>
+    <td style="font-weight:800;letter-spacing:.08em">JOSHRIX <span style="color:#6A7180">STUDIO</span></td>
   </tr></table>
-  <div style="height:3px;background:#E4813C;border-radius:2px;margin:16px 0 22px"></div>
+  <div style="height:3px;background:#D92D3F;border-radius:2px;margin:16px 0 22px"></div>
   <p style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#9d9db3;margin:0 0 6px">${esc(eventName)}</p>
   <h1 style="font-size:20px;line-height:1.35;margin:0 0 14px">${esc(subject)}</h1>
   <p style="color:#c9c9d6;line-height:1.7;font-size:15px;margin:0 0 22px">This is the JOSHRIX notification for <b>${esc(eventName)}</b>. Open your studio for the full details and any actions waiting for you.</p>
-  <a href="https://www.joshrix.com/dashboard.html" style="display:inline-block;background:#E4813C;color:#1A0E05;text-decoration:none;font-weight:700;padding:11px 22px;border-radius:10px">Open JOSHRIX</a>
+  <a href="https://www.joshrix.com/dashboard.html" style="display:inline-block;background:#D92D3F;color:#FFFFFF;text-decoration:none;font-weight:700;padding:11px 22px;border-radius:10px">Open JOSHRIX</a>
   <p style="color:#6b6b80;font-size:12px;line-height:1.6;margin:26px 0 0">© 2026 JOSHRIX Studio · Create Worlds. Build Games. Own the Future.<br>
   ${mandatory ? "This is a mandatory service notice — it is sent even when marketing emails are switched off." : "You can adjust which updates you receive in your profile."}
-  · <a href="https://www.joshrix.com/privacy.html" style="color:#E4813C">Privacy</a></p>
+  · <a href="https://www.joshrix.com/privacy.html" style="color:#D92D3F">Privacy</a></p>
 </div></body></html>`;
 }
 
@@ -166,7 +166,7 @@ export function renderNewsletter(opts: {
   };
 
   const sections = opts.sections.map((s) => `
-  <h2 style="font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#6C7280;margin:30px 0 8px">${esc(s.heading)}</h2>
+  <h2 style="font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#6A7180;margin:30px 0 8px">${esc(s.heading)}</h2>
   ${s.blurb ? `<p style="color:#c9c9d6;line-height:1.65;font-size:14.5px;margin:0 0 12px">${esc(s.blurb)}</p>` : ""}
   <table role="presentation" style="width:100%;border-collapse:collapse">
     ${s.links.map((l) => `<tr><td style="padding:7px 0;border-bottom:1px solid #23233a">
@@ -175,24 +175,24 @@ export function renderNewsletter(opts: {
     </td></tr>`).join("")}
   </table>`).join("");
 
-  return `<!DOCTYPE html><html><body style="margin:0;background:#131519;font-family:system-ui,-apple-system,sans-serif;color:#ececf4">
+  return `<!DOCTYPE html><html><body style="margin:0;background:#0F1117;font-family:system-ui,-apple-system,sans-serif;color:#ececf4">
 <div style="max-width:600px;margin:0 auto;padding:28px 20px">
   <table role="presentation" style="width:100%"><tr>
-    <td style="width:42px"><div style="width:34px;height:34px;background:#E4813C;border-radius:8px;text-align:center;line-height:34px;font-weight:800;color:#fff">JX</div></td>
-    <td style="font-weight:800;letter-spacing:.08em">JOSHRIX <span style="color:#6C7280">STUDIO</span></td>
+    <td style="width:42px"><div style="width:34px;height:34px;background:#D92D3F;border-radius:8px;text-align:center;line-height:34px;font-weight:800;color:#fff">JX</div></td>
+    <td style="font-weight:800;letter-spacing:.08em">JOSHRIX <span style="color:#6A7180">STUDIO</span></td>
     <td style="text-align:right;color:#6b6b80;font-size:12px">${esc(opts.issue)}</td>
   </tr></table>
-  <div style="height:3px;background:#E4813C;border-radius:2px;margin:16px 0 22px"></div>
+  <div style="height:3px;background:#D92D3F;border-radius:2px;margin:16px 0 22px"></div>
 
   <h1 style="font-size:22px;line-height:1.3;margin:0 0 12px">${esc(opts.headline)}</h1>
   <p style="color:#c9c9d6;line-height:1.7;font-size:15px;margin:0 0 20px">${esc(opts.intro)}</p>
-  <a href="${esc(tag("/studio"))}" style="display:inline-block;background:#E4813C;color:#1A0E05;text-decoration:none;font-weight:700;padding:11px 22px;border-radius:10px">Open the Studio</a>
+  <a href="${esc(tag("/studio"))}" style="display:inline-block;background:#D92D3F;color:#FFFFFF;text-decoration:none;font-weight:700;padding:11px 22px;border-radius:10px">Open the Studio</a>
   ${sections}
 
   <p style="color:#6b6b80;font-size:12px;line-height:1.7;margin:30px 0 0;border-top:1px solid #23233a;padding-top:16px">
   © 2026 JOSHRIX Studio · Create Worlds. Build Games. Own the Future.<br>
   You are receiving this because you have a JOSHRIX account.
-  <a href="${esc(opts.unsubscribeUrl)}" style="color:#E4813C">Unsubscribe</a> ·
-  <a href="${esc(tag("/privacy.html"))}" style="color:#E4813C">Privacy</a></p>
+  <a href="${esc(opts.unsubscribeUrl)}" style="color:#D92D3F">Unsubscribe</a> ·
+  <a href="${esc(tag("/privacy.html"))}" style="color:#D92D3F">Privacy</a></p>
 </div></body></html>`;
 }

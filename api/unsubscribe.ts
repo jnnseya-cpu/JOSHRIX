@@ -49,12 +49,12 @@ const page = (title: string, body: string) => `<!DOCTYPE html><html lang="en"><h
      be indefensible, and counting the visit adds nothing anyone would act on.
      tests/t28 asserts this stays untracked, so it cannot be "fixed" by a sweep
      that adds the beacon everywhere. -->
-<body style="background:#131519;color:#ececf4;font-family:system-ui,-apple-system,sans-serif">
+<body style="background:#0F1117;color:#ececf4;font-family:system-ui,-apple-system,sans-serif">
 <main style="max-width:34rem;margin:0 auto;padding:4rem 1.25rem">
-  <div style="height:3px;background:linear-gradient(90deg,#E4813C,#E4813C);border-radius:2px;margin-bottom:1.6rem"></div>
+  <div style="height:3px;background:linear-gradient(90deg,#D92D3F,#D92D3F);border-radius:2px;margin-bottom:1.6rem"></div>
   <h1 style="font-size:1.5rem;margin:0 0 .8rem">${title}</h1>
   ${body}
-  <p style="margin-top:2rem"><a href="/" style="color:#E4813C">Back to JOSHRIX Studio</a></p>
+  <p style="margin-top:2rem"><a href="/" style="color:#D92D3F">Back to JOSHRIX Studio</a></p>
 </main></body></html>`;
 
 export default async function handler(req: any, res: any) {
@@ -69,12 +69,12 @@ export default async function handler(req: any, res: any) {
     return res.status(400).send(page("That link is incomplete",
       `<p style="color:#c9c9d6;line-height:1.7">The unsubscribe link did not carry an email address.
        Use the link at the bottom of the email itself, or write to
-       <a href="mailto:support@joshrix.com" style="color:#E4813C">support@joshrix.com</a> and we will remove you.</p>`));
+       <a href="mailto:support@joshrix.com" style="color:#D92D3F">support@joshrix.com</a> and we will remove you.</p>`));
   }
   if (!tokenValid(email, token)) {
     return res.status(400).send(page("That link is not valid",
       `<p style="color:#c9c9d6;line-height:1.7">This unsubscribe link has been altered. Use the one in the
-       email, or write to <a href="mailto:support@joshrix.com" style="color:#E4813C">support@joshrix.com</a>.</p>`));
+       email, or write to <a href="mailto:support@joshrix.com" style="color:#D92D3F">support@joshrix.com</a>.</p>`));
   }
 
   const sql = getDb();
@@ -85,7 +85,7 @@ export default async function handler(req: any, res: any) {
     } catch {
       return res.status(500).send(page("We could not complete that",
         `<p style="color:#c9c9d6;line-height:1.7">Something went wrong on our side and you are still subscribed.
-         Please write to <a href="mailto:support@joshrix.com" style="color:#E4813C">support@joshrix.com</a>
+         Please write to <a href="mailto:support@joshrix.com" style="color:#D92D3F">support@joshrix.com</a>
          and we will remove you by hand.</p>`));
     }
   }

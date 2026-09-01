@@ -75,7 +75,7 @@ ${post.keywords ? `<meta name="keywords" content="${esc(post.keywords)}">` : ""}
 <meta name="twitter:description" content="${esc(post.description)}">
 <meta name="twitter:image" content="${SITE}/assets/icons/icon-512.png">
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#0B0C0E">
+<meta name="theme-color" content="#07080B">
 <link rel="apple-touch-icon" href="/assets/icons/icon-180.png">
 <link rel="alternate" type="application/rss+xml" title="JOSHRIX Blog" href="${SITE}/feed.xml">
 <script type="application/ld+json">${jsonLd}</script>
@@ -96,10 +96,10 @@ ${post.keywords ? `<meta name="keywords" content="${esc(post.keywords)}">` : ""}
   .post article p,.post article li{color:var(--muted,#c9c9d6);line-height:1.8;font-size:1.02rem;margin:.8rem 0}
   .post article h2{font-size:1.35rem;margin:2rem 0 .6rem}
   .post article h3{font-size:1.08rem;margin:1.4rem 0 .4rem}
-  .post article a{color:#E4813C}
+  .post article a{color:#D92D3F}
   .post article ul{padding-left:1.3rem}
   .more{border-top:1px solid var(--stroke,#26263a);margin-top:2.6rem;padding-top:1.4rem}
-  .more a{display:block;color:#E4813C;text-decoration:none;margin:.45rem 0}
+  .more a{display:block;color:#D92D3F;text-decoration:none;margin:.45rem 0}
 </style>
 </head>
 <body>
@@ -107,7 +107,7 @@ ${post.keywords ? `<meta name="keywords" content="${esc(post.keywords)}">` : ""}
 <div class="noise" aria-hidden="true"></div>
 <nav class="jx">
   <a class="brand" href="/index.html">
-    <svg viewBox="-50 -50 100 100"><defs><linearGradient id="jxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#F0975B"/><stop offset="100%" stop-color="#C96A28"/></linearGradient></defs><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#jxG)" stroke-width="7" stroke-linejoin="round"/><polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#jxG)"/></svg>
+    <svg viewBox="-50 -50 100 100"><defs><linearGradient id="jxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#E8455A"/><stop offset="100%" stop-color="#8E1C2A"/></linearGradient></defs><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#jxG)" stroke-width="7" stroke-linejoin="round"/><polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#jxG)"/></svg>
     <span class="word">JOSHRIX<em>STUDIO</em></span>
   </a>
   <ul class="nav-links">
@@ -140,7 +140,7 @@ ${post.keywords ? `<meta name="keywords" content="${esc(post.keywords)}">` : ""}
 
 function notFound(res: any) {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
-  const body = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Post not found — JOSHRIX</title><meta name="robots" content="noindex"></head><body style="background:#0B0C0E;color:#ececf4;font-family:system-ui;display:flex;min-height:100vh;align-items:center;justify-content:center"><p>Post not found — <a style="color:#E4813C" href="/blog.html">back to the blog</a></p></body></html>`;
+  const body = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Post not found — JOSHRIX</title><meta name="robots" content="noindex"></head><body style="background:#07080B;color:#ececf4;font-family:system-ui;display:flex;min-height:100vh;align-items:center;justify-content:center"><p>Post not found — <a style="color:#D92D3F" href="/blog.html">back to the blog</a></p></body></html>`;
   res.statusCode = 404;
   return res.send ? res.send(body) : res.end(body);
 }

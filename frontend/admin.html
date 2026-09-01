@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="manifest" href="manifest.webmanifest">
 <script src="/assets/splash.js" defer></script>
-<meta name="theme-color" content="#0B0C0E">
+<meta name="theme-color" content="#07080B">
 <link rel="apple-touch-icon" href="assets/icons/icon-180.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,8 +20,8 @@
 <!-- ADMIN LOCK — the page unlocks ONLY when the entered key verifies against the
      server (/api/moderation, which requires the real MODERATION_KEY). The overlay
      is UI; the actual protection is that every admin API call re-checks the key. -->
-<div id="adminLock" style="position:fixed;inset:0;z-index:10000;background:#0B0C0E;display:flex;align-items:center;justify-content:center;padding:1rem">
-  <div style="max-width:380px;width:100%;border:1px solid rgba(228,129,60,.5);border-radius:16px;padding:2rem 1.8rem;background:rgba(10,10,18,.95);box-shadow:0 20px 70px rgba(0,0,0,.6);text-align:center">
+<div id="adminLock" style="position:fixed;inset:0;z-index:10000;background:#07080B;display:flex;align-items:center;justify-content:center;padding:1rem">
+  <div style="max-width:380px;width:100%;border:1px solid rgba(217,45,63,.5);border-radius:16px;padding:2rem 1.8rem;background:rgba(10,10,18,.95);box-shadow:0 20px 70px rgba(0,0,0,.6);text-align:center">
     <div style="font-size:2rem;margin-bottom:.4rem">🔐</div>
     <h2 style="margin:.2rem 0 .4rem;font-size:1.2rem">Admin Access</h2>
     <p style="color:#9d9db3;font-size:.9rem;line-height:1.55;margin:0 0 1.1rem">This is the JOSHRIX command bridge. Enter the moderation key to unlock — the key is verified against the server.</p>
@@ -29,7 +29,7 @@
       style="width:100%;background:rgba(255,255,255,.05);border:1px solid #26263a;border-radius:10px;padding:.7rem .9rem;color:#ececf4;font-size:.95rem">
     <button class="btn btn-primary" id="lockGo" style="width:100%;margin-top:.8rem">Unlock</button>
     <p id="lockMsg" style="color:#f87171;font-size:.85rem;min-height:1.2em;margin:.7rem 0 0"></p>
-    <p style="color:#6b6b80;font-size:.78rem;margin:.9rem 0 0">Not an admin? <a href="index.html" style="color:#E4813C">Back to JOSHRIX</a></p>
+    <p style="color:#6b6b80;font-size:.78rem;margin:.9rem 0 0">Not an admin? <a href="index.html" style="color:#D92D3F">Back to JOSHRIX</a></p>
   </div>
 </div>
 <script>
@@ -76,7 +76,7 @@
 <div class="noise" aria-hidden="true"></div>
 <nav class="jx">
   <a class="brand" href="index.html">
-    <svg viewBox="-50 -50 100 100"><defs><linearGradient id="jxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#F0975B"/><stop offset="100%" stop-color="#C96A28"/></linearGradient></defs><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#jxG)" stroke-width="7" stroke-linejoin="round"/><polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#jxG)"/></svg>
+    <svg viewBox="-50 -50 100 100"><defs><linearGradient id="jxG" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#E8455A"/><stop offset="100%" stop-color="#8E1C2A"/></linearGradient></defs><polygon points="0,-44 38,-22 38,22 0,44 -38,22 -38,-22" fill="none" stroke="url(#jxG)" stroke-width="7" stroke-linejoin="round"/><polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="url(#jxG)"/></svg>
     <span class="word">JOSHRIX<em>STUDIO</em></span>
   </a>
   <ul class="nav-links">
@@ -215,7 +215,7 @@
           row.style.cssText = 'display:flex;flex-wrap:wrap;gap:.5rem 1rem;align-items:center;border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.6rem .9rem';
           var PLAN_IDS = ['explorer','creator','creator_pro','studio','business','enterprise'];
           row.innerHTML = '<b style="min-width:110px">' + esc(w.name || (w.email ? w.email.split('@')[0] : 'Unnamed')) + '</b>'
-            + '<span style="font-size:.78rem;color:var(--muted,#9d9db3)"><b class="wcatname">' + esc(w.category) + '</b>' + (w.email ? ' · ' + esc(w.email) : '') + ' · <code style="color:var(--cyan,#E4813C)">' + esc(w.id) + '</code></span>'
+            + '<span style="font-size:.78rem;color:var(--muted,#9d9db3)"><b class="wcatname">' + esc(w.category) + '</b>' + (w.email ? ' · ' + esc(w.email) : '') + ' · <code style="color:var(--cyan,#D92D3F)">' + esc(w.id) + '</code></span>'
             + (w.category === 'purchased'
                 ? '<span style="font-size:.72rem;color:var(--muted,#9d9db3);border:1px solid var(--stroke,#26263a);border-radius:999px;padding:.28rem .6rem">💳 paid · locked</span>'
                 : '<button class="btn btn-ghost btn-sm wcat">' + (w.category === 'tester' ? 'Revoke tester' : 'Make tester') + '</button>')
@@ -292,7 +292,7 @@
       if (err && j && j.matches && j.matches.length) {
         // several people match — show them so the admin can pick the exact wallet
         $g('grantMsg').innerHTML = '⚠ ' + esc(err) + '<br>' + j.matches.map(function(m){
-          return '• ' + esc(m.name || 'Unnamed') + (m.email ? ' · ' + esc(m.email) : '') + ' · <code style="color:var(--cyan,#E4813C)">' + esc(m.id) + '</code> · ' + Number(m.balance).toLocaleString() + ' ACU';
+          return '• ' + esc(m.name || 'Unnamed') + (m.email ? ' · ' + esc(m.email) : '') + ' · <code style="color:var(--cyan,#D92D3F)">' + esc(m.id) + '</code> · ' + Number(m.balance).toLocaleString() + ' ACU';
         }).join('<br>');
         return;
       }
@@ -343,7 +343,7 @@
           row.innerHTML = '<b style="min-width:96px;font-family:var(--mono,monospace)">' + money(r.amountMinor) + '</b>'
             + '<span style="font-size:.78rem;color:var(--muted,#9d9db3)">fee ' + money(r.feeMinor) + ' → net <b>' + money(r.netMinor) + '</b> · '
             + esc(r.rail) + (r.kycRequired ? ' · <b style="color:#fbbf24">KYC REQUIRED</b>' : '')
-            + ' · <code style="color:var(--cyan,#E4813C)">' + esc(r.walletId) + '</code></span>'
+            + ' · <code style="color:var(--cyan,#D92D3F)">' + esc(r.walletId) + '</code></span>'
             + '<span class="pAct" style="margin-left:auto;display:flex;gap:.4rem"></span>'
             + '<span class="pMsg" style="font-size:.78rem;color:var(--muted,#9d9db3)"></span>';
           // Only offer transitions the ledger will actually accept:
@@ -434,7 +434,7 @@
             + (e.mandatory ? '<span style="border:1px solid rgba(248,113,113,.5);color:#f87171;border-radius:999px;padding:.05rem .5rem;font-size:.68rem">mandatory</span>' : '')
             + '<code style="color:var(--muted,#9d9db3)">' + esc(e.id) + '</code>'
             + '<span style="color:var(--muted,#9d9db3)">' + esc(e.subject) + '</span>'
-            + '<span style="margin-left:auto;color:var(--cyan,#E4813C);font-size:.72rem">' + e.channels.join(' · ') + '</span></div>';
+            + '<span style="margin-left:auto;color:var(--cyan,#D92D3F);font-size:.72rem">' + e.channels.join(' · ') + '</span></div>';
         }).join('') + '</div></details>';
     }).join('');
   }).catch(function(){ $c('commStats').textContent = '⚠ Could not load the catalogue'; });
@@ -459,7 +459,7 @@
       .then(function(r){ return r.json(); }).then(function(j){
         var ds = j.deliveries || [];
         $c('commLog').innerHTML = ds.length ? ds.map(function(d){
-          return '<div style="display:flex;gap:.8rem;flex-wrap:wrap;color:var(--muted,#9d9db3)"><code style="color:var(--cyan,#E4813C)">' + esc(d.channel) + '</code><span>' + esc(d.event) + '</span><b style="color:' + (d.status === 'sent' ? '#4ade80' : '#9d9db3') + '">' + esc(d.status) + '</b><span>' + esc(d.provider || '') + ' · ' + new Date(d.created_at).toLocaleTimeString() + '</span></div>';
+          return '<div style="display:flex;gap:.8rem;flex-wrap:wrap;color:var(--muted,#9d9db3)"><code style="color:var(--cyan,#D92D3F)">' + esc(d.channel) + '</code><span>' + esc(d.event) + '</span><b style="color:' + (d.status === 'sent' ? '#4ade80' : '#9d9db3') + '">' + esc(d.status) + '</b><span>' + esc(d.provider || '') + ' · ' + new Date(d.created_at).toLocaleTimeString() + '</span></div>';
         }).join('') : '<span style="color:var(--muted,#9d9db3)">No deliveries yet — fire a test above.</span>';
       }).catch(function(){ $c('commLog').textContent = '⚠ Could not load deliveries'; });
   });

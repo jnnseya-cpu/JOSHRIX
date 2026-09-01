@@ -222,7 +222,7 @@ POLISH BAR (all of these, not some):
 - Multi-layer parallax background that evokes the concept's WORLD (its places, not abstract stars — a forest concept gets trees and fireflies, a city concept gets skyline layers).
 - Distinct visual identity per entity: the player, each enemy/hazard type and each collectable must be DRAWN as recognisable shapes of the concept (a keeper is a figure with arms, a crystal is a faceted gem, a shadow sprite has eyes) — never plain circles for everything.
 - Juice: score pops, combo counters, flash on damage, glow effects (shadowBlur), animated HUD.
-- Premium palette fitting the concept. Choose it FROM THE CONCEPT first — a coral reef is not the same world as a foundry. Only when the concept suggests nothing, fall back to the house palette: #0B0C0E ground, #131519 raised surfaces, #ECEDEF text, and a single accent #E4813C used for the player, the goal and nothing else. One accent, used sparingly, is what separates a built game from a generated one; a second and third accent is how every AI-made scene ends up looking identical. Bright children's worlds are the deliberate exception and should be vivid.
+- Premium palette fitting the concept. Choose it FROM THE CONCEPT first — a coral reef is not the same world as a foundry. Only when the concept suggests nothing, fall back to the house palette: #07080B ground, #0F1117 raised surfaces, #EDEFF3 text, and a single accent #D92D3F used for the player, the goal and nothing else. One accent, used sparingly, is what separates a built game from a generated one; a second and third accent is how every AI-made scene ends up looking identical. Bright children's worlds are the deliberate exception and should be vivid.
 - Procedural WebAudio sound design (no files): distinct SFX per event + a simple ambient loop + a mute button; create the AudioContext only on the first user gesture.
 - All player-facing text in the creator's language (use the provided language, else detect from the concept).
 - Age-appropriate for the stated audience. No real brands, clubs, celebrities or licensed characters.
@@ -961,16 +961,16 @@ export async function generateGameHtml(
   // demo fallback (no AI key): a tiny real playable game so the flow stays testable offline
   const title = (opts.title || "Your Game").replace(/[<>&]/g, "");
   const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>body{margin:0;background:#0B0C0E;color:#F4F4FA;font-family:system-ui;display:flex;flex-direction:column;align-items:center}
-h3{color:#E4813C;margin:12px 0 4px}p{color:#9CA3B8;margin:0 0 8px;font-size:13px}canvas{max-width:100%;touch-action:none;border:1px solid #333;border-radius:8px}</style>
+<style>body{margin:0;background:#07080B;color:#F4F4FA;font-family:system-ui;display:flex;flex-direction:column;align-items:center}
+h3{color:#D92D3F;margin:12px 0 4px}p{color:#9CA3B8;margin:0 0 8px;font-size:13px}canvas{max-width:100%;touch-action:none;border:1px solid #333;border-radius:8px}</style>
 </head><body><h3>${title}</h3><p>Demo build (offline) — tap the orbs before they fade!</p><canvas id="c" width="560" height="380"></canvas>
 <script>const cv=document.getElementById('c'),cx=cv.getContext('2d');let orbs=[],score=0,miss=0,t=0,speed=1400;
 function spawn(){orbs.push({x:40+Math.random()*480,y:40+Math.random()*300,r:26,born:Date.now()})}
 setInterval(()=>{spawn();speed=Math.max(600,speed-15)},1400);
-function draw(){cx.fillStyle='#0B0C0E';cx.fillRect(0,0,560,380);t++;
+function draw(){cx.fillStyle='#07080B';cx.fillRect(0,0,560,380);t++;
 orbs=orbs.filter(o=>{const age=(Date.now()-o.born)/speed;if(age>1){miss++;return false}
-cx.beginPath();cx.arc(o.x,o.y,o.r*(1-age*0.5),0,7);cx.fillStyle=age<0.5?'#E4813C':'#F0975B';cx.fill();return true});
-cx.fillStyle='#E4813C';cx.font='bold 16px system-ui';cx.fillText('SCORE '+score,12,24);cx.fillStyle='#FB7185';cx.fillText('MISSED '+miss,120,24);
+cx.beginPath();cx.arc(o.x,o.y,o.r*(1-age*0.5),0,7);cx.fillStyle=age<0.5?'#D92D3F':'#E8455A';cx.fill();return true});
+cx.fillStyle='#D92D3F';cx.font='bold 16px system-ui';cx.fillText('SCORE '+score,12,24);cx.fillStyle='#FB7185';cx.fillText('MISSED '+miss,120,24);
 requestAnimationFrame(draw)}
 function tap(e){const r=cv.getBoundingClientRect(),p=e.touches?e.touches[0]:e;const x=(p.clientX-r.left)*(560/r.width),y=(p.clientY-r.top)*(380/r.height);
 orbs=orbs.filter(o=>{if(Math.hypot(o.x-x,o.y-y)<o.r+8){score++;return false}return true});e.preventDefault()}

@@ -43,12 +43,12 @@
       "box-shadow:0 20px 50px rgba(0,0,0,.55);backdrop-filter:blur(10px);" +
       "font-family:var(--sans,'Archivo',system-ui,'Segoe UI',sans-serif);font-size:.95rem;line-height:1.5}" +
       "#jx-consent p{margin:0;flex:1 1 300px;min-width:0}" +
-      "#jx-consent a{color:#E4813C}" +
+      "#jx-consent a{color:#D92D3F}" +
       "#jx-consent .jx-consent-btns{display:flex;gap:.5rem;flex:0 0 auto}" +
       "#jx-consent button{font:inherit;font-weight:700;cursor:pointer;border-radius:999px;" +
       "padding:.55rem 1.2rem;border:1px solid rgba(160,140,255,.45);background:transparent;color:#F4F4FA}" +
-      "#jx-consent button.ok{background:linear-gradient(90deg,#E4813C,#E4813C);border-color:transparent;color:#fff}" +
-      "#jx-consent button:focus-visible{outline:2px solid #E4813C;outline-offset:2px}" +
+      "#jx-consent button.ok{background:linear-gradient(90deg,#D92D3F,#D92D3F);border-color:transparent;color:#fff}" +
+      "#jx-consent button:focus-visible{outline:2px solid #D92D3F;outline-offset:2px}" +
       "@media(max-width:520px){#jx-consent .jx-consent-btns{width:100%}" +
       "#jx-consent button{flex:1}}";
 
