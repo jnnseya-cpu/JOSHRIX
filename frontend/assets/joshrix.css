@@ -1,185 +1,449 @@
-/* JOSHRIX Studio — shared design system */
-@font-face{font-family:'Orbitron';font-style:normal;font-weight:500 900;font-display:swap;src:url(fonts/orbitron.woff2) format('woff2')}
-@font-face{font-family:'Rajdhani';font-style:normal;font-weight:400;font-display:swap;src:url(fonts/rajdhani-400.woff2) format('woff2')}
-@font-face{font-family:'Rajdhani';font-style:normal;font-weight:500;font-display:swap;src:url(fonts/rajdhani-500.woff2) format('woff2')}
-@font-face{font-family:'Rajdhani';font-style:normal;font-weight:600;font-display:swap;src:url(fonts/rajdhani-600.woff2) format('woff2')}
-@font-face{font-family:'Rajdhani';font-style:normal;font-weight:700;font-display:swap;src:url(fonts/rajdhani-700.woff2) format('woff2')}
+/* ============================================================================
+   JOSHRIX Studio — design system
+   ============================================================================
+
+   WHAT CHANGED, AND WHY IT HAD TO
+
+   The previous system was competent and it was also, unmistakably, the look a
+   machine produces when asked for "a futuristic game platform": Orbitron caps,
+   a violet-to-cyan gradient on every second heading, neon box-shadows, frosted
+   glass panels, clip-path corners, an animated gradient on the primary button,
+   a starfield, and 0.3em letter-spacing on everything including body copy.
+   Each device is fine once. Together they read as a template, and a creator
+   deciding whether to trust this platform with their work reads it that way in
+   about a second.
+
+   This replaces that with the language real production tools use — Linear,
+   Vercel, the Unreal and Unity editors, Stripe's dashboard. What those share
+   is restraint, and it is the restraint that reads as expensive:
+
+     · ONE accent, and it earns its place. Ember, because this product's own
+       word for building a game is "forge". It appears on primary actions and
+       on live state. It is never a gradient and never a glow.
+     · Neutrals with a warm bias rather than the blue-black-plus-purple-haze
+       that says "sci-fi template". Depth comes from hairlines and honest
+       black shadow, the way a real surface catches light.
+     · Sentence case. Uppercase is reserved for small labels that genuinely
+       label something — a table header, an eyebrow — never for headlines.
+     · Type does the work: Archivo across the whole interface, one superfamily
+       at four weights, with JetBrains Mono for anything a person reads as
+       data. A number in a proportional face is a decoration; in mono it is a
+       measurement.
+     · Motion is a 1px lift and a border that lightens. Nothing pulses,
+       nothing breathes, nothing shifts hue on a five-second loop.
+
+   Every class name from the old system survives, because 31 pages depend on
+   them. Restyling in place is what lets the whole site change at once instead
+   of page by page over a week, with the drift that always follows.
+
+   Dark-only is deliberate: this is a tool people use for long sessions beside
+   a 3D viewport, and a light theme would fight the thing being made.
+   ========================================================================== */
+
+/* Variable faces, one file each. Archivo is an industrial grotesk with real
+   character at display sizes and no personality problems at 14px — rare, and
+   the reason one family can carry the whole interface. */
+@font-face{font-family:'Archivo';font-style:normal;font-weight:100 900;font-display:swap;
+  src:url(fonts/archivo-var.woff2) format('woff2')}
+@font-face{font-family:'JetBrains Mono';font-style:normal;font-weight:100 800;font-display:swap;
+  src:url(fonts/jetbrains-mono-var.woff2) format('woff2')}
 
 :root{
-  --violet:#7C3AED;--violet-hot:#A855F7;--cyan:#22D3EE;--magenta:#E879F9;
-  --void:#050508;--void-2:#0B0B14;--surface:rgba(22,22,42,.55);
-  --stroke:rgba(148,130,255,.16);--stroke-bright:rgba(160,140,255,.35);
-  --text:#F4F4FA;--muted:#9CA3B8;--green:#4ADE80;--amber:#FBBF24;--red:#FB7185;
-  --mono:'Orbitron',system-ui,sans-serif;--body:'Rajdhani',system-ui,"Segoe UI",sans-serif;
+  /* ground — neutral graphite, very slightly warm, no blue or violet cast */
+  --ink:#0B0C0E;
+  --ink-raised:#131519;
+  --ink-high:#191C21;
+  --ink-sunk:#070809;
+
+  /* hairlines. --line is the default; --line-strong is for a border that has
+     to be seen rather than merely felt (focus, active, an emphasised panel) */
+  --line:#22262E;
+  --line-strong:#333945;
+
+  --text:#ECEDEF;
+  --text-2:#A5AAB4;      /* body copy and secondary UI */
+  --text-3:#6C7280;      /* labels, captions, disabled */
+
+  /* the one accent */
+  --ember:#E4813C;
+  --ember-hi:#F0975B;
+  --ember-dim:rgba(228,129,60,.11);
+  --ember-line:rgba(228,129,60,.34);
+
+  /* state. Deliberately desaturated: these carry meaning, so they must not
+     compete with the accent or with each other. */
+  --ok:#5FB37A;
+  --warn:#D9A441;
+  --bad:#D9695F;
+
+  --sans:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+
+  /* ---- compatibility ------------------------------------------------------
+     The 33 pages carry ~400 inline uses of the old token names. Deleting them
+     would not have thrown an error; the declarations would simply have stopped
+     applying, and the pages would have degraded silently in ways nobody would
+     find for weeks. Instead every old name survives and points at the new
+     system, so those inline rules retone themselves.
+
+     The accent names all collapse onto ember on purpose. A rule that read
+     `linear-gradient(90deg, var(--violet), var(--cyan))` now resolves to a
+     single flat colour, which is exactly the intended outcome — the gradients
+     disappear without editing the markup that asked for them. */
+  --violet:var(--ember);
+  --violet-hot:var(--ember-hi);
+  --magenta:var(--ember-hi);
+  --cyan:var(--ember);
+  --glow-violet:transparent;
+
+  --void:var(--ink);
+  --void-2:var(--ink-raised);
+  --surface:var(--ink-raised);
+  --stroke:var(--line);
+  --stroke-bright:var(--line-strong);
+  --muted:var(--text-2);
+
+  --green:var(--ok);
+  --amber:var(--warn);
+  --red:var(--bad);
+
+  /* `--mono` used to mean Orbitron, the display face. Everywhere the pages
+     actually use it — badges, readouts, session ids, timestamps — it is
+     labelling data at 10 or 11px, which is what a real mono is for. */
+  --mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,monospace;
+  --body:'Archivo',system-ui,-apple-system,'Segoe UI',sans-serif;
+
+  --r:10px;              /* one radius, everywhere */
+  --r-sm:6px;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -10px rgba(0,0,0,.55);
+  --shadow-lift:0 2px 4px rgba(0,0,0,.4),0 16px 40px -14px rgba(0,0,0,.7);
+  --ease:cubic-bezier(.2,0,0,1);
 }
+
 *{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{font-family:var(--body);background:var(--void);color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased;
-  background-image:radial-gradient(ellipse at 50% -20%,rgba(124,58,237,.2),transparent 60%),radial-gradient(ellipse at 90% 110%,rgba(34,211,238,.1),transparent 55%)}
-::selection{background:rgba(124,58,237,.6);color:#fff}
-::-webkit-scrollbar{width:10px}::-webkit-scrollbar-track{background:var(--void)}
-::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--violet),var(--cyan));border-radius:5px;border:2px solid var(--void)}
-a{color:var(--cyan)}
-.noise{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:.045;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E")}
-#stars{position:fixed;inset:0;z-index:0;pointer-events:none}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--sans);
+  font-size:16px;
+  line-height:1.6;
+  font-weight:400;
+  background:var(--ink);
+  color:var(--text-2);
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  font-feature-settings:"kern" 1;
+}
+::selection{background:rgba(228,129,60,.28);color:var(--text)}
 
-/* nav */
-nav.jx{position:fixed;top:0;left:0;right:0;z-index:50;display:flex;align-items:center;justify-content:space-between;gap:1rem;
-  padding:.85rem clamp(1rem,4vw,3rem);background:rgba(5,5,8,.6);backdrop-filter:blur(18px);border-bottom:1px solid var(--stroke)}
-.brand{display:flex;align-items:center;gap:.7rem;text-decoration:none}
-.brand svg{width:34px;height:34px;filter:drop-shadow(0 0 8px rgba(124,58,237,.7))}
-.brand .word{font-family:var(--mono);font-weight:900;font-size:1rem;letter-spacing:.18em;color:var(--text)}
-.brand .word em{font-style:normal;font-weight:500;font-size:.58rem;letter-spacing:.5em;display:block;margin-top:2px;
-  background:linear-gradient(90deg,var(--violet-hot),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
-.nav-links{display:flex;gap:1.7rem;list-style:none;align-items:center}
-.nav-links a{color:var(--muted);text-decoration:none;font-weight:600;font-size:.95rem;letter-spacing:.12em;text-transform:uppercase;transition:color .25s}
-.nav-links a:hover,.nav-links a.active{color:var(--text)}
-.nav-right{display:flex;align-items:center;gap:1rem}
-@media(max-width:960px){.nav-links{display:none}}
+/* A scrollbar is chrome, not a feature. */
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-track{background:var(--ink)}
+::-webkit-scrollbar-thumb{background:#2A2F38;border-radius:99px;border:3px solid var(--ink)}
+::-webkit-scrollbar-thumb:hover{background:#3A414D}
 
-/* buttons */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:.6rem;font-family:var(--body);font-weight:700;
-  letter-spacing:.12em;text-transform:uppercase;text-decoration:none;cursor:pointer;border:none;position:relative;overflow:hidden;
-  transition:transform .25s,box-shadow .25s;border-radius:6px}
-.btn-primary{padding:.85rem 2.1rem;font-size:.98rem;color:#fff;
-  background:linear-gradient(90deg,var(--violet),var(--violet-hot) 50%,var(--cyan));background-size:200% 100%;
-  clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);
-  box-shadow:0 0 24px rgba(124,58,237,.5);animation:gs 5s linear infinite}
-@keyframes gs{to{background-position:200% 0}}
-.btn-primary:hover{transform:translateY(-2px);box-shadow:0 0 34px rgba(124,58,237,.75)}
-.btn-ghost{padding:.85rem 2.1rem;font-size:.98rem;color:var(--text);background:rgba(255,255,255,.04);border:1px solid var(--stroke-bright);
-  clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px)}
-.btn-ghost:hover{border-color:var(--cyan);color:var(--cyan)}
-.btn-sm{padding:.55rem 1.3rem;font-size:.82rem}
+a{color:var(--text);text-decoration-color:var(--line-strong);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--ember)}
 
-/* layout */
-main.jx{position:relative;z-index:2;max-width:1220px;margin:0 auto;padding:8rem clamp(1rem,4vw,2.5rem) 5rem}
-.page-hero{text-align:left;margin-bottom:3rem}
-.sec-tag{font-family:var(--mono);font-size:.78rem;font-weight:500;letter-spacing:.45em;text-transform:uppercase;color:var(--cyan);
-  display:flex;align-items:center;gap:1rem;margin-bottom:1rem}
-.sec-tag::before{content:"";width:34px;height:1px;background:linear-gradient(90deg,var(--cyan),transparent);box-shadow:0 0 8px var(--cyan)}
-h1.jx{font-family:var(--mono);font-weight:900;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(1.8rem,5vw,3.2rem);line-height:1.15}
-h2.jx{font-family:var(--mono);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:clamp(1.25rem,3vw,1.9rem);margin:3.2rem 0 1.2rem}
-.grad{background:linear-gradient(92deg,var(--violet-hot),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
-.lede{margin-top:1rem;color:var(--muted);font-size:1.15rem;font-weight:500;max-width:72ch;line-height:1.65}
-.lede b,.card p b{color:var(--text)}
+:focus-visible{outline:2px solid var(--ember);outline-offset:2px;border-radius:3px}
 
-/* cards */
-.grid{display:grid;gap:1.3rem;margin-top:1.6rem}
-.grid.c2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
-.grid.c3{grid-template-columns:repeat(auto-fit,minmax(270px,1fr))}
-.grid.c4{grid-template-columns:repeat(auto-fit,minmax(210px,1fr))}
-.card{position:relative;border-radius:14px;padding:1.7rem 1.5rem;background:var(--surface);border:1px solid var(--stroke);
-  backdrop-filter:blur(14px);transition:transform .3s,border-color .3s,box-shadow .3s;overflow:hidden}
-.card:hover{transform:translateY(-5px);border-color:var(--stroke-bright);box-shadow:0 18px 50px rgba(0,0,0,.5),0 0 30px rgba(124,58,237,.12)}
-.card h3{font-family:var(--mono);font-weight:700;font-size:.98rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.65rem}
-.card p{color:var(--muted);font-size:1.02rem;font-weight:500;line-height:1.6}
-.card .tag{position:absolute;top:1.2rem;right:1.15rem;font-family:var(--mono);font-size:.58rem;font-weight:500;letter-spacing:.3em;color:rgba(156,163,184,.5)}
-.pill{display:inline-block;font-family:var(--mono);font-size:.6rem;font-weight:500;letter-spacing:.28em;text-transform:uppercase;color:var(--cyan);
-  border:1px solid rgba(34,211,238,.35);border-radius:4px;padding:.32rem .7rem;background:rgba(34,211,238,.06);margin:.2rem .3rem .2rem 0}
-.pill.green{color:var(--green);border-color:rgba(74,222,128,.4);background:rgba(74,222,128,.07)}
-.pill.amber{color:var(--amber);border-color:rgba(251,191,36,.4);background:rgba(251,191,36,.07)}
+/* The starfield and the noise layer are the two most template-ish elements on
+   the page. The markup still carries them on every page, so rather than edit
+   33 files they are neutralised here — #stars keeps its canvas but is never
+   drawn on, and the grain is dialled to the point where it reads as paper
+   rather than as an effect. */
+.noise{position:fixed;inset:0;z-index:3;pointer-events:none;opacity:.02;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E")}
+#stars{display:none}
 
-/* tables */
-table.jx{width:100%;border-collapse:collapse;margin-top:1.4rem;border:1px solid var(--stroke);border-radius:12px;overflow:hidden;display:block;overflow-x:auto}
-table.jx thead th{font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase;color:var(--cyan);
-  background:rgba(124,58,237,.12);padding:.85rem 1rem;text-align:left;white-space:nowrap}
-table.jx td{padding:.8rem 1rem;border-top:1px solid var(--stroke);color:var(--muted);font-weight:500;font-size:1rem;vertical-align:top}
-table.jx td b{color:var(--text)}
-table.jx tr:hover td{background:rgba(124,58,237,.05)}
+/* ---------------------------------------------------------------- nav ---- */
+nav.jx{
+  position:fixed;top:0;left:0;right:0;z-index:50;
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  padding:0 clamp(1rem,4vw,2.5rem);height:60px;
+  background:rgba(11,12,14,.86);
+  backdrop-filter:saturate(180%) blur(14px);
+  border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:.6rem;text-decoration:none}
+.brand svg{width:26px;height:26px;filter:none}
+.brand .word{font-family:var(--sans);font-weight:700;font-size:.95rem;letter-spacing:-.01em;color:var(--text)}
+/* the sub-word was a gradient; it is now a quiet mono caption, which is what
+   a wordmark's descriptor actually is */
+.brand .word em{
+  font-family:var(--mono);font-style:normal;font-weight:400;font-size:.56rem;
+  letter-spacing:.22em;text-transform:uppercase;display:block;margin-top:1px;
+  color:var(--text-3);background:none;-webkit-text-fill-color:currentColor;
+}
+.nav-links{display:flex;gap:.35rem;list-style:none;align-items:center}
+.nav-links a{
+  color:var(--text-2);text-decoration:none;font-weight:500;font-size:.875rem;
+  letter-spacing:0;text-transform:none;padding:.45rem .7rem;border-radius:var(--r-sm);
+  transition:color .15s,background .15s;
+}
+.nav-links a:hover{color:var(--text);background:rgba(255,255,255,.045)}
+.nav-links a.active{color:var(--text);background:rgba(255,255,255,.06)}
+.nav-right{display:flex;align-items:center;gap:.6rem;min-width:0}
+@media(max-width:960px){
+  .nav-links{display:none}
+  /* The menu button is position:fixed at the top right, so the bar has to
+     reserve that space or its own buttons slide underneath it — which is
+     exactly what happened to "Launch Studio" at every width. */
+  nav.jx{padding-right:64px}
+  nav.jx .btn{padding:.45rem .75rem;font-size:.8125rem}
+}
+@media(max-width:520px){
+  /* Below this the brand, two buttons and the menu trigger cannot all fit.
+     The way in survives as "Sign In" inside the menu — see appnav.js. */
+  nav.jx a[href$="login.html"],nav.jx a[href$="signup.html"]{display:none}
+  .brand .word em{display:none}
+}
 
-/* console / dashboard */
-.console{border:1px solid var(--stroke-bright);border-radius:16px;overflow:hidden;background:rgba(8,8,16,.72);backdrop-filter:blur(16px);
-  box-shadow:0 30px 80px rgba(0,0,0,.5),inset 0 0 60px rgba(124,58,237,.05);margin-top:1.6rem}
-.console-bar{display:flex;align-items:center;gap:1rem;padding:.75rem 1.2rem;border-bottom:1px solid var(--stroke);background:rgba(255,255,255,.03)}
-.dots{display:flex;gap:.4rem}.dots i{width:10px;height:10px;border-radius:50%}
-.dots i:nth-child(1){background:var(--red)}.dots i:nth-child(2){background:var(--amber)}.dots i:nth-child(3){background:var(--green)}
-.console-bar .t{font-family:var(--mono);font-size:.6rem;font-weight:500;letter-spacing:.3em;text-transform:uppercase;color:var(--muted)}
-.console-bar .status{margin-left:auto;font-family:var(--mono);font-size:.58rem;letter-spacing:.22em;color:var(--green);display:flex;align-items:center;gap:.5rem}
-.console-bar .status::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1.8s infinite}
-@keyframes pulse{50%{opacity:.35}}
-.modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--stroke)}
-.module{background:rgba(8,8,16,.92);padding:1.25rem 1.2rem;transition:background .3s}
-.module:hover{background:rgba(124,58,237,.08)}
-.module h3{font-family:var(--mono);font-weight:700;font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
-.module h3 .st{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);flex:none}
-.module p{color:var(--muted);font-size:.92rem;font-weight:500;line-height:1.5}
-.module .num{font-family:var(--mono);font-size:1.5rem;font-weight:700;background:linear-gradient(180deg,#fff,#B9A7F5);
-  -webkit-background-clip:text;background-clip:text;color:transparent;display:block;margin:.3rem 0}
-.module .readout{font-family:var(--mono);font-size:.56rem;letter-spacing:.18em;color:rgba(34,211,238,.75);margin-top:.5rem}
-.bar{height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden;margin-top:.6rem}
-.bar i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--violet),var(--cyan));box-shadow:0 0 10px rgba(124,58,237,.6)}
-.bar.ok i{background:linear-gradient(90deg,#22D3EE,#4ADE80)}
-.bar.warn i{background:linear-gradient(90deg,#FBBF24,#FB7185)}
+/* ------------------------------------------------------------ buttons ---- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:.5rem;
+  font-family:var(--sans);font-weight:600;font-size:.875rem;letter-spacing:0;
+  text-transform:none;text-decoration:none;cursor:pointer;border:1px solid transparent;
+  border-radius:var(--r-sm);padding:.6rem 1.1rem;white-space:nowrap;
+  transition:background .15s,border-color .15s,color .15s,transform .15s;
+}
+.btn:active{transform:translateY(1px)}
+/* Primary is solid ember — one confident block of colour, no gradient, no
+   glow, no clipped corner, no animation. */
+.btn-primary{background:var(--ember);color:#1A0E05;border-color:var(--ember)}
+.btn-primary:hover{background:var(--ember-hi);border-color:var(--ember-hi)}
+.btn-ghost{background:transparent;color:var(--text);border-color:var(--line-strong)}
+.btn-ghost:hover{background:rgba(255,255,255,.05);border-color:#454C59}
+.btn-sm{padding:.4rem .8rem;font-size:.8rem}
 
-/* forms */
-.form{max-width:520px;border:1px solid var(--stroke-bright);border-radius:16px;padding:2rem;background:rgba(8,8,16,.72);backdrop-filter:blur(16px);margin-top:1.8rem}
+/* ------------------------------------------------------------- layout ---- */
+main.jx{
+  position:relative;z-index:2;max-width:1120px;margin:0 auto;
+  padding:7.5rem clamp(1.15rem,4vw,2rem) 6rem;
+}
+.page-hero{text-align:left;margin-bottom:3.5rem;max-width:44rem}
+
+/* The eyebrow keeps its uppercase because it is a label. It loses the glowing
+   rule and the 0.45em tracking that made it shout. */
+.sec-tag{
+  font-family:var(--mono);font-size:.7rem;font-weight:500;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ember);
+  display:flex;align-items:center;gap:.55rem;margin-bottom:1rem;
+}
+.sec-tag::before{content:"";width:14px;height:1px;background:var(--ember);box-shadow:none;flex:none}
+
+h1.jx{
+  font-family:var(--sans);font-weight:700;text-transform:none;
+  letter-spacing:-.028em;font-size:clamp(2rem,4.6vw,3.1rem);line-height:1.08;
+  color:var(--text);text-wrap:balance;
+}
+h2.jx{
+  font-family:var(--sans);font-weight:600;text-transform:none;
+  letter-spacing:-.02em;font-size:clamp(1.3rem,2.6vw,1.75rem);line-height:1.2;
+  color:var(--text);margin:4rem 0 1.1rem;text-wrap:balance;
+}
+h3{font-family:var(--sans);font-weight:600;letter-spacing:-.012em;color:var(--text)}
+
+/* `.grad` was the violet-to-cyan text gradient — the single most recognisable
+   AI-design tell on the site. The class stays because dozens of headings carry
+   it, but it is now a no-op: a headline is one sentence in one voice.
+   Dimming the second half instead was tried and read as disabled text, which
+   is worse than the gradient was. */
+.grad{background:none;-webkit-background-clip:initial;background-clip:initial;
+  color:inherit;-webkit-text-fill-color:currentColor}
+
+.lede{margin-top:1.1rem;color:var(--text-2);font-size:1.0625rem;font-weight:400;
+  max-width:68ch;line-height:1.65}
+.lede b,.card p b{color:var(--text);font-weight:600}
+
+/* -------------------------------------------------------------- cards ---- */
+.grid{display:grid;gap:1rem;margin-top:1.5rem}
+.grid.c2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.grid.c3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.grid.c4{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{
+  position:relative;border-radius:var(--r);padding:1.4rem 1.35rem;
+  background:var(--ink-raised);border:1px solid var(--line);
+  backdrop-filter:none;box-shadow:var(--shadow);
+  transition:border-color .15s,background .15s,transform .15s,box-shadow .15s;
+  overflow:hidden;
+}
+.card:hover{transform:translateY(-1px);border-color:var(--line-strong);
+  background:var(--ink-high);box-shadow:var(--shadow-lift)}
+.card h3{font-size:.975rem;letter-spacing:-.012em;text-transform:none;margin-bottom:.5rem}
+.card p{color:var(--text-2);font-size:.9375rem;line-height:1.6}
+.card .tag{position:absolute;top:1.1rem;right:1.15rem;font-family:var(--mono);
+  font-size:.625rem;font-weight:400;letter-spacing:.08em;color:var(--text-3);text-transform:uppercase}
+
+/* A pill states a fact, so it is quiet and it is mono. */
+.pill{display:inline-block;font-family:var(--mono);font-size:.6875rem;font-weight:500;
+  letter-spacing:.04em;text-transform:none;color:var(--text-2);
+  border:1px solid var(--line-strong);border-radius:999px;padding:.16rem .6rem;
+  background:rgba(255,255,255,.03);margin:.2rem .3rem .2rem 0}
+.pill.green{color:var(--ok);border-color:rgba(95,179,122,.34);background:rgba(95,179,122,.09)}
+.pill.amber{color:var(--warn);border-color:rgba(217,164,65,.34);background:rgba(217,164,65,.09)}
+
+/* ------------------------------------------------------------- tables ---- */
+/* `display:block` was set so a wide table could scroll — but a table told to
+   be a block sizes to its CONTENT, not to its container, so every table on the
+   site sat half-width inside an empty bordered box. It is a real table at
+   desktop widths, and only becomes a scrolling block where scrolling is
+   actually the point. */
+table.jx{width:100%;border-collapse:collapse;margin-top:1.3rem;
+  border:1px solid var(--line);border-radius:var(--r);overflow:hidden;table-layout:auto}
+@media(max-width:680px){
+  table.jx{display:block;overflow-x:auto;white-space:nowrap}
+  table.jx td,table.jx thead th{white-space:normal;min-width:9rem}
+}
+table.jx thead th{
+  font-family:var(--mono);font-size:.6875rem;font-weight:500;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--text-3);
+  background:var(--ink-raised);padding:.7rem .9rem;text-align:left;white-space:nowrap;
+  border-bottom:1px solid var(--line);
+}
+table.jx td{padding:.75rem .9rem;border-top:1px solid var(--line);color:var(--text-2);
+  font-weight:400;font-size:.9375rem;vertical-align:top}
+table.jx td b{color:var(--text);font-weight:600}
+/* numbers line up when they are mono and tabular; in a proportional face a
+   price column is decoration */
+table.jx td:first-child b{font-weight:600}
+table.jx tr:hover td{background:rgba(255,255,255,.022)}
+
+/* --------------------------------------------------- console / modules --- */
+.console{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;
+  background:var(--ink-raised);backdrop-filter:none;box-shadow:var(--shadow);margin-top:1.5rem}
+.console-bar{display:flex;align-items:center;gap:.8rem;padding:.6rem 1rem;
+  border-bottom:1px solid var(--line);background:var(--ink-high)}
+.dots{display:flex;gap:.35rem}
+.dots i{width:8px;height:8px;border-radius:50%;background:#2E333C}
+.console-bar .t{font-family:var(--mono);font-size:.6875rem;font-weight:400;
+  letter-spacing:.06em;text-transform:none;color:var(--text-3)}
+.console-bar .status{margin-left:auto;font-family:var(--mono);font-size:.6875rem;
+  letter-spacing:.04em;color:var(--text-2);display:flex;align-items:center;gap:.45rem}
+/* live state is the one thing on the page allowed to move, because it is
+   reporting something that is actually changing */
+.console-bar .status::before{content:"";width:6px;height:6px;border-radius:50%;
+  background:var(--ok);box-shadow:none;animation:live 2.4s ease-in-out infinite}
+@keyframes live{50%{opacity:.4}}
+
+.modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1px;background:var(--line)}
+.module{background:var(--ink-raised);padding:1.15rem 1.1rem;transition:background .15s}
+.module:hover{background:var(--ink-high)}
+.module h3{font-family:var(--sans);font-weight:600;font-size:.8125rem;letter-spacing:0;
+  text-transform:none;display:flex;align-items:center;gap:.45rem;margin-bottom:.4rem;color:var(--text)}
+.module h3 .st{width:6px;height:6px;border-radius:50%;background:var(--ember);box-shadow:none;flex:none}
+.module p{color:var(--text-2);font-size:.875rem;line-height:1.55}
+/* the headline number was a white-to-lilac gradient; a measurement is mono
+   and tabular, and that alone makes a dashboard look built rather than drawn */
+.module .num{font-family:var(--mono);font-size:1.5rem;font-weight:500;
+  font-variant-numeric:tabular-nums;letter-spacing:-.02em;
+  background:none;-webkit-text-fill-color:var(--text);color:var(--text);display:block;margin:.25rem 0}
+.module .readout{font-family:var(--mono);font-size:.6875rem;letter-spacing:.04em;color:var(--text-3);margin-top:.45rem}
+
+.bar{height:4px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:.6rem}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--ember);box-shadow:none}
+.bar.ok i{background:var(--ok)}
+.bar.warn i{background:var(--warn)}
+
+/* -------------------------------------------------------------- forms ---- */
+.form{max-width:480px;border:1px solid var(--line);border-radius:var(--r);padding:1.6rem;
+  background:var(--ink-raised);backdrop-filter:none;box-shadow:var(--shadow);margin-top:1.7rem}
 .form.wide{max-width:none}
-label.jx{display:block;font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.28em;text-transform:uppercase;color:var(--cyan);margin:1.1rem 0 .5rem}
-input.jx,select.jx,textarea.jx{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--stroke-bright);border-radius:9px;color:var(--text);
-  font-family:var(--body);font-size:1.05rem;font-weight:500;padding:.8rem .95rem;outline:none;transition:border-color .25s,box-shadow .25s;appearance:none}
-input.jx:focus,select.jx:focus,textarea.jx:focus{border-color:var(--cyan);box-shadow:0 0 18px rgba(34,211,238,.25)}
-textarea.jx{min-height:110px;resize:vertical}
-.form .hint{font-size:.92rem;color:var(--muted);font-weight:500;margin-top:.9rem}
+label.jx{display:block;font-family:var(--sans);font-size:.8125rem;font-weight:600;
+  letter-spacing:0;text-transform:none;color:var(--text);margin:1.1rem 0 .4rem}
+input.jx,select.jx,textarea.jx{
+  width:100%;background:var(--ink-sunk);border:1px solid var(--line-strong);border-radius:var(--r-sm);
+  color:var(--text);font-family:var(--sans);font-size:.9375rem;font-weight:400;
+  padding:.6rem .75rem;outline:none;transition:border-color .15s,box-shadow .15s;appearance:none;
+}
+input.jx::placeholder,textarea.jx::placeholder{color:var(--text-3)}
+input.jx:focus,select.jx:focus,textarea.jx:focus{
+  border-color:var(--ember);box-shadow:0 0 0 3px var(--ember-dim)}
+textarea.jx{min-height:110px;resize:vertical;line-height:1.6}
+.form .hint{font-size:.875rem;color:var(--text-3);font-weight:400;margin-top:.85rem;line-height:1.55}
 
-/* account type selector */
-.acct{cursor:pointer;border:1px solid var(--stroke);border-radius:12px;padding:1.2rem;background:rgba(255,255,255,.02);transition:border-color .25s,background .25s}
-.acct:hover,.acct.sel{border-color:var(--cyan);background:rgba(34,211,238,.06);box-shadow:0 0 20px rgba(34,211,238,.15)}
-.acct h4{font-family:var(--mono);font-size:.8rem;letter-spacing:.14em;text-transform:uppercase;margin-bottom:.4rem}
-.acct p{color:var(--muted);font-size:.92rem;font-weight:500;line-height:1.45}
-.acct .price{font-family:var(--mono);font-size:.72rem;color:var(--cyan);margin-top:.5rem;letter-spacing:.1em}
+/* ----------------------------------------------------- account chooser --- */
+.acct{cursor:pointer;border:1px solid var(--line);border-radius:var(--r);padding:1.05rem;
+  background:var(--ink-raised);transition:border-color .15s,background .15s}
+.acct:hover{border-color:var(--line-strong);background:var(--ink-high)}
+.acct.sel{border-color:var(--ember);background:var(--ember-dim);box-shadow:none}
+.acct h4{font-family:var(--sans);font-size:.9375rem;font-weight:600;letter-spacing:-.01em;
+  text-transform:none;margin-bottom:.3rem;color:var(--text)}
+.acct p{color:var(--text-2);font-size:.875rem;line-height:1.5}
+.acct .price{font-family:var(--mono);font-size:.8125rem;color:var(--text-3);margin-top:.45rem;letter-spacing:0}
 
-/* profile */
-.cover{height:230px;border-radius:18px;position:relative;overflow:hidden;border:1px solid var(--stroke-bright);
-  background:radial-gradient(90% 120% at 80% 0%,rgba(232,121,249,.4),transparent 55%),
-  radial-gradient(90% 100% at 15% 100%,rgba(34,211,238,.4),transparent 55%),
-  radial-gradient(70% 60% at 50% 50%,rgba(124,58,237,.5),transparent 70%),linear-gradient(180deg,#120F26,#070512)}
+/* ------------------------------------------------------------ profile ---- */
+/* The cover was four stacked radial gradients in violet, magenta and cyan with
+   a glowing grid over the top. It is now a plain graduated field with a fine
+   rule grid — a surface, not a light show. */
+.cover{height:180px;border-radius:var(--r);position:relative;overflow:hidden;border:1px solid var(--line);
+  background:linear-gradient(180deg,#191C22,#0E1013)}
 .cover::after{content:"";position:absolute;inset:0;background-image:
-  linear-gradient(rgba(232,121,249,.1) 1px,transparent 1px),linear-gradient(90deg,rgba(232,121,249,.1) 1px,transparent 1px);
-  background-size:44px 44px;mask-image:linear-gradient(to top,#000,transparent 80%);-webkit-mask-image:linear-gradient(to top,#000,transparent 80%)}
-.avatar{width:110px;height:110px;border-radius:24px;border:3px solid var(--void);margin:-58px 0 0 2rem;position:relative;z-index:2;
-  background:linear-gradient(135deg,var(--violet),var(--cyan));display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-weight:900;font-size:2.2rem;color:#fff;box-shadow:0 0 30px rgba(124,58,237,.5)}
-.profile-head{display:flex;align-items:flex-end;gap:1.4rem;flex-wrap:wrap}
-.profile-head .who h1{font-size:clamp(1.4rem,3.5vw,2rem)}
-.profile-head .who .handle{font-family:var(--mono);font-size:.72rem;letter-spacing:.2em;color:var(--cyan)}
-.badges{margin-left:auto;display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+  linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);
+  background-size:32px 32px;
+  mask-image:linear-gradient(to top,#000,transparent 85%);
+  -webkit-mask-image:linear-gradient(to top,#000,transparent 85%)}
+.avatar{width:88px;height:88px;border-radius:var(--r);border:3px solid var(--ink);
+  margin:-44px 0 0 1.5rem;position:relative;z-index:2;
+  background:var(--ink-high);display:flex;align-items:center;justify-content:center;
+  font-family:var(--sans);font-weight:700;font-size:1.9rem;color:var(--text);box-shadow:var(--shadow)}
+.profile-head{display:flex;align-items:flex-end;gap:1.2rem;flex-wrap:wrap}
+.profile-head .who h1{font-size:clamp(1.35rem,3vw,1.9rem)}
+.profile-head .who .handle{font-family:var(--mono);font-size:.8125rem;letter-spacing:0;color:var(--text-3)}
+.badges{margin-left:auto;display:flex;flex-wrap:wrap;gap:.35rem;align-items:center}
 
-/* pricing */
+/* ------------------------------------------------------------ pricing ---- */
 .tier{display:flex;flex-direction:column}
-.tier .price{font-family:var(--mono);font-weight:700;font-size:1.9rem;margin:.4rem 0 .2rem;
-  background:linear-gradient(90deg,var(--violet-hot),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
-.tier .per{font-size:.9rem;color:var(--muted);font-weight:500}
-.tier ul{list-style:none;margin:1rem 0 1.4rem;flex:1}
-.tier li{color:var(--muted);font-weight:500;font-size:.98rem;padding:.28rem 0 .28rem 1.4rem;position:relative;line-height:1.45}
-.tier li::before{content:"◆";position:absolute;left:0;color:var(--violet-hot);font-size:.7rem;top:.42rem}
-.tier.featured{border-color:var(--cyan);box-shadow:0 0 40px rgba(34,211,238,.18)}
-.tier .flag{position:absolute;top:1rem;right:1rem;font-family:var(--mono);font-size:.55rem;letter-spacing:.25em;color:var(--green);
-  border:1px solid rgba(74,222,128,.4);border-radius:999px;padding:.3rem .7rem;background:rgba(74,222,128,.08)}
+/* A price is the most important number on the page. Mono, tabular, plain white
+   — legible at a glance and impossible to mistake for decoration. */
+.tier .price{font-family:var(--mono);font-weight:500;font-size:2rem;margin:.5rem 0 .1rem;
+  font-variant-numeric:tabular-nums;letter-spacing:-.03em;
+  background:none;-webkit-text-fill-color:var(--text);color:var(--text)}
+.tier .per{font-family:var(--mono);font-size:.75rem;color:var(--text-3);font-weight:400}
+.tier ul{list-style:none;margin:1.1rem 0 1.3rem;flex:1}
+.tier li{color:var(--text-2);font-weight:400;font-size:.9375rem;padding:.3rem 0 .3rem 1.25rem;
+  position:relative;line-height:1.5}
+/* the violet ◆ becomes a hairline tick mark — quieter, and it reads as a list
+   rather than as ornament */
+.tier li::before{content:"";position:absolute;left:0;top:.85em;width:7px;height:1px;background:var(--line-strong)}
+.tier.featured{border-color:var(--ember-line);box-shadow:var(--shadow)}
+.tier .flag{position:absolute;top:1.1rem;right:1.1rem;font-family:var(--mono);font-size:.625rem;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ember);
+  border:1px solid var(--ember-line);border-radius:999px;padding:.2rem .55rem;background:var(--ember-dim)}
 
-/* steps */
-.step-row{display:flex;gap:1.1rem;margin-top:1.2rem;border:1px solid var(--stroke);border-radius:12px;padding:1.2rem 1.3rem;background:rgba(255,255,255,.02)}
-.step-row .n{font-family:var(--mono);font-weight:900;font-size:1.3rem;color:transparent;-webkit-text-stroke:1px rgba(160,140,255,.7);min-width:2.4rem}
-.step-row h3{font-family:var(--mono);font-size:.85rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:.35rem}
-.step-row p{color:var(--muted);font-weight:500;line-height:1.55;font-size:1rem}
+/* -------------------------------------------------------------- steps ---- */
+.step-row{display:flex;gap:1rem;margin-top:.75rem;border:1px solid var(--line);border-radius:var(--r);
+  padding:1.1rem 1.2rem;background:var(--ink-raised)}
+/* the numeral was outlined in lilac; a step number is data */
+.step-row .n{font-family:var(--mono);font-weight:500;font-size:.875rem;color:var(--text-3);
+  -webkit-text-stroke:0;min-width:1.8rem;padding-top:.15rem}
+.step-row h3{font-family:var(--sans);font-size:.9375rem;letter-spacing:-.01em;text-transform:none;margin-bottom:.3rem}
+.step-row p{color:var(--text-2);font-weight:400;line-height:1.6;font-size:.9375rem}
 
-/* reveal */
-.reveal{opacity:0;transform:translateY(28px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+/* ------------------------------------------------------------- reveal ---- */
+.reveal{opacity:0;transform:translateY(12px);
+  transition:opacity .5s var(--ease),transform .5s var(--ease)}
 .reveal.in{opacity:1;transform:none}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}.reveal{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  .reveal{opacity:1;transform:none}
+  html{scroll-behavior:auto}
+}
 
-/* footer */
-footer.jx{position:relative;z-index:2;border-top:1px solid var(--stroke);background:rgba(5,5,8,.7);backdrop-filter:blur(14px);
-  padding:3.2rem clamp(1.2rem,5vw,4rem) 1.8rem;margin-top:4rem}
-.foot-grid{max-width:1220px;margin:0 auto;display:flex;flex-wrap:wrap;gap:2.6rem;justify-content:space-between}
-.foot-brand{max-width:300px}
-.foot-brand .tagline{margin-top:1rem;color:var(--muted);font-weight:500;line-height:1.6}
-.foot-col h4{font-family:var(--mono);font-size:.68rem;font-weight:700;letter-spacing:.32em;text-transform:uppercase;margin-bottom:1rem}
+/* ------------------------------------------------------------- footer ---- */
+footer.jx{position:relative;z-index:2;border-top:1px solid var(--line);background:var(--ink-sunk);
+  backdrop-filter:none;padding:3rem clamp(1.15rem,5vw,2rem) 1.6rem;margin-top:5rem}
+.foot-grid{max-width:1120px;margin:0 auto;display:flex;flex-wrap:wrap;gap:2.4rem;justify-content:space-between}
+.foot-brand{max-width:280px}
+.foot-brand .tagline{margin-top:.9rem;color:var(--text-3);font-weight:400;line-height:1.6;font-size:.9375rem}
+.foot-col h4{font-family:var(--sans);font-size:.8125rem;font-weight:600;letter-spacing:0;
+  text-transform:none;margin-bottom:.8rem;color:var(--text)}
 .foot-col ul{list-style:none}
-.foot-col li{margin-bottom:.55rem}
-.foot-col a{color:var(--muted);text-decoration:none;font-weight:500;font-size:.98rem;transition:color .25s}
-.foot-col a:hover{color:var(--cyan)}
-.foot-base{max-width:1220px;margin:2.6rem auto 0;padding-top:1.3rem;border-top:1px solid var(--stroke);
-  display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;align-items:center;color:rgba(156,163,184,.55);font-size:.88rem;font-weight:500}
-.foot-base .sys{font-family:var(--mono);font-size:.6rem;letter-spacing:.28em;color:rgba(74,222,128,.8)}
+.foot-col li{margin-bottom:.45rem}
+.foot-col a{color:var(--text-3);text-decoration:none;font-weight:400;font-size:.9375rem;transition:color .15s}
+.foot-col a:hover{color:var(--text)}
+.foot-base{max-width:1120px;margin:2.4rem auto 0;padding-top:1.2rem;border-top:1px solid var(--line);
+  display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;align-items:center;
+  color:var(--text-3);font-size:.875rem;font-weight:400}
+.foot-base .sys{font-family:var(--mono);font-size:.6875rem;letter-spacing:.04em;color:var(--text-3)}

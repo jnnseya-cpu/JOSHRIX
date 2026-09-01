@@ -32,7 +32,11 @@
     const a = document.createElement('a');
     a.href = 'login.html';
     a.textContent = 'Sign In';
-    a.style.cssText = 'display:inline-flex;align-items:center;padding:.5rem .95rem;border:1px solid var(--stroke-bright,#3b3b52);border-radius:10px;color:var(--text,#ececf4);text-decoration:none;font-weight:700;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap';
+    // Matches .btn.btn-ghost from the design system rather than inventing a
+    // third button style. It was uppercase and 700-weight, which read as a
+    // shout next to the sentence-case CTA it sits beside.
+    a.className = 'btn btn-ghost btn-sm';
+    a.style.cssText = 'white-space:nowrap';
     nav.insertBefore(a, before || nav.firstChild);
   };
 

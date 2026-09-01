@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Model Library — JOSHRIX Studio</title>
-<meta name="description" content="Every 3D model included with JOSHRIX Studio: 2,435 CC0 GLB models across 34 packs, including 178 rigged and animated characters, creatures and animals. Load any one and play its animation in the browser.">
-<meta name="theme-color" content="#050508">
+<meta name="description" content="Every 3D model included with JOSHRIX Studio: 2,591 CC0 GLB models across 35 packs, including 281 rigged and animated characters, creatures and animals. Load any one and play its animation in the browser.">
+<meta name="theme-color" content="#0B0C0E">
 <link rel="stylesheet" href="assets/joshrix.css">
 <script src="assets/config.js"></script>
 <script src="assets/track.js"></script>
@@ -13,7 +13,7 @@
 <script src="assets/consent.js" defer></script>
 <style>
 .wrap{max-width:1200px;margin:0 auto;padding:5.5rem clamp(1rem,4vw,3rem) 4rem}
-h1{font-family:var(--mono);font-weight:900;font-size:clamp(1.6rem,4.5vw,2.6rem);letter-spacing:.06em;
+h1{font-family:var(--sans);font-weight:700;font-size:clamp(1.6rem,4.5vw,2.6rem);letter-spacing:-.02em;
   text-wrap:balance;margin-bottom:.5rem}
 h1 em{font-style:normal;background:linear-gradient(90deg,var(--violet-hot),var(--cyan));
   -webkit-background-clip:text;background-clip:text;color:transparent}
@@ -41,7 +41,7 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--violet-hot),var(-
   background:var(--surface);border:1px solid var(--stroke);border-radius:10px;color:var(--text);cursor:pointer;
   padding:.6rem .8rem;font-family:var(--body);font-size:.95rem;font-weight:600;transition:border-color .2s,background .2s}
 .packs button:hover{border-color:var(--stroke-bright)}
-.packs button[aria-pressed=true]{border-color:var(--cyan);background:rgba(34,211,238,.09)}
+.packs button[aria-pressed=true]{border-color:var(--cyan);background:rgba(228,129,60,.09)}
 .packs button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .packs button span{font-family:var(--mono);font-size:.62rem;letter-spacing:.1em;color:var(--muted);
   font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -60,12 +60,12 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--violet-hot),var(-
 
 .viewerbar{display:flex;flex-wrap:wrap;gap:.4rem;align-items:center;margin-top:.8rem}
 .viewerbar .path{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;color:var(--cyan);
-  background:rgba(34,211,238,.08);border:1px solid rgba(34,211,238,.3);border-radius:8px;padding:.4rem .7rem;
+  background:rgba(228,129,60,.08);border:1px solid rgba(228,129,60,.3);border-radius:8px;padding:.4rem .7rem;
   overflow-x:auto;white-space:nowrap;max-width:100%}
 .clips{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.6rem}
 .clips button{font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.1em;color:var(--text);
   background:var(--surface);border:1px solid var(--stroke);border-radius:999px;padding:.35rem .8rem;cursor:pointer}
-.clips button[aria-pressed=true]{border-color:var(--violet-hot);background:rgba(168,85,247,.16)}
+.clips button[aria-pressed=true]{border-color:var(--violet-hot);background:rgba(240,151,91,.16)}
 .clips button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .clips .none{font-family:var(--body);font-size:.85rem;color:var(--muted)}
 
@@ -75,7 +75,7 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--violet-hot),var(-
   cursor:pointer;padding:.55rem .7rem;text-align:left;font-family:var(--body);font-size:.9rem;font-weight:600;
   transition:border-color .2s}
 .grid button:hover{border-color:var(--stroke-bright)}
-.grid button[aria-pressed=true]{border-color:var(--cyan);background:rgba(34,211,238,.09)}
+.grid button[aria-pressed=true]{border-color:var(--cyan);background:rgba(228,129,60,.09)}
 .grid button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
 .grid button em{display:block;font-style:normal;font-family:var(--mono);font-size:.56rem;letter-spacing:.1em;
   color:var(--muted);margin-top:.2rem;font-variant-numeric:tabular-nums}
@@ -101,7 +101,7 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--violet-hot),var(-
       <label class="search">
         <span class="vh">Search every model</span>
         <input id="q" type="search" autocomplete="off" spellcheck="false"
-               placeholder="Search 2,435 models — gun, car, tree, zombie…">
+               placeholder="Search 2,591 models — gun, car, tree, zombie…">
       </label>
       <p class="hint" id="hint"></p>
       <div class="packs" id="packs" role="group" aria-label="Model packs"></div>
@@ -156,15 +156,15 @@ h1 em{font-style:normal;background:linear-gradient(90deg,var(--violet-hot),var(-
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     stage.appendChild(renderer.domElement);
     scene = new THREE.Scene();
-    scene.background = new THREE.Color("#06040f");
+    scene.background = new THREE.Color("#0B0C0E");
     key = new THREE.DirectionalLight(0xfff4e2, 2.0);
     key.position.set(4, 9, 11); key.castShadow = true;
     key.shadow.mapSize.set(1024, 1024);
     scene.add(key);
-    scene.add(new THREE.HemisphereLight(0xc9d8ff, 0x2a2440, 1.9));
-    var rim = new THREE.DirectionalLight(0xa855f7, 1.1); rim.position.set(-6, 4, -7); scene.add(rim);
+    scene.add(new THREE.HemisphereLight(0xdfe4ec, 0x2b2f36, 1.9));
+    var rim = new THREE.DirectionalLight(0xbfc6d2, 0.9); rim.position.set(-6, 4, -7); scene.add(rim);
     var floor = new THREE.Mesh(new THREE.CircleGeometry(6, 48),
-      new THREE.MeshStandardMaterial({ color: "#100e1c", roughness: 1 }));
+      new THREE.MeshStandardMaterial({ color: "#15171B", roughness: 1 }));
     floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
     camera = new THREE.PerspectiveCamera(38, 16 / 9, 0.1, 100);
     clock = new THREE.Clock();
