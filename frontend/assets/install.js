@@ -21,7 +21,7 @@
     if (chip) return;
     chip = document.createElement('div');
     chip.style.cssText = 'position:fixed;right:14px;bottom:14px;z-index:9999;display:flex;align-items:center;gap:.45rem;'
-      + 'background:linear-gradient(120deg,rgba(124,58,237,.92),rgba(34,211,238,.85));color:#fff;'
+      + 'background:linear-gradient(120deg,rgba(228,129,60,.92),rgba(228,129,60,.85));color:#fff;'
       + 'border-radius:999px;padding:.55rem .5rem .55rem 1rem;font:600 .85rem/1 system-ui,sans-serif;'
       + 'box-shadow:0 8px 30px rgba(0,0,0,.45);cursor:pointer;user-select:none';
     const label = document.createElement('span');
@@ -46,7 +46,7 @@
     const card = document.createElement('div');
     card.id = 'jxIosSteps';
     card.style.cssText = 'position:fixed;right:14px;bottom:66px;z-index:9999;max-width:280px;'
-      + 'background:#0b0b14;color:#ececf4;border:1px solid rgba(124,58,237,.6);border-radius:14px;'
+      + 'background:#131519;color:#ececf4;border:1px solid rgba(228,129,60,.6);border-radius:14px;'
       + 'padding:1rem 1.1rem;font:400 .88rem/1.55 system-ui,sans-serif;box-shadow:0 12px 40px rgba(0,0,0,.55)';
     card.innerHTML = '<b>Install JOSHRIX on this device</b><br>'
       + '1. Tap the <b>Share</b> button <span style="opacity:.8">(the square with the ↑ arrow)</span><br>'

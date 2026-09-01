@@ -22,7 +22,7 @@
 
   var wrap = document.createElement('div');
   wrap.style.cssText = 'position:relative;width:' + width + ';max-width:100%;border-radius:14px;overflow:hidden;' +
-    'background:#050508;border:1px solid rgba(160,140,255,.35);box-shadow:0 20px 50px rgba(0,0,0,.45)';
+    'background:#0B0C0E;border:1px solid rgba(160,140,255,.35);box-shadow:0 20px 50px rgba(0,0,0,.45)';
 
   var pad = document.createElement('div');
   pad.style.cssText = 'width:100%;padding-top:' + (ratio * 100) + '%;position:relative';
@@ -41,7 +41,7 @@
   chip.textContent = '⚡ FORGE YOUR OWN · JOSHRIX';
   chip.style.cssText = 'position:absolute;right:.7rem;bottom:.7rem;z-index:2;text-decoration:none;color:#fff;' +
     'font:700 10px/1 system-ui,sans-serif;letter-spacing:.14em;padding:.55rem .9rem;border-radius:999px;' +
-    'background:linear-gradient(90deg,#7C3AED,#22D3EE);box-shadow:0 0 16px rgba(124,58,237,.6)';
+    'background:linear-gradient(90deg,#E4813C,#E4813C);box-shadow:0 8px 24px -10px rgba(0,0,0,.55)';
 
   pad.appendChild(frame);
   wrap.appendChild(pad);

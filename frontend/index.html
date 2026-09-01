@@ -128,6 +128,21 @@ h1 .fill,h1 .grad,h1 .outline{
 
 .scroll-hint{display:none}
 
+/* THE CAST. Six real GLB models out of 2,591, rendered by
+   tools/hero-render.mjs through the same three-light rig the game runtime
+   uses. Nothing here is illustrated, and because it is generated from the
+   library it cannot quietly stop being true. It replaces an aurora and a
+   starfield: a platform that ships game-ready models should show game-ready
+   models. */
+.hero-cast{margin-top:3.5rem;padding-top:2.5rem;border-top:1px solid var(--line)}
+.hero-cast img{display:block;width:100%;max-width:1000px;height:auto;
+  /* the figures are lit from above-left; a soft floor shadow under them keeps
+     them standing on something instead of floating */
+  filter:drop-shadow(0 18px 22px rgba(0,0,0,.55))}
+.hero-cast figcaption{margin-top:1rem;color:var(--text-3);font-size:.875rem}
+.hero-cast figcaption b{color:var(--text-2);font-weight:500}
+@media(max-width:720px){.hero-cast{margin-top:2.5rem;padding-top:2rem}}
+
 /* ------------------------------------------------------------ sections --- */
 section{position:relative;z-index:2;max-width:1120px;margin:0 auto;
   padding:5rem clamp(1.15rem,4vw,2rem)}
@@ -379,7 +394,13 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
     <a class="btn btn-primary" href="#try">▶&nbsp; Play One Now — No Account</a>
     <a class="btn btn-ghost" href="studio.html">Start Forging</a>
   </div>
-  <div class="hero-stats">
+  <figure class="hero-cast reveal">
+  <img src="assets/hero-cast.webp" width="1800" height="420" loading="eager" decoding="async"
+       alt="Six models from the JOSHRIX library: a golden knight, a zombie, a robot, a winged monster, a cow and a race car.">
+  <figcaption><b>Six of 2,591 models</b> that ship with every account — rendered from the actual library, not illustrated.</figcaption>
+</figure>
+
+<div class="hero-stats">
     <div class="stat"><div class="num" data-count="90" data-suffix="%">0</div><div class="lbl">Cost Reduction</div></div>
     <div class="stat"><div class="num" data-count="48" data-prefix="&lt;">0</div><div class="lbl">Hours To Market</div></div>
     <div class="stat"><div class="num" data-count="7">0</div><div class="lbl">Agent Fleet</div></div>

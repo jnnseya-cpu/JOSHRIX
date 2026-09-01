@@ -11,34 +11,11 @@
 (() => {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // starfield
-  const cv = document.getElementById('stars');
-  if (cv) {
-    const cx = cv.getContext('2d');
-    let W, H, stars = [];
-    const size = () => {
-      W = cv.width = innerWidth * devicePixelRatio;
-      H = cv.height = innerHeight * devicePixelRatio;
-      cv.style.width = innerWidth + 'px'; cv.style.height = innerHeight + 'px';
-      stars = Array.from({ length: Math.min(160, innerWidth / 8) }, () => ({
-        x: Math.random() * W, y: Math.random() * H,
-        z: Math.random() * 0.8 + 0.2, r: Math.random() * 1.3 + 0.3,
-        tw: Math.random() * Math.PI * 2,
-        hue: Math.random() < 0.18 ? 'rgba(34,211,238,' : Math.random() < 0.3 ? 'rgba(168,85,247,' : 'rgba(244,244,250,'
-      }));
-    };
-    size(); addEventListener('resize', size);
-    let t = 0;
-    (function draw() {
-      cx.clearRect(0, 0, W, H); t += 0.016;
-      for (const s of stars) {
-        const tw = reduced ? 1 : 0.55 + 0.45 * Math.sin(t * 1.4 + s.tw);
-        cx.beginPath(); cx.arc(s.x, s.y, s.r * s.z * devicePixelRatio, 0, 7);
-        cx.fillStyle = s.hue + (0.2 + 0.55 * s.z) * tw + ')'; cx.fill();
-      }
-      requestAnimationFrame(draw);
-    })();
-  }
+  /* The starfield is gone. It drew 160 twinkling violet and cyan dots behind
+     every page — the decoration that says "sci-fi template" loudest, and a
+     requestAnimationFrame loop running for the life of every session to do
+     it. The design system hides #stars, so this was painting something
+     nobody could see; the canvas element stays in the markup harmlessly. */
 
   // scroll reveal
   const io = new IntersectionObserver(es => es.forEach(e => {

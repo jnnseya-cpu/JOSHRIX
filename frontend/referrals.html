@@ -16,10 +16,10 @@
 .tier-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.2rem;margin-top:2rem}
 .tier-card{border:1px solid var(--stroke);border-radius:16px;padding:1.6rem;background:rgba(22,22,42,.5);transition:transform .3s,border-color .3s}
 .tier-card:hover{transform:translateY(-4px);border-color:var(--stroke-bright)}
-.tier-card.hot{border-color:var(--stroke-bright);box-shadow:0 0 30px rgba(228,129,60,.25)}
+.tier-card.hot{border-color:var(--stroke-bright);box-shadow:var(--shadow)}
 .tier-card h3{font-family:var(--sans);font-size:1rem;letter-spacing:-.02em;text-transform:none}
-.tier-card .share{font-family:var(--mono);font-weight:700;font-size:1.9rem;margin:.7rem 0 .2rem;background:linear-gradient(90deg,var(--violet-hot),var(--cyan));-webkit-background-clip:text;background-clip:text;color:transparent}
-.tier-card .cond{font-family:var(--mono);font-size:.58rem;letter-spacing:.2em;color:var(--muted);text-transform:uppercase}
+.tier-card .share{font-family:var(--mono);font-weight:700;font-size:1.9rem;margin:.7rem 0 .2rem;color:var(--text);}
+.tier-card .cond{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
 .tier-card p{margin-top:1rem;color:var(--muted);font-weight:500;line-height:1.6;font-size:.95rem}
 .rulebox{border:1px solid var(--stroke);border-radius:14px;padding:1.4rem 1.5rem;background:rgba(255,255,255,.02);margin-top:1.4rem}
 .rulebox h3{font-family:var(--sans);font-size:.85rem;letter-spacing:-.02em;text-transform:none;margin-bottom:.7rem}

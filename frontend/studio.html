@@ -86,7 +86,7 @@ textarea:focus,select:focus{border-color:var(--cyan);box-shadow:none;resize:vert
   letter-spacing:0;text-transform:none;text-decoration:none;cursor:pointer;border:none;position:relative;overflow:hidden;
   transition:transform .25s,box-shadow .25s,opacity .25s;border-radius:6px}
 .btn-primary{padding:.7rem 1.25rem;font-size:.9375rem;color:#1A0E05;
-  background:var(--ember);background-size:200% 100%;
+  background:var(--ember);
   
   box-shadow:none;box-shadow:none;cursor:not-allowed;transform:none}
 .btn-ghost{padding:.7rem 1.25rem;font-size:.9375rem;color:var(--text);background:rgba(255,255,255,.04);border:1px solid var(--stroke-bright);
@@ -111,8 +111,8 @@ textarea:focus,select:focus{border-color:var(--cyan);box-shadow:none;resize:vert
   border-radius:10px;padding:.8rem 1.1rem;background:rgba(255,255,255,.02);transition:border-color .3s}
 .agent.run{border-color:rgba(228,129,60,.45);box-shadow:none;font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:.55rem}
 .agent .st{width:8px;height:8px;border-radius:50%;background:rgba(156,163,184,.4);flex:none}
-.agent.run .st{background:var(--cyan);box-shadow:0 0 8px var(--cyan);animation:pl 1.2s infinite}
-.agent.done .st{background:var(--green);box-shadow:0 0 8px var(--green)}
+.agent.run .st{background:var(--cyan);animation:pl 1.2s infinite}
+.agent.done .st{background:var(--green)}
 @keyframes pl{50%{opacity:.35}}
 .agent .log{font-size:.92rem;color:var(--muted);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .agent .bar{width:130px;height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden}
@@ -1400,7 +1400,7 @@ function initGame() {
       cx.beginPath(); cx.moveTo(ball.x, ball.y); cx.lineTo(drag.x, drag.y); cx.stroke(); cx.setLineDash([]);
       cx.strokeStyle = 'rgba(228,129,60,.9)'; cx.lineWidth = 3;
       cx.beginPath(); cx.arc(ball.x, ball.y, br + 7, -Math.PI/2, -Math.PI/2 + power * 6.283); cx.stroke();
-      cx.fillStyle = '#E4813C'; cx.font = '700 12px Rajdhani, sans-serif'; cx.textAlign = 'center';
+      cx.fillStyle = '#E4813C'; cx.font = '500 12px "JetBrains Mono", ui-monospace, monospace'; cx.textAlign = 'center';
       cx.fillText(`POWER ${Math.round(power * 100)}%`, ball.x, ball.y + br + 22); cx.textAlign = 'left';
     }
     // confetti
@@ -1422,7 +1422,7 @@ function initGame() {
         const a = el < 140 ? el / 140 : el > 900 ? (1150 - el) / 250 : 1;
         const sc = 1 + .12 * Math.sin(Math.min(1, el / 1150) * Math.PI);
         cx.save(); cx.translate(W/2, H * .4); cx.scale(sc, sc); cx.globalAlpha = Math.max(0, a);
-        cx.font = '900 40px Orbitron, sans-serif'; cx.textAlign = 'center';
+        cx.font = '700 40px Archivo, system-ui, sans-serif'; cx.textAlign = 'center';
         cx.shadowColor = banner.c; cx.shadowBlur = 26;
         cx.fillStyle = banner.c; cx.fillText(banner.txt, 0, 0);
         cx.restore(); cx.globalAlpha = 1; cx.shadowBlur = 0;
@@ -1437,10 +1437,10 @@ function initGame() {
       cx.beginPath(); cx.moveTo(ball.x + 32, ball.y - 92); cx.lineTo(ball.x + 19, ball.y - 82); cx.moveTo(ball.x + 32, ball.y - 92); cx.lineTo(ball.x + 34, ball.y - 74); cx.stroke();
       cx.textAlign = 'center';
       cx.fillStyle = `rgba(228,129,60,${.65 + pulse * .35})`;
-      cx.font = '900 21px Orbitron, sans-serif';
+      cx.font = '700 21px Archivo, system-ui, sans-serif';
       cx.fillText('▶ PLAY YOUR GAME NOW', W/2, H/2 - 8);
       cx.fillStyle = 'rgba(244,244,250,.95)';
-      cx.font = '600 15px Rajdhani, sans-serif';
+      cx.font = '400 15px Archivo, system-ui, sans-serif';
       cx.fillText('Press & hold the ball · drag to aim & power · release to shoot', W/2, H/2 + 20);
       cx.textAlign = 'left';
     }
@@ -1448,9 +1448,9 @@ function initGame() {
     const hud = cx.createLinearGradient(0, H - 34, 0, H);
     hud.addColorStop(0, 'rgba(5,5,8,.55)'); hud.addColorStop(1, 'rgba(5,5,8,.9)');
     cx.fillStyle = hud; cx.fillRect(0, H - 34, W, 34);
-    cx.fillStyle = '#F4F4FA'; cx.font = '700 13px Rajdhani, sans-serif';
+    cx.fillStyle = '#ECEDEF'; cx.font = '500 13px Archivo, system-ui, sans-serif';
     cx.fillStyle = '#F0975B'; cx.fillText(`LVL ${level}`, 14, H - 13);
-    cx.fillStyle = '#F4F4FA';
+    cx.fillStyle = '#ECEDEF';
     cx.fillText(`SHOT ${Math.min(shots + 1, 5)}/5`, 72, H - 13);
     cx.fillText(`GOALS ${goals}`, 168, H - 13);
     cx.fillStyle = '#FBBF24'; cx.fillText(`ⓒ ${coins} COINS`, 250, H - 13);

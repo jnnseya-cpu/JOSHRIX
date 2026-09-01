@@ -96,7 +96,7 @@ export default async function handler(_req: any, res: any) {
 <style>
   .fx-wrap{max-width:1100px;margin:0 auto;padding:0 1rem 4rem}
   .fx-group{margin-top:2.6rem}
-  .fx-group h2{font-size:1.05rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted,#9d9db3)}
+  .fx-group h2{font-size:1.15rem;letter-spacing:-.02em;text-transform:none;font-weight:600;color:var(--muted,#9d9db3)}
   .fx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.1rem;margin-top:1rem}
   .fx-card{border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;background:rgba(255,255,255,.02)}
   .fx-card h3{margin:0 0 .6rem;font-size:1.05rem;line-height:1.35}

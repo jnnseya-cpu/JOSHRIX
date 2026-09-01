@@ -17,26 +17,26 @@
   box-shadow:0 30px 70px rgba(0,0,0,.6),0 0 50px rgba(228,129,60,.2),inset 0 1px 0 rgba(255,255,255,.08)}
 #stage canvas{display:block;width:100%;touch-action:none;cursor:crosshair}
 .hud3{position:absolute;top:.8rem;left:.9rem;display:flex;gap:.5rem;flex-wrap:wrap;pointer-events:none}
-.hud3 span{font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.18em;color:var(--text);
+.hud3 span{font-family:var(--mono);font-size:.62rem;font-weight:700;letter-spacing:.08em;color:var(--text);
   background:rgba(5,5,8,.62);border:1px solid var(--stroke-bright);border-radius:999px;padding:.35rem .8rem;backdrop-filter:blur(6px)}
 .hud3 .lv{color:#F0975B}.hud3 .cn{color:#FBBF24}
 #msg3{position:absolute;bottom:.9rem;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.66rem;
-  font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);background:rgba(5,5,8,.62);
+  font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan);background:rgba(5,5,8,.62);
   border:1px solid rgba(228,129,60,.35);border-radius:999px;padding:.45rem 1.1rem;pointer-events:none;white-space:nowrap;backdrop-filter:blur(6px)}
 #pow3{position:absolute;bottom:3.4rem;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:.72rem;
-  font-weight:700;letter-spacing:.2em;color:var(--cyan);pointer-events:none;display:none;text-shadow:0 0 12px rgba(228,129,60,.8)}
+  font-weight:700;letter-spacing:.08em;color:var(--cyan);pointer-events:none;display:none;}
 #tut3{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.7rem;
   background:rgba(5,4,12,.4);pointer-events:none;text-align:center;padding:1rem}
-#tut3 b{font-family:var(--mono);font-weight:900;font-size:clamp(1rem,3vw,1.5rem);letter-spacing:.12em;color:var(--cyan);
-  text-shadow:0 0 22px rgba(228,129,60,.8);animation:tpulse 1.6s ease-in-out infinite}
+#tut3 b{font-family:var(--mono);font-weight:700;font-size:clamp(1rem,3vw,1.5rem);letter-spacing:.12em;color:var(--cyan);
+  animation:tpulse 1.6s ease-in-out infinite}
 #tut3 i{font-style:normal;font-weight:600;font-size:1.02rem;color:var(--text)}
 @keyframes tpulse{50%{opacity:.55}}
 @media(prefers-reduced-motion:reduce){#tut3 b{animation:none}}
 #mute3{position:absolute;top:.8rem;right:.9rem;background:rgba(5,5,8,.62);border:1px solid var(--stroke-bright);
   border-radius:8px;color:var(--text);cursor:pointer;padding:.35rem .65rem;font-size:.95rem;backdrop-filter:blur(6px)}
 #forgeChip{position:absolute;top:.8rem;right:3.4rem;text-decoration:none;font-family:var(--mono);font-size:.6rem;
-  font-weight:700;letter-spacing:.18em;color:#fff;background:linear-gradient(90deg,var(--violet),var(--cyan));
-  border-radius:999px;padding:.45rem .95rem;box-shadow:0 0 18px rgba(228,129,60,.55);transition:transform .25s}
+  font-weight:700;letter-spacing:.08em;color:#fff;background:linear-gradient(90deg,var(--violet),var(--cyan));
+  border-radius:999px;padding:.45rem .95rem;box-shadow:var(--shadow);transition:transform .25s}
 #forgeChip:hover{transform:translateY(-2px)}
 .spec-row{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:1.1rem}
 .spec-row .pill{font-size:.6rem}
