@@ -12,7 +12,7 @@
  * indexed entry pointing at the product page that delivers it — so the hub is
  * useful on day one rather than only once the archive fills.
  */
-import { FEATURES, FEATURE_GROUPS, LIBRARY, n as num } from "./_features";
+import { FEATURES, FEATURE_GROUPS, LIBRARY, BUILD_COST_MINOR, gbp, n as num } from "./_features";
 import { getDb } from "./_ledger";
 import { listBlogPosts } from "./_ledger";
 
@@ -84,7 +84,7 @@ export default async function handler(_req: any, res: any) {
   const html = `<!DOCTYPE html><html lang="en"><head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>What JOSHRIX Studio Does — Every Feature, With The Specifics</title>
-<meta name="description" content="Every capability of JOSHRIX Studio: ${num(LIBRARY.models)} 3D models and ${num(LIBRARY.sprites)} sprites included, metered pricing from £0.32 a game, 75-92.5% revenue share, mobile-money payouts, and refunds on failed builds.">
+<meta name="description" content="Every capability of JOSHRIX Studio: ${num(LIBRARY.models)} 3D models and ${num(LIBRARY.sprites)} sprites included, metered pricing from ${gbp(BUILD_COST_MINOR.twoD)} a game, 75-92.5% revenue share, mobile-money payouts, and refunds on failed builds.">
 <link rel="canonical" href="${SITE}/features">
 <meta property="og:type" content="website">
 <meta property="og:title" content="What JOSHRIX Studio Does — Every Feature">

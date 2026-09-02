@@ -182,11 +182,49 @@
   }
 
 
+  /**
+   * The footer status badge.
+   *
+   * Nineteen pages carried the literal text "\u25C9 ALL SYSTEMS OPERATIONAL",
+   * hard-coded. A status indicator that cannot go red is not a status
+   * indicator — it stays green through an outage, which is worse than having
+   * none, because a visitor who once catches it lying stops believing the rest
+   * of the page. /api/health already reports the real thing: whether the
+   * deployment answers, and how many AI providers are configured.
+   *
+   * It lives here rather than on each page because appnav.js is the one script
+   * all nineteen already load. If the endpoint cannot be reached the badge
+   * stays hidden: unreachable is not the same as operational, and guessing in
+   * the optimistic direction is the whole defect being fixed.
+   */
+  function status() {
+    var els = document.querySelectorAll(".foot-base .sys");
+    if (!els.length) return;
+    for (var i = 0; i < els.length; i++) els[i].hidden = true;
+
+    var base = (window.JOSHRIX_API_BASE || "");
+    fetch(base + "/api/health", { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("status " + r.status); return r.json(); })
+      .then(function (h) {
+        var providers = 0, ps = h && h.providers;
+        if (ps) for (var k in ps) if (Object.prototype.hasOwnProperty.call(ps, k) && ps[k]) providers++;
+        var text = h && h.ok
+          ? "\u25C9 Operational \u00B7 " + providers + " AI provider" + (providers === 1 ? "" : "s") + " ready"
+          : "\u25C9 Degraded";
+        for (var j = 0; j < els.length; j++) { els[j].textContent = text; els[j].hidden = false; }
+      })
+      .catch(function () { /* stay hidden */ });
+  }
+
   try {
     if (document.readyState === "loading") {
-      document.addEventListener("DOMContentLoaded", function () { try { build(); } catch (e) {} });
+      document.addEventListener("DOMContentLoaded", function () {
+        try { build(); } catch (e) {}
+        try { status(); } catch (e) {}
+      });
     } else {
       build();
+      try { status(); } catch (e) {}
     }
   } catch (e) { /* navigation must never break the page it sits on */ }
 })();

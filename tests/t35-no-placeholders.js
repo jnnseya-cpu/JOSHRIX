@@ -207,6 +207,82 @@ console.log('\nwhat the page promises is what the ledger pays');
     growth.statusForPaidReferrals(1000) === 'Elite Referrer');
 }
 
+/* ================================================================= *
+ * 5. THE LANDING PAGE DOES NOT INVENT NUMBERS
+ * -----------------------------------------------------------------
+ * The front page shipped an "Operator Command Centre": eight panels with
+ * animated bar charts and readouts reading "14 TITLES · ON-CHAIN · 0 DISPUTES",
+ * "PROJECTION CONFIDENCE 94%" and "7/7 AGENTS NOMINAL". Nobody had 14 titles —
+ * three screens further down the same page rendered "No public worlds yet".
+ * Above them sat four hero statistics: 90% cost reduction, <48 hours to market,
+ * 7 agents, 100% creator-owned IP. Three were unfalsifiable, and they took the
+ * fourth down with them, because a visitor who catches one invented figure is
+ * right to discard the rest.
+ *
+ * This platform ships a feature called "Analytics that refuse to invent
+ * numbers". The landing page is the first thing a buyer reads.
+ * ================================================================= */
+console.log('\nthe landing page states only what can be counted');
+{
+  const features = require('./build/api/_features.js');
+  // Comments explaining what was removed necessarily quote it. Strip them
+  // first, or the fix for a defect reads as the defect.
+  const page = fs.readFileSync(path.join(ROOT, 'frontend/index.html'), 'utf8')
+    .replace(/<!--[\s\S]*?-->/g, ' ')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ');
+
+  const banned = [
+    [/\d+\s*TITLES/i, 'a title count nobody has earned'],
+    [/0\s*DISPUTES/i, 'a dispute count'],
+    [/CONFIDENCE\s*\d+%/i, 'a fabricated confidence score'],
+    [/\d+\/\d+\s*AGENTS\s*NOMINAL/i, 'a fabricated agent health readout'],
+    [/ACTIVE FORGES/i, 'a fabricated forge count'],
+    [/PAYOUT ARMED/i, 'a fabricated payout state'],
+    [/AGE RATING CLEAR/i, 'a fabricated rating state'],
+    [/data-count="90"/, 'the 90% cost-reduction claim'],
+    [/Cost Reduction/i, 'the 90% cost-reduction claim'],
+    [/Hours To Market/i, 'the <48 hours claim'],
+    [/ALL SYSTEMS OPERATIONAL/i, 'a status badge that cannot go red'],
+  ];
+  for (const [re, what] of banned) {
+    t('no ' + what, !re.test(page), String(re));
+  }
+
+  // Every figure the hero states must come from the source of truth, so that
+  // changing the library or the metering changes the page or fails here.
+  t('the model count matches _features.LIBRARY',
+    page.includes(`data-count="${features.LIBRARY.models}"`),
+    `expected data-count="${features.LIBRARY.models}"`);
+  t('the sprite count matches _features.LIBRARY',
+    page.includes(`data-count="${features.LIBRARY.sprites}"`),
+    `expected data-count="${features.LIBRARY.sprites}"`);
+  t('the build cost matches _features.BUILD_COST_MINOR',
+    page.includes(features.gbp(features.BUILD_COST_MINOR.twoD)) &&
+    page.includes(features.gbp(features.BUILD_COST_MINOR.threeD)),
+    `expected ${features.gbp(features.BUILD_COST_MINOR.twoD)} and ${features.gbp(features.BUILD_COST_MINOR.threeD)}`);
+
+  // The commission ladder is owned by shared/payments.ts. A landing page that
+  // quotes a rate the ledger does not charge is a pricing bug with a nice font.
+  const pay = require('./build/shared/payments.js');
+  const rates = pay.PLANS.filter((p) => p.commission !== null).map((p) => p.commission);
+  const worst = Math.max(...rates), best = Math.min(...rates);
+  t('the commission the page quotes is the one the ledger charges',
+    page.includes(`${worst * 100}%`) && page.includes(`${best * 100}%`),
+    `expected ${worst * 100}% and ${best * 100}%`);
+
+  // The demo is only honest while the posters it advertises actually exist.
+  for (const g of ['midnight-post', 'dino-island', 'wonderverse']) {
+    t(`the ${g} poster is a real captured frame on disk`,
+      fs.existsSync(path.join(ROOT, `frontend/assets/posters/${g}.webp`)) &&
+      fs.existsSync(path.join(ROOT, `frontend/games/${g}.html`)),
+      'run tools/game-posters.mjs');
+  }
+
+  // A hidden element whose animation loop still runs is work nobody can see.
+  t('the starfield loop is gone, not merely hidden',
+    !/getElementById\('stars'\)/.test(page) && !/spawnMeteor/.test(page));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 })();

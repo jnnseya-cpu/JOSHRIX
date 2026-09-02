@@ -33,6 +33,29 @@ export const LIBRARY = {
   sprites: 2553,
 } as const;
 
+/**
+ * What one finished game costs in metered compute, in pence.
+ *
+ * This is the single number a creator most wants before signing up, and it was
+ * written out longhand in this file's proof text and again in the features
+ * hub's meta description — the same two-copy pattern that had already let the
+ * model count go stale. The landing page needed it as well, which would have
+ * made three, so it becomes a constant here and `tests/t16-features.js` asserts
+ * that every surface quoting it agrees.
+ *
+ * These are measurements from real forge runs, not a target. If metering or
+ * model routing changes them, change them HERE and the failing test will name
+ * every page that has to follow.
+ */
+export const BUILD_COST_MINOR = {
+  twoD: 32,
+  threeD: 49,
+} as const;
+
+/** "£0.32" — a pence figure as a buyer reads it. */
+export const gbp = (minor: number) =>
+  minor % 100 === 0 ? `£${minor / 100}` : `£${(minor / 100).toFixed(2)}`;
+
 /** "2,591" — the form every marketing claim uses. */
 export const n = (v: number) => v.toLocaleString("en-GB");
 
@@ -103,7 +126,7 @@ export const FEATURES: Feature[] = [
     group: "Economics",
     keywords: ["AI game maker pricing", "pay per use AI credits", "cheapest AI game generator"],
     proof: [
-      "A finished 2D game measures at about £0.32 of compute; a 3D game about £0.49.",
+      `A finished 2D game measures at about ${gbp(BUILD_COST_MINOR.twoD)} of compute; a 3D game about ${gbp(BUILD_COST_MINOR.threeD)}.`,
       "Charges are metered from real token usage, never a flat guess.",
       "The hold is an estimate; whatever the build did not use is refunded the moment it settles.",
     ],

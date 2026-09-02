@@ -29,10 +29,10 @@
    given room.
    ========================================================================== */
 
-/* The three ambient layers the markup still carries. Rather than edit them out
-   of the HTML they are simply not drawn — the page keeps working, the effects
-   do not. */
-#stars,.aurora,#cursorGlow,.grid-floor{display:none!important}
+/* The film grain is the one ambient layer left. The starfield canvas, aurora,
+   cursor glow and perspective floor grid used to be hidden here with
+   display:none while their markup and their animation loop stayed in the page;
+   all four are now deleted rather than concealed. */
 .noise{opacity:.02}
 
 body{background:var(--ink);color:var(--text-2)}
@@ -85,8 +85,19 @@ nav{position:fixed;top:0;left:0;right:0;z-index:50;height:60px;
 .btn-ghost:hover{background:rgba(255,255,255,.05);border-color:#454C59;color:var(--text)}
 
 /* --------------------------------------------------------------- hero ---- */
-header{position:relative;z-index:2;max-width:1120px;margin:0 auto;
-  padding:9rem clamp(1.15rem,4vw,2rem) 5rem;text-align:left}
+/* Two columns: the argument on the left, a running game on the right. The
+   single-column version left the right 45% of a 1440px screen empty and pushed
+   the only piece of evidence on the page below the fold. */
+header{position:relative;z-index:2;max-width:1240px;margin:0 auto;
+  padding:8rem clamp(1.15rem,4vw,2rem) 3.5rem;text-align:left;
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+  gap:clamp(2rem,5vw,4rem);align-items:center}
+.hero-copy{min-width:0}
+@media(max-width:980px){
+  header{grid-template-columns:1fr;padding-top:7rem;gap:2.5rem}
+  /* On a narrow screen the game goes first: it is the reason to stay. */
+  .hero-play{order:-1}
+}
 
 /* The badge was a pill with a pulsing dot announcing the fleet is online.
    It stays, because it is true and it is specific — it just stops glowing. */
@@ -118,15 +129,71 @@ h1 .fill,h1 .grad,h1 .outline{
 .hero-ctas{display:flex;gap:.6rem;margin-top:2rem;flex-wrap:wrap}
 
 /* A measurement belongs in mono and tabular, or it is decoration. */
-.hero-stats{display:flex;gap:3.5rem;margin-top:4rem;flex-wrap:wrap;
-  padding-top:2rem;border-top:1px solid var(--line)}
-.stat .num{font-family:var(--mono);font-weight:500;font-size:1.75rem;
+.hero-stats{list-style:none;display:grid;grid-template-columns:1fr 1fr;
+  gap:1.25rem 2rem;margin-top:2.5rem;padding-top:1.75rem;border-top:1px solid var(--line)}
+.stat .num{display:block;font-family:var(--mono);font-weight:500;font-size:1.5rem;
   font-variant-numeric:tabular-nums;letter-spacing:-.03em;color:var(--text);
   background:none;-webkit-text-fill-color:var(--text);text-shadow:none}
-.stat .lbl{font-family:var(--sans);font-size:.8125rem;font-weight:400;
-  letter-spacing:0;text-transform:none;color:var(--text-3);margin-top:.2rem}
+.stat .lbl{display:block;font-family:var(--sans);font-size:.8125rem;font-weight:400;
+  line-height:1.4;letter-spacing:0;text-transform:none;color:var(--text-3);margin-top:.25rem}
 
 .scroll-hint{display:none}
+
+/* ---------------------------------------------------- hero: play frame --- */
+/* The poster is a frame captured from the game by tools/game-posters.mjs, not
+   an emoji on a panel. One click swaps it for the live iframe; the game is not
+   loaded until then, so the fold stays cheap. */
+.hero-play{min-width:0}
+.play-frame{position:relative;border:1px solid var(--line-strong);border-radius:var(--r);
+  overflow:hidden;background:var(--ink-sunk);box-shadow:var(--shadow-lift);
+  aspect-ratio:16/10}
+.play-frame iframe{display:block;width:100%;height:100%;border:0;background:#000}
+.play-poster{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;
+  cursor:pointer;background:var(--ink-sunk);display:block;font-family:var(--sans);
+  color:var(--text);text-align:left}
+.play-poster img{display:block;width:100%;height:100%;object-fit:cover;
+  transition:transform .4s cubic-bezier(.2,0,0,1),filter .2s;filter:brightness(.94)}
+.play-poster:hover img,.play-poster:focus-visible img{transform:scale(1.02);filter:brightness(1)}
+.play-poster::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 58%,rgba(7,8,11,.88))}
+.play-go{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:2;
+  width:64px;height:64px;border-radius:50%;background:var(--signal);color:#FFFFFF;
+  display:flex;align-items:center;justify-content:center;font-size:1.35rem;
+  padding-left:4px;transition:background .15s,transform .15s}
+.play-poster:hover .play-go{background:var(--signal-hi);transform:translate(-50%,-50%) scale(1.06)}
+.play-label{position:absolute;left:1.1rem;right:1.1rem;bottom:1rem;z-index:2;
+  font-size:.9375rem;color:var(--text-2)}
+.play-label b{color:var(--text);font-weight:600}
+
+.play-switch{display:flex;gap:.4rem;margin-top:.75rem;flex-wrap:wrap}
+.play-switch button{font-family:var(--sans);font-size:.8125rem;cursor:pointer;
+  color:var(--text-3);background:transparent;border:1px solid var(--line);
+  border-radius:999px;padding:.35rem .75rem;transition:color .15s,border-color .15s,background .15s}
+.play-switch button:hover{color:var(--text);border-color:var(--line-strong)}
+.play-switch button[aria-pressed="true"]{color:var(--text);border-color:var(--signal-line);
+  background:var(--signal-dim)}
+.play-note{margin-top:.9rem;color:var(--text-3);font-size:.8125rem;line-height:1.55}
+
+/* ------------------------------------------------------------- facts ----- */
+/* The numbers a creator wants before spending anything, including the ones
+   that cost us something to say. */
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(228px,1fr));gap:1rem;margin-top:2rem}
+.fact{border:1px solid var(--line);border-radius:var(--r);padding:1.5rem 1.4rem;
+  background:var(--ink-raised);box-shadow:var(--shadow);
+  transition:border-color .15s,background .15s}
+.fact:hover{border-color:var(--line-strong);background:var(--ink-high)}
+.fact h3{font-family:var(--sans);font-size:.9375rem;font-weight:600;letter-spacing:-.012em;
+  color:var(--text-3);margin-bottom:.6rem}
+.fact .big{font-family:var(--mono);font-size:1.65rem;font-weight:500;color:var(--text);
+  font-variant-numeric:tabular-nums;margin-bottom:.7rem;line-height:1.2}
+.fact .big small{font-family:var(--sans);font-size:.75rem;font-weight:400;color:var(--text-3);
+  letter-spacing:0}
+.fact p{color:var(--text-2);font-size:.9375rem;line-height:1.6}
+.fact p b{color:var(--text);font-weight:600}
+/* The limitations card is the widest because it is the longest and because it
+   should not read as a footnote. */
+.fact-wide{grid-column:1/-1;border-color:var(--line-strong)}
+.fact-wide h3{color:var(--signal)}
 
 /* THE CAST. Six real GLB models out of 2,591, rendered by
    tools/hero-render.mjs through the same three-light rig the game runtime
@@ -134,14 +201,14 @@ h1 .fill,h1 .grad,h1 .outline{
    library it cannot quietly stop being true. It replaces an aurora and a
    starfield: a platform that ships game-ready models should show game-ready
    models. */
-.hero-cast{margin-top:3.5rem;padding-top:2.5rem;border-top:1px solid var(--line)}
+.hero-cast{max-width:1240px;margin:0 auto;padding:0 clamp(1.15rem,4vw,2rem) 1rem}
 .hero-cast img{display:block;width:100%;height:auto;
   /* the figures are lit from above-left; a soft floor shadow under them keeps
      them standing on something instead of floating */
   filter:none}
 .hero-cast figcaption{margin-top:1rem;color:var(--text-3);font-size:.875rem}
 .hero-cast figcaption b{color:var(--text-2);font-weight:500}
-@media(max-width:720px){.hero-cast{margin-top:2.5rem;padding-top:2rem}}
+@media(max-width:720px){.hero-cast figcaption{font-size:.8125rem}}
 
 /* ------------------------------------------------------------ sections --- */
 section{position:relative;z-index:2;max-width:1120px;margin:0 auto;
@@ -197,7 +264,9 @@ h2 .grad{background:none;-webkit-background-clip:initial;background-clip:initial
   background:var(--ok);box-shadow:none;animation:live 2.4s ease-in-out infinite}
 
 .modules{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--line)}
-.module{background:var(--ink-raised);padding:1.2rem 1.15rem;transition:background .15s}
+.module{display:block;text-decoration:none;background:var(--ink-raised);
+  padding:1.2rem 1.15rem;transition:background .15s}
+.module:focus-visible{outline:2px solid var(--signal);outline-offset:-2px}
 .module:hover{background:var(--ink-high)}
 .module h3{font-family:var(--sans);font-weight:600;font-size:.8125rem;letter-spacing:0;
   text-transform:none;color:var(--text);display:flex;align-items:center;gap:.45rem;margin-bottom:.4rem}
@@ -276,22 +345,6 @@ h2 .grad{background:none;-webkit-background-clip:initial;background-clip:initial
   background:rgba(255,255,255,.03)}
 .lang-strip p{color:var(--text-2);font-size:.9375rem;line-height:1.6}
 
-/* ---------------------------------------------------------- try / demo --- */
-.jx-try{padding-top:3rem}
-.try-frame{position:relative;border:1px solid var(--line);border-radius:var(--r);
-  overflow:hidden;background:var(--ink-sunk);margin-top:1.75rem;box-shadow:var(--shadow)}
-.try-frame iframe{display:block;width:100%;height:min(62vh,540px);border:0;background:#000}
-.try-poster{position:absolute;inset:0;width:100%;border:0;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.5rem;
-  background:var(--ink-raised);color:var(--text);font-family:var(--sans)}
-.try-emoji{font-size:2rem;filter:none}
-.try-name{font-size:1.125rem;font-weight:600;letter-spacing:-.015em}
-.try-meta{font-family:var(--mono);font-size:.75rem;color:var(--text-3);letter-spacing:.04em}
-.try-go{margin-top:.75rem;display:inline-flex;align-items:center;gap:.4rem;
-  background:var(--signal);color:#FFFFFF;border-radius:var(--r-sm);
-  padding:.6rem 1.1rem;font-weight:600;font-size:.9375rem;box-shadow:none;transition:background .15s}
-.try-poster:hover .try-go{background:var(--signal-hi);transform:none}
-.try-foot{margin-top:.9rem;color:var(--text-3);font-size:.875rem}
 
 /* ------------------------------------------------------------ marquee ---- */
 /* A scrolling ticker is a decoration that never stops moving. It keeps its
@@ -356,10 +409,13 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
   </defs>
 </svg>
 
-<canvas id="stars" aria-hidden="true"></canvas>
-<div class="aurora" aria-hidden="true"></div>
+<!-- The starfield canvas, aurora and cursor glow that used to live here are gone
+     rather than hidden. The design system set them to display:none, but the
+     inline script below kept animating 220 twinkling dots and a meteor timer
+     into the hidden canvas and kept two mousemove listeners alive — a
+     requestAnimationFrame loop running for the life of every session, painting
+     something no one can see. The film grain stays: it is drawn. -->
 <div class="noise" aria-hidden="true"></div>
-<div id="cursorGlow" aria-hidden="true"></div>
 
 <nav>
   <a class="brand" href="#top" aria-label="JOSHRIX Studio home">
@@ -378,235 +434,90 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
 </nav>
 
 <header id="top">
-  <div class="grid-floor" aria-hidden="true"></div>
-  <div class="hero-badge"><span class="dot"></span> Autonomous Production Fleet — Online</div>
-  <h1>
-    <span class="line fill">Create Worlds.</span>
-    <span class="line grad">Build Games.</span>
-    <span class="line outline">Own the Future.</span>
-  </h1>
-  <p class="hero-sub">
-    <b>JOSHRIX Studio</b> is the autonomous AI production OS for game creators.
-    Input a concept — an orchestrated agent fleet synthesises, builds, validates,
-    and publishes your game. <b>You own every pixel of the IP. Forever.</b>
-  </p>
-  <div class="hero-ctas">
-    <a class="btn btn-primary" href="#try">▶&nbsp; Play One Now — No Account</a>
-    <a class="btn btn-ghost" href="studio.html">Start Forging</a>
+  <div class="hero-copy">
+    <div class="hero-badge"><span class="dot"></span> Autonomous Production Fleet — Online</div>
+    <h1>
+      <span class="line fill">Create Worlds.</span>
+      <span class="line grad">Build Games.</span>
+      <span class="line outline">Own the Future.</span>
+    </h1>
+    <p class="hero-sub">
+      Describe a game in your own words, in any language. An agent fleet designs it,
+      writes it, checks it and hands you a link that plays in any browser — no engine,
+      no install, no code. <b>You own it outright</b>, and you pay only for the builds
+      you keep.
+    </p>
+    <div class="hero-ctas">
+      <a class="btn btn-primary" href="studio.html">Start Forging</a>
+      <a class="btn btn-ghost" href="pricing.html">See what it costs</a>
+    </div>
+    <!-- Every figure here is countable and sourced: the library numbers come from
+         api/_features.ts LIBRARY, the compute figure from BUILD_COST_MINOR, and
+         tests/t35 fails if this markup and those constants disagree. The four
+         numbers that stood here before — 90% cost reduction, <48 hours to market,
+         7 agents, 100% owned — were three invented statistics propping up the one
+         true claim, which is a bad trade: a visitor who catches one made-up number
+         correctly discards the rest. -->
+    <ul class="hero-stats">
+      <li class="stat"><span class="num" data-count="2591">0</span><span class="lbl">3D models included, all&nbsp;CC0</span></li>
+      <li class="stat"><span class="num" data-count="2553">0</span><span class="lbl">2D sprites included, all&nbsp;CC0</span></li>
+      <li class="stat"><span class="num">£0.32</span><span class="lbl">of compute for a finished game</span></li>
+      <li class="stat"><span class="num" data-count="100" data-suffix="%">0</span><span class="lbl">of the IP stays yours</span></li>
+    </ul>
   </div>
-  <figure class="hero-cast reveal">
-  <img src="assets/hero-cast.webp" width="2100" height="620" loading="eager" decoding="async"
+
+  <!-- The right half of this fold used to be 620px of empty black while the one
+       asset that proves anything — a real game — sat two clicks and a scroll
+       away behind an emoji. A games platform whose first screen contains no game
+       is asking to be taken on trust it has not earned yet. -->
+  <div class="hero-play">
+    <div class="play-frame" id="playFrame">
+      <button class="play-poster" id="playPoster" type="button" data-game="midnight-post">
+        <img id="playPosterImg" src="assets/posters/midnight-post.webp" width="1200" height="750"
+             loading="eager" decoding="async" fetchpriority="high"
+             alt="Midnight Post: a post van on a night road between low-poly cottages, with a parcel counter and a countdown to dawn.">
+        <span class="play-go" aria-hidden="true">▶</span>
+        <span class="play-label">Play <b id="playTitle">Midnight Post</b> — right here, no account</span>
+      </button>
+    </div>
+    <div class="play-switch" role="group" aria-label="Choose a game to play">
+      <button type="button" data-game="midnight-post" data-title="Midnight Post" aria-pressed="true">Midnight Post</button>
+      <button type="button" data-game="dino-island" data-title="Dino Island" aria-pressed="false">Dino Island</button>
+      <button type="button" data-game="wonderverse" data-title="WonderVerse" aria-pressed="false">WonderVerse</button>
+    </div>
+    <p class="play-note">
+      Reference games, hand-built on the same runtime and the same model library
+      every forge targets — so this is what a build has to work with. Each is a URL:
+      no download, no account, plays on a phone.
+    </p>
+  </div>
+</header>
+
+<!-- The cast strip earns its place here rather than in the hero: it is proof for
+     the "2,591 models included" claim directly above it, and a full-width band is
+     the right shape for a line-up. -->
+<figure class="hero-cast reveal">
+  <img src="assets/hero-cast.webp" width="2100" height="620" loading="lazy" decoding="async"
        alt="Six models from the JOSHRIX library: a golden knight, a zombie, a robot, a winged monster, a cow and a race car.">
   <figcaption><b>Six of 2,591 models</b> that ship with every account — rendered from the actual library, not illustrated.</figcaption>
 </figure>
 
-<div class="hero-stats">
-    <div class="stat"><div class="num" data-count="90" data-suffix="%">0</div><div class="lbl">Cost Reduction</div></div>
-    <div class="stat"><div class="num" data-count="48" data-prefix="&lt;">0</div><div class="lbl">Hours To Market</div></div>
-    <div class="stat"><div class="num" data-count="7">0</div><div class="lbl">Agent Fleet</div></div>
-    <div class="stat"><div class="num" data-count="100" data-suffix="%">0</div><div class="lbl">Creator-Owned IP</div></div>
-  </div>
-  <div class="scroll-hint" aria-hidden="true">Scroll<span class="bar"></span></div>
-</header>
-
-<section id="try" class="jx-try">
-  <h2 class="reveal">Don't take our word for it. <span class="grad">Play one.</span></h2>
-  <p class="sec-sub reveal">Built on JOSHRIX, with the same model library and the same rules every forge here has to meet. No account, no download, no payment — it runs in this page.</p>
-  <div class="try-frame reveal" id="tryFrame">
-    <button class="try-poster" id="tryPoster" type="button" aria-label="Play Dino Island">
-      <span class="try-emoji" aria-hidden="true">🦖</span>
-      <span class="try-name">Dino Island — Guardian of the Nest</span>
-      <span class="try-meta">3D · plays on phone and desktop · loads in seconds</span>
-      <span class="try-go">▶ Play</span>
-    </button>
-  </div>
-  <p class="try-foot reveal">Made something better? <a href="studio.html">Forge yours</a> — creation starts from a &pound;5 ACU pack.</p>
-</section>
-
-
-<div class="marquee" aria-hidden="true">
+<!-- The ticker that stood here read "Concept To Product ◆ Autonomous Agent Fleet
+     ◆ Sovereign Licensing ◆ BitriPay Settlements". Nine phrases, none of which
+     tells a creator anything they can act on. Same strip, same quiet treatment,
+     facts instead. -->
+<div class="marquee">
   <div class="track">
-    <span>Concept To Product <i>◆</i> Autonomous Agent Fleet <i>◆</i> On-Chain IP Registry <i>◆</i> Economy Design At Forge Time <i>◆</i> AI QA &amp; Age-Rating <i>◆</i> One-Click Global Deployment <i>◆</i> Zero-Code Pipeline <i>◆</i> BitriPay Settlements <i>◆</i> Sovereign Licensing <i>◆</i></span>
-    <span>Concept To Product <i>◆</i> Autonomous Agent Fleet <i>◆</i> On-Chain IP Registry <i>◆</i> Economy Design At Forge Time <i>◆</i> AI QA &amp; Age-Rating <i>◆</i> One-Click Global Deployment <i>◆</i> Zero-Code Pipeline <i>◆</i> BitriPay Settlements <i>◆</i> Sovereign Licensing <i>◆</i></span>
+    <span>Runs in a browser tab <i>◆</i> No engine to learn <i>◆</i> No install for players
+      <i>◆</i> Any language <i>◆</i> CC0 assets included <i>◆</i> Refunded if you discard the build
+      <i>◆</i> Payouts by mobile money, card or bank</span>
   </div>
 </div>
 
-<section id="engine">
-  <div class="sec-tag reveal">The Agent Fleet</div>
-  <h2 class="reveal">Seven Agents. <span class="grad">One Forge Cycle.</span></h2>
-  <p class="sec-sub reveal">Input a concept. The autonomous fleet executes in orchestrated parallel clusters — synthesising, building, validating, and publishing commercial-grade game IP with no manual production bottleneck.</p>
-  <div class="grid-3">
-    <div class="card reveal">
-      <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
-      <span class="tag">AGT.01</span>
-      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 00-4 12.7c.6.5 1 1.2 1 2V18h6v-1.3c0-.8.4-1.5 1-2A7 7 0 0012 2z"/><path d="M9 21h6M10 18v3M14 18v3"/></svg></div>
-      <h3>Idea Agent</h3>
-      <p>Turns a raw prompt into a full creative brief — genre, mechanics, narrative arc, and art direction — fed by real-time market predictive intelligence so you never build into a dead niche.</p>
-    </div>
-    <div class="card reveal">
-      <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
-      <span class="tag">AGT.02</span>
-      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg></div>
-      <h3>Strategic Agent</h3>
-      <p>Positions every forge against the live competitive landscape — audience sizing, platform selection, pricing strategy, and launch-window timing, decided before a single asset is built.</p>
-    </div>
-    <div class="card reveal">
-      <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
-      <span class="tag">AGT.03</span>
-      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13 5l-2 14"/></svg></div>
-      <h3>Code Agent</h3>
-      <p>Writes, refactors, and optimises production game code — gameplay systems, netcode, and platform integrations — at enterprise grade, with zero code required from you.</p>
-    </div>
-    <div class="card reveal">
-      <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
-      <span class="tag">AGT.04</span>
-      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.1 4.9L19 10l-4.9 2.1L12 17l-2.1-4.9L5 10l4.9-2.1L12 3z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15z"/></svg></div>
-      <h3>Asset Agent</h3>
-      <p>Generates cohesive art, audio, UI, and animation from your creative brief — characters, environments, soundtracks, and VFX that share one visual soul.</p>
-    </div>
-    <div class="card reveal">
-      <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
-      <span class="tag">AGT.05</span>
-      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5c0-1 1-1.7 2.5-1.7s2.5.7 2.5 1.7c0 2.7-5 1.6-5 4.3 0 1 1 1.7 2.5 1.7s2.5-.7 2.5-1.7"/></svg></div>
-      <h3>Economy Agent</h3>
-      <p>Designs hyper-optimised monetisation loops at forge time — in-game economies, pricing tiers, and marketplace strategy that most studios never get right.</p>
-    </div>
-    <div class="card reveal">
-      <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
-      <span class="tag">AGT.06</span>
-      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg></div>
-      <h3>QA Agent</h3>
-      <p>Runs mechanical stability, IP-risk, age-rating, and cross-platform validation autonomously — the QA pass that takes human teams weeks, finished before your coffee is.</p>
-    </div>
-    <div class="card reveal">
-      <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
-      <span class="tag">AGT.07</span>
-      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15l-2-2c.5-3.5 2-6.5 5-9 2 1.5 3.5 3 4 6-2.5 3-5.5 4.5-7 5z"/><path d="M10 13l-5 2 2-5M13 16l-2 5-1-4M17.5 6.5l.01.01"/></svg></div>
-      <h3>Deployment Agent</h3>
-      <p>One shareable link the moment moderation approves — playable on any phone or desktop, with no store review and no install. Store listings are a paid service you can request per game.</p>
-    </div>
-  </div>
-</section>
-
-<section id="command">
-  <div class="sec-tag reveal">Operator Command Centre</div>
-  <h2 class="reveal">Mission Control For <span class="grad">Every Forge</span></h2>
-  <p class="sec-sub reveal">Every operator gets a dedicated AI Command Centre — seven intelligence modules running continuously in the background of every session.</p>
-  <div class="console reveal">
-    <div class="console-bar">
-      <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
-      <span class="title">JOSHRIX OS — Operator Session</span>
-      <span class="session">FLEET SYNCED</span>
-    </div>
-    <div class="modules">
-      <div class="module">
-        <h3><span class="st"></span>Forge Intelligence</h3>
-        <p>Real-time visibility into every active and completed forge cycle. Monitor agents, view logs, trigger re-runs.</p>
-        <div class="viz">
-          <div class="bar-row"><b>CYCLE 047</b><span class="bar"><i style="--w:82%;--d:.1s"></i></span></div>
-          <div class="bar-row"><b>CYCLE 048</b><span class="bar"><i style="--w:34%;--d:.25s"></i></span></div>
-          <div class="readout">2 ACTIVE FORGES · 0 BLOCKED</div>
-        </div>
-      </div>
-      <div class="module">
-        <h3><span class="st"></span>Market Radar</h3>
-        <p>Live trend analysis from the Idea Agent's predictive layer. Validate a niche before you spend a single forge credit.</p>
-        <div class="viz">
-          <div class="bar-row"><b>ROGUELITE</b><span class="bar ok"><i style="--w:91%;--d:.1s"></i></span></div>
-          <div class="bar-row"><b>IDLE RPG</b><span class="bar warn"><i style="--w:38%;--d:.25s"></i></span></div>
-          <div class="readout">NICHE VIABILITY · LIVE FEED</div>
-        </div>
-      </div>
-      <div class="module">
-        <h3><span class="st"></span>IP Vault</h3>
-        <p>Sovereign registry of all forged game IP. View certificates, assign licences, list on the marketplace.</p>
-        <div class="viz">
-          <div class="bar-row"><b>REGISTERED</b><span class="bar ok"><i style="--w:100%;--d:.1s"></i></span></div>
-          <div class="readout">14 TITLES · ON-CHAIN · 0 DISPUTES</div>
-        </div>
-      </div>
-      <div class="module">
-        <h3><span class="st"></span>Economy Analyser</h3>
-        <p>Post-forge monetisation projection. Simulate LTV curves, compare economy models, tune price points.</p>
-        <div class="viz">
-          <div class="bar-row"><b>LTV MODEL</b><span class="bar"><i style="--w:74%;--d:.1s"></i></span></div>
-          <div class="bar-row"><b>CHURN RISK</b><span class="bar warn"><i style="--w:22%;--d:.25s"></i></span></div>
-          <div class="readout">PROJECTION CONFIDENCE 94%</div>
-        </div>
-      </div>
-      <div class="module">
-        <h3><span class="st"></span>Revenue Dashboard</h3>
-        <p>Marketplace sales, subscriptions, and royalties in one view. Track earnings and trigger payouts via BitriPay — cards, wallets, and mobile money worldwide.</p>
-        <div class="viz">
-          <div class="bar-row"><b>SALES</b><span class="bar ok"><i style="--w:68%;--d:.1s"></i></span></div>
-          <div class="bar-row"><b>ROYALTIES</b><span class="bar ok"><i style="--w:47%;--d:.25s"></i></span></div>
-          <div class="readout">BITRIPAY SETTLEMENT · PAYOUT ARMED</div>
-        </div>
-      </div>
-      <div class="module">
-        <h3><span class="st"></span>Agent Control</h3>
-        <p>Live status of every agent on active forges. Pause, restart, re-prioritise, and approve agent decisions.</p>
-        <div class="viz">
-          <div class="bar-row"><b>CODE AGT</b><span class="bar"><i style="--w:88%;--d:.1s"></i></span></div>
-          <div class="bar-row"><b>ASSET AGT</b><span class="bar"><i style="--w:63%;--d:.25s"></i></span></div>
-          <div class="readout">7/7 AGENTS NOMINAL</div>
-        </div>
-      </div>
-      <div class="module">
-        <h3><span class="st"></span>Security Vault</h3>
-        <p>IP risk scores, compliance flags, and QA reports per forge. Review certificates and escalate disputes.</p>
-        <div class="viz">
-          <div class="bar-row"><b>IP SAFETY</b><span class="bar ok"><i style="--w:97%;--d:.1s"></i></span></div>
-          <div class="readout">AGE RATING CLEAR · 0 FLAGS</div>
-        </div>
-      </div>
-      <div class="module">
-        <h3><span class="st"></span>Scale To Studio</h3>
-        <p>Team forge queues, shared IP vaults with revenue splits, studio analytics, and role-based access — when you outgrow solo.</p>
-        <div class="viz">
-          <div class="bar-row"><b>TEAM RBAC</b><span class="bar"><i style="--w:100%;--d:.1s"></i></span></div>
-          <div class="readout">SOLO → STUDIO → ENTERPRISE</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="worlds">
-  <div class="sec-tag reveal">Featured Worlds</div>
-  <h2 class="reveal">Forged In <span class="grad">JOSHRIX Studio</span></h2>
-  <p class="sec-sub reveal">Live universes forged by the operator community — from raw concept to global deployment in a single forge cycle. Playable now, evolving nightly.</p>
-  <div class="worlds" id="realWorlds">
-    <p class="sec-sub" id="worldsEmpty" style="display:none">No public worlds yet — moderation-approved games appear here the moment they go live. <a href="studio.html" style="color:var(--cyan,#D92D3F)">Be the first to forge one.</a></p>
-  </div>
-  <script>
-  /* Real data only: featured worlds are the community's actual approved games. */
-  (function () {
-    var API = (window.JOSHRIX_API_BASE || '');
-    var esc = function (t) { return String(t == null ? '' : t).replace(/[<>&"]/g, function (c) { return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
-    fetch(API + '/api/arcade').then(function (r) { return r.json(); }).then(function (j) {
-      var games = (j && j.games) || [];
-      var box = document.getElementById('realWorlds');
-      if (!games.length) { document.getElementById('worldsEmpty').style.display = 'block'; return; }
-      games.slice(0, 3).forEach(function (g, i) {
-        var a = document.createElement('a');
-        a.className = 'world reveal';
-        a.href = 'play/' + encodeURIComponent(g.id);
-        a.style.textDecoration = 'none';
-        a.innerHTML =
-          '<div class="art art-' + ((i % 3) + 1) + '"></div><div class="veil"></div>' +
-          '<div class="live"><span class="dot"></span>LIVE · ' + Number(g.plays || 0).toLocaleString() + ' plays</div>' +
-          '<div class="meta"><span class="genre">Forged in the Studio</span>' +
-          '<h3>' + esc(g.title || 'Untitled world') + '</h3>' +
-          '<p class="desc">' + esc((g.summary || '').slice(0, 120)) + '</p>' +
-          '<span class="enter">Enter World <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>';
-        box.appendChild(a);
-      });
-    }).catch(function () { document.getElementById('worldsEmpty').style.display = 'block'; });
-  })();
-  </script>
-</section>
-
+<!-- POSITION IS THE POINT. This section was the fifth thing on the page, under
+     seven agent cards and a console. It is the only part of the site that makes
+     an argument rather than a list of features, and the argument is the reason
+     to keep reading, so it now runs directly after the fold. -->
 <section id="why">
   <div class="sec-tag reveal">Why The World Switches</div>
   <h2 class="reveal">They Have Players. <span class="grad">We Have Owners.</span></h2>
@@ -638,6 +549,207 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
     <div class="langs"><span>English</span><span>Français</span><span>Kiswahili</span><span>Yorùbá</span><span>Hausa</span><span>العربية</span><span>Português</span><span>Español</span><span>हिन्दी</span><span>中文</span><span>Twi</span><span>isiZulu</span><span>አማርኛ</span><span>日本語</span><span>+ every other</span></div>
     <p>Describe your game in your own words, in your own language — the agent fleet designs it, writes it and voices the commentary in that language, then localises it for the world when you're ready.</p>
   </div>
+</section>
+
+<!-- THE SECTION THAT WAS MISSING. You could read this entire page and still not
+     know what a game costs, what comes out at the end, or what the platform
+     takes when you sell — the five questions a creator asks before they will
+     spend anything. Every figure below already existed in api/_features.ts and
+     shared/payments.ts and had simply never reached the front page. The last
+     card is the one most sites leave out: what it will not do. Whoever states
+     the catch first is the one who gets believed about everything else. -->
+<section id="facts">
+  <div class="sec-tag reveal">Before You Sign Up</div>
+  <h2 class="reveal">The five things <span class="grad">you actually want to know.</span></h2>
+  <p class="sec-sub reveal">Plainly, with the numbers, including the ones that are not flattering.</p>
+  <div class="facts">
+    <article class="fact reveal">
+      <h3>What does one game cost?</h3>
+      <p class="big">£0.32 <small>2D</small> &nbsp; £0.49 <small>3D</small></p>
+      <p>That is metered compute for a finished build, charged from real token usage
+        rather than a flat guess. Credit is bought in ACUs at 1p each, from a £5 pack
+        up. <b>You are charged only if you keep the build</b> — refine it, discard it or
+        walk away and the whole hold comes back.</p>
+    </article>
+    <article class="fact reveal">
+      <h3>What do I get at the end?</h3>
+      <p class="big">A URL</p>
+      <p>A real 3D game on three.js, or a 2D side-scroller, running in a browser tab on
+        a phone or a desktop. No engine to learn, no plugin, no download, and no account
+        for the person you send it to. It also installs from the browser as an app.</p>
+    </article>
+    <article class="fact reveal">
+      <h3>Who owns it?</h3>
+      <p class="big">You do</p>
+      <p>The creator holds the IP; the platform takes a commission on sales and never a
+        stake in the work. The 2,591 models and 2,553 sprites are CC0, so there is no
+        attribution burden on the output, and the game is not locked to the platform the
+        way a Roblox experience is.</p>
+    </article>
+    <article class="fact reveal">
+      <h3>What do you take when I sell?</h3>
+      <p class="big">25% <small>falling to 7.5%</small></p>
+      <p>25% on Creator, 20% on Creator Pro, 15% on Studio, 10% on Business, 7.5% on
+        Enterprise. For comparison: Steam takes 30%, Apple takes 30%, and Roblox keeps
+        roughly three quarters once its currency is converted. Payouts run by mobile
+        money as well as card and bank.</p>
+    </article>
+    <article class="fact reveal fact-wide">
+      <h3>What won't it do?</h3>
+      <p>It will not build your open-world RPG, your multiplayer shooter or anything that
+        needs a team and a year. It does not export to Unity, Unreal or Godot — the output
+        is a hosted browser game, and if you need a project file this is the wrong tool.
+        Photoreal art is out of scope: the library is stylised low-poly, which is what you
+        saw above. Publishing to the public arcade waits on human review, so it is not
+        instant. And a public account starts at zero credit — <b>there is no free AI tier</b>,
+        because the compute is real and someone has to pay for it.</p>
+    </article>
+  </div>
+</section>
+
+<section id="engine">
+  <div class="sec-tag reveal">The Agent Fleet</div>
+  <h2 class="reveal">Seven Agents. <span class="grad">One Forge Cycle.</span></h2>
+  <p class="sec-sub reveal">One concept goes in and a playable, checked, hosted game comes out. These are the seven passes it makes on the way, and what each one is responsible for.</p>
+  <div class="grid-3">
+    <div class="card reveal">
+      <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
+      <span class="tag">AGT.01</span>
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 00-4 12.7c.6.5 1 1.2 1 2V18h6v-1.3c0-.8.4-1.5 1-2A7 7 0 0012 2z"/><path d="M9 21h6M10 18v3M14 18v3"/></svg></div>
+      <h3>Idea Agent</h3>
+      <p>Turns a prompt in any language into a full brief — genre, mechanics, narrative and art direction — with every player-facing string written in the language you used, not translated afterwards.</p>
+    </div>
+    <div class="card reveal">
+      <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
+      <span class="tag">AGT.02</span>
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1"/></svg></div>
+      <h3>Strategic Agent</h3>
+      <p>Settles the shape of the thing before a single asset is built: who it is for, how long a session runs, what the difficulty curve does, and which of the two build targets suits it.</p>
+    </div>
+    <div class="card reveal">
+      <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
+      <span class="tag">AGT.03</span>
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M13 5l-2 14"/></svg></div>
+      <h3>Code Agent</h3>
+      <p>Writes the game: loop, input, collision, scoring, win and lose states, and the wiring to the 3D runtime. Every build must parse, draw a canvas and contain a real game loop before you are shown it.</p>
+    </div>
+    <div class="card reveal">
+      <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
+      <span class="tag">AGT.04</span>
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.1 4.9L19 10l-4.9 2.1L12 17l-2.1-4.9L5 10l4.9-2.1L12 3z"/><path d="M19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9L19 15z"/></svg></div>
+      <h3>Asset Agent</h3>
+      <p>Casts the game from the included library — 2,591 models, 281 of them rigged and animated, and 2,553 sprites — and picks the palette, lighting and audio so one build looks like one game.</p>
+    </div>
+    <div class="card reveal">
+      <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
+      <span class="tag">AGT.05</span>
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 9.5c0-1 1-1.7 2.5-1.7s2.5.7 2.5 1.7c0 2.7-5 1.6-5 4.3 0 1 1 1.7 2.5 1.7s2.5-.7 2.5-1.7"/></svg></div>
+      <h3>Economy Agent</h3>
+      <p>Proposes the in-game economy and a starting price at forge time — currency sinks, reward pacing, and what to charge — as a draft you edit, not a decision made for you.</p>
+    </div>
+    <div class="card reveal">
+      <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
+      <span class="tag">AGT.06</span>
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.4 8.4-8 10-4.6-1.6-8-5-8-10V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg></div>
+      <h3>QA Agent</h3>
+      <p>Runs the gates a build has to clear: it must parse, it must play, and it is scanned for outside network calls, password fields, hidden eval and embedded pages. Anything that trips a gate is discarded and another provider is asked.</p>
+    </div>
+    <div class="card reveal">
+      <span class="c c1"></span><span class="c c2"></span><span class="c c3"></span><span class="c c4"></span>
+      <span class="tag">AGT.07</span>
+      <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15l-2-2c.5-3.5 2-6.5 5-9 2 1.5 3.5 3 4 6-2.5 3-5.5 4.5-7 5z"/><path d="M10 13l-5 2 2-5M13 16l-2 5-1-4M17.5 6.5l.01.01"/></svg></div>
+      <h3>Deployment Agent</h3>
+      <p>One shareable link the moment moderation approves — playable on any phone or desktop, with no store review and no install. Store listings are a paid service you can request per game.</p>
+    </div>
+  </div>
+</section>
+
+<!-- WHAT THIS SECTION USED TO BE. Eight panels described as an "AI Command
+     Centre", each with an animated bar chart and a readout, none of which
+     existed: "Market Radar — live trend analysis from the Idea Agent's
+     predictive layer" describes a market data feed the platform does not have,
+     and the dashboard it was illustrating contains My Games. It is now a map of
+     the surfaces that are actually built, each linking to the page that
+     delivers it — which is also more useful than a console was. -->
+<section id="command">
+  <div class="sec-tag reveal">Inside Your Account</div>
+  <h2 class="reveal">Where everything <span class="grad">actually lives.</span></h2>
+  <p class="sec-sub reveal">Eight surfaces, all of them built. Follow any of them now — you can look before you sign up.</p>
+  <div class="console reveal">
+    <div class="console-bar">
+      <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="title">joshrix.com — signed in</span>
+    </div>
+    <div class="modules">
+      <a class="module" href="dashboard.html">
+        <h3><span class="st"></span>My Games</h3>
+        <p>Every build you have made, playable in place. Keep it, refine it, publish it or throw it away — you are charged only for the ones you keep.</p>
+      </a>
+      <a class="module" href="wallet.html">
+        <h3><span class="st"></span>Wallet</h3>
+        <p>ACU balance and a double-entry ledger of every charge and refund. Payouts by mobile money as well as card and bank, which for a lot of creators is the difference between getting paid and not.</p>
+      </a>
+      <a class="module" href="marketplace.html">
+        <h3><span class="st"></span>Marketplace</h3>
+        <p>List a game at a price you set. Pricing is settled server-side, so a listing cannot be bought at a price you did not choose. Payment runs through Stripe.</p>
+      </a>
+      <a class="module" href="ip-registry.html">
+        <h3><span class="st"></span>IP Registry</h3>
+        <p>A certificate per game, and remix lineage that pays the original creator automatically when someone builds on your work. No other platform in this category tracks lineage.</p>
+      </a>
+      <a class="module" href="growth.html">
+        <h3><span class="st"></span>Growth</h3>
+        <p>Ten tools for marketing what you made — posts, adverts, email, landing copy, hashtags, video scripts, timing. About £0.05 per generated asset, metered like everything else.</p>
+      </a>
+      <a class="module" href="dashboard.html">
+        <h3><span class="st"></span>Analytics</h3>
+        <p>Counted from the platform's own database. Anything that cannot be known — traffic source, demographics, off-platform shares — is listed as not measured, never estimated.</p>
+      </a>
+      <a class="module" href="arcade.html">
+        <h3><span class="st"></span>Arcade</h3>
+        <p>Approved games go public here the moment a human reviewer clears them, and the Arcade installs from the browser as an app. Private playtesting before that is unlimited and free.</p>
+      </a>
+      <a class="module" href="enterprise.html">
+        <h3><span class="st"></span>Teams</h3>
+        <p>Shared vaults with revenue splits, role-based access and a lower commission as you scale — 15% on Studio, 10% on Business, 7.5% on Enterprise.</p>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section id="worlds">
+  <div class="sec-tag reveal">Featured Worlds</div>
+  <h2 class="reveal">Forged In <span class="grad">JOSHRIX Studio</span></h2>
+  <p class="sec-sub reveal">Live universes forged by the operator community — from raw concept to global deployment in a single forge cycle. Playable now, evolving nightly.</p>
+  <div class="worlds" id="realWorlds">
+    <p class="sec-sub" id="worldsEmpty" style="display:none">No public worlds yet — moderation-approved games appear here the moment they go live. <a href="studio.html" style="color:var(--signal)">Be the first to forge one.</a></p>
+  </div>
+  <script>
+  /* Real data only: featured worlds are the community's actual approved games. */
+  (function () {
+    var API = (window.JOSHRIX_API_BASE || '');
+    var esc = function (t) { return String(t == null ? '' : t).replace(/[<>&"]/g, function (c) { return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
+    fetch(API + '/api/arcade').then(function (r) { return r.json(); }).then(function (j) {
+      var games = (j && j.games) || [];
+      var box = document.getElementById('realWorlds');
+      if (!games.length) { document.getElementById('worldsEmpty').style.display = 'block'; return; }
+      games.slice(0, 3).forEach(function (g, i) {
+        var a = document.createElement('a');
+        a.className = 'world reveal';
+        a.href = 'play/' + encodeURIComponent(g.id);
+        a.style.textDecoration = 'none';
+        a.innerHTML =
+          '<div class="art art-' + ((i % 3) + 1) + '"></div><div class="veil"></div>' +
+          '<div class="live"><span class="dot"></span>LIVE · ' + Number(g.plays || 0).toLocaleString() + ' plays</div>' +
+          '<div class="meta"><span class="genre">Forged in the Studio</span>' +
+          '<h3>' + esc(g.title || 'Untitled world') + '</h3>' +
+          '<p class="desc">' + esc((g.summary || '').slice(0, 120)) + '</p>' +
+          '<span class="enter">Enter World <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>';
+        box.appendChild(a);
+      });
+    }).catch(function () { document.getElementById('worldsEmpty').style.display = 'block'; });
+  })();
+  </script>
 </section>
 
 <section id="create">
@@ -680,7 +792,8 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
   </div>
   <div class="foot-base">
     <span>© 2026 JOSHRIX Studio. All worlds belong to their creators. · <a href="terms.html">Terms</a> · <a href="privacy.html">Privacy</a> · <a href="refunds.html">Refunds</a></span>
-    <span class="sys">◉ ALL SYSTEMS OPERATIONAL</span>
+    <!-- filled from /api/health by appnav.js; hidden until the deployment answers -->
+    <span class="sys" hidden></span>
   </div>
 </footer>
 
@@ -688,72 +801,14 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
 (() => {
   const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  /* ---- particle starfield with parallax + shooting stars ---- */
-  const cv = document.getElementById('stars');
-  const cx = cv.getContext('2d');
-  let W, H, stars = [], meteors = [], mx = 0.5, my = 0.5;
-  function size() {
-    W = cv.width = innerWidth * devicePixelRatio;
-    H = cv.height = innerHeight * devicePixelRatio;
-    cv.style.width = innerWidth + 'px';
-    cv.style.height = innerHeight + 'px';
-    stars = Array.from({length: Math.min(220, innerWidth / 6)}, () => ({
-      x: Math.random() * W, y: Math.random() * H,
-      z: Math.random() * 0.8 + 0.2,
-      r: Math.random() * 1.4 + 0.3,
-      tw: Math.random() * Math.PI * 2,
-      hue: Math.random() < 0.18 ? 'rgba(217,45,63,' : (Math.random() < 0.3 ? 'rgba(232,69,90,' : 'rgba(244,244,250,')
-    }));
-  }
-  size();
-  addEventListener('resize', size);
-  addEventListener('mousemove', e => { mx = e.clientX / innerWidth; my = e.clientY / innerHeight; });
-  function spawnMeteor() {
-    meteors.push({ x: Math.random() * W, y: -50, vx: (Math.random() * 2 + 2) * devicePixelRatio, vy: (Math.random() * 3 + 4) * devicePixelRatio, life: 1 });
-    setTimeout(spawnMeteor, 4000 + Math.random() * 7000);
-  }
-  if (!reduced) setTimeout(spawnMeteor, 2500);
-  let t = 0;
-  (function draw() {
-    cx.clearRect(0, 0, W, H);
-    t += 0.016;
-    const px = (mx - 0.5), py = (my - 0.5);
-    for (const s of stars) {
-      const tw = reduced ? 1 : (0.55 + 0.45 * Math.sin(t * 1.6 + s.tw));
-      const ox = px * s.z * 46 * devicePixelRatio, oy = py * s.z * 46 * devicePixelRatio;
-      cx.beginPath();
-      cx.arc(s.x - ox, s.y - oy, s.r * s.z * devicePixelRatio, 0, 7);
-      cx.fillStyle = s.hue + (0.25 + 0.6 * s.z) * tw + ')';
-      cx.fill();
-    }
-    for (let i = meteors.length - 1; i >= 0; i--) {
-      const m = meteors[i];
-      m.x += m.vx; m.y += m.vy; m.life -= 0.008;
-      if (m.life <= 0 || m.y > H + 60) { meteors.splice(i, 1); continue; }
-      const g = cx.createLinearGradient(m.x, m.y, m.x - m.vx * 14, m.y - m.vy * 14);
-      g.addColorStop(0, 'rgba(217,45,63,' + 0.85 * m.life + ')');
-      g.addColorStop(1, 'rgba(217,45,63,0)');
-      cx.strokeStyle = g;
-      cx.lineWidth = 2 * devicePixelRatio;
-      cx.beginPath();
-      cx.moveTo(m.x, m.y);
-      cx.lineTo(m.x - m.vx * 14, m.y - m.vy * 14);
-      cx.stroke();
-    }
-    requestAnimationFrame(draw);
-  })();
+  /* The starfield, the meteor spawner and the cursor glow that lived here are
+     gone. The design system had set #stars, .aurora and #cursorGlow to
+     display:none, but this script kept building 220 star objects, running a
+     requestAnimationFrame loop over them for the life of every session and
+     holding two mousemove listeners open — all of it painting into a canvas
+     nobody could see. Hiding the element does not stop the work. */
 
-  /* ---- cursor glow ---- */
-  const glow = document.getElementById('cursorGlow');
-  if (!reduced && matchMedia('(pointer:fine)').matches) {
-    addEventListener('mousemove', e => {
-      glow.style.opacity = 1;
-      glow.style.left = e.clientX + 'px';
-      glow.style.top = e.clientY + 'px';
-    });
-  }
-
-  /* ---- card glow follows cursor ---- */
+  /* ---- card hover position (still drawn: the cards use it) ---- */
   document.querySelectorAll('.card').forEach(card => {
     card.addEventListener('mousemove', e => {
       const r = card.getBoundingClientRect();
@@ -768,21 +823,64 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
   }), { threshold: 0.12 });
   document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
-  /* ---- animated stat counters ---- */
-  const fmt = n => n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace(/\.0$/, '') + 'K' : String(n);
+  /* ---- animated stat counters ----
+     Only elements carrying data-count animate. The £0.32 figure is a price and
+     is written out in the markup: counting up to a currency value reads as a
+     slot machine, and +el.dataset.count on an element without the attribute is
+     NaN, which is how a real number becomes the text "NaN" on a live page. */
+  const fmt = n => n >= 1000 ? n.toLocaleString('en-GB') : String(n);
   const so = new IntersectionObserver(es => es.forEach(e => {
     if (!e.isIntersecting) return;
     so.unobserve(e.target);
     const el = e.target, target = +el.dataset.count, suf = el.dataset.suffix || '', pre = el.dataset.prefix || '';
     if (reduced) { el.textContent = pre + fmt(target) + suf; return; }
-    const t0 = performance.now(), dur = 1800;
+    const t0 = performance.now(), dur = 1400;
     (function step(now) {
       const p = Math.min((now - t0) / dur, 1);
       el.textContent = pre + fmt(Math.round(target * (1 - Math.pow(1 - p, 4)))) + suf;
       if (p < 1) requestAnimationFrame(step);
     })(t0);
   }), { threshold: 0.6 });
-  document.querySelectorAll('.stat .num').forEach(el => so.observe(el));
+  document.querySelectorAll('.stat .num[data-count]').forEach(el => so.observe(el));
+
+  /* ---- the hero's playable game ----
+     The poster is a real captured frame; the iframe is only created on click,
+     so visiting the page does not download a game engine and three megabytes of
+     models for someone who is just reading. */
+  const frame = document.getElementById('playFrame');
+  const poster = document.getElementById('playPoster');
+  const posterImg = document.getElementById('playPosterImg');
+  const title = document.getElementById('playTitle');
+  const NAMES = { 'midnight-post': 'Midnight Post', 'dino-island': 'Dino Island', 'wonderverse': 'WonderVerse' };
+
+  function play(id) {
+    const f = document.createElement('iframe');
+    f.src = 'games/' + id + '.html';
+    f.title = NAMES[id] + ' — a game running on the JOSHRIX 3D runtime';
+    f.allow = 'autoplay; fullscreen; gamepad';
+    frame.innerHTML = '';
+    frame.appendChild(f);
+    frame.dataset.playing = id;
+  }
+
+  if (poster) poster.addEventListener('click', () => play(poster.dataset.game));
+
+  document.querySelectorAll('.play-switch button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.game;
+      document.querySelectorAll('.play-switch button')
+        .forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+      /* Switching while a game is running swaps the running game. Switching
+         before that only re-dresses the poster, so a visitor can look at all
+         three without loading any of them. */
+      if (frame.dataset.playing) { play(id); return; }
+      poster.dataset.game = id;
+      posterImg.src = 'assets/posters/' + id + '.webp';
+      posterImg.alt = 'A frame from ' + btn.dataset.title + ', running on the JOSHRIX 3D runtime.';
+      title.textContent = btn.dataset.title;
+    });
+  });
+
 })();
 </script>
 <script>if('serviceWorker' in navigator && location.protocol==='https:'){addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js').catch(()=>{})})}</script>
@@ -794,18 +892,5 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
 <script src="assets/pixels.js"></script>
 <script src="assets/consent.js" defer></script>
 
-<script>
-(function(){
-  var b=document.getElementById('tryPoster'), f=document.getElementById('tryFrame');
-  if(!b||!f) return;
-  b.addEventListener('click', function(){
-    var i=document.createElement('iframe');
-    i.src='games/dino-island.html';
-    i.title='Dino Island — a game built on JOSHRIX';
-    i.allow='autoplay; fullscreen';
-    f.innerHTML=''; f.appendChild(i);
-  });
-})();
-</script>
 </body>
 </html>
