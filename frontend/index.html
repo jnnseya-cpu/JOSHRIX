@@ -720,12 +720,21 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
 <section id="worlds">
   <div class="sec-tag reveal">Featured Worlds</div>
   <h2 class="reveal">Forged In <span class="grad">JOSHRIX Studio</span></h2>
-  <p class="sec-sub reveal">Live universes forged by the operator community — from raw concept to global deployment in a single forge cycle. Playable now, evolving nightly.</p>
+  <!-- "Live universes forged by the operator community — playable now, evolving
+       nightly" described a shelf that was empty, which is a claim about games
+       that do not exist making a promise ("nightly") about work nobody is
+       doing. The copy now says what is true whether the shelf holds ten games
+       or none, and the section shows six rather than three: a row of three
+       reads as all there is, and this list is meant to grow. -->
+  <p class="sec-sub reveal">Everything here was forged on this platform and cleared by a human reviewer before it went public. Click one and it plays — no account, no download.</p>
   <div class="worlds" id="realWorlds">
-    <p class="sec-sub" id="worldsEmpty" style="display:none">No public worlds yet — moderation-approved games appear here the moment they go live. <a href="studio.html" style="color:var(--signal)">Be the first to forge one.</a></p>
+    <p class="sec-sub" id="worldsEmpty" style="display:none">Nothing has cleared review yet. Approved games appear here automatically — in the meantime the three games at the top of this page are playable, and <a href="studio.html" style="color:var(--signal)">the Studio is open</a>.</p>
   </div>
   <script>
-  /* Real data only: featured worlds are the community's actual approved games. */
+  /* Real data only. This grid renders whatever /api/arcade returns and nothing
+     else — there is no placeholder card, which is why the section was visibly
+     empty rather than quietly padded, and why it is worth fixing at the source
+     rather than here. */
   (function () {
     var API = (window.JOSHRIX_API_BASE || '');
     var esc = function (t) { return String(t == null ? '' : t).replace(/[<>&"]/g, function (c) { return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
@@ -733,8 +742,15 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
       var games = (j && j.games) || [];
       var box = document.getElementById('realWorlds');
       if (!games.length) { document.getElementById('worldsEmpty').style.display = 'block'; return; }
-      games.slice(0, 3).forEach(function (g, i) {
+      games.slice(0, 6).forEach(function (g, i) {
         var a = document.createElement('a');
+        /* NOT 'world reveal'. The IntersectionObserver that turns .reveal into
+           .in runs once at load, before this fetch resolves, so a card created
+           here is never observed and stays at opacity:0 forever. The section
+           would have looked empty even with a full arcade behind it — which is
+           why this was invisible: the bug needed games to show itself, and
+           there have never been any. The class is added on the next frame so
+           the transition still plays. */
         a.className = 'world reveal';
         a.href = 'play/' + encodeURIComponent(g.id);
         a.style.textDecoration = 'none';
@@ -746,6 +762,7 @@ footer{position:relative;z-index:2;border-top:1px solid var(--line);background:v
           '<p class="desc">' + esc((g.summary || '').slice(0, 120)) + '</p>' +
           '<span class="enter">Enter World <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>';
         box.appendChild(a);
+        requestAnimationFrame(function () { a.classList.add('in'); });
       });
     }).catch(function () { document.getElementById('worldsEmpty').style.display = 'block'; });
   })();

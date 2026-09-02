@@ -3,7 +3,51 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-08-28 (P0 account takeover closed — identity is now verified server-side)
+Last updated: 2026-09-02 (P1 closed — no 3D game could ever be published, which is why the arcade is empty)
+
+---
+
+## P1 — NO 3D GAME COULD EVER BE PUBLISHED. Closed 2 Sep.
+
+The arcade has been empty since launch, and Featured Worlds on the landing page
+renders "No public worlds yet". The cause was not a lack of creators.
+
+`POST /api/games` gated on `html.includes("<canvas")`. A build on the hosted
+JOSHRIX3D runtime contains no literal `<canvas>` anywhere — the runtime creates
+the element from JavaScript, which is the point of a hosted runtime. So every 3D
+game, the platform's flagship output and the thing the whole landing page
+advertises, was refused at publish with "`html` must be a complete forged game
+(doctype + canvas)" — a message that reads as though the creator's game is
+malformed.
+
+`api/_gateway.ts` already knew this. `looksPlayable()` exists, and carries the
+comment "3D builds create their canvas from JavaScript and used to be silently
+rejected here". `api/forge-game.ts` was moved onto it; the publish endpoint was
+not, so the two halves of one pipeline disagreed about what a game is.
+
+**Fixed:** `api/games.ts` uses `looksPlayable()`. The gate widened to fit 3D
+rather than disappearing — a prose document, a bare fragment, and a page that
+loads the runtime without booting it are all still refused.
+
+**A second bug behind it.** Even with an approved game in the database, the
+Featured Worlds cards would not have appeared: they are created with class
+`reveal`, and the IntersectionObserver that turns `.reveal` into `.in` runs once
+at load, before the `/api/arcade` fetch resolves. Cards created afterwards were
+never observed and stayed at `opacity:0`. Invisible until there were games to
+make it visible.
+
+**Verified end to end by `tests/t37-publish-3d.js`** — real handlers, real engine
+output, forge → publish → moderate → arcade, 19 assertions. It drives the actual
+`buildPlayable3dGame()` output rather than a fixture, because a hand-written
+fixture would have contained a `<canvas>` and agreed with the bug.
+
+**Still outstanding: the arcade is still empty.** The pipeline works; nobody has
+run ten forges through it. `tools/seed-arcade.mjs` does exactly that against a
+live deployment — ten launch-title concepts in five languages, forged, published
+and approved through the real endpoints, with a preflight that refuses to start
+if no provider key is live. It needs `ANTHROPIC_API_KEY` in Vercel, a funded
+(tester-designated) wallet, and `MODERATION_KEY`. None of those exist in a dev
+container, so this environment cannot run it.
 
 ---
 

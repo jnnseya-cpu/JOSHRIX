@@ -38,16 +38,16 @@
     css.textContent =
       "#jx-consent{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:9999;" +
       "width:min(680px,calc(100vw - 24px));display:flex;flex-wrap:wrap;gap:.9rem;align-items:center;" +
-      "justify-content:space-between;background:rgba(11,11,20,.96);color:#F4F4FA;" +
-      "border:1px solid rgba(160,140,255,.35);border-radius:14px;padding:.9rem 1.1rem;" +
+      "justify-content:space-between;background:rgba(15,17,23,.97);color:#EDEFF3;" +
+      "border:1px solid #2C323F;border-radius:14px;padding:.9rem 1.1rem;" +
       "box-shadow:0 20px 50px rgba(0,0,0,.55);backdrop-filter:blur(10px);" +
       "font-family:var(--sans,'Archivo',system-ui,'Segoe UI',sans-serif);font-size:.95rem;line-height:1.5}" +
       "#jx-consent p{margin:0;flex:1 1 300px;min-width:0}" +
       "#jx-consent a{color:#D92D3F}" +
       "#jx-consent .jx-consent-btns{display:flex;gap:.5rem;flex:0 0 auto}" +
       "#jx-consent button{font:inherit;font-weight:700;cursor:pointer;border-radius:999px;" +
-      "padding:.55rem 1.2rem;border:1px solid rgba(160,140,255,.45);background:transparent;color:#F4F4FA}" +
-      "#jx-consent button.ok{background:linear-gradient(90deg,#D92D3F,#D92D3F);border-color:transparent;color:#fff}" +
+      "padding:.55rem 1.2rem;border:1px solid #2C323F;background:transparent;color:#EDEFF3}" +
+      "#jx-consent button.ok{background:#D92D3F;border-color:#D92D3F;color:#fff}" +
       "#jx-consent button:focus-visible{outline:2px solid #D92D3F;outline-offset:2px}" +
       "@media(max-width:520px){#jx-consent .jx-consent-btns{width:100%}" +
       "#jx-consent button{flex:1}}";

@@ -12,6 +12,7 @@
  */
 import { randomUUID } from "node:crypto";
 import { getDb, ensureGameSchema, saveGame, getWallet, countPendingByWallet, acceptForgeCharge, creditWallet, getForgeCharge, recollectRefundedForge } from "./_ledger";
+import { looksPlayable } from "./_gateway";
 import { notify } from "./_notify";
 import { EMAIL_RE } from "./_guard";
 
@@ -39,8 +40,24 @@ export default async function handler(req: any, res: any) {
   if (!title || typeof title !== "string" || title.trim().length < 2) {
     return res.status(400).json({ error: "A game `title` is required." });
   }
-  if (!html || typeof html !== "string" || !/^\s*<!doctype html>/i.test(html) || !html.includes("<canvas")) {
-    return res.status(400).json({ error: "`html` must be a complete forged game (doctype + canvas)." });
+  /* THE GATE THAT EMPTIED THE ARCADE.
+     This used to require a literal "<canvas" substring. A build on the hosted
+     JOSHRIX3D runtime never contains one — the runtime creates the element from
+     JavaScript, which is the point of a hosted runtime — so every 3D game, the
+     platform's flagship output, was refused at publish with a message telling
+     the creator their game was malformed. The forge endpoint had already been
+     moved onto looksPlayable() for exactly this reason ("3D builds create their
+     canvas from JavaScript and used to be silently rejected here"); the publish
+     endpoint was left behind, so the two halves of one pipeline disagreed about
+     what a game is.
+     looksPlayable is the single definition now. It still refuses a document
+     with no game in it — widening the gate to fit 3D must not mean removing
+     it — and the completeness check stays, because a fragment is not a
+     hostable page. */
+  if (!html || typeof html !== "string" || !/^\s*<!doctype html>/i.test(html) || !looksPlayable(html)) {
+    return res.status(400).json({
+      error: "`html` must be a complete forged game — a full document that renders a canvas or boots the JOSHRIX 3D runtime.",
+    });
   }
   if (Buffer.byteLength(html, "utf8") > MAX_HTML_BYTES) {
     return res.status(413).json({ error: "Game HTML too large to host." });

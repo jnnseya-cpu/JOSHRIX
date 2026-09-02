@@ -10,7 +10,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Worlds — JOSHRIX Studio</title>
-<meta name="description" content="Live game universes forged by the JOSHRIX operator community.">
+<meta name="description" content="Browser games forged on JOSHRIX Studio and cleared by a human reviewer. Play any of them free — no account, no download.">
 <link rel="stylesheet" href="assets/joshrix.css">
 </head>
 <body>
@@ -38,16 +38,21 @@
 <div class="page-hero reveal">
   <div class="sec-tag">Featured Worlds</div>
   <h1 class="jx">Forged In <span class="grad">JOSHRIX Studio</span></h1>
-  <p class="lede">Live universes forged by the operator community — from raw concept to global deployment in a single forge cycle. Playable now, evolving nightly.</p>
+  <p class="lede">Everything here was forged on this platform and cleared by a human reviewer before it went public. Click one and it plays — no account, no download.</p>
 </div><div class="grid c3" id="wGrid"><p style="color:var(--muted)">Loading live worlds…</p></div>
 <script>
 (function(){
   var esc = function(x){ return String(x == null ? '' : x).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
-  var HUES = ['232,121,249','34,211,238','251,146,60','74,222,128','251,191,36','168,85,247'];
+  /* This used to be six hues — magenta, cyan, orange, green, amber, purple —
+     painted as a gradient behind every world card. It survived the palette
+     work because it is built in JavaScript and only renders when the arcade
+     has games in it, so no screenshot of this page ever showed it. The cards
+     are flat surfaces now; the game's own artwork is the colour. */
+  var SURFACES = ['#1B1E24', '#1E1B18', '#181C1B'];
   fetch((window.JOSHRIX_API_BASE || '') + '/api/arcade').then(function(r){ return r.json(); }).then(function(j){
     var g = document.getElementById('wGrid'), games = j.games || [];
     g.innerHTML = games.length ? games.slice(0, 12).map(function(x, i){
-      return '<a class="card reveal in" style="text-decoration:none;color:inherit;border-top:2px solid transparent;background:linear-gradient(180deg,rgba(' + HUES[i % HUES.length] + ',.14),rgba(22,22,42,.55) 40%)" href="' + esc(x.playUrl) + '">'
+      return '<a class="card reveal in" style="text-decoration:none;color:inherit;background:' + SURFACES[i % SURFACES.length] + '" href="' + esc(x.playUrl) + '">'
         + '<span class="pill green">◉ LIVE · ' + Number(x.plays || 0).toLocaleString() + ' plays</span>'
         + '<h3 style="margin-top:.8rem">' + esc(x.title) + '</h3>'
         + (x.language ? '<span class="pill">' + esc(x.language) + '</span>' : '')
