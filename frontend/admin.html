@@ -526,7 +526,7 @@
 </script>
 <h2 class="jx reveal">Content Agent <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— SEO BLOG ON AUTOPILOT</span></h2>
 <div class="reveal" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
-  <p style="font-size:.88rem;color:var(--muted,#9d9db3);margin:0 0 .8rem">Publishes one SEO article a day automatically (Vercel Cron, 09:00 UTC) rotating a 14-topic editorial calendar, with dynamic internal links to live games. Every post is server-rendered with OpenGraph + JSON-LD, listed in <a href="/sitemap.xml" style="color:var(--cyan)">sitemap.xml</a> and <a href="/feed.xml" style="color:var(--cyan)">the RSS feed</a> — point Buffer/Zapier/IFTTT at the feed to auto-share each post to your social accounts.</p>
+  <p style="font-size:.88rem;color:var(--muted,#9d9db3);margin:0 0 .8rem">Publishes one SEO article a day automatically (Vercel Cron, 09:00 UTC) rotating a 14-topic editorial calendar, with dynamic internal links to live games. Every post is server-rendered with OpenGraph + JSON-LD, listed in <a href="/sitemap.xml" style="color:var(--signal)">sitemap.xml</a> and <a href="/feed.xml" style="color:var(--signal)">the RSS feed</a> — point Buffer/Zapier/IFTTT at the feed to auto-share each post to your social accounts.</p>
   <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">
     <input id="blogTopic" placeholder="Optional custom topic (blank = next calendar topic)" style="flex:1 1 300px;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.55rem .8rem;color:inherit">
     <button class="btn btn-primary btn-sm" id="btnWritePost">✍ Write &amp; Publish Now</button>
@@ -550,7 +550,7 @@
         btn.disabled = false;
         var escB = function(x){ return String(x == null ? '' : x).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
         msg.innerHTML = res.ok
-          ? '✓ Published: <a href="' + escB(res.j.url) + '" target="_blank" rel="noopener" style="color:var(--cyan)">' + escB(res.j.title) + '</a> (' + escB(res.j.provider) + ')'
+          ? '✓ Published: <a href="' + escB(res.j.url) + '" target="_blank" rel="noopener" style="color:var(--signal)">' + escB(res.j.title) + '</a> (' + escB(res.j.provider) + ')'
           : '⚠ ' + escB(res.j.error || 'failed') + (res.j.detail ? ' — ' + escB(res.j.detail) : '');
       })
       .catch(function(){ btn.disabled = false; msg.textContent = '⚠ Could not reach the Content Agent'; });

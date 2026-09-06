@@ -151,7 +151,7 @@
   // My Games: the creator's real forged games
   const body = $('myGamesBody');
   const PILL = { approved: '<span class="pill green">● LIVE</span>', pending_review: '<span class="pill amber">◐ IN REVIEW</span>', rejected: '<span class="pill" style="color:#f87171">✕ REJECTED</span>' };
-  const emptyRow = '<tr><td colspan="6" style="color:var(--muted)">No games yet — <a href="studio.html" style="color:var(--cyan)">forge your first world</a>. It appears here the moment you publish.</td></tr>';
+  const emptyRow = '<tr><td colspan="6" style="color:var(--muted)">No games yet — <a href="studio.html" style="color:var(--signal)">forge your first world</a>. It appears here the moment you publish.</td></tr>';
   if (!p.serverWalletId) { body.innerHTML = emptyRow; }
   else {
     fetch(API + '/api/my-games', { method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -174,10 +174,10 @@
           + '<td style="white-space:nowrap">£<input class="gPrice" data-i="' + i + '" type="number" min="0.50" step="0.01" value="'
             + (g.priceMinor ? (g.priceMinor / 100).toFixed(2) : '') + '" placeholder="—" '
             + 'aria-label="Sale price for ' + esc(g.title) + ' in pounds" '
-            + 'style="width:72px;background:rgba(255,255,255,.04);border:1px solid var(--stroke);border-radius:6px;padding:.3rem .4rem;color:inherit;font-family:var(--mono)">'
-            + ' <button class="gSave" data-i="' + i + '" style="background:none;border:0;color:var(--cyan);cursor:pointer;font:inherit;font-size:.85rem">save</button>'
+            + 'style="width:72px;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:6px;padding:.3rem .4rem;color:inherit;font-family:var(--mono)">'
+            + ' <button class="gSave" data-i="' + i + '" style="background:none;border:0;color:var(--signal);cursor:pointer;font:inherit;font-size:.85rem">save</button>'
             + '<div class="gMsg" data-i="' + i + '" style="font-size:.72rem;color:var(--muted);margin-top:.15rem"></div></td>'
-          + '<td><a href="' + esc(g.status === 'approved' ? g.playUrl : g.previewUrl) + '" target="_blank" rel="noopener" style="color:var(--cyan)">▶ ' + (g.status === 'approved' ? 'Play' : 'Preview') + '</a></td></tr>'
+          + '<td><a href="' + esc(g.status === 'approved' ? g.playUrl : g.previewUrl) + '" target="_blank" rel="noopener" style="color:var(--signal)">▶ ' + (g.status === 'approved' ? 'Play' : 'Preview') + '</a></td></tr>'
         ).join('') : emptyRow;
 
         /* PRICING. The creator types pounds; the server is told pence and is the

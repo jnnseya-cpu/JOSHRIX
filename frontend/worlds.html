@@ -57,7 +57,7 @@
         + '<h3 style="margin-top:.8rem">' + esc(x.title) + '</h3>'
         + (x.language ? '<span class="pill">' + esc(x.language) + '</span>' : '')
         + '<p style="margin-top:.7rem">' + esc(x.summary || 'A world forged on JOSHRIX.') + '</p></a>';
-    }).join('') : '<p style="color:var(--muted)">The first live worlds appear here the moment moderation approves them — <a href="studio.html" style="color:var(--cyan)">forge yours now</a>.</p>';
+    }).join('') : '<p style="color:var(--muted)">The first live worlds appear here the moment moderation approves them — <a href="studio.html" style="color:var(--signal)">forge yours now</a>.</p>';
   }).catch(function(){ document.getElementById('wGrid').innerHTML = '<p style="color:var(--muted)">Could not load worlds — refresh to retry.</p>'; });
 })();
 </script><div class="reveal" style="margin-top:2.4rem;display:flex;gap:1rem;flex-wrap:wrap"><a class="btn btn-primary" href="studio.html">▶&nbsp; Forge Your World</a><a class="btn btn-ghost" href="showcase.html">Creator Showcase</a></div>

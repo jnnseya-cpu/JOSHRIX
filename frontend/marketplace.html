@@ -91,16 +91,16 @@
         + '<p>' + esc(x.summary || 'A world forged on JOSHRIX.') + '</p>'
         + '<div class="price-row" style="display:flex;justify-content:space-between;align-items:center;margin-top:1rem">'
         + '<b style="font-family:var(--mono);font-size:1.15rem">' + money(x.priceMinor) + '</b>'
-        + '<span><a href="' + esc(x.playUrl) + '" style="color:var(--cyan);margin-right:.9rem">▶ Try it</a>'
+        + '<span><a href="' + esc(x.playUrl) + '" style="color:var(--signal);margin-right:.9rem">▶ Try it</a>'
         + '<button class="btn btn-primary btn-sm mkBuy" data-i="' + i + '">Buy</button></span></div></div>';
-    }).join('') : '<p style="color:var(--muted)">No worlds are on sale yet. Creators set a price on their <a href="dashboard.html" style="color:var(--cyan)">dashboard</a>.</p>';
+    }).join('') : '<p style="color:var(--muted)">No worlds are on sale yet. Creators set a price on their <a href="dashboard.html" style="color:var(--signal)">dashboard</a>.</p>';
     saleEl.querySelectorAll('.mkBuy').forEach(function(b){
       b.addEventListener('click', function(){ buy(sale[b.dataset.i].id, b); });
     });
 
     document.getElementById('mkGrid').innerHTML = free.length ? free.slice(0, 9).map(function(x){
       return '<a class="card reveal in" style="text-decoration:none;color:inherit" href="' + esc(x.playUrl) + '"><span class="tag">LIVE GAME</span><h3>' + esc(x.title) + '</h3><p>' + esc(x.summary || 'A world forged on JOSHRIX.') + '</p><p style="margin-top:.8rem"><b style="font-family:var(--mono);font-size:1rem">▶ ' + Number(x.plays || 0).toLocaleString() + ' plays · FREE</b></p></a>';
-    }).join('') : '<p style="color:var(--muted)">The first approved games land here the moment moderation clears them — <a href="studio.html" style="color:var(--cyan)">forge yours</a>.</p>';
+    }).join('') : '<p style="color:var(--muted)">The first approved games land here the moment moderation clears them — <a href="studio.html" style="color:var(--signal)">forge yours</a>.</p>';
   }).catch(function(){
     document.getElementById('mkSale').innerHTML = '<p style="color:var(--muted)">Could not load listings — refresh to retry.</p>';
     document.getElementById('mkGrid').innerHTML = '<p style="color:var(--muted)">Could not load live games — refresh to retry.</p>';
@@ -120,7 +120,7 @@
 <h2 class="jx reveal">Commission <span class="grad">Ladder</span></h2>
 <table class="jx reveal"><thead><tr><th>Seller tier</th><th>Explorer (free)</th><th>Creator</th><th>Creator Pro</th><th>Studio</th><th>Business</th><th>Enterprise</th></tr></thead>
 <tbody><tr><td><b>Commission</b></td><td>cannot sell</td><td>25%</td><td>20%</td><td>15%</td><td>10%</td><td>7.5% (5–10% negotiated)</td></tr></tbody></table>
-<p class="lede reveal" style="max-width:66ch">Selling starts at <a href="pricing.html" style="color:var(--cyan)">Creator</a>. The free Explorer tier plays and browses; it does not list. The rate on this row is the rate the payment engine actually applies — it is read from your account, never from the page.</p>
+<p class="lede reveal" style="max-width:66ch">Selling starts at <a href="pricing.html" style="color:var(--signal)">Creator</a>. The free Explorer tier plays and browses; it does not list. The rate on this row is the rate the payment engine actually applies — it is read from your account, never from the page.</p>
 <p class="lede reveal">Creators may set royalties on eligible secondary sales. High-value exclusive sales run through escrow with automated technical verification and an inspection period.</p>
 <div class="reveal" style="margin-top:2rem"><a class="btn btn-primary" href="signup.html">Become a Seller</a></div>
 </main>

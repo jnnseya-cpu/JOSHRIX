@@ -3,7 +3,102 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-09-02 (P1 closed — no 3D game could ever be published, which is why the arcade is empty)
+Last updated: 2026-09-06 (launch-readiness deep dive — 156 models were invisible to the forge; payout rail and tax are the remaining commercial blockers)
+
+---
+
+## THE LAUNCH-READINESS DIVE — 6 Sep
+
+Justin: *"why we still can't take the market by storm"*. Everything below was
+traced in code, not inferred. What could be fixed from this environment was
+fixed in the same pass; what needs his accounts is named as such.
+
+### Fixed — 156 models the forge could not see
+
+`packs/quaternius-fbx` — 156 models, 103 animated, and the library's ONLY sea
+life (40), dinosaurs (6), and dock/fishing props — was ingested on 31 Aug,
+written to `manifest.json`, deployed, and counted in the "2,591 models included"
+the landing page advertises. **The build prompt never named it.** The Code Agent
+can only write a path it has been given, so none of those models could appear in
+any forged game. Nothing failed; no test went red; the library count stayed true.
+Same shape as the eight packs that vanished into `.gitignore` in August — an
+asset pipeline succeeding silently while the thing downstream never learns the
+asset exists. `check-incoming.mjs` closed the upload end; this closes the
+consumption end.
+
+The pack breaks BOTH conventions the prompt teaches, so the entry says so twice:
+
+- **Clip names are lowercase** here (`idle`, `walk`, `run`) where every other
+  Quaternius pack uses `Idle`/`Walk`/`Death`. Following the general rule leaves
+  the character frozen.
+- **Every model is normalised to 1.85 units tall**, whatever it is — the FBX
+  ingest applies `TARGET_HEIGHT = 1.85` to the Y extent, which is right for the
+  characters it was written for and wrong for an avocado. A raw load makes fruit
+  the size of a horse; `G.load(key, path, { height })` corrects it.
+
+Both claims are asserted against the shipped files, not just written down: a
+warning about a quirk that no longer exists is its own kind of lie.
+
+**The LIBRARY 4 header was also stale in all three of its numbers** — it claimed
+152 models in 9 packs with 150 animated; the manifest held 162 in 10 with 156,
+and now 318 in 11 with 259. Wrong in the direction that undersells the library
+to the model writing the game.
+
+`tests/t38-prompt-library.js` (49) now fails if any pack on disk is missing from
+the prompt, if any name the prompt lists does not resolve to a file, or if the
+LIBRARY 3/4 headline counts drift from the manifest.
+
+### Fixed — /api/health reported "live" off the wrong key
+
+`mode` was `ANTHROPIC_API_KEY ? "live" : "demo"`. Anthropic is the **last**
+provider in the chain, placed there on measured truncation. So a deployment
+holding only `GEMINI_API_KEY` — the one provider the probe says returns a
+complete full-size build — reported "demo" and looked broken, while one holding
+only `ANTHROPIC_API_KEY` reported "live" and would fall through to the engine on
+most runs. Health now reports `forge.leadProvider`, `forge.fallbacks` and
+`forge.ready`, so a single-vendor deployment is visible as such.
+
+### Fixed — .env.example was a wish list
+
+Twenty variables no code reads (BitriPay, SendGrid, Twilio, Vertex, Skybox, a
+JWT signing key), while **omitting `PAYOUT_SECRET`** — without which
+`api/_secrets.ts` fails closed, `/api/payout-destination` refuses to save a
+destination, and therefore **no creator can request a withdrawal at all**.
+Provisioning from that file meant buying accounts the platform cannot use and
+still shipping a wallet nobody could cash out. Rewritten as a contract: required
+/ required-before-payouts / recommended / reporting-only / not-implemented.
+`tests/t32-secrets.js` now fails if a declared name is read by nothing, or a name
+the code reads is undocumented.
+
+Worth keeping in view: `IMAGE_GEN_API_KEY`, `MESHY_API_KEY`, `TRIPO_API_KEY` and
+`ELEVENLABS_API_KEY` are read in exactly one place — `providerStatus()` — and
+reported as booleans on `/api/health`. **No code path calls any of those
+services.** `docs/REALISM-PIPELINE.md` is a specification, not an implementation.
+
+### Fixed — the wallet showed an ETA it could not keep
+
+`/api/payout` returns a careful note: *"Reserved and queued for operator release.
+Funds move once the payout rail is executed."* `wallet.html` dropped it and
+rendered `✓ requested … ETA 1 day(s)`, which a creator reads as money on its way.
+The note is now shown, and the ETA is labelled as the rail's time **after**
+release. The rails themselves stay: the fee mathematics is real and Justin does
+execute them — selling a manual service is honest, implying an automated one is
+not.
+
+### NOT fixable here — these need Justin's accounts
+
+| Blocker | Why it matters | What it needs |
+|---|---|---|
+| **The loop has never closed once** | The forge has never produced a game Justin judged good, and until 2 Sep no 3D build could be published even if it had. Nobody has gone concept → game → published → sold → paid. This is the whole product. | One forge run. Check `/api/health` first: if `forge.leadProvider` is not `gemini`, set `GEMINI_API_KEY`. |
+| **Money cannot leave the building** | `/api/payout` queues; an operator moves money by hand and marks it paid. No Stripe Connect, no BitriPay integration despite the name appearing in customer copy. Caps the platform at the number of creators Justin can personally pay. | Stripe Connect onboarding (and a mobile-money aggregator if the Africa promise is to be real). Both need building, not just a key. |
+| **No tax collection** | Zero `automatic_tax` / `tax_behavior` on any Stripe session. Digital goods to UK/EU consumers carry VAT obligations; the EU has no threshold for non-established sellers. | Stripe Tax is a config change plus registration. Get an accountant's read before volume. |
+| **No error monitoring** | No Sentry, no Datadog. A forge that fails for a paying creator at 2am surfaces when they email. `/api/forge-log` is pull, not push. | A monitoring account. Free tier is ample at this volume. |
+| **Route 3 of the business model** | Publish to the creator's own Play/App Store — specified in `PLATFORM.md`, sold by hand via `/api/distribution`, not built. | Real work, but nothing in the architecture blocks it. |
+
+**Corrected while here:** the P0 section below said `wallet.html` still sends a
+hardcoded `destinationRef: 'tok_demo_dest_2941'`. That was fixed —
+`api/payout-destination.ts` owns tokenised destinations and `/api/payout` reads
+the saved one. The entry was stale.
 
 ---
 
@@ -104,10 +199,12 @@ mints tokens with a local RSA key so the signature check is real.
 **Still open from this finding:** `?w=<walletId>` remains in preview URLs
 (`api/games.ts`) and in `game-html` / `forge-result` / `growth-analytics`. It is
 no longer a credential for the *account*, but it still grants access to a game,
-so it should move to the token too. Also: `wallet.html`'s payout button sends a
-hardcoded `destinationRef: 'tok_demo_dest_2941'` — real withdrawals need a
-tokenised destination collected per creator, so that button cannot pay anyone
-yet and the operator queue at `/admin` is the only thing that moves money.
+so it should move to the token too. ~~Also: `wallet.html`'s payout button sends a hardcoded
+`destinationRef: 'tok_demo_dest_2941'`~~ — **fixed.** `api/payout-destination.ts`
+stores tokenised destinations encrypted under `PAYOUT_SECRET` and `/api/payout`
+reads the saved one; a raw ref from the request body is no longer accepted. The
+operator queue at `/admin` is still the only thing that moves money, because
+there is no payout rail integration at all.
 
 ---
 

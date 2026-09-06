@@ -10,28 +10,28 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Wallet — JOSHRIX Studio</title>
-<meta name="description" content="Your JOSHRIX wallet: ACU balance, top-up packages, creator earnings and payouts to bank, BitriPay or mobile money.">
+<meta name="description" content="Your JOSHRIX wallet: ACU balance, top-up packages, creator earnings, and withdrawals to a bank account, BitriPay or mobile money.">
 <link rel="stylesheet" href="assets/joshrix.css">
 <style>
 .wal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:1.1rem;margin-top:2rem}
-.wal-card{border:1px solid var(--stroke);border-radius:14px;padding:1.3rem 1.4rem;background:var(--ink-raised)}
+.wal-card{border:1px solid var(--line);border-radius:14px;padding:1.3rem 1.4rem;background:var(--ink-raised)}
 .wal-card b{display:block;font-family:var(--mono);font-size:.58rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:.5rem}
 .wal-card .big{font-family:var(--mono);font-weight:700;font-size:1.7rem;color:var(--text);}
 .wal-card .sub{margin-top:.4rem;color:var(--muted);font-weight:500;font-size:.92rem}
 .pkg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.9rem;margin-top:1.4rem}
-.pkg{border:1px solid var(--stroke);border-radius:12px;padding:1rem;background:rgba(255,255,255,.02);text-align:center;transition:transform .3s,border-color .3s;cursor:pointer}
-.pkg:hover{transform:translateY(-3px);border-color:var(--cyan)}
-.pkg.hot{border-color:var(--stroke-bright);box-shadow:var(--shadow)}
+.pkg{border:1px solid var(--line);border-radius:12px;padding:1rem;background:rgba(255,255,255,.02);text-align:center;transition:transform .3s,border-color .3s;cursor:pointer}
+.pkg:hover{transform:translateY(-3px);border-color:var(--signal)}
+.pkg.hot{border-color:var(--line-strong);box-shadow:var(--shadow)}
 .pkg .price{font-family:var(--mono);font-weight:700;font-size:1.25rem;color:var(--text)}
-.pkg .acus{color:var(--cyan);font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;margin-top:.3rem}
+.pkg .acus{color:var(--signal);font-family:var(--mono);font-size:.68rem;letter-spacing:.08em;margin-top:.3rem}
 .pkg .buy{margin-top:.7rem;font-size:.7rem;padding:.45rem .9rem}
-.pane{border:1px solid var(--stroke-bright);border-radius:16px;padding:1.6rem;background:rgba(8,8,16,.6);margin-top:1.6rem}
+.pane{border:1px solid var(--line-strong);border-radius:16px;padding:1.6rem;background:rgba(8,8,16,.6);margin-top:1.6rem}
 .pane h3{font-family:var(--sans);font-size:.9rem;letter-spacing:-.02em;text-transform:none;margin-bottom:1rem}
 .frow{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1rem;align-items:end}
 .result{margin-top:1rem;font-family:var(--mono);font-size:.75rem;letter-spacing:.05em;color:var(--green);white-space:pre-wrap;line-height:1.7;display:none;
   border:1px solid rgba(74,222,128,.35);border-radius:10px;padding:.9rem 1rem;background:rgba(74,222,128,.05)}
 .methods{display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem}
-.methods span{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;border:1px solid var(--stroke);border-radius:999px;padding:.4rem .9rem;color:var(--muted)}
+.methods span{font-family:var(--mono);font-size:.6rem;letter-spacing:.08em;border:1px solid var(--line);border-radius:999px;padding:.4rem .9rem;color:var(--muted)}
 table.jx td:first-child{white-space:nowrap}
 </style>
 </head>
@@ -57,13 +57,13 @@ table.jx td:first-child{white-space:nowrap}
   <div class="page-hero reveal">
     <div class="sec-tag">Wallet · Pay In &amp; Pay Out</div>
     <h1 class="jx">Your Money, <span class="grad">Both Directions</span></h1>
-    <p class="lede">Top up ACUs to forge. Earn from every sale, licence and remix. Withdraw to bank, BitriPay or mobile money — one wallet, one double-entry ledger, no surprises.</p>
+    <p class="lede">Top up ACUs to forge. Earn from every sale, licence and remix. Withdraw to a bank account, BitriPay or mobile money — every withdrawal is reserved against your cleared earnings and released by an operator, so the balance you see is the balance you have.</p>
   </div>
 
   <div class="wal-grid reveal">
     <div class="wal-card"><b>ACU Balance</b><span class="big" id="wAcu">0</span>
       <p class="sub" id="wAcuCat">top up below to start forging</p>
-      <p class="sub" id="wWid" style="display:none;font-family:var(--mono);font-size:.72rem;letter-spacing:.03em">wallet <code id="wWidCode" style="color:var(--cyan)"></code> <a href="#" id="wWidCopy" style="color:var(--cyan)">copy</a><br><span style="color:var(--muted)">give this ID to the admin for ACU grants</span></p></div>
+      <p class="sub" id="wWid" style="display:none;font-family:var(--mono);font-size:.72rem;letter-spacing:.03em">wallet <code id="wWidCode" style="color:var(--signal)"></code> <a href="#" id="wWidCopy" style="color:var(--signal)">copy</a><br><span style="color:var(--muted)">give this ID to the admin for ACU grants</span></p></div>
     <div class="wal-card"><b>Available Earnings</b><span class="big" id="wAvail">£0.00</span>
       <p class="sub">from sales, licences, lineage royalties &amp; referrals</p></div>
     <div class="wal-card"><b>Pending</b><span class="big" id="wPend">£0.00</span>
@@ -95,7 +95,7 @@ table.jx td:first-child{white-space:nowrap}
     <p class="sub" style="color:var(--muted);font-weight:500;margin-top:.8rem">Minimum £10 · KYC verification at £100 cumulative · your account reference is encrypted and only ever shown as its last four characters.</p>
     <div class="result" id="payoutResult"></div>
 
-    <div style="margin-top:1.4rem;border-top:1px solid var(--stroke);padding-top:1.2rem">
+    <div style="margin-top:1.4rem;border-top:1px solid var(--line);padding-top:1.2rem">
       <h3 style="font-size:.8rem">Your payout destinations</h3>
       <div id="destList" style="color:var(--muted);font-size:.92rem;margin-bottom:.9rem">Loading…</div>
       <div class="frow">
@@ -179,7 +179,7 @@ async function loadDestinations() {
       : '<option value="">— add a destination below —</option>';
     list.innerHTML = ds.length
       ? ds.map(d => '<div style="display:flex;gap:.6rem;align-items:center;margin:.3rem 0">'
-          + '<code style="color:var(--cyan)">' + d.label + ' ••••' + d.endsWith + '</code>'
+          + '<code style="color:var(--signal)">' + d.label + ' ••••' + d.endsWith + '</code>'
           + '<span style="font-size:.8rem">' + d.rail.replace(/_/g, ' ') + '</span>'
           + '<button class="btn btn-ghost btn-sm" data-del="' + d.id + '">Remove</button></div>').join('')
       : (j.configured === false
@@ -233,10 +233,19 @@ $('btnPayout').addEventListener('click', async () => {
       body: JSON.stringify({ walletId: walletOf() || undefined, amountMinor: amt, rail, instant, destinationId }),
       signal: AbortSignal.timeout(8000) });
     const j = await resp.json();
+    /* The server's own `note` says the thing that matters — the request is
+       RESERVED AND QUEUED, and a person releases it. This used to be dropped on
+       the floor, so a creator saw "requested ... ETA 1 day(s)" and reasonably
+       read that as money already on its way. Nothing about the payout is
+       automated yet: /api/payout queues, an operator executes the rail by hand
+       and marks it paid. Showing an ETA without saying what it is measured from
+       is the part that misleads, not the rail's name. */
     r.textContent = resp.ok
       ? '\u2713 ' + j.payout.status + ' \u2014 \u00a3' + (j.payout.amountMinor/100).toFixed(2) + ' via ' + j.payout.rail + (j.payout.instant ? ' (instant)' : '')
         + '\nto ' + j.payout.destination.label + ' \u2022\u2022\u2022\u2022' + j.payout.destination.endsWith
-        + '\nfee \u00a3' + (j.payout.feeMinor/100).toFixed(2) + ' \u2192 you receive \u00a3' + (j.payout.netMinor/100).toFixed(2) + ' \u00b7 ETA ' + j.payout.etaDays + ' day(s)'
+        + '\nfee \u00a3' + (j.payout.feeMinor/100).toFixed(2) + ' \u2192 you receive \u00a3' + (j.payout.netMinor/100).toFixed(2)
+        + '\n' + (j.note || 'Reserved and queued for operator release.')
+        + '\nThe rail then takes about ' + j.payout.etaDays + ' day(s) once it is released.'
         + (j.payout.kycRequired ? '\n\u26a0 KYC verification required for this amount' : '')
       : '\u2715 ' + (j.error || 'failed');
   } catch (e) {
@@ -256,7 +265,7 @@ const applyLocalAcu = (skipBalance, serverCategory) => {
     const p = JSON.parse(localStorage.getItem('jx.profile') || '{}');
     if (serverCategory ? serverCategory === 'tester' : p.testerAcuGranted) {
       if (!skipBalance) $('wAcu').textContent = (p.acu || 0).toLocaleString();
-      $('wAcuCat').insertAdjacentHTML('beforeend', ' · 🧪 <a href="#" id="btnRefill" style="color:var(--cyan)">refill</a>');
+      $('wAcuCat').insertAdjacentHTML('beforeend', ' · 🧪 <a href="#" id="btnRefill" style="color:var(--signal)">refill</a>');
       const rf = document.getElementById('btnRefill');
       if (rf && !rf.dataset.wired) {
         rf.dataset.wired = '1';
@@ -309,9 +318,9 @@ const applyLocalAcu = (skipBalance, serverCategory) => {
           const CAT_LABEL = { tester: '🧪 tester', purchased: 'purchased', standard: 'account' };
           $('wAcuCat').textContent = (CAT_LABEL[j.category] || j.category) + ' · server-verified';
           if (j.plan && j.plan !== 'explorer') {
-            $('wAcuCat').innerHTML += ' · plan: <b style="color:var(--cyan)">' + String(j.plan).replace('_', ' ') + '</b>';
+            $('wAcuCat').innerHTML += ' · plan: <b style="color:var(--signal)">' + String(j.plan).replace('_', ' ') + '</b>';
           } else {
-            $('wAcuCat').innerHTML += ' · <a href="pricing.html" style="color:var(--cyan)">choose a plan</a>';
+            $('wAcuCat').innerHTML += ' · <a href="pricing.html" style="color:var(--signal)">choose a plan</a>';
           }
           applyLocalAcu(true, j.category); // server balance wins; this just adds the tester refill link
         } else applyLocalAcu();

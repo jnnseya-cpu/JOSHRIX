@@ -14,23 +14,23 @@
 <link rel="stylesheet" href="assets/joshrix.css">
 <style>
 .tier-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.2rem;margin-top:2rem}
-.tier-card{border:1px solid var(--stroke);border-radius:16px;padding:1.6rem;background:var(--ink-raised);transition:transform .3s,border-color .3s}
-.tier-card:hover{transform:translateY(-4px);border-color:var(--stroke-bright)}
-.tier-card.hot{border-color:var(--stroke-bright);box-shadow:var(--shadow)}
+.tier-card{border:1px solid var(--line);border-radius:16px;padding:1.6rem;background:var(--ink-raised);transition:transform .3s,border-color .3s}
+.tier-card:hover{transform:translateY(-4px);border-color:var(--line-strong)}
+.tier-card.hot{border-color:var(--line-strong);box-shadow:var(--shadow)}
 .tier-card h3{font-family:var(--sans);font-size:1rem;letter-spacing:-.02em;text-transform:none}
 .tier-card .share{font-family:var(--mono);font-weight:700;font-size:1.9rem;margin:.7rem 0 .2rem;color:var(--text);}
 .tier-card .cond{font-family:var(--mono);font-size:.58rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
 .tier-card p{margin-top:1rem;color:var(--muted);font-weight:500;line-height:1.6;font-size:.95rem}
-.rulebox{border:1px solid var(--stroke);border-radius:14px;padding:1.4rem 1.5rem;background:rgba(255,255,255,.02);margin-top:1.4rem}
+.rulebox{border:1px solid var(--line);border-radius:14px;padding:1.4rem 1.5rem;background:rgba(255,255,255,.02);margin-top:1.4rem}
 .rulebox h3{font-family:var(--sans);font-size:.85rem;letter-spacing:-.02em;text-transform:none;margin-bottom:.7rem}
 .rulebox p,.rulebox li{color:var(--muted);font-weight:500;line-height:1.65;font-size:.95rem}
 .rulebox ul{padding-left:1.2rem;display:grid;gap:.35rem}
 .chips{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.6rem}
-.chips span{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;border:1px solid var(--stroke);border-radius:999px;padding:.35rem .8rem;color:var(--muted);text-transform:uppercase}
+.chips span{font-family:var(--mono);font-size:.62rem;letter-spacing:.12em;border:1px solid var(--line);border-radius:999px;padding:.35rem .8rem;color:var(--muted);text-transform:uppercase}
 .chips span.bad{border-color:rgba(248,113,113,.4);color:#f87171}
 .chips span.ok{border-color:rgba(74,222,128,.4);color:#4ade80}
 .codebox{display:flex;gap:.6rem;margin-top:1.2rem;flex-wrap:wrap}
-.codebox input{flex:1;min-width:220px;background:rgba(5,5,8,.55);border:1px solid var(--stroke);border-radius:8px;color:var(--cyan);font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;padding:.7rem .9rem;outline:none}
+.codebox input{flex:1;min-width:220px;background:rgba(5,5,8,.55);border:1px solid var(--line);border-radius:8px;color:var(--signal);font-family:var(--mono);font-size:.8rem;letter-spacing:.06em;padding:.7rem .9rem;outline:none}
 </style>
 </head>
 <body>
@@ -82,7 +82,7 @@
     <div class="tier-card">
       <h3>Approved Influencer</h3><span class="share">1%</span>
       <div class="cond">Immediately · by application</div>
-      <p><b>1% lifetime commission from day one</b> on verified net revenue — no monthly cap, £20,000/customer lifetime cap, strict fraud and quality checks. Apply via the <a href="contact.html" style="color:var(--cyan)">contact page</a>.</p>
+      <p><b>1% lifetime commission from day one</b> on verified net revenue — no monthly cap, £20,000/customer lifetime cap, strict fraud and quality checks. Apply via the <a href="contact.html" style="color:var(--signal)">contact page</a>.</p>
     </div>
   </div>
 
@@ -107,7 +107,7 @@
     </ul>
   </div>
 
-  <div class="rulebox reveal" style="border-color:var(--stroke-bright)">
+  <div class="rulebox reveal" style="border-color:var(--line-strong)">
     <h3>🔗 Claim Your Partner Link</h3>
     <p>Your link attributes every signup and payment to you. Rewards begin at your first <b>paid</b> referral.</p>
     <div class="codebox">
