@@ -3,7 +3,93 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-09-06 (launch-readiness deep dive — 156 models were invisible to the forge; payout rail and tax are the remaining commercial blockers)
+Last updated: 2026-09-06 (public-surface audit — no page had a share card or a canonical; the acquisition strategy is shared links)
+
+---
+
+## THE PUBLIC-SURFACE AUDIT — 6 Sep
+
+Every marketing page, its metadata, the sitemap, the press kit and the emails,
+read against what the platform actually does.
+
+### The whole site was unshareable
+
+Of 32 pages, **exactly two carried a canonical URL and ZERO carried a single
+Open Graph tag.** Every link pasted into WhatsApp, Discord, X, LinkedIn or Slack
+unfurled as bare blue text — no title, no description, no image. The three
+reference games had full cards; the entire marketing site had none.
+
+index.html argues that JOSHRIX wins "the queue, the group chat, the fanbase
+drop". The shared link IS the acquisition strategy, and it was the one surface
+with no design on it at all.
+
+- `tools/make-og-image.mjs` renders `assets/og-cover.png` (1200x630, 97KB) by
+  composing the existing hero cast, so the card shows six real library models.
+  PNG rather than WebP: X and LinkedIn still refuse WebP as an og:image.
+- `tools/seo-head.mjs` writes canonical + og + twitter into all 33 pages between
+  markers, so re-running replaces its own block instead of stacking a second.
+- Canonicals are **extensionless**, matching what `cleanUrls` serves and what the
+  games already declared. The two pages that DID have canonicals pointed at the
+  `.html` spelling, which 308-redirects — they were naming the redirect as the
+  real page. Both were replaced; two conflicting canonicals is worse than none.
+- `play.html` and `doc.html` deliberately get NO canonical: one file serves many
+  URLs (`/play/:id`, `doc.html?d=<SPEC>`) and a static canonical would declare
+  every game, or every spec, to be the same page.
+- `dashboard`, `profile`, `wallet`, `login` and `admin` are now `noindex,follow`.
+
+`tests/t39-share-cards.js` (409) guards all of it, including that the image is
+1200x630, absolute, PNG and under 900KB.
+
+### Three public pages were missing from the sitemap
+
+`growth`, `signup` and `studio`. `/growth` even carried its own canonical, so it
+was meant to be indexed and was simply never listed. The sitemap also listed
+every marketing URL in the `.html` spelling, so each entry redirected to the URL
+we actually wanted indexed — crawl budget spent to arrive where it could have
+started. Aligned to the canonical form.
+
+### Copy that had stopped being true
+
+- **`play3d.html`** told visitors *"Games created in the Studio today ship as
+  polished 2D HTML5 builds"* and described 3D as something games "will be able to
+  target as the REALISM-PIPELINE rolls out". The 3D lane shipped: `_engine3d.ts`,
+  the hosted runtime, three reference games and a 2,591-model library. The page
+  was actively underselling the flagship capability. Its `<title>` was also
+  "Penalty King 3D" — a name this file records as invented data in the wallet
+  incident — while its own h1 said "3D Engine". Corrected, and it is **orphaned**:
+  no page links to it. Worth linking or deleting; it is a genuine working demo.
+- **`studio.html`** was titled "JOSHRIX Forge Studio — Prototype" — the main
+  product page calling itself a prototype in the browser tab and in search
+  results — and its description promised publishing "to web, PWA, Android and
+  iOS". The store lanes are a paid manual service, described honestly further
+  down the same page; the meta turned them into a capability of the forge.
+- **`dashboard.html`** advertised "forges, revenue, ACUs, games, and AI
+  recommendations". The dashboard contains My Games.
+- **The press kit** sent journalists to a GitHub blob **on this working branch**
+  for the brand guidelines. That link dies the moment the branch is merged, and
+  the same file is already deployed at `/branding/BRANDING.md`. Repointed, and
+  the new social card added as a download.
+- Nine meta descriptions were too short to fill a search result (login 26 chars,
+  play 38, careers 45, showcase 51). Rewritten.
+
+### Checked and found clean
+
+Library numbers on every public page match `_features.ts` · no broken internal
+links (all ten flagged were JS template concatenations) · © 2026 correct ·
+`BRANDING.md` matches the shipped palette · the email catalogue carries no stale
+claims, and `payout.paid` — "{{amount}} is on its way to you" — fires only when
+an operator marks it paid, which is after the money has actually been sent.
+
+### Still open: shared GAME links unfurl blank
+
+`/play/:id` rewrites to `play.html`, which sets `document.title` in JavaScript
+and nothing else. **Link unfurlers do not run JavaScript**, so every shared game
+— the strongest organic asset the platform has — unfurls with no title and no
+image. `play.html` now carries a generic JOSHRIX card, which is a strict
+improvement over nothing, but a per-game card needs `/play/:id` served by a route
+that renders og tags server-side. That path is `api/game-html.ts`, which is the
+paywall, so it was not changed on my own judgement. It is the highest-value SEO
+work left and it should be done deliberately.
 
 ---
 

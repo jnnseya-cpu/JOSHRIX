@@ -7,11 +7,22 @@ import { getDb, ensureBlogSchema, ensureGameSchema, listBlogPosts, listApprovedG
 
 const SITE = "https://www.joshrix.com";
 const STATIC_PAGES = [
-  "", "arcade.html", "blog.html", "marketplace.html", "pricing.html", "how-it-works.html",
-  "docs.html", "showcase.html", "worlds.html", "agent-fleet.html", "enterprise.html",
-  "about.html", "press.html", "contact.html", "careers.html", "referrals.html",
-  "ip-registry.html", "terms.html", "privacy.html", "refunds.html",
+  /* EXTENSIONLESS, to match every page's own <link rel="canonical">.
+     vercel.json sets cleanUrls, so "/pricing.html" 308-redirects to "/pricing".
+     Listing the .html spelling meant every marketing URL in this sitemap was a
+     redirect to the URL we actually wanted indexed — crawl budget spent to
+     arrive where it could have started, on a domain that has none to spare. */
+  "", "arcade", "blog", "marketplace", "pricing", "how-it-works",
+  "docs", "showcase", "worlds", "agent-fleet", "enterprise",
+  "about", "press", "contact", "careers", "referrals",
+  "ip-registry", "terms", "privacy", "refunds",
   "features",
+  /* Public and indexable, and absent from this list until 6 Sep. /growth even
+     carried its own canonical, so it was meant to be indexed and was simply
+     never listed; /signup is the conversion page; /studio is the product.
+     Account pages (wallet, dashboard, profile, login) are deliberately NOT here
+     and now carry noindex — a logged-out crawler sees an empty shell. */
+  "growth", "signup", "studio",
   /* "N CC0 models included" is a claim on every marketing page (the count
      itself lives in _features.ts, once); /library is
      the page that lets a stranger check it in ten seconds instead of taking it
@@ -20,9 +31,7 @@ const STATIC_PAGES = [
   /* The reference games are the strongest organic entry point on the site — a
      stranger can play one without an account — so every one of them belongs
      here. WonderVerse was missing entirely: it shipped, it is linked from the
-     newsletter, and search engines were never told it exists.
-     Extensionless because cleanUrls is on and the games' own <link rel=canonical>
-     points at the extensionless form; listing both spellings would compete. */
+     newsletter, and search engines were never told it exists. */
   "games/dino-island",
   "games/wonderverse",
   "games/midnight-post",
