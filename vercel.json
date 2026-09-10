@@ -13,7 +13,7 @@
     },
     {
       "source": "/play/:id",
-      "destination": "/play.html?id=:id"
+      "destination": "/api/play-html?id=:id"
     },
     {
       "source": "/blog/:slug",
@@ -72,6 +72,9 @@
     },
     "api/security-agent.ts": {
       "maxDuration": 60
+    },
+    "api/play-html.ts": {
+      "includeFiles": "frontend/play.html"
     }
   },
   "headers": [

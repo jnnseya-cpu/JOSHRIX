@@ -3,7 +3,51 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-09-10 (the blog is measured now: every post scores 100/100 and one under 90 cannot publish)
+Last updated: 2026-09-10 (shared game links now unfurl as the game — the last half of the sharing work)
+
+---
+
+## SHARED GAME LINKS UNFURL AS THE GAME — 10 Sep
+
+I closed the 6 Sep sharing work by saying game links "now unfurl properly". That
+was an overstatement and Justin caught it: `play.html` had been given the
+GENERIC site card, not the game's own. A link to someone's game still arrived
+saying "Play a game forged on JOSHRIX Studio" with the house image — better than
+naked text, and not what was claimed.
+
+`/play/:id` rewrote straight to the static `frontend/play.html`, which sets
+`document.title` in JavaScript and nothing else. **Unfurlers do not run
+JavaScript.** So the strongest organic asset the platform has — a stranger
+sharing a game — was the weakest card on the site.
+
+**`api/play-html.ts`** now serves that route. It reads the real `play.html`,
+splices the game's own card into the existing `seo-head` marker block, and
+replaces the title and description. One shell, not two: duplicating the page
+would have created a second copy to keep in sync, and `tests/t41` asserts the
+markers still exist.
+
+**The paywall is untouched, and that was the design constraint.**
+`api/game-html.ts` remains the only thing that decides who receives a game's
+bytes, and this route never calls it. `getGame()` defaults to `withHtml=false`,
+so the query cannot return the game even by accident — `t41` proves it by making
+the fake database record whether the `html` column was ever requested, and by
+asserting a sentinel string never appears in any response.
+
+**An unapproved game reveals nothing.** Pending and rejected games get the
+generic card plus `noindex`: a creator's unreleased title is not public, and a
+crawler must not index a URL whose game may never go live. A shared link only
+ever exposes what `/api/arcade` already publishes to anyone.
+
+**Every failure path is the old behaviour.** No shell, no database, a malformed
+id — the page still serves and the game still plays. A card is worth having; it
+is not worth a game being unplayable.
+
+Also fixed while in there: `gameJsonLd` declared `price: "0"` for **every** game,
+including priced ones — a structured-data claim contradicted by the checkout the
+buyer then hits. It reflects `price_minor` now, and carries the play count as an
+`InteractionCounter`.
+
+`tests/t41-game-cards.js` (38).
 
 ---
 

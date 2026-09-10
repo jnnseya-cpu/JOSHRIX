@@ -286,7 +286,11 @@ export function websiteNode() {
 }
 
 /** Structured data for a playable game page — VideoGame is a real schema type. */
-export function gameJsonLd(g: { id: string; title: string; summary?: string | null; created_at?: any; plays?: number }): string {
+export function gameJsonLd(g: {
+  id: string; title: string; summary?: string | null; created_at?: any; plays?: number;
+  /** Pence, when the creator has priced it. null/omitted means free to play. */
+  priceMinor?: number | null;
+}): string {
   return JSON.stringify({
     "@context": "https://schema.org",
     "@graph": [
@@ -301,7 +305,20 @@ export function gameJsonLd(g: { id: string; title: string; summary?: string | nu
         operatingSystem: "Any",
         publisher: { "@id": `${SITE}/#org` },
         ...(g.created_at ? { datePublished: new Date(g.created_at).toISOString() } : {}),
-        offers: { "@type": "Offer", price: "0", priceCurrency: "GBP", availability: "https://schema.org/InStock" },
+        /* The offer has to match the paywall. This declared price "0" for every
+           game, including priced ones — a structured-data claim contradicted by
+           the checkout the buyer then hits, which is exactly the mismatch that
+           gets rich results suppressed and, more to the point, is not true. */
+        offers: {
+          "@type": "Offer",
+          price: g.priceMinor != null && g.priceMinor > 0 ? (g.priceMinor / 100).toFixed(2) : "0",
+          priceCurrency: "GBP",
+          availability: "https://schema.org/InStock",
+          url: `${SITE}/play/${g.id}`,
+        },
+        ...(typeof g.plays === "number" && g.plays > 0
+          ? { interactionStatistic: { "@type": "InteractionCounter", interactionType: "https://schema.org/PlayAction", userInteractionCount: g.plays } }
+          : {}),
       },
       orgNode(),
     ],
