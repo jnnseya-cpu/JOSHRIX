@@ -10,6 +10,7 @@
  * pages/games (dynamic linking), and ready-to-paste social captions.
  */
 import Anthropic from "@anthropic-ai/sdk";
+import { scoreArticleDraft, MIN_SCORE, scoreReport } from "./_seoscore";
 import { getDb, ensureBlogSchema, ensureGameSchema, saveBlogPost, getBlogPost, listBlogPosts, countBlogPosts, listApprovedGames, blogViews } from "./_ledger";
 
 const SITE = "https://www.joshrix.com";
@@ -56,12 +57,22 @@ slug (kebab-case, <=60 chars, no stopwords),
 metaDescription (string, <=155 chars, compelling, includes the primary keyword),
 keywords (string[] of 6-10 search phrases),
 excerpt (string, 1-2 sentences),
-html (string: the article BODY as an HTML fragment — no <html>/<head>/<body>. ~1100-1400 words. Structure: hook intro <p>, then 4-6 <h2> sections with <p>/<ul> content, one comparison or checklist <ul>, a <h2>FAQ</h2> with three <h3> questions each followed by a <p> answer, and a closing call-to-action paragraph. Weave in 5-8 internal links from the provided link list using DESCRIPTIVE anchor text (never "click here" or a bare URL), including at least two links to earlier articles when any are listed. Every link must be one of the exact URLs provided — never invent a URL. Open with a direct answer to the title question in the first 40 words (featured-snippet shape), and make each <h2> a question or a concrete claim a searcher would type. Confident, concrete, zero fluff; no fabricated statistics, no competitor names.),
+html (string: the article BODY as an HTML fragment — no <html>/<head>/<body>. AT LEAST 1100 words and up to 1500 — a shorter draft is rejected by the scorer before it can publish. Structure: hook intro <p>, then 4-6 <h2> sections with <p>/<ul> content, one comparison or checklist <ul>, a <h2>FAQ</h2> with three <h3> questions each followed by a <p> answer, and a closing call-to-action paragraph. Weave in 5-8 internal links from the provided link list using DESCRIPTIVE anchor text (never "click here" or a bare URL), including at least two links to earlier articles when any are listed. Every link must be one of the exact URLs provided — never invent a URL. Open with a direct answer to the title question in the first 40 words (featured-snippet shape), and make each <h2> a question or a concrete claim a searcher would type. Confident, concrete, zero fluff; no fabricated statistics, no competitor names.),
 socialX (string <=260 chars for X/Twitter with 2-3 hashtags),
 socialLinkedIn (string, 400-600 chars, professional angle),
 socialFacebook (string, 200-400 chars, community angle),
 hashtags (string[] of 5-8 without #).
-Write in English unless the topic is clearly in another language.`;
+Write in English unless the topic is clearly in another language.
+
+HOW THIS IS JUDGED. api/_seoscore.ts scores every draft out of 100 and api/blog-agent.ts REFUSES TO PUBLISH below 90, so these are requirements, not preferences:
+- 1100+ words of body, five or more <h2> sections, exactly the structure above.
+- The first ~40 words must ANSWER the title in a self-contained sentence, with no throat-clearing. That passage is promoted into a marked answer block and is what an AI engine lifts and cites. If it needs the paragraph before it to make sense, it cannot be quoted, and the citation goes to whoever did answer first.
+- A real FAQ with three or more question <h3>s. It becomes FAQPage markup, which is the schema most likely to produce a rich result.
+- Five to eight internal links with descriptive anchor text. Never "click here", "read more" or a bare URL — anchor text is a ranking signal for the page it points at. Vary the destinations; eight links to one page is not interlinking.
+- Link the EXTENSIONLESS form: /pricing, never /pricing.html. The .html spelling redirects, which spends a hop and dilutes what the link passes.
+- Every link must be one of the exact URLs provided. Never invent one.
+- No invented statistics. Where a figure is given to you, use it; where none is given, make the point without a number. A fabricated statistic is the fastest way to lose a technical reader, and this platform's buyers are technical.
+- Each <h2> should be a question or a concrete claim a searcher would actually type, because each one becomes an anchor an engine can cite individually.`;
 
 function slugify(s: string): string {
   return s.normalize("NFKD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "post";
@@ -170,7 +181,38 @@ export default async function handler(req: any, res: any) {
     const liveGames = (await listApprovedGames(sql, 5)) as Array<{ id: string; title: string }>;
     // prior posts feed the interlinking: each new article links back into the archive
     const priorPosts = (await listBlogPosts(sql, 12)) as Array<{ slug: string; title: string }>;
-    const { article, provider } = await generateArticle(topic, liveGames, priorPosts);
+    let { article, provider } = await generateArticle(topic, liveGames, priorPosts);
+
+    /* THE FLOOR, ENFORCED BEFORE PUBLICATION.
+     *
+     * "SEO optimised" is the kind of claim that is always asserted and never
+     * measured. api/_seoscore.ts measures it, and a draft under MIN_SCORE is
+     * REWRITTEN ONCE with its own shortfalls handed back to the writer, then
+     * refused if it still misses. Refusing is the point: a thin post published
+     * anyway is a page that will never rank, competing with the archive for
+     * crawl budget, and it can never be un-indexed as cheaply as it was made.
+     *
+     * The scorer runs on the draft body, not the finished page, so the renderer's
+     * own contribution (schema, cards, canonical) is granted — those are fixed
+     * properties of every post and are covered separately by tests/t40. What is
+     * being judged here is the only part the writer controls: depth, structure,
+     * a direct opening answer, a real FAQ, and enough internal links to belong
+     * to a cluster. */
+    let audit = scoreArticleDraft(article);
+    if (audit.total < MIN_SCORE) {
+      const retry = await generateArticle(
+        `${topic}\n\nA previous attempt scored ${audit.total}/100 and was rejected. Fix EXACTLY these, keeping everything that already worked:\n${audit.failed.map((f) => `  - ${f.note}`).join("\n")}`,
+        liveGames, priorPosts,
+      );
+      const second = scoreArticleDraft(retry.article);
+      if (second.total > audit.total) { article = retry.article; provider = retry.provider; audit = second; }
+    }
+    if (audit.total < MIN_SCORE) {
+      return res.status(422).json({
+        error: `Draft scored ${audit.total}/100 — below the ${MIN_SCORE} floor, so it was not published.`,
+        report: scoreReport(audit), topic, provider,
+      });
+    }
 
     // never overwrite an existing slug — suffix when the calendar wraps around
     let slug = article.slug;
@@ -181,7 +223,7 @@ export default async function handler(req: any, res: any) {
       social: { x: article.socialX, linkedin: article.socialLinkedIn, facebook: article.socialFacebook, hashtags: article.hashtags },
       topic: topic.startsWith("FEATURE:") ? (featureById(topic.slice(8))?.name ?? topic) : topic, provider,
     });
-    return res.status(200).json({ ok: true, slug, url: `/blog/${slug}`, title: article.title, provider, topic });
+    return res.status(200).json({ ok: true, slug, url: `/blog/${slug}`, title: article.title, provider, topic, seoScore: audit.total });
   } catch (err: any) {
     return res.status(502).json({ error: "Content Agent failed", detail: String(err?.message ?? err) });
   }

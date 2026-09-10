@@ -3,7 +3,83 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-09-06 (public-surface audit — no page had a share card or a canonical; the acquisition strategy is shared links)
+Last updated: 2026-09-10 (the blog is measured now: every post scores 100/100 and one under 90 cannot publish)
+
+---
+
+## THE BLOG IS MEASURED NOW — 10 Sep
+
+Justin asked for a blog that scores 90+ and is built to be found by search
+engines and by answer engines. "SEO optimised" was asserted in the header of
+`api/blog-html.ts` and measured nowhere, so the first move was to make the claim
+a number.
+
+### The score
+
+`api/_seoscore.ts` scores a page out of 100 across five weighted groups: title
+and meta (15), content depth (25), linking (20), structured data (20), sharing
+(10) and technical/answer-engine (10). It runs in two places, from one
+implementation so they can never disagree:
+
+- **`scoreArticleDraft()` gates publication.** `blog-agent.ts` scores the draft,
+  hands the shortfalls back to the writer for ONE rewrite, and **refuses to
+  publish under 90**. It judges only what the writer controls, renormalised to
+  100 — crediting the template would hand every draft the same free points and
+  make the floor meaningless.
+- **`scorePage()` judges the finished document.** `tests/t40` drives the REAL
+  renderer against a stubbed database and scores the HTML that comes out.
+  **Currently 100/100, grade A.**
+
+What the score cannot do is promise a ranking, and it does not claim to. Position
+depends on competition, domain authority, links from other sites and time. What
+it measures is the controllable half.
+
+### What was actually broken
+
+- **Every blog share rendered as a grey box.** The card declared
+  `summary_large_image` and supplied a **512x512 app icon**. A square image in a
+  landscape card is the single most common way a share silently fails.
+- **Every internal link pointed at the .html spelling**, which `cleanUrls`
+  308-redirects — in the auto-linker table the whole interlinking strategy runs
+  through.
+- **The auto-linker could link inside a link it had just written**, producing
+  `<a href="/blog/<a href="/ip-registry">remix</a>-economy">`: a nested anchor
+  inside an attribute. It only appeared once the target list was broad enough for
+  two rules to overlap on one sentence. Anchors are now frozen the moment they
+  are inserted.
+- **Post-to-post links almost never placed.** A sibling was linked only if the
+  article quoted its whole headline verbatim. Widening it to a run of significant
+  words did not work either — "browser game beats a download" has a stopword
+  inside the run. Fuzzy-matching headlines against prose is the wrong tool, so
+  there is now a **Related reading block ranked by keyword overlap, rendered
+  inside `<article>`** where the links count as body content.
+- The dead starfield canvas and the old palette tokens were still in the blog
+  template.
+
+### What was added
+
+- **A per-post answer block.** The article's own opening paragraph is promoted
+  into a marked block that `speakable` points at — the passage an answer engine
+  lifts and cites. It does not invent one; a post that buries its answer still
+  reads honestly, it just scores and cites worse.
+- **A generated table of contents**, with a stable id on every `<h2>`/`<h3>`, so
+  a page can be cited at a specific claim rather than only as a whole.
+- **`BlogPosting` instead of bare `Article`**, a named author entity
+  (`#editorial`) rather than the company, a real `dateModified`, and a 1200x630
+  article image.
+- **Visible breadcrumb, prev/next, byline, updated date.**
+- **`/llms.txt`** (`api/llms.ts`, routed in `vercel.json`, announced in
+  `robots.txt`) — a plain-text brief for answer engines: what the platform is,
+  what is verifiably true, what it does NOT do, and which URL answers which
+  question. **Every figure is generated** from `_features.ts`, `payments.ts` and
+  the database at request time, so an engine cannot quote a stale number.
+- 37 auto-link targets, up from 12, written to match how an article actually
+  phrases a thing rather than the label the product uses. A representative post
+  now carries **26 links in its body**.
+- The writer's instructions state the scoring rules explicitly, because the agent
+  is judged on them.
+
+`tests/t40-blog-seo.js` (50) and the updated `tests/t12-seo.js` (50) cover it.
 
 ---
 

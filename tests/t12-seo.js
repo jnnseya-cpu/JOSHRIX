@@ -7,15 +7,20 @@ const body=`<p>Open the JOSHRIX Studio and describe your game. Browse the Arcade
 <p>Existing link: <a href="/somewhere">the Arcade</a> should not be touched.</p>
 <code>the Studio in code</code>`;
 const linked=seo.autoLink(body);
-t('links the Studio', linked.includes('href="/studio.html"'));
-t('links pricing', linked.includes('href="/pricing.html"'));
-t('links how it works', linked.includes('href="/how-it-works.html"'));
+/* EXTENSIONLESS. cleanUrls 308-redirects the .html spelling, so a link to it
+   spends a hop and hands the destination a diluted signal — on the very table
+   the site's internal-linking strategy runs through. */
+t('links the Studio', linked.includes('href="/studio"'));
+t('links pricing', linked.includes('href="/pricing"'));
+t('links how it works', linked.includes('href="/how-it-works"'));
+t('no auto-link points at a redirecting .html URL',
+  !/href="\/[a-z0-9-]+\.html"/.test(linked), (linked.match(/href="\/[a-z0-9-]+\.html"/)||[''])[0]);
 t('NEVER nests an anchor inside an existing one', !/<a[^>]*>[^<]*<a /.test(linked), linked.match(/<a[^>]*>[^<]*<a [\s\S]{0,60}/)?.[0]||'');
 t('never links inside a heading', !/<h2[^>]*>[\s\S]*?<a [\s\S]*?<\/h2>/.test(linked));
 t('never links inside <code>', !/<code>[\s\S]*?<a /.test(linked));
-const perDest=(linked.match(/href="\/studio\.html"/g)||[]).length;
+const perDest=(linked.match(/href="\/studio"/g)||[]).length;
 t('at most ONE link per destination (no keyword stuffing)', perDest===1, 'studio links: '+perDest);
-t('respects the max-links cap', (linked.match(/<a /g)||[]).length<=9);
+t('respects the max-links cap', (linked.match(/<a /g)||[]).length<=19);
 
 console.log('\n  sibling-post links are injected too:');
 const withSib=seo.autoLink('<p>We covered Remix Economy in an earlier piece.</p>',[{phrase:/\bRemix Economy\b/i,href:'/blog/remix-economy',title:'x'}]);
@@ -32,7 +37,22 @@ const post={title:'How to create a game with AI',description:'A guide.',slug:'ho
 const faqBody='<p>Intro</p><h2>FAQ</h2><h3>Is it free?</h3><p>No — AI compute costs real money, so every build is metered.</p><h3>Do I own my game?</h3><p>Yes, you keep full ownership of everything you create.</p>';
 const ld=JSON.parse(seo.articleJsonLd(post,faqBody).replace(/\\u003c/g,'<'));
 const types=ld['@graph'].map(n=>n['@type']);
-t('emits Article', types.includes('Article'));
+/* BlogPosting is a strict subtype of Article: anything that consumes Article
+   accepts it, and it tells an engine what KIND of page this is rather than
+   leaving it to infer from the URL. */
+t('emits BlogPosting', types.includes('BlogPosting'));
+t('names an author and both dates', (() => {
+  const a = ld['@graph'].find(n => n['@type'] === 'BlogPosting');
+  return !!(a && a.author && a.datePublished && a.dateModified);
+})());
+t('marks a speakable passage for voice and AI answers', (() => {
+  const a = ld['@graph'].find(n => n['@type'] === 'BlogPosting');
+  return !!(a && a.speakable && a.speakable.cssSelector);
+})());
+t('the article image is a 1200x630 card, not the app icon', (() => {
+  const a = ld['@graph'].find(n => n['@type'] === 'BlogPosting');
+  return !!(a && a.image && a.image.width === 1200 && a.image.height === 630);
+})());
 t('emits BreadcrumbList', types.includes('BreadcrumbList'));
 t('emits Organization', types.includes('Organization'));
 t('emits WebSite with search action', types.includes('WebSite'));

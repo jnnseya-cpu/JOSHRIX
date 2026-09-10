@@ -4,3 +4,8 @@ Disallow: /admin.html
 Disallow: /api/
 
 Sitemap: https://www.joshrix.com/sitemap.xml
+
+# A plain-text brief for answer engines: what this platform is, what is
+# verifiably true about it, and which URL answers which question. Generated from
+# the codebase at request time, so it cannot go stale.
+# https://www.joshrix.com/llms.txt

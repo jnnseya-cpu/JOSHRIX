@@ -28,6 +28,10 @@
       "destination": "/api/sitemap"
     },
     {
+      "source": "/llms.txt",
+      "destination": "/api/llms"
+    },
+    {
       "source": "/feed.xml",
       "destination": "/api/rss"
     },
