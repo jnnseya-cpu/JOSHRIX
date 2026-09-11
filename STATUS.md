@@ -3,7 +3,61 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-09-11 (three backends became one; Firestore rules are versioned for the first time)
+Last updated: 2026-09-11 (the forge runs to completion; three backends became one;
+Firestore rules are versioned for the first time)
+
+---
+
+## A FORGE MUST FINISH — 11 Sep
+
+Justin: *"make forge run to have no time and ACU limit. It's better to cost more and
+run longer and get a product, than stop midway and get frustrated."*
+
+"Stopped midway" was two different failures wearing one name, and only one of them
+was about time.
+
+**Truncation, which is what was actually happening.** The model hits its output cap
+and the file ends without a closing tag. Every gate rejects it, the engine build
+ships instead, and the creator gets a generic game having paid for theirs. The
+18 Aug probe recorded it plainly: `claude — truncated ("no closing </html>")` at
+159 seconds. The output budgets were 18k/15k, sized back when a token was a cost
+lever. It never was one here — an unfinished game is rejected, so those tokens are
+spent AND nothing ships. Budgets are now **32k for 3D and 24k for 2D** on Claude
+and Gemini. OpenAI stays at **16,000** because gpt-4o's hard cap is 16,384 and a
+request above it is rejected outright, which would delete the provider from the
+chain rather than stretch it.
+
+**The drop.** The serverless function is killed at `maxDuration` while the model is
+still writing: the creator sees "Code Agent unreachable" and gets nothing, which is
+strictly worse than a short game. The only defence is to abort just before the
+platform does — so the code's ceiling has to match `vercel.json`'s. It was three
+separate hard-coded numbers, which is three chances to raise one and forget
+another, and the one you forget silently becomes the real limit. There is now one
+knob, `FORGE_MAX_SECONDS` (default 290, settable per environment), and the
+generation deadline, the provider timeout and the whole-chain budget all derive
+from it. `tests/t44` fails if any literal reappears or if the knob drifts within
+10 seconds of `maxDuration`.
+
+**The brief is no longer clipped at 6,000 characters.** `MAX_CONCEPT_CHARS` is
+24,000. The guard that number came from was never really about length: a
+16,743-character design document reached the build prompt verbatim and the model
+returned a complete file with no canvas at all. What fixed that was the
+*instruction* — build the playable core loop, not a document. So that instruction
+is now attached to every brief over `DESIGN_DOC_CHARS` (6,000) whether or not it is
+over the cap. Raising the cap past 16,743 would otherwise have quietly reinstated
+the exact bug the guard was written for, with the test still green.
+
+**Holds moved with the budgets: 500 for 2D, 750 for 3D** (were 150/250). A hold is
+a reservation, not a price — charge-on-accept settles it to the metered actual and
+returns the rest — but a hold below the settlement means the build cannot be
+charged for. 32k output tokens meter to roughly 160 ACU at the worst case, and t1
+enforces that a hold never exceeds 5× the worst settle. A tester wallet
+(`TESTER_CEILING_ACU` 20,000) still affords 26 consecutive 3D forges.
+
+Not verified in this environment: no provider keys are reachable here, so no forge
+has actually been run against the new budgets. What is verified is that every
+timeout derives from one number, the numbers are internally consistent, and the
+whole suite is green (46 files, 1,718 assertions).
 
 ---
 
@@ -1018,7 +1072,9 @@ that drew nothing. 25 assertions in `tests/t21-charge-on-accept.js`.
 the build. The 3D forge RESERVED 1,200 ACU up front, but a real 3D build settles at
 40-51 — the hold was 23x the cost, so a creator with enough for ~20 games could not
 start one. A hold is not a price: it is refunded in the same request, so no charge
-changes. Now 250 for 3D and 150 for 2D, against a worst measured settle of 93.
+changes. Set to 250 for 3D and 150 for 2D, against a worst measured settle of 93.
+*(Superseded 11 Sep: 750 and 500, because the output budgets that decide the settle
+were raised — see "A forge must finish" at the top.)*
 
 ## Blueprint blocker — FIXED 18 Aug
 

@@ -210,8 +210,24 @@ console.log('\n== a design document must not be pasted straight into the build p
   const short = 'A penalty shootout game set in African stadiums.';
   t('a normal concept is passed through untouched', G.conceptForBuild(short) === short);
 
-  const doc = 'BLACKOUT: 72 HOURS. Vesper City, 11 million people, loses power at 21:17. '
-    + 'X'.repeat(20000);
+  const OPENING = 'BLACKOUT: 72 HOURS. Vesper City, 11 million people, loses power at 21:17. ';
+
+  /* THE ORIGINAL FAILURE, at its original size. The pitch that produced a file
+     with no canvas was 16,743 characters — comfortably UNDER today's cap, and
+     that is exactly the trap. Sizing this fixture off MAX_CONCEPT_CHARS instead
+     of off the real document would have let a raised cap silently reinstate the
+     bug while the test went on passing. */
+  const realPitch = OPENING + 'X'.repeat(16743 - OPENING.length);
+  const pitched = G.conceptForBuild(realPitch);
+  t('a 16,743-character design document still gets the instruction',
+    pitched.length > realPitch.length && /PLAYABLE CORE LOOP/.test(pitched),
+    'this is the brief that shipped a website instead of a game');
+  t('and it is NOT truncated — the whole brief still reaches the build',
+    pitched.startsWith(realPitch),
+    'a truncated brief builds a different game from the one described');
+
+  /* Over the cap: the instruction is the same, and now something is dropped. */
+  const doc = OPENING + 'X'.repeat(G.MAX_CONCEPT_CHARS + 5000);
   const out = G.conceptForBuild(doc);
   t('a design document is capped', out.length < doc.length, `${out.length} vs ${doc.length}`);
   t('the opening — the selling idea and the world — survives',
@@ -221,6 +237,9 @@ console.log('\n== a design document must not be pasted straight into the build p
   t('and names the failure it is preventing',
     /do not produce a design document|PLAYABLE CORE LOOP/i.test(out));
   t('the cap leaves room for a real brief', G.MAX_CONCEPT_CHARS >= 4000);
+  t('the design-document threshold sits below the cap',
+    G.DESIGN_DOC_CHARS > 0 && G.DESIGN_DOC_CHARS < G.MAX_CONCEPT_CHARS,
+    `${G.DESIGN_DOC_CHARS} vs ${G.MAX_CONCEPT_CHARS}`);
 }
 
 console.log('\n== the 2D lane had no gate at all ==');

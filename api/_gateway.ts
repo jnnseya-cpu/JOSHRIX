@@ -464,8 +464,45 @@ ${RUNTIME_SAFETY}`;
  * observed, while still admitting anyone who can genuinely afford several runs.
  * Raise it only if a real settlement is ever seen above it — and record the
  * settlement here when you do. */
-export const FORGE_GAME_ACU_CHARGE = 150;       // HOLD (2D) — settles to ~32-40
-export const FORGE_GAME_3D_ACU_CHARGE = 250;    // HOLD (3D) — settles to ~51
+/**
+ * OUTPUT BUDGETS, exported because the ACU holds are DERIVED from them.
+ *
+ * tests/t1 computes the worst settlement a hold must cover, and it did so from a
+ * hard-coded 18000 — a copy of the old budget. So when the budget rose the test
+ * kept scoring the old world and reported a hold as nine times too large when it
+ * was really five. Same stale-duplicate defect this codebase has now been bitten
+ * by four times; the fix is the same one: one number, read by everyone.
+ */
+export const OUTPUT_BUDGET = {
+  claude3d: 32_000,
+  claude2d: 24_000,
+  gemini3d: 32_000,
+  gemini2d: 24_000,
+  /* gpt-4o's hard output cap is 16384. A request ABOVE it is rejected outright,
+     which removes the provider from the chain rather than shortening its reply,
+     so this one is a ceiling and not a preference. */
+  openai: 16_000,
+} as const;
+
+/* RAISED 11 Sep 2026, with the output budgets. A hold is a RESERVATION, not a
+ * price: charge-on-accept settles it to what the run actually metered and
+ * returns the rest, so the only thing a bigger hold costs is requiring a funded
+ * wallet. What a SMALL hold costs is a refused build — which is the "stops
+ * midway and you get nothing" failure, arriving before generation even starts.
+ *
+ * The budgets above now allow 32k output tokens. At Sonnet's rate that is
+ * roughly 150-250 ACUs of metered settlement on a build that genuinely uses the
+ * headroom, so a 250 hold could no longer reliably cover its own settlement —
+ * and a settlement that cannot collect is a game given away.
+ *
+ * These leave several times the observed settlement in headroom. Record a real
+ * settlement here if one is ever seen above them. Note that most builds finish
+ * well inside the budget and still settle at the old figures: the ceiling rose,
+ * the typical cost did not, which is why api/_features.ts BUILD_COST_MINOR
+ * (£0.32 / £0.49) is still the honest number to quote — re-measure it from
+ * /api/forge-log once real runs exist rather than adjusting it on theory. */
+export const FORGE_GAME_ACU_CHARGE = 500;       // HOLD (2D) — settles to metered actual
+export const FORGE_GAME_3D_ACU_CHARGE = 750;    // HOLD (3D) — settles to metered actual
 export const FORGE_MIN_CHARGE = 40;             // metered floor when the Code Agent ran
 /** A 3D build smaller than this is a stub, however well-formed. Dino Island,
  *  the leanest complete game on the runtime, is 10,975 bytes. */
@@ -475,12 +512,42 @@ export const ENHANCE_HOLD = 500;                // HOLD per enhance pass — set
 export const GROWTH_HOLD = 60;                  // HOLD per growth tool — settled to metered 4x actual
 export const GROWTH_MIN_CHARGE = 4;             // metered floor per growth run
 
-/** The serverless function dies hard at 300s — a generation that runs past it
- *  drops the connection and the creator sees "Code Agent unreachable" with no
- *  response at all. Abort the model stream at 240s instead: the caller catches
- *  the error, ships the guaranteed engine build, and settles the small flat
- *  charge — a playable answer ALWAYS comes back inside the platform ceiling. */
-const GENERATION_DEADLINE_MS = 240_000;
+/**
+ * HOW LONG A FORGE MAY RUN — one number, and everything else derives from it.
+ *
+ * Justin, 11 Sep 2026: "no time or ACU limit — better to cost more and run
+ * longer than stop midway and get a frustrating product." That is the right
+ * call: a truncated game is worth nothing, and the ACUs spent reaching the
+ * truncation are spent either way.
+ *
+ * THE CEILING IS NOT OURS TO REMOVE. A Vercel serverless function is killed at
+ * its `maxDuration`, set in vercel.json. Past it the connection simply drops and
+ * the creator sees "Code Agent unreachable" with no response at all — strictly
+ * worse than a short game. So the model stream is aborted just BEFORE the
+ * ceiling, the caller catches it, and a playable answer always comes back.
+ *
+ * There used to be three separate hard-coded numbers for this — 240s, 230s and
+ * 200s — which is three chances to raise the ceiling and forget one, and the
+ * one you forget silently becomes the real limit. Now there is one knob.
+ *
+ * TO RUN LONGER: raise `maxDuration` for api/forge-game.ts in vercel.json AND
+ * set FORGE_MAX_SECONDS to about ten seconds below it. tests/t44 fails if they
+ * ever disagree. How high you may go is a function of the Vercel PLAN, not of
+ * this code — check the account before raising it, because a maxDuration the
+ * plan does not allow fails the build rather than the request.
+ *
+ * TO REMOVE THE CEILING ENTIRELY the generation has to outlive the request:
+ * forge returns a ticket immediately and a worker finishes in the background.
+ * Half of that already exists — `ticket`, saveForgeResult() and
+ * /api/forge-result are how the Studio survives a dropped connection today —
+ * but the generation itself still runs inside the request, so this is the honest
+ * limit until that work is done.
+ */
+export const FORGE_MAX_SECONDS = Math.max(30, Number(process.env.FORGE_MAX_SECONDS) || 290);
+const FORGE_MAX_MS = FORGE_MAX_SECONDS * 1000;
+
+/** Abort the model stream with enough left to build, settle and persist a reply. */
+const GENERATION_DEADLINE_MS = FORGE_MAX_MS - 20_000;
 async function finishWithinDeadline(stream: ReturnType<Anthropic["messages"]["stream"]>): Promise<Anthropic.Message> {
   const killer = setTimeout(() => { try { stream.abort(); } catch { /* already done */ } }, GENERATION_DEADLINE_MS);
   try {
@@ -601,37 +668,56 @@ const FLOOR_ENGINE: Array<[string, RegExp]> = [
   ["a sound of its own — the player must hear what they did", /\.\s*(sfx|ambience|beep)\s*\(/],
 ];
 
-/** How many DISTINCT library models a build actually pulls in. Logged with every
- *  forge, because "which provider and how many bytes" could not answer the one
- *  question that mattered — did it use the library at all. */
 /**
- * A concept longer than this is a DESIGN DOCUMENT, not a game brief.
+ * A brief this long is a DESIGN DOCUMENT, not a game brief — and that is a
+ * failure mode, not a size problem.
  *
  * A creator pasted a 16,743-character, 33-section AAA console pitch —
  * districts, factions, co-op, competitive modes, audio design, expansions,
  * marketing positioning, trailer copy. All of it went into the BUILD prompt
  * verbatim, next to "write one self-contained HTML file with a canvas". The
- * model produced a complete file with no canvas at all and the run fell
- * through to the engine fallback.
+ * model produced a complete file with no canvas at all and the run fell through
+ * to the engine fallback: the creator got "collect the orbs" instead of their
+ * game.
  *
- * The blueprint stage exists precisely to distil a brief into title, summary,
- * levels and mechanics, and it still sees the WHOLE document — breadth helps
- * there. What the build stage needs is the playable core, plus an explicit
- * instruction not to try to represent a four-year production in 900 lines.
- * 6,000 characters is roughly the first six sections of a document like that:
- * the selling idea, the world, and what the player actually does.
+ * What fixed that was never the truncation. It was telling the model, in the
+ * build prompt, that a document describing a four-year production must become
+ * ONE playable loop. So that instruction is attached to every long brief,
+ * whether or not it is over the cap — otherwise raising MAX_CONCEPT_CHARS past
+ * 16,743 would quietly reinstate the exact bug this guard was written for.
+ *
+ * 6,000 characters is roughly the first six sections of a document like that.
  */
-export const MAX_CONCEPT_CHARS = 6_000;
+export const DESIGN_DOC_CHARS = 6_000;
 
-export function conceptForBuild(prompt: string): string {
-  if (prompt.length <= MAX_CONCEPT_CHARS) return prompt;
-  const head = prompt.slice(0, MAX_CONCEPT_CHARS);
-  return `${head}
+/**
+ * The hard ceiling on what reaches the BUILD prompt.
+ *
+ * The blueprint stage still sees the WHOLE brief — breadth helps when distilling
+ * a title, summary, levels and mechanics. This cap applies only to the build,
+ * and it is generous because a truncated brief builds a different game from the
+ * one described. It exists so that a 200,000-character paste cannot crowd the
+ * build instructions out of the model's attention, not to save tokens.
+ */
+export const MAX_CONCEPT_CHARS = 24_000;
 
-[The creator's brief continues for ${prompt.length - MAX_CONCEPT_CHARS} more characters and describes a full multi-platform production: additional systems, cinematics, audio direction, online modes, expansions and marketing. DO NOT attempt to represent all of it, and do not produce a design document, a menu of features, or a website about the game. Build the PLAYABLE CORE LOOP of what is described above as ONE browser game — the world, the player, what they do minute to minute, what opposes them, and how a session ends. One vertical slice that plays beats a summary of everything that does not.]`;
+/** The one instruction that stopped design documents becoming websites. */
+function coreLoopDirective(dropped: number): string {
+  const continues = dropped > 0
+    ? `The creator's brief continues for ${dropped} more characters and describes`
+    : "The creator's brief above describes";
+  return `[${continues} a full production: additional systems, cinematics, audio direction, online modes, expansions and marketing. DO NOT attempt to represent all of it, and do not produce a design document, a menu of features, or a website about the game. Build the PLAYABLE CORE LOOP of what is described above as ONE browser game — the world, the player, what they do minute to minute, what opposes them, and how a session ends. One vertical slice that plays beats a summary of everything that does not.]`;
 }
 
-/** How many DISTINCT library models a build actually pulls in. */
+export function conceptForBuild(prompt: string): string {
+  if (prompt.length <= DESIGN_DOC_CHARS) return prompt;
+  const head = prompt.length > MAX_CONCEPT_CHARS ? prompt.slice(0, MAX_CONCEPT_CHARS) : prompt;
+  return `${head}\n\n${coreLoopDirective(prompt.length - head.length)}`;
+}
+
+/** How many DISTINCT library models a build actually pulls in. Logged with every
+ *  forge, because "which provider and how many bytes" could not answer the one
+ *  question that mattered — did it use the library at all. */
 export function countLibraryModels(html: string): number {
   const seen = new Set<string>();
   const re = /['"]((?:lib|vehicles|packs)\/[A-Za-z0-9_\-/]+)['"]/g;
@@ -741,7 +827,10 @@ function extractHtml(text: string): string {
   return out;
 }
 
-const PROVIDER_TIMEOUT_MS = 200_000;
+/** A single provider may use nearly the whole window: with the chain able to
+ *  skip ahead when time is short, a generous per-call timeout costs nothing and
+ *  a mean one is the difference between a finished game and a fallback. */
+const PROVIDER_TIMEOUT_MS = FORGE_MAX_MS - 30_000;
 
 /** Gemini REST fallback (activates when GEMINI_API_KEY is set in Vercel). */
 export async function geminiGenerate(system: string, user: string, maxTokens: number): Promise<{ html: string; usage?: TokenUsage }> {
@@ -838,19 +927,29 @@ export async function generateGameHtml(
   // model reads it as DATA, and never as instructions addressed to itself.
   const userMsg = `${wrapUntrusted(conceptForBuild(prompt))}\n\nBlueprint title: ${opts.title ?? "(derive from concept)"}\nBlueprint summary: ${opts.summary ?? "(none)"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the concept"}`;
 
-  // Per-provider output budgets, sized from the full-size diagnostic probe:
-  // Claude writes past 12k tokens and truncates (= broken game), so it gets the
-  // headroom it demonstrably needs; Gemini finishes a complete game in ~9k;
-  // gpt-4o's hard output cap is 16384 so it must stay under that.
-  const claudeMax = is3d ? 18000 : 16000;
-  const geminiMax = is3d ? 15000 : 12000;
-  const openaiMax = is3d ? 15000 : 12000;
+  /* OUTPUT BUDGETS — this is what "stops midway" actually means.
+   *
+   * A build does not fail halfway because of a clock; it fails because the model
+   * hits its output cap and the file ends without a closing tag. That is the
+   * measured failure in the probe below: claude "truncated (no closing
+   * </html>)". The gates then reject it and the creator gets the engine build.
+   *
+   * These were 18k/15k, sized when the budget was a cost lever. It is not one:
+   * an unfinished game is rejected, so the tokens are spent AND nothing ships,
+   * which is the worst of both. Metering charges what a run actually used, so a
+   * build that needs 30k tokens costs more and delivers, rather than costing
+   * less and delivering nothing.
+   *
+   * The numbers are per-model hard caps, not guesses: Sonnet and Gemini 2.5
+   * Flash both accept far more than a game needs, while gpt-4o's cap is 16384
+   * and a request above it is rejected outright — so openai stays under it. */
+  const claudeMax = is3d ? OUTPUT_BUDGET.claude3d : OUTPUT_BUDGET.claude2d;
+  const geminiMax = is3d ? OUTPUT_BUDGET.gemini3d : OUTPUT_BUDGET.gemini2d;
+  const openaiMax = OUTPUT_BUDGET.openai;
 
   // MULTI-PROVIDER CHAIN — no single vendor may block a creator's game; whichever
-  // answers first with a COMPLETE file ships as the bespoke build.
-  // 2D leads with Gemini: the probe shows it finishing a complete full-size game
-  // in ~35s, so creators get their bespoke build fast. 3D (the premium lane)
-  // leads with Claude, the strongest coder, now with real output headroom.
+  // answers first with a COMPLETE file ships as the bespoke build. Both lanes
+  // share one order, and the evidence for it is set out below the declarations.
   type Cand = { name: string; enabled: boolean; run: () => Promise<{ html: string; usage?: TokenUsage }> };
   const claude: Cand = { name: "claude", enabled: !!process.env.ANTHROPIC_API_KEY, run: () => claudeGenerate(system, userMsg, claudeMax) };
   const gemini: Cand = { name: "gemini", enabled: !!process.env.GEMINI_API_KEY, run: () => geminiGenerate(system, userMsg, geminiMax) };
@@ -892,7 +991,7 @@ export async function generateGameHtml(
   // reply must still be built, settled, and persisted after generation. Skip
   // remaining providers rather than start one that can't finish in time.
   const chainStart = Date.now();
-  const CHAIN_BUDGET_MS = 230_000;
+  const CHAIN_BUDGET_MS = FORGE_MAX_MS - 40_000;
   let subFloor: { html: string; provider: string; usage?: TokenUsage } | null = null;
   for (const c of chain) {
     if (!c.enabled) continue;

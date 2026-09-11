@@ -36,10 +36,16 @@ console.log('\n== HOLDS vs SETTLEMENT (creator must never be over-charged) ==');
 // could afford twenty times over. A hold is refunded in the same request, so its
 // only job is to cover the worst settle without gatekeeping affordable work.
 {
+  /* Derived from the REAL output budgets, not a copy of them. This used to
+     hard-code 18000/16000, so when the budgets rose on 11 Sep the test went on
+     scoring the old world and called a correctly-sized hold nine times too
+     large. A test that carries its own copy of a production constant stops
+     testing production the moment that constant moves. */
+  const { OUTPUT_BUDGET } = require('./build/api/_gateway.js');
   const worst3d = Math.max(FORGE_MIN_CHARGE,
-    acuChargeForUsage('claude-sonnet-5', { inputTokens: 8000, outputTokens: 18000 }));
+    acuChargeForUsage('claude-sonnet-5', { inputTokens: 8000, outputTokens: OUTPUT_BUDGET.claude3d }));
   const worst2d = Math.max(FORGE_MIN_CHARGE,
-    acuChargeForUsage('claude-sonnet-5', { inputTokens: 8000, outputTokens: 16000 }));
+    acuChargeForUsage('claude-sonnet-5', { inputTokens: 8000, outputTokens: OUTPUT_BUDGET.claude2d }));
   t(`3D hold ${FORGE_GAME_3D_ACU_CHARGE} covers the worst settle ${worst3d}`,
     FORGE_GAME_3D_ACU_CHARGE > worst3d);
   t(`2D hold ${FORGE_GAME_ACU_CHARGE} covers the worst settle ${worst2d}`,

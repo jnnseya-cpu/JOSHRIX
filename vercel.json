@@ -187,5 +187,6 @@
         }
       ]
     }
-  ]
+  ],
+  "//forge-duration": "FORGE_MAX_SECONDS in the environment must stay about 10s BELOW the maxDuration above, and tests/t44 fails if it does not. To let a forge run longer, raise BOTH together \u2014 how high depends on the Vercel plan, and a maxDuration the plan disallows fails the BUILD, not the request."
 }

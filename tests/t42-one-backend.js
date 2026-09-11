@@ -116,16 +116,23 @@ console.log('\nno document points at something that was removed');
       const full = path.join(dir, f);
       if (!fs.statSync(full).isFile()) continue;
       const src = fs.readFileSync(full, 'utf8');
-      /* Comments explaining WHY these were removed necessarily name them, so a
-         line that is doing that is not a stale pointer. Strip block quotes and
-         anything already marked as corrected or not implemented. */
-      const live = src.split('\n')
+      /* A doc explaining WHY these were removed has to name them, so a mention
+         is not automatically a stale pointer. The old filter judged one LINE at
+         a time, which cannot work: STATUS.md names both backends in a bullet
+         list and states "Both are removed" three lines further down, so the
+         explanation and the exoneration are never on the same line.
+         Judge by SECTION instead — a markdown heading to the next heading is
+         the unit a reader actually takes meaning from. A section that says the
+         thing is gone is a history note; one that names it with no such
+         sentence is still pointing at it. */
+      const sections = src.split('\n')
         .filter((l) => !l.trimStart().startsWith('>'))
-        .filter((l) => !/NOT IMPLEMENTED|removed|Corrected|git history/i.test(l))
-        .join('\n');
-      if (/backend\/ai-gateway|firebase deploy --only functions|`functions\//.test(live)) {
-        stale.push(path.relative(ROOT, full));
-      }
+        .join('\n')
+        .split(/\n(?=#{1,6}\s)/);
+      const stillPointing = sections.filter((s) =>
+        /backend\/ai-gateway|firebase deploy --only functions|`functions\//.test(s) &&
+        !/NOT IMPLEMENTED|\b(removed|deleted|gone|no longer)\b|Corrected|git history/i.test(s));
+      if (stillPointing.length) stale.push(path.relative(ROOT, full));
     }
   }
   t('no doc still instructs a Firebase Functions deploy', stale.length === 0, stale.join(', '));
