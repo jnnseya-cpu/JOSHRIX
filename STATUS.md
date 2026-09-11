@@ -1060,10 +1060,26 @@ provider while the game path had three). 20 assertions in `tests/t20-blueprint-j
 | 2b | **Gate the legacy wallets** | Every account created before 18 Aug is still `tester` and can refill itself for free. One pass through `/admin` → "Revoke tester" on everyone who is not a real tester. |
 | 3 | **Set `NEWSLETTER_SECRET` in Vercel** | Any long random string. Without it the unsubscribe link still works, but the token is not signed, so anyone could unsubscribe another address. |
 | 4 | **Confirm the newsletter send** | It is live but has never sent to a real inbox. Run `GET /api/newsletter?dry=1` with `x-moderation-key` first — it reports the audience size and sends nothing. |
-| 5 | **ROTATE THE NEON PASSWORD — P1, do this first** | It was pasted into chat, then written verbatim into this file in `d27bde2` as a reminder. **This repository is PUBLIC**, so a live database password has been readable by anyone since that commit. The literal is removed from HEAD, but removing it does not remove it from git history and must not be mistaken for a fix: rotate the credential in Neon, update `DATABASE_URL` in Vercel, redeploy. Until it is rotated it is compromised. Never write a credential here again — this entry is the reason the rule exists. |
+| ~~5~~ | ~~ROTATE THE NEON PASSWORD~~ | **DONE — Justin, 11 Sep.** The credential was exposed in `d27bde2` in a public repository and has been rotated. Note for the record: rotation is the fix, and the old literal remains in git history forever — it is dead, not absent. The rule it produced stands: never write a credential into this file. |
 | 6 | **Add three Stripe webhook events** | The leak fixes only fire if Stripe sends the events. In Developers → Webhooks, add **`customer.subscription.updated`**, **`invoice.payment_failed`** and confirm **`charge.refunded`** is on. Without `customer.subscription.updated` a lapsed subscription keeps its commission rate — leak #5 stays open no matter what the code says. |
 | 7 | **Check the dunning setting** | Billing → Subscriptions → "Manage failed payments". If it is set to **mark unpaid** rather than **cancel**, `customer.subscription.deleted` never fires at all. Either setting is now handled, but knowing which one is live tells you how long a non-payer keeps their plan. |
 | ~~8~~ | ~~Decide the free-play question~~ | **DECIDED 25 Aug: "keep both as they are."** Priced games need an entitlement, unpriced games play for anyone, and the 14-day clearing window stands. Both recorded at the top of this file — do not reopen either on inference. |
+
+### Confirmed done by Justin — 11 Sep
+
+These were the top of the blocker list and they are cleared. **Reported by
+Justin, not verified by me** — this environment cannot reach Vercel, Neon or the
+Firebase console, and that distinction is worth keeping in the record:
+
+- **All AI provider keys are set in Vercel**, not just Anthropic. That closes the
+  single-provider risk: `/api/health` should now report `forge.leadProvider:
+  "gemini"` with two fallbacks behind it.
+- **The Neon password is rotated.**
+- **The Firestore rules are deployed.**
+
+**What this changes.** The blocker list I have been repeating is now wrong, and
+the honest remaining list is much shorter — and one item on it dominates
+everything else. See below.
 
 ## Waiting on me — nothing
 
