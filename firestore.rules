@@ -1,0 +1,61 @@
+rules_version = '2';
+
+// JOSHRIX Studio — Firestore security rules.
+//
+// WHY THIS FILE EXISTS. The client writes profiles to Firestore from
+// frontend/assets/store.js on six pages, and until 11 Sep 2026 there were NO
+// rules in this repository at all. Whatever was protecting that data lived only
+// in the Firebase console: unversioned, unreviewable, and impossible to reason
+// about in a pull request. A database created in test mode defaults to
+// `allow read, write: if true` and silently expires into a total lockout later,
+// so "we never checked" and "every profile is world-readable" look identical
+// from the outside.
+//
+// WHAT IS ACTUALLY IN HERE. One collection. users/{uid} holds a display profile:
+// handle, display name, email, bio, country, language, website, avatar and
+// cover. That is personal data, which is the whole reason the rules matter —
+// there is no money here.
+//
+// WHAT IS NOT IN HERE, and must never be. All money, ownership and entitlement
+// lives in Neon Postgres behind api/_ledger.ts. That is a standing rule from the
+// app spec — money never lives solely in Firestore — and it is why a compromised
+// profile document cannot become a compromised balance.
+//
+// ON THE acu FIELDS. The profile carries `acu`, `acuCategory` and
+// `testerAcuGranted`, and the owner can write them, because store.js persists
+// the whole profile object. They are a DISPLAY CACHE with no authority: every
+// paid endpoint reads the balance from the ledger, and wallet.html's own comment
+// records that "server balance wins". A user who edits them locally changes a
+// number on their own screen and nothing else — the next forge still charges the
+// real balance and still fails with 402 if it is empty.
+//
+// DEPLOY: firebase deploy --only firestore:rules
+// TEST:   Firebase console → Firestore → Rules → Rules Playground
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // A signed-in person may read and write THEIR OWN profile, and no one
+    // else's. request.auth.uid comes from a verified Firebase ID token, which is
+    // the same credential api/_auth.ts checks server-side, so the two halves of
+    // the platform agree about who someone is.
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // EVERYTHING ELSE IS DENIED.
+    //
+    // This is the rule that matters most and it is deliberately last and
+    // deliberately total. Firestore evaluates rules as a union of allows, so a
+    // collection nobody has written a rule for is closed by default — but only
+    // if no broad match above it has opened it. Stating the denial explicitly
+    // means a future `match /{document=**}` added carelessly above this line is
+    // a visible change in the diff rather than an invisible one.
+    //
+    // If a new collection is needed, add a specific match block for it with the
+    // narrowest condition that works. Never widen this.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

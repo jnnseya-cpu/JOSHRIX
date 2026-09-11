@@ -2,7 +2,10 @@
  * JOSHRIX AI Gateway — deployed serverless edition.
  * Claude (claude-opus-5) is the primary brain; when no key is configured the
  * gateway serves a deterministic demo blueprint so the platform demos end-to-end
- * on a fresh deploy. Full multi-provider fallback chain: backend/ai-gateway/.
+ * on a fresh deploy. THIS FILE IS THE FALLBACK CHAIN — gemini, then openai,
+ * then claude, ordered on measured evidence rather than preference. A second
+ * reference copy used to live in backend/ai-gateway/ and this line pointed at
+ * it as though it were authoritative; it had drifted, and it is gone.
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { Script } from "node:vm";

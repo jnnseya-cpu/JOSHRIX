@@ -1,0 +1,31 @@
+{
+  "//": [
+    "Type-checking for the deployed source. There was no root tsconfig at all,",
+    "and the test harness compiles with strict:false because its job is to EMIT",
+    "runnable JS for the assertions rather than to judge types. The consequence",
+    "was that nothing checked api/ under strict mode before a deploy — type",
+    "errors would have surfaced on Vercel, at the worst possible moment.",
+    "",
+    "Running it found ZERO errors: the code was already strict-clean and simply",
+    "had nothing proving it. This file makes that a guarantee instead of a",
+    "coincidence. `npm run typecheck` runs it; tools/run-tests.mjs runs it too,",
+    "so a type error fails the suite rather than the deployment."
+  ],
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "lib": ["es2022", "dom"],
+    "strict": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "forceConsistentCasingInFileNames": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": ["api/**/*.ts", "shared/**/*.ts"],
+  "exclude": ["node_modules", ".testbuild", "tools", "tests", "frontend"]
+}

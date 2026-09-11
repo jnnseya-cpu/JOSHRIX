@@ -18,7 +18,7 @@ Every game the fleet forges at "Commercial starter" maturity or above must ship 
 
 ## 2. Generation Chain by Asset Class
 
-The Asset Agent orchestrates specialised providers through the AI Gateway (`backend/ai-gateway/`), same fallback discipline as text models — primary → secondary → error, every call metered into ACUs.
+The Asset Agent orchestrates specialised providers through the AI Gateway (`api/_gateway.ts`), same fallback discipline as text models — primary → secondary → error, every call metered into ACUs.
 
 | Asset class | Chain | Output |
 |---|---|---|

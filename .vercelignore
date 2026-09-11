@@ -20,3 +20,9 @@ frontend/assets/sprites/_incoming/
 tests/
 tools/
 .testbuild/
+
+# Firebase configuration. The backend is Vercel serverless in api/; Firebase is
+# used only for Authentication and the users/{uid} profile collection. These two
+# files are deployed with `firebase deploy --only firestore:rules`, never here.
+firebase.json
+firestore.rules

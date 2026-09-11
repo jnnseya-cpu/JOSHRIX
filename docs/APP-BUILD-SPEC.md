@@ -90,7 +90,7 @@ User submits idea → Idea Agent improves it → Design Agent creates GDD → **
 | Layer | Stack |
 |---|---|
 | Frontend | Next.js · React · TailwindCSS · Shadcn UI · Framer Motion · Phaser.js · Three.js |
-| Backend | Firebase Auth · Firestore · Firebase Storage · Cloud Functions · Cloud Run · Cloud Tasks · BitriPay/Stripe + Connect · SendGrid/Brevo |
+| Backend | **AS BUILT:** Vercel serverless (`api/*.ts`) · Neon Postgres (`api/_ledger.ts`) · Firebase Auth for identity only · Stripe for payments in · SMTP/Resend for mail. *Firestore, Firebase Storage, Cloud Functions, Cloud Run, Cloud Tasks, Stripe Connect and BitriPay are SPECIFIED HERE BUT NOT IMPLEMENTED — see `.env.example` for which of them read nothing.* |
 | AI layer | OpenAI · Gemini · Claude · Vertex AI behind the custom AI Gateway — provider cost tracker, fallback routing, prompt logging, credit billing engine |
 | Infrastructure | Vercel or Firebase App Hosting · Cloud Run build workers · Firebase Storage for game files · Firestore for operational data · BigQuery later for analytics |
 

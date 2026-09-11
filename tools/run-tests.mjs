@@ -48,6 +48,24 @@ const copyInto = (fromDir, toDir, ext) => {
   }
 };
 
+/* ---------- 0. type-check the deployed source ----------
+ * There was no root tsconfig and nothing ran tsc in strict mode, so a type error
+ * in api/ would have been discovered by VERCEL, during a deploy. The harness
+ * below deliberately compiles with strict:false — its job is to emit runnable JS
+ * for the assertions, not to judge types — so it can never catch one either.
+ * Running the real check here means a type error fails the suite instead of the
+ * deployment. It costs a few seconds and it is skipped for --filter runs, which
+ * are for iterating on one file. */
+if (!filter && !buildOnly) {
+  const tc = spawnSync('npx', ['tsc', '--noEmit'], { cwd: ROOT, encoding: 'utf8' });
+  if (tc.status !== 0) {
+    console.error('\n  TYPECHECK FAILED — fix these before the deploy does it for you:\n');
+    console.error((tc.stdout || tc.stderr || '').split('\n').slice(0, 25).join('\n'));
+    process.exit(1);
+  }
+  console.log('typecheck: clean');
+}
+
 /* ---------- 1. mirror the sources ---------- */
 rm(WS);
 fs.mkdirSync(WS, { recursive: true });

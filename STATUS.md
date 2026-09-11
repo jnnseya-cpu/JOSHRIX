@@ -3,7 +3,96 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-09-10 (shared game links now unfurl as the game — the last half of the sharing work)
+Last updated: 2026-09-11 (three backends became one; Firestore rules are versioned for the first time)
+
+---
+
+## THE STABILISATION PASS — 11 Sep
+
+Justin supplied seven prompts for a **Firebase App Hosting + Next.js** project:
+remove duplicate `next.config.js` / `.firebaserc`, align React and Next versions,
+validate App Hosting, and so on. **This platform is neither.** There is no
+Next.js, no React, no App Hosting, no `apphosting.yaml` and no `.firebaserc`.
+It is Vercel serverless + static HTML + Neon Postgres, with Firebase used for
+Authentication and one profile collection.
+
+Following those prompts literally would have meant migrating the whole platform
+to a different framework and host — weeks of work, and it would have broken the
+working deployment. **The likely source of the confusion is `docs/DEPLOYMENT.md`,
+which described exactly that architecture** — Firebase Functions, Firestore job
+queues, "grow it into the Next.js app later" — and had been wrong for months.
+It has been rewritten to describe what actually deploys. That correction is
+probably the most valuable thing in this pass.
+
+The prompts' *instinct* was right, though, and each one mapped onto real work.
+
+### THERE WERE THREE BACKENDS (P1)
+
+`api/` — 62 modules, the ledger, the paywall, the gateway, all 45 test files — is
+the live one, and the only one `vercel.json` and the frontend ever reach
+(`JOSHRIX_API_BASE = ''`, same origin). Beside it sat:
+
+- **`functions/`** — a Firebase Cloud Functions codebase exposing nine routes
+  `api/` already had, **including its own `/stripe-webhook` with no ledger behind
+  it.** Deploying it would have stood up a second system able to take card
+  payments and record nothing. It was buildable (its `package.json` copies
+  `../shared` in at build time), which made it more dangerous, not less.
+- **`backend/ai-gateway/`** — a third copy of the AI gateway, which
+  `api/_gateway.ts` pointed at in a comment as though it were authoritative.
+
+CLAUDE.md says "never add a second path to a model provider". There were three.
+Both are removed; `firebase.json` came back **much smaller**, declaring Firestore
+rules and nothing else. `tests/t42` (26) stops them returning and allows
+`provider-selftest.ts` by name — it must reach each provider independently,
+which the fallback chain cannot do, so it is a sanctioned exception rather than a
+loosened rule.
+
+The one duplication that is deliberate — `docs/` is not deployed, so
+`frontend/specs/` holds the published copies — is now guarded by a hash check,
+because byte-identical copies drift silently and a stale published spec is worse
+than an unpublished one. It caught my own drift within the same hour.
+
+### FIRESTORE RULES DID NOT EXIST (P5)
+
+`frontend/assets/store.js` reads and writes `users/{uid}` from the browser on six
+pages, and **this repository contained no Firestore rules at all.** Whatever
+protects that data lived only in the Firebase console: unversioned, unreviewable,
+absent from every code review. A database created in test mode defaults to
+`allow read, write: if true`, and from outside the console "nobody checked" and
+"every user's email, name and bio is world-readable" look identical.
+
+`firestore.rules` now ships least-privilege rules — own document only, explicit
+catch-all denial — and `tests/t43` (15) fails if they ever become permissive.
+
+The good news from the audit: **the server never reads `accountType`**, so the
+client-writable profile carries no privilege. `dashboard.html` redirects a
+self-declared admin to `admin.html`, which then demands the real `MODERATION_KEY`
+verified server-side. The risk was confidentiality, not escalation.
+
+**Justin must run `firebase deploy --only firestore:rules`.** The file being
+correct here does not make the live rules correct.
+
+### DEPENDENCIES (P2)
+
+- **`firebase@12.16.0` was a production dependency read by zero files.** The
+  browser loads Firebase from Google's CDN at **12.9.0** — so it was both unused
+  and a second version number to reconcile. Removed.
+- **A HIGH-severity nodemailer advisory** (RFC 5322 comment mis-parsing → mail
+  delivered to an attacker-controlled domain) in the dependency that sends every
+  transactional email. Fixed at `^9.1.1`.
+- `@types/nodemailer` moved out of `dependencies`.
+- Clean install: **18 packages, 0 vulnerabilities.**
+
+### THE BUILD (P3/P4)
+
+**There was no root `tsconfig.json`,** and the test harness compiles with
+`strict: false` because its job is to emit runnable JS. So nothing type-checked
+`api/` before a deploy — errors would have surfaced on Vercel.
+
+Running it found **zero errors**: the code was already strict-clean and simply
+had nothing proving it. There is now a strict root config, `npm run typecheck`,
+and the check runs inside `tools/run-tests.mjs`, so a type error fails the suite
+instead of the deployment.
 
 ---
 

@@ -55,7 +55,6 @@ See [`branding/BRANDING.md`](branding/BRANDING.md) for the full brand guidelines
 │   ├── about / careers / press / contact .html
 │   ├── signup / login / dashboard / profile / admin .html
 │   └── assets/            joshrix.css design system, site.js, woff2 fonts
-├── functions/             Deployed backend: Firebase Cloud Functions (2nd gen)
 │   └── src/index.ts       HTTPS `api` fn — /health + /blueprint (Idea Agent, Claude primary)
 ├── api/                   Same backend as Vercel functions (optional same-origin mirror)
 │   ├── health.ts          GET /api/health — deployment + provider readiness

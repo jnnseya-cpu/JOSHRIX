@@ -1,9 +1,6 @@
 {
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "predeploy": ["npm --prefix functions install", "npm --prefix functions run build"]
-    }
-  ]
+  "//": "Firestore security rules ONLY. This file previously declared a `functions` codebase — a second backend with its own /stripe-webhook and no ledger behind it — which was removed on 11 Sep 2026. The backend is Vercel serverless in api/, deployed by vercel.json. Firebase is used for Authentication and for the users/{uid} profile collection, nothing else. Deploy with: firebase deploy --only firestore:rules",
+  "firestore": {
+    "rules": "firestore.rules"
+  }
 }

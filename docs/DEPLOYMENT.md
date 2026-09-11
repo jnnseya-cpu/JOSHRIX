@@ -37,15 +37,52 @@ The chosen stack, with each service doing only what it is best at.
                     └───────────────────────┘  └──────────────────────┘
 ```
 
-## Deploying What Exists Today — Chosen Split
+## How It Actually Deploys — one provider, one command
 
-**Frontend → Vercel · Backend (+ shared) → Firebase Cloud Functions.** Both configs are in the repo; each deploy is one command/click.
+> **Corrected 11 Sep 2026.** This section used to describe a split deployment —
+> frontend on Vercel, backend on Firebase Cloud Functions — and called `api/` an
+> "optional same-origin mirror". That was backwards, and it had been backwards
+> for months. `api/` IS the backend: 62 modules, the ledger, the paywall, the AI
+> gateway, the moderation queue and every one of the 43 test files. The Firebase
+> Functions codebase exposed nine routes that `api/` already had, was never in
+> the live path (`frontend/assets/config.js` sets `JOSHRIX_API_BASE = ''`, i.e.
+> same origin), and carried its OWN `/stripe-webhook` with no ledger behind it.
+> Deploying it would have stood up a second system able to take card payments
+> with no double-entry record. It has been removed along with `firebase.json`.
+> If you want it back it is in git history — but do not deploy two payment paths.
 
-1. **Frontend on Vercel**: vercel.com → Add New Project → import `jnnseya-cpu/JOSHRIX` → Deploy. The root `vercel.json` serves `frontend/` (all 21 pages including `/play3d`) with clean URLs and security headers, zero-config.
-2. **Backend on Firebase**: `npm i -g firebase-tools && firebase login && firebase use --add <your-project> && firebase deploy --only functions`. `firebase.json` builds and deploys `functions/` — a 2nd-gen HTTPS function `api` in **europe-west2** exposing `GET /health` and `POST /blueprint` (the Idea Agent, Claude primary). The build copies `shared/contracts.ts` into the bundle, so the shared layer deploys inside the backend. With no secret set it runs in **demo mode**; go live with a **freshly issued** key: `firebase functions:secrets:set ANTHROPIC_API_KEY` then redeploy. (Requires the Blaze plan, as all Cloud Functions do.)
-3. **Connect them**: the deploy prints the function URL (like `https://api-xxxxx-ew.a.run.app`). In `frontend/assets/config.js`, set `window.JOSHRIX_API_BASE` to that URL and redeploy Vercel — the pages call the Firebase API cross-origin (CORS enabled; both `/health` and `/api/health` path forms accepted). Verify with `<function-url>/health`.
+**Everything is one Vercel project.** `vercel.json` serves `frontend/` as the
+static site (`outputDirectory: "frontend"`, `cleanUrls: true`) and every
+`api/*.ts` file as a serverless function on the same origin. There is no second
+backend, no CORS, and no `JOSHRIX_API_BASE` to set.
 
-The `api/` directory is the same backend as Vercel-native serverless functions — an optional same-origin mirror: if you ever run frontend and backend on one Vercel project, `/api/*` works with `JOSHRIX_API_BASE = ''` and no CORS at all.
+1. **Deploy**: vercel.com → Add New Project → import `jnnseya-cpu/JOSHRIX` →
+   Deploy. Zero config; `vercel.json` owns the rewrites, crons, function
+   timeouts and security headers.
+2. **Set the environment**: see `.env.example`, which is a contract rather than a
+   wish list — every name in it is read by code, and the sections say which are
+   required, which are recommended, and which integrations do not exist yet.
+   At minimum you need `DATABASE_URL`, `MODERATION_KEY`, one AI provider key,
+   `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET`, plus `PAYOUT_SECRET` before
+   any creator can withdraw.
+3. **Verify**: `curl -s https://<host>/api/health`. It reports the build, whether
+   the ledger and moderation key are configured, which AI providers are live,
+   and — importantly — `forge.leadProvider` and `forge.fallbacks`, so a
+   single-vendor deployment is visible as one.
+
+### What Firebase is still used for
+
+**Authentication, and nothing else.** A Firebase ID token is the credential;
+`api/_auth.ts` verifies it against Google's published certificates with
+`node:crypto`, checking `aud`, `iss`, `exp`, `iat` and the signature. There is no
+`firebase-admin` dependency, no Firestore, and no Firebase Storage — all
+persistent data lives in Neon Postgres behind `api/_ledger.ts`, which is a
+deliberate rule from the app spec: money never lives solely in Firestore.
+
+The client config in `frontend/assets/config.js` is public by design. The project
+id is also a constant in `shared/firebase.ts`, asserted equal by
+`tests/t33-auth.js`, because a mismatch means the server rejects every token the
+client can produce.
 
 ## Setup Steps
 
