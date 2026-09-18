@@ -91,7 +91,11 @@ const badPrompts = [
   ['numeric prompt', {prompt:12345}],
   ['array prompt', {prompt:['x','y']}],
   ['object prompt', {prompt:{a:1}}],
-  ['oversized prompt', {prompt:'x'.repeat(20001)}],
+  /* The request cap rose to 120,000 on 18 Sep: the blueprint stage benefits from
+     the whole brief, and the BUILD prompt is capped separately and much lower.
+     Still bounded — this string is stored and re-read on every attempt of a run
+     — so the assertion is that a limit exists, sized to whatever it currently is. */
+  ['oversized prompt', {prompt:'x'.repeat(120001)}],
 ];
 for (const [name, body] of badPrompts) {
   const rr = await call('forge-game', {method:'POST', headers:{}, body, query:{}});

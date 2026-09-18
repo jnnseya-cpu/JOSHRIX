@@ -42,6 +42,10 @@
   ],
   "crons": [
     {
+      "path": "/api/forge-worker",
+      "schedule": "* * * * *"
+    },
+    {
       "path": "/api/blog-agent",
       "schedule": "0 9 * * *"
     },
@@ -56,7 +60,7 @@
   ],
   "functions": {
     "api/forge-game.ts": {
-      "maxDuration": 300
+      "maxDuration": 30
     },
     "api/forge-enhance.ts": {
       "maxDuration": 300
@@ -68,13 +72,16 @@
       "maxDuration": 120
     },
     "api/blog-agent.ts": {
-      "maxDuration": 120
+      "maxDuration": 300
     },
     "api/security-agent.ts": {
       "maxDuration": 60
     },
     "api/play-html.ts": {
       "includeFiles": "frontend/play.html"
+    },
+    "api/forge-worker.ts": {
+      "maxDuration": 300
     }
   },
   "headers": [
@@ -188,5 +195,5 @@
       ]
     }
   ],
-  "//forge-duration": "FORGE_MAX_SECONDS in the environment must stay about 10s BELOW the maxDuration above, and tests/t44 fails if it does not. To let a forge run longer, raise BOTH together \u2014 how high depends on the Vercel plan, and a maxDuration the plan disallows fails the BUILD, not the request."
+  "//forge-duration": "FORGE_MAX_SECONDS must stay about 10s BELOW the maxDuration of api/forge-worker.ts (tests/t44 fails if it does not). It now bounds ONE SLICE of a forge, not the whole forge: a run continues across as many worker invocations as it needs, so raising it makes each slice longer, not the run. The '* * * * *' forge-worker cron sweeps jobs whose creator closed the tab; sub-daily cron frequency requires a Vercel plan above Hobby."
 }

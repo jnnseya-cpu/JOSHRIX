@@ -484,25 +484,28 @@ export const OUTPUT_BUDGET = {
   openai: 16_000,
 } as const;
 
-/* RAISED 11 Sep 2026, with the output budgets. A hold is a RESERVATION, not a
- * price: charge-on-accept settles it to what the run actually metered and
- * returns the rest, so the only thing a bigger hold costs is requiring a funded
- * wallet. What a SMALL hold costs is a refused build — which is the "stops
- * midway and you get nothing" failure, arriving before generation even starts.
+/* THE FIXED FORGE HOLD IS GONE — removed 18 Sep 2026.
  *
- * The budgets above now allow 32k output tokens. At Sonnet's rate that is
- * roughly 150-250 ACUs of metered settlement on a build that genuinely uses the
- * headroom, so a 250 hold could no longer reliably cover its own settlement —
- * and a settlement that cannot collect is a game given away.
+ * There were two constants here, 500 for 2D and 750 for 3D, debited before
+ * generating and settled to the metered actual afterwards. They were raised
+ * twice, on 18 Aug and again on 11 Sep, each time because they were refusing
+ * work a wallet could afford. The second raise should have been the clue: a
+ * reservation taken before the work is priced is a guess, and a guess in front of
+ * a paid operation is a limit whichever way it is wrong. Too small and an
+ * affordable build is refused; too large and a funded wallet is gatekept.
  *
- * These leave several times the observed settlement in headroom. Record a real
- * settlement here if one is ever seen above them. Note that most builds finish
- * well inside the budget and still settle at the old figures: the ceiling rose,
- * the typical cost did not, which is why api/_features.ts BUILD_COST_MINOR
- * (£0.32 / £0.49) is still the honest number to quote — re-measure it from
- * /api/forge-log once real runs exist rather than adjusting it on theory. */
-export const FORGE_GAME_ACU_CHARGE = 500;       // HOLD (2D) — settles to metered actual
-export const FORGE_GAME_3D_ACU_CHARGE = 750;    // HOLD (3D) — settles to metered actual
+ * It was also the real ACU ceiling. A run could not cost more than its hold, so a
+ * forge that needed a fourth attempt was refused a fourth attempt however close
+ * the third came — precisely the "stops midway" failure, arriving as a billing
+ * decision rather than a timeout.
+ *
+ * Now api/_forgejobs.ts debits each attempt's OWN metered cost as that attempt
+ * completes, and the accumulated total becomes the hold on the existing
+ * charge-on-accept row. Nothing about accept or discard changed. What changed is
+ * that the number is measured instead of predicted, so there is nothing left here
+ * to guess — the wallet balance is the only bound, which is the honest one.
+ *
+ * FORGE_MIN_CHARGE below is what it now takes to START: enough for one attempt. */
 export const FORGE_MIN_CHARGE = 40;             // metered floor when the Code Agent ran
 /** A 3D build smaller than this is a stub, however well-formed. Dino Island,
  *  the leanest complete game on the runtime, is 10,975 bytes. */
@@ -536,20 +539,47 @@ export const GROWTH_MIN_CHARGE = 4;             // metered floor per growth run
  * this code — check the account before raising it, because a maxDuration the
  * plan does not allow fails the build rather than the request.
  *
- * TO REMOVE THE CEILING ENTIRELY the generation has to outlive the request:
- * forge returns a ticket immediately and a worker finishes in the background.
- * Half of that already exists — `ticket`, saveForgeResult() and
- * /api/forge-result are how the Studio survives a dropped connection today —
- * but the generation itself still runs inside the request, so this is the honest
- * limit until that work is done.
+ * THE CEILING IS NOW A SLICE, NOT A LIMIT — done 18 Sep 2026. A forge is a
+ * durable job (api/_forgejobs.ts): each worker invocation does as much as fits
+ * safely inside ONE maxDuration and writes its state to Postgres, and the next
+ * invocation continues. So this number no longer decides how long a forge may
+ * take. It decides how long a single slice of one may take, which is a very
+ * different thing, and it must still sit below the platform ceiling for the same
+ * reason as before — a slice killed mid-stream loses that attempt's work.
+ *
+ * A caller that owns a smaller window passes `deadline` to generateGameHtml and
+ * every budget derives from that instead. The worker does exactly this, because
+ * its clock starts when the slice does, not when the request does.
  */
 export const FORGE_MAX_SECONDS = Math.max(30, Number(process.env.FORGE_MAX_SECONDS) || 290);
 const FORGE_MAX_MS = FORGE_MAX_SECONDS * 1000;
 
+/**
+ * THE THREE BUDGETS INSIDE ONE WINDOW, derived rather than written down.
+ *
+ * `windowMs` is how long the caller actually has: a whole request for the old
+ * synchronous forge, or what remains of a worker slice for a job. Each budget
+ * leaves room for the step after it — the stream must stop in time for the reply
+ * to be built, a provider call must stop in time for the chain to try another,
+ * and the chain must stop in time for the caller to persist. Floored at five
+ * seconds so a tiny window produces a fast clean failure rather than a negative
+ * timeout, which aborts instantly and looks like a provider outage.
+ */
+function budgets(windowMs: number) {
+  const floor = (n: number) => Math.max(5_000, n);
+  return {
+    stream: floor(windowMs - 20_000),
+    provider: floor(windowMs - 30_000),
+    chain: floor(windowMs - 40_000),
+  };
+}
+
 /** Abort the model stream with enough left to build, settle and persist a reply. */
-const GENERATION_DEADLINE_MS = FORGE_MAX_MS - 20_000;
-async function finishWithinDeadline(stream: ReturnType<Anthropic["messages"]["stream"]>): Promise<Anthropic.Message> {
-  const killer = setTimeout(() => { try { stream.abort(); } catch { /* already done */ } }, GENERATION_DEADLINE_MS);
+async function finishWithinDeadline(
+  stream: ReturnType<Anthropic["messages"]["stream"]>,
+  budgetMs = budgets(FORGE_MAX_MS).stream,
+): Promise<Anthropic.Message> {
+  const killer = setTimeout(() => { try { stream.abort(); } catch { /* already done */ } }, budgetMs);
   try {
     return await stream.finalMessage();
   } finally {
@@ -559,7 +589,7 @@ async function finishWithinDeadline(stream: ReturnType<Anthropic["messages"]["st
 
 /** Claude generation — the primary Code Agent, shared by forge, enhance, and the
  *  full-size diagnostic probe so all three exercise the exact same call. */
-export async function claudeGenerate(system: string, user: string, maxTokens: number): Promise<{ html: string; usage?: TokenUsage }> {
+export async function claudeGenerate(system: string, user: string, maxTokens: number, budgetMs?: number): Promise<{ html: string; usage?: TokenUsage }> {
   const anthropic = new Anthropic();
   const stream = anthropic.messages.stream({
     model: "claude-sonnet-5",   // Code Agent: fast frontier coder; Idea Agent stays on Opus
@@ -567,7 +597,7 @@ export async function claudeGenerate(system: string, user: string, maxTokens: nu
     system,
     messages: [{ role: "user", content: user }],
   });
-  const msg = await finishWithinDeadline(stream);
+  const msg = await finishWithinDeadline(stream, budgetMs);
   const text = msg.content.filter((b): b is Anthropic.TextBlock => b.type === "text").map((b) => b.text).join("");
   return {
     html: extractHtml(text),
@@ -795,6 +825,75 @@ export function missing2dFloor(html: string): string[] {
  *  comes in short, the best of them is still better than nothing. */
 export const MIN_2D_BYTES = 12_000;
 
+/* ------------------------------------------------------------------------- *
+ * ONE JUDGE OF A BUILD, used by the provider chain AND by the retry loop.
+ *
+ * These checks used to live inline in the chain, which was fine while a forge
+ * was one pass: judge, ship or fall through, done. A forge that RETRIES until
+ * the build is good has to ask the same question from a second place — "is this
+ * one acceptable, and if not, what exactly is wrong with it?" — and the worst
+ * possible answer is a second copy of the gates that drifts from the first.
+ *
+ * So the chain and the worker both call this. The wording of `notes` is load
+ * bearing twice over: forge-game.ts greps the trail for "rejected by the
+ * security scan" to raise a security event, and the retry loop feeds these exact
+ * strings back to the model as the reason its last attempt was refused.
+ * ------------------------------------------------------------------------- */
+export type BuildVerdict = {
+  /** Did it clear every floor? Only then may it ship as the bespoke build. */
+  ok: boolean;
+  /** What is wrong, in the words the retry prompt quotes back to the model. */
+  notes: string[];
+  /** May it be kept as the last-resort build if nothing better ever arrives?
+   *  False for hostile code, and false for a runtime build that failed the
+   *  fidelity floor — that one is not a plain game, it is the runtime's empty
+   *  default world, which is worse than the deterministic engine build. */
+  keepAsFallback: boolean;
+  /** HOW CLOSE it came, so a retry loop can tell improvement from churn.
+   *  Higher is better; a passing build is Infinity. Comparable across attempts
+   *  and across providers, which is the only reason it exists. */
+  score: number;
+};
+
+export function judgeBuild(html: string, is3d: boolean): BuildVerdict {
+  /* Hostile code is not a quality problem and never becomes a fallback. */
+  const sec = scanGeneratedHtml(html);
+  if (!sec.safe) {
+    return { ok: false, notes: ["rejected by the security scan — " + describeVerdict(sec)], keepAsFallback: false, score: 0 };
+  }
+
+  const notes: string[] = [];
+  let keepAsFallback = true;
+  const engine = usesEngine(html);
+  const minBytes = is3d ? MIN_3D_BYTES : MIN_2D_BYTES;
+
+  if (is3d && !engine &&
+      !/appendChild\s*\(\s*[\w.]*(renderer|\w+)\s*\.\s*domElement\s*\)|appendChild\s*\(\s*canvas\s*\)/.test(html)) {
+    notes.push("never appends renderer.domElement — the page would stay blank");
+  }
+  if (html.length < minBytes) {
+    notes.push(`only ${html.length} bytes — below the ${minBytes}-byte substance floor for a ${is3d ? "3D" : "2D"} game`);
+  }
+
+  const missing = is3d ? missing3dFloor(html) : missing2dFloor(html);
+  if (missing.length) {
+    notes.push(`below the ${is3d ? "3D fidelity" : "2D"} floor (missing: ${missing.join(", ")})`);
+    /* An engine build that misses the fidelity floor booted the runtime and left
+       its empty default world on screen. Discarded outright, not demoted. */
+    if (is3d && engine) keepAsFallback = false;
+  }
+
+  /* The score. Floor coverage dominates, because a build satisfying four of five
+     requirements is genuinely nearer than a longer one satisfying two; size
+     breaks ties, capped so a rambling file cannot outrank a tighter better one. */
+  const total = is3d ? (engine ? FLOOR_ENGINE.length + 1 : FLOOR_3D.length) : FLOOR_2D.length;
+  const satisfied = Math.max(0, total - missing.length);
+  const score = notes.length === 0 ? Infinity
+    : (satisfied / Math.max(1, total)) * 10_000 + Math.min(html.length, minBytes * 3);
+
+  return { ok: notes.length === 0, notes, keepAsFallback, score };
+}
+
 /** Every inline script in a shipping build must PARSE. A syntax error is a
  *  guaranteed-dead game — and with three providers on the gateway, broken code
  *  must burn through to the NEXT provider, not reach a creator's screen.
@@ -829,11 +928,13 @@ function extractHtml(text: string): string {
 
 /** A single provider may use nearly the whole window: with the chain able to
  *  skip ahead when time is short, a generous per-call timeout costs nothing and
- *  a mean one is the difference between a finished game and a fallback. */
-const PROVIDER_TIMEOUT_MS = FORGE_MAX_MS - 30_000;
+ *  a mean one is the difference between a finished game and a fallback.
+ *  `budgetMs` lets a caller that owns a smaller window — a worker slice — pass
+ *  its own, rather than assuming a whole request is available. */
+const PROVIDER_TIMEOUT_MS = budgets(FORGE_MAX_MS).provider;
 
 /** Gemini REST fallback (activates when GEMINI_API_KEY is set in Vercel). */
-export async function geminiGenerate(system: string, user: string, maxTokens: number): Promise<{ html: string; usage?: TokenUsage }> {
+export async function geminiGenerate(system: string, user: string, maxTokens: number, budgetMs = PROVIDER_TIMEOUT_MS): Promise<{ html: string; usage?: TokenUsage }> {
   const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
   const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`, {
     method: "POST", headers: { "Content-Type": "application/json" },
@@ -849,7 +950,7 @@ export async function geminiGenerate(system: string, user: string, maxTokens: nu
         ...(model.includes("flash") ? { thinkingConfig: { thinkingBudget: 0 } } : {}),
       },
     }),
-    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+    signal: AbortSignal.timeout(budgetMs),
   });
   const j: any = await r.json().catch(() => null);
   if (!r.ok) throw new Error(`Gemini HTTP ${r.status}: ${String(j?.error?.message ?? "").slice(0, 200)}`);
@@ -863,7 +964,7 @@ export async function geminiGenerate(system: string, user: string, maxTokens: nu
 }
 
 /** OpenAI REST fallback (activates when OPENAI_API_KEY is set in Vercel). */
-export async function openaiGenerate(system: string, user: string, maxTokens: number): Promise<{ html: string; usage?: TokenUsage }> {
+export async function openaiGenerate(system: string, user: string, maxTokens: number, budgetMs = PROVIDER_TIMEOUT_MS): Promise<{ html: string; usage?: TokenUsage }> {
   const model = process.env.OPENAI_MODEL || "gpt-4o";
   const r = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -873,7 +974,7 @@ export async function openaiGenerate(system: string, user: string, maxTokens: nu
       messages: [{ role: "system", content: system }, { role: "user", content: user }],
       max_completion_tokens: maxTokens,
     }),
-    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+    signal: AbortSignal.timeout(budgetMs),
   });
   const j: any = await r.json().catch(() => null);
   if (!r.ok) throw new Error(`OpenAI HTTP ${r.status}: ${String(j?.error?.message ?? "").slice(0, 200)}`);
@@ -919,13 +1020,36 @@ export async function fullSizeProbe(): Promise<Record<string, any>> {
 
 export async function generateGameHtml(
   prompt: string,
-  opts: { title?: string; summary?: string; language?: string; mode?: string } = {},
-): Promise<{ html: string; provider: string; usage?: TokenUsage; attempts?: string[] }> {
+  opts: {
+    title?: string; summary?: string; language?: string; mode?: string;
+    /** WHY THE LAST ATTEMPT WAS REFUSED, verbatim from judgeBuild.
+     *
+     *  A retry that sends the identical prompt is not a retry, it is the same
+     *  dice roll at the same price — CLAUDE.md's rule 7, "same error plus same
+     *  approach equals stop and reassess", applied to the model rather than to
+     *  me. Passing the gate notes back is what makes attempt four different
+     *  from attempt one, and the notes are written as concrete requirements for
+     *  exactly this reason ("only 4,200 bytes", "missing: sound"). */
+    feedback?: string[];
+    /** 1-based, so the prompt can say which attempt this is. */
+    attempt?: number;
+    /** Epoch ms by which this call must be finished. Defaults to a whole
+     *  FORGE_MAX_SECONDS window; a worker slice passes what remains of its own. */
+    deadline?: number;
+  } = {},
+): Promise<{ html: string; provider: string; usage?: TokenUsage; attempts?: string[]; verdict?: BuildVerdict }> {
   const is3d = opts.mode === "3d";
   const system = is3d ? GAME_SYSTEM_3D : GAME_SYSTEM;
+  /* The retry note is OUR text, not the creator's, so it sits outside the
+     untrusted fence — it is an instruction and is meant to be read as one. */
+  const retry = opts.feedback && opts.feedback.length
+    ? `\n\nTHIS IS ATTEMPT ${opts.attempt ?? 2}. Your previous attempt was REJECTED by the platform's automated quality gate for these specific reasons:\n`
+      + opts.feedback.map((f) => `  - ${f}`).join("\n")
+      + `\nFix every one of them in this attempt. They are hard requirements, not suggestions, and a build that repeats any of them is rejected again. Do not apologise, explain or comment on this — return only the corrected complete HTML document.`
+    : "";
   // The concept is arbitrary text from the public internet. Fence it so the
   // model reads it as DATA, and never as instructions addressed to itself.
-  const userMsg = `${wrapUntrusted(conceptForBuild(prompt))}\n\nBlueprint title: ${opts.title ?? "(derive from concept)"}\nBlueprint summary: ${opts.summary ?? "(none)"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the concept"}`;
+  const userMsg = `${wrapUntrusted(conceptForBuild(prompt))}\n\nBlueprint title: ${opts.title ?? "(derive from concept)"}\nBlueprint summary: ${opts.summary ?? "(none)"}\nCreation language: ${opts.language && opts.language !== "auto" ? opts.language : "auto-detect from the concept"}${retry}`;
 
   /* OUTPUT BUDGETS — this is what "stops midway" actually means.
    *
@@ -950,10 +1074,17 @@ export async function generateGameHtml(
   // MULTI-PROVIDER CHAIN — no single vendor may block a creator's game; whichever
   // answers first with a COMPLETE file ships as the bespoke build. Both lanes
   // share one order, and the evidence for it is set out below the declarations.
+  /* THE WINDOW THIS CALL ACTUALLY HAS. A synchronous forge owns a whole request;
+     a worker slice owns whatever is left of one, and passing that in is what
+     stops a slice starting a 260-second provider call 100 seconds in and being
+     killed with the model still writing. Every budget below derives from it. */
+  const windowMs = opts.deadline ? Math.max(5_000, opts.deadline - Date.now()) : FORGE_MAX_MS;
+  const B = budgets(windowMs);
+
   type Cand = { name: string; enabled: boolean; run: () => Promise<{ html: string; usage?: TokenUsage }> };
-  const claude: Cand = { name: "claude", enabled: !!process.env.ANTHROPIC_API_KEY, run: () => claudeGenerate(system, userMsg, claudeMax) };
-  const gemini: Cand = { name: "gemini", enabled: !!process.env.GEMINI_API_KEY, run: () => geminiGenerate(system, userMsg, geminiMax) };
-  const openai: Cand = { name: "openai", enabled: !!process.env.OPENAI_API_KEY, run: () => openaiGenerate(system, userMsg, openaiMax) };
+  const claude: Cand = { name: "claude", enabled: !!process.env.ANTHROPIC_API_KEY, run: () => claudeGenerate(system, userMsg, claudeMax, B.stream) };
+  const gemini: Cand = { name: "gemini", enabled: !!process.env.GEMINI_API_KEY, run: () => geminiGenerate(system, userMsg, geminiMax, B.provider) };
+  const openai: Cand = { name: "openai", enabled: !!process.env.OPENAI_API_KEY, run: () => openaiGenerate(system, userMsg, openaiMax, B.provider) };
   // Order comes from the live forge log and the full-size probe, never from
   // assumptions about model quality. Measured by /api/forge-selftest, 18 Aug 2026,
   // one full-size 3D generation per provider:
@@ -991,8 +1122,13 @@ export async function generateGameHtml(
   // reply must still be built, settled, and persisted after generation. Skip
   // remaining providers rather than start one that can't finish in time.
   const chainStart = Date.now();
-  const CHAIN_BUDGET_MS = FORGE_MAX_MS - 40_000;
+  const CHAIN_BUDGET_MS = B.chain;
   let subFloor: { html: string; provider: string; usage?: TokenUsage } | null = null;
+  /* Best-of, not first-of. The chain used to keep whichever short build arrived
+     first, so a provider returning 3,000 bytes could beat one returning 9,000
+     purely by being earlier in the order. */
+  let subFloorScore = -1;
+  let subFloorVerdict: BuildVerdict | null = null;
   for (const c of chain) {
     if (!c.enabled) continue;
     if (Date.now() - chainStart > CHAIN_BUDGET_MS) { errors.push(c.name + ": skipped — forge time budget exhausted"); continue; }
@@ -1005,68 +1141,30 @@ export async function generateGameHtml(
       // must never be stored. Treated exactly like a provider failure: burn to
       // the next provider rather than shipping it, and never keep it as the
       // last-resort sub-floor build either.
-      const sec = scanGeneratedHtml(r.html);
-      if (!sec.safe) {
-        errors.push(c.name + ": rejected by the security scan — " + describeVerdict(sec));
+      /* ONE judge, shared with the retry loop in api/_forgejobs.ts. The gates
+         used to be written out here; a forge that retries has to ask the same
+         question from a second place, and two copies of a quality bar drift. */
+      const v = judgeBuild(r.html, is3d);
+      if (!v.ok) {
+        for (const n of v.notes) errors.push(c.name + ": " + n);
+        /* Demoted, not discarded: if every provider comes in short, the best of
+           them still beats no bespoke build at all. Except hostile code, and
+           except a runtime build that failed the fidelity floor — see
+           judgeBuild for why those two are thrown away instead. */
+        if (v.keepAsFallback && (!subFloor || v.score > subFloorScore)) {
+          subFloor = { html: r.html, provider: c.name, usage: r.usage };
+          subFloorScore = v.score;
+          subFloorVerdict = v;
+        }
         continue;
       }
-
-      if (is3d) {
-        // A 3D build that never appends its canvas renders a blank screen no
-        // matter how good the code is. Require the append so the chain can try
-        // the next provider instead of shipping a guaranteed-blank game.
-        if (!usesEngine(r.html) &&
-            !/appendChild\s*\(\s*[\w.]*(renderer|\w+)\s*\.\s*domElement\s*\)|appendChild\s*\(\s*canvas\s*\)/.test(r.html)) {
-          errors.push(c.name + ": never appends renderer.domElement — the page would stay blank");
-          if (!subFloor) subFloor = { html: r.html, provider: c.name, usage: r.usage };
-          continue;
-        }
-        // SUBSTANCE FLOOR. Every structural gate below is satisfiable by a stub:
-        // openai's probe build appended a canvas, booted the runtime and called
-        // the required methods in 8,411 bytes — and was still nothing to play.
-        // Calibrated against the leanest complete game on this runtime, Dino
-        // Island at 10,975 bytes; 9,500 keeps a genuinely concise build while
-        // rejecting one that is a third the size of a real game.
-        // Demoted, not discarded: it becomes the sub-floor fallback, so if every
-        // provider comes in short the best of them still ships.
-        if (r.html.length < MIN_3D_BYTES) {
-          errors.push(c.name + `: only ${r.html.length} bytes — below the ${MIN_3D_BYTES}-byte substance floor for a 3D game`);
-          if (!subFloor) subFloor = { html: r.html, provider: c.name, usage: r.usage };
-          continue;
-        }
-        const miss3 = missing3dFloor(r.html);
-        if (miss3.length) {
-          errors.push(c.name + ": below the 3D fidelity floor (missing: " + miss3.join(", ") + ")");
-          // The backstop is for a build that IS a game but looks cheap. A build
-          // on the runtime that failed this floor is not a game at all — it boots
-          // the runtime and leaves its empty default world on screen. Keeping
-          // that as the fallback is how a player ends up staring at a green field
-          // with a button, which is worse than the deterministic engine build we
-          // would otherwise ship. So it is discarded outright.
-          if (!subFloor && !usesEngine(r.html)) subFloor = { html: r.html, provider: c.name, usage: r.usage };
-          continue;
-        }
-      } else {
-        // THE 2D LANE. It had no gate at all beyond the security scan, which is
-        // how a stub reached a paying creator. Same two-stage shape as 3D:
-        // substance first, then the requirements the prompt actually states.
-        if (r.html.length < MIN_2D_BYTES) {
-          errors.push(c.name + `: only ${r.html.length} bytes — below the ${MIN_2D_BYTES}-byte substance floor for a 2D game`);
-          if (!subFloor) subFloor = { html: r.html, provider: c.name, usage: r.usage };
-          continue;
-        }
-        const miss2 = missing2dFloor(r.html);
-        if (miss2.length) {
-          errors.push(c.name + ": below the 2D floor (missing: " + miss2.join(", ") + ")");
-          if (!subFloor) subFloor = { html: r.html, provider: c.name, usage: r.usage };
-          continue;
-        }
-      }
-      return { html: r.html, provider: c.name, usage: r.usage, attempts: errors.slice() };
+      return { html: r.html, provider: c.name, usage: r.usage, attempts: errors.slice(), verdict: v };
     } catch (e: any) { errors.push(c.name + ": " + String(e?.message ?? e)); }
   }
-  // every provider missed the floor — a modest REAL 3D game still beats no game
-  if (subFloor) return { ...subFloor, attempts: errors.slice() };
+  // every provider missed the floor — a modest REAL 3D game still beats no game.
+  // The verdict travels with it so the caller can tell "this passed" from "this
+  // was the least bad of three failures", which is what a retry loop acts on.
+  if (subFloor) return { ...subFloor, attempts: errors.slice(), verdict: subFloorVerdict ?? undefined };
   if (process.env.ANTHROPIC_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY) {
     throw new Error(errors.length ? errors.join(" | ") : "all configured AI providers failed this run");
   }

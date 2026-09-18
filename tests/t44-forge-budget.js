@@ -21,7 +21,18 @@
  *   separate hard-coded numbers, which is three chances to raise one and forget
  *   another, and the one you forget silently becomes the real limit.
  *
- * This file exists because that mismatch is invisible until a real forge drops.
+ * Justin, 18 Sep 2026, went further: "every AI powered work must have no time
+ * limit and ACU limit... must work until it produces the highly expected
+ * results." A knob cannot deliver that, because the ceiling belongs to the
+ * platform rather than to us. So a forge became a durable JOB — api/_forgejobs.ts
+ * plus api/forge-worker.ts — advanced one slice at a time until the build clears
+ * every gate. FORGE_MAX_SECONDS now bounds one slice, not the run.
+ *
+ * This file therefore guards three things, and the third is the newest: that the
+ * slice ceiling still sits under the platform's, that no second copy of a budget
+ * or a quality bar has appeared, and that the two limits Justin asked to remove —
+ * the clock and the fixed ACU hold — have not crept back in disguised as
+ * defaults. Every one of those failures is invisible until a real forge drops.
  *
  *   node tests/t44-forge-budget.js
  */
@@ -39,23 +50,27 @@ const vercel = JSON.parse(fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf8'
 const src = fs.readFileSync(path.join(ROOT, 'api/_gateway.ts'), 'utf8')
   .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
 
-console.log('\nthe code ceiling sits below the platform ceiling');
+console.log('\nthe slice ceiling sits below the platform ceiling');
 {
-  const maxDuration = (vercel.functions || {})['api/forge-game.ts']?.maxDuration;
-  t('vercel.json sets a maxDuration for the forge', typeof maxDuration === 'number', String(maxDuration));
+  /* THE WORKER, not the forge entry point. Since 18 Sep the generation happens
+     in api/forge-worker.ts — forge-game only queues a job, which is why its own
+     maxDuration dropped to 30s. If this ever reads forge-game again, someone has
+     put generation back inside the request and reinstated the hard ceiling. */
+  const worker = (vercel.functions || {})['api/forge-worker.ts']?.maxDuration;
+  const queue = (vercel.functions || {})['api/forge-game.ts']?.maxDuration;
+  t('vercel.json sets a maxDuration for the worker', typeof worker === 'number', String(worker));
+  t('the queue endpoint needs no long window', typeof queue === 'number' && queue <= 60, String(queue),
+    'forge-game writes a row; a long window there means it is generating again');
   t('FORGE_MAX_SECONDS is exported', typeof gw.FORGE_MAX_SECONDS === 'number', String(gw.FORGE_MAX_SECONDS));
 
-  /* The margin has to cover building the reply, settling the hold and
-     persisting the result AFTER generation returns. Ten seconds is the floor;
-     less and a slow database write is enough to lose the whole run. */
-  t(`FORGE_MAX_SECONDS (${gw.FORGE_MAX_SECONDS}) is at least 10s under maxDuration (${maxDuration})`,
-    gw.FORGE_MAX_SECONDS <= maxDuration - 10,
-    'raise BOTH together, or the function is killed mid-stream and the creator gets nothing');
-
-  /* The other direction matters too: a code ceiling far below the platform one
-     is paid-for time being thrown away. */
-  t('and it is not needlessly far below it', gw.FORGE_MAX_SECONDS >= maxDuration - 60,
-    'unused headroom is a shorter game for no reason');
+  /* The margin has to cover writing the slice's state back AFTER generation
+     returns. Ten seconds is the floor; less and a slow database write loses the
+     attempt — not the run any more, but still paid-for tokens for nothing. */
+  t(`FORGE_MAX_SECONDS (${gw.FORGE_MAX_SECONDS}) is at least 10s under the worker's maxDuration (${worker})`,
+    gw.FORGE_MAX_SECONDS <= worker - 10,
+    'raise BOTH together, or the slice is killed mid-stream and that attempt is wasted');
+  t('and it is not needlessly far below it', gw.FORGE_MAX_SECONDS >= worker - 60,
+    'unused headroom is a wasted slice for no reason');
 }
 
 console.log('\nevery timeout derives from that one number');
@@ -66,9 +81,15 @@ console.log('\nevery timeout derives from that one number');
     .filter((n) => !/^16_?000$|^24_?000$|^32_?000$/.test(n));
   t('no stray hard-coded millisecond ceiling remains', literals.length === 0,
     literals.join(', ') + ' — derive it from FORGE_MAX_SECONDS instead');
-  t('the generation deadline derives from the knob', /FORGE_MAX_MS\s*-\s*[\d_]+/.test(src));
-  t('the provider timeout derives from it', /PROVIDER_TIMEOUT_MS\s*=\s*FORGE_MAX_MS/.test(src));
-  t('the chain budget derives from it', /CHAIN_BUDGET_MS\s*=\s*FORGE_MAX_MS/.test(src));
+  /* One helper now derives all three, so that they cannot drift apart AND so a
+     caller owning a shorter window can re-derive them from what it actually has.
+     That second property is what makes a worker slice safe. */
+  t('one helper derives all three budgets', /function budgets\(windowMs: number\)/.test(src));
+  t('the stream abort comes from it', /budgets\([^)]*\)\.stream|B\.stream/.test(src));
+  t('the provider timeout comes from it', /PROVIDER_TIMEOUT_MS\s*=\s*budgets\(/.test(src));
+  t('the chain budget comes from it', /CHAIN_BUDGET_MS\s*=\s*B\.chain/.test(src));
+  t('and a caller may pass its own window', /deadline\?:\s*number/.test(src) && /opts\.deadline/.test(src),
+    'a worker slice starts mid-request; without this it would budget as if it owned a whole one');
 }
 
 console.log('\nthe knob is settable without a code change');
@@ -124,26 +145,90 @@ console.log('\na long brief is not silently cut');
     'silently truncating a brief builds the wrong game with no way to tell');
 }
 
-console.log('\nthe hold can cover what a long build settles to');
+console.log('\nnothing is reserved up front any more');
 {
-  /* A hold is a reservation, not a price: charge-on-accept settles it to the
-     metered actual and returns the rest. A hold BELOW the settlement means the
-     charge cannot collect — the build is given away. A hold below the cost of
-     starting means the build is refused before it begins, which is the "stops
-     midway" failure arriving early. */
-  t(`the 3D hold rose with the budgets (${gw.FORGE_GAME_3D_ACU_CHARGE})`,
-    gw.FORGE_GAME_3D_ACU_CHARGE >= 600,
-    '32k output tokens can meter well above the old 250 hold');
-  t(`the 2D hold rose too (${gw.FORGE_GAME_ACU_CHARGE})`, gw.FORGE_GAME_ACU_CHARGE >= 400);
-  t('3D still holds more than 2D', gw.FORGE_GAME_3D_ACU_CHARGE > gw.FORGE_GAME_ACU_CHARGE);
-  t('the metered floor is still below the hold', gw.FORGE_MIN_CHARGE < gw.FORGE_GAME_ACU_CHARGE);
+  /* The fixed hold is gone, and its absence is the assertion. It was raised twice
+     for the same reason — refusing work a wallet could afford — and it was also
+     the real ACU ceiling, because a run could never cost more than its hold. If
+     either constant comes back, someone has reinstated that ceiling. */
+  t('the fixed 2D hold is gone', gw.FORGE_GAME_ACU_CHARGE === undefined,
+    'a reservation taken before the work is priced is a limit whichever way it is wrong');
+  t('the fixed 3D hold is gone', gw.FORGE_GAME_3D_ACU_CHARGE === undefined);
+  t('forge-game no longer debits a hold before generating',
+    !/debitWallet/.test(fs.readFileSync(path.join(ROOT, 'api/forge-game.ts'), 'utf8')),
+    'it queues a job; the worker debits each attempt as that attempt completes');
 
-  /* A tester wallet must still afford several runs, or the one account that can
-     test the forge cannot test it more than once. */
-  const pay = require('./build/shared/payments.js');
-  const runs = Math.floor(pay.TESTER_CEILING_ACU / gw.FORGE_GAME_3D_ACU_CHARGE);
-  t(`a tester wallet still affords several 3D forges (${runs})`, runs >= 8,
-    `TESTER_CEILING_ACU ${pay.TESTER_CEILING_ACU} / hold ${gw.FORGE_GAME_3D_ACU_CHARGE}`);
+  /* What replaced it: enough to begin, and the wallet as the only bound. */
+  t(`starting a forge needs only one attempt's floor (${gw.FORGE_MIN_CHARGE})`,
+    gw.FORGE_MIN_CHARGE > 0 && gw.FORGE_MIN_CHARGE <= 100,
+    'anything larger gatekeeps a funded wallet again');
+
+  const jobs = fs.readFileSync(path.join(ROOT, 'api/_forgejobs.ts'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+  t('the run stops on the WALLET, not on a counter',
+    /balance\s*<\s*FORGE_MIN_CHARGE/.test(jobs),
+    'the only honest spending bound is the money that exists');
+  t('each attempt debits what that attempt metered',
+    /debitWallet\(sql,\s*job\.wallet_id,\s*cost\)/.test(jobs));
+  t('the accumulated total becomes the existing charge-on-accept hold',
+    /recordForgeHold\(sql,\s*forgeId,\s*job\.wallet_id,\s*p\.acuHeld/.test(jobs),
+    'a second money path is the one thing that must never appear here');
+  t('a failed run refunds every ACU it spent',
+    /creditWallet\(sql,\s*job\.wallet_id,\s*acuHeld\)/.test(jobs),
+    '/refunds promises "you never pay for a failed forge"');
+}
+
+console.log('\nthe run outlives the request, which is what removes the time limit');
+{
+  const jobs = fs.readFileSync(path.join(ROOT, 'api/_forgejobs.ts'), 'utf8');
+  const worker = fs.readFileSync(path.join(ROOT, 'api/forge-worker.ts'), 'utf8');
+  const queue = fs.readFileSync(path.join(ROOT, 'api/forge-game.ts'), 'utf8');
+
+  t('forge-game returns 202 and a ticket, not a game', /status\(202\)/.test(queue));
+  t('and it does not call the model at all', !/generateGameHtml/.test(queue),
+    'generation inside the request is the hard ceiling this change removes');
+  t('a slice that runs out of time leaves the job RUNNING', /status:\s*"running"/.test(jobs),
+    'the next invocation continues — that is the whole mechanism');
+  t('a slice hands its lease back rather than holding it', /releaseLease/.test(jobs));
+  t('the lease is what stops two workers spending twice',
+    /lease_until IS NULL OR lease_until < now\(\)/.test(jobs));
+  t('a cron sweeps jobs whose creator closed the tab',
+    (vercel.crons || []).some((c) => c.path === '/api/forge-worker'),
+    'without this the promise depends on a browser staying open');
+  t('an unprivileged caller must prove the job is theirs',
+    /not your forge/.test(worker) && /existing\.wallet_id !== walletId/.test(worker),
+    'this endpoint spends money, so ownership is checked before the claim');
+  t('the kill switch stops new slices too', /forgeDisabled\(\)/.test(worker),
+    'an incident is exactly when a paid loop must stop buying attempts');
+}
+
+console.log('\nit retries until the build is good, and says why');
+{
+  const jobs = fs.readFileSync(path.join(ROOT, 'api/_forgejobs.ts'), 'utf8')
+    .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+  t('there is ONE judge of a build, shared with the chain',
+    typeof gw.judgeBuild === 'function' && /judgeBuild/.test(jobs),
+    'two copies of a quality bar drift, and the drift ships bad games');
+  t('a refusal is fed back to the next attempt as requirements',
+    /feedback:\s*notes/.test(jobs),
+    'an identical retry is the same dice roll at the same price');
+  t('the stop condition is lack of PROGRESS, not an attempt cap',
+    /stale\s*>=\s*MAX_STALE_ATTEMPTS/.test(jobs) && !/attempts\s*>=\s*MAX_ATTEMPTS/.test(jobs),
+    'a run that keeps getting closer must never be stopped');
+  t('and the allowance is settable', typeof gw !== 'undefined' &&
+    /process\.env\.FORGE_MAX_STALE_ATTEMPTS/.test(fs.readFileSync(path.join(ROOT, 'api/_forgejobs.ts'), 'utf8')));
+
+  /* judgeBuild has to be usable as a judge: a passing build and a stub must not
+     score the same, or "is it improving" cannot be answered. */
+  const stub = '<!DOCTYPE html><html><body><canvas id="c"></canvas><script>1</script></body></html>';
+  const v = gw.judgeBuild(stub, false);
+  t('a stub is refused', v.ok === false && v.notes.length > 0);
+  t('and its reasons are concrete enough to act on',
+    v.notes.join(' ').includes('substance floor') || v.notes.join(' ').includes('missing:'),
+    v.notes.join(' | '));
+  t('a refused build scores finite, a passing one Infinity',
+    Number.isFinite(v.score) && gw.judgeBuild(stub, false).score === v.score,
+    'the score is what tells improvement from churn, so it must be stable');
 }
 
 console.log(`\n${pass} passed, ${fail} failed`);

@@ -604,6 +604,11 @@ let refining = false;   // refine passes are delta-priced, never a full re-charg
 let forgeAcu0 = 0;      // ACU balance when the current forge run started (set at launch)
 let lastBp = { title: 'Penalty King', summary: null, genre: [] };  // the user's generated blueprint follows them through the flow
 let realBuild = null, realBuildPromise = null, realBuildErr = null;  // the Code Agent's actual generated game
+/* Live state of the running job, refreshed by the poller from the server's own
+   record — never estimated here. A forge may now take several attempts, so the
+   progress line reports which attempt it is on and why the last one was refused. */
+let forgeProgress = null;
+let forgeDone = false;
 
 /* live character counter on the concept box */
 const updateCount = () => {
@@ -759,70 +764,115 @@ function runAgent(i, done) {
   }, 260);
 }
 $('btnForge').addEventListener('click', () => {
-  if (!needAcu(refining ? 60 : (($('chk3d') && $('chk3d').checked) ? 1200 : 300), $('btnForge').nextElementSibling)) return;
+  /* WHAT IT TAKES TO START, not a guess at what it will cost. The server used to
+     reserve a fixed 300/1200 up front and that reservation was the real spending
+     limit; now every attempt is metered as it happens and the run continues while
+     the balance lasts, so the only thing to check before starting is that there
+     is enough for the first attempt. FORGE_MIN_CHARGE on the server is 40 — the
+     server refuses below it and is the authority; this is only the early hint. */
+  if (!needAcu(refining ? 60 : 40, $('btnForge').nextElementSibling)) return;
   setStep(2);
   show('p2');
   forgeAcu0 = acu; simSpend = 0;
   AudioFX.setLang($('selLang').value === 'auto' ? 'en' : $('selLang').value);
   jxTrack('forge.blueprint_approved', { scope: $('selScope').value });
   // the REAL build: the Code Agent writes the actual game while the fleet animates
-  realBuild = null; realBuildErr = null;
+  realBuild = null; realBuildErr = null; forgeProgress = null; forgeDone = false;
   realBuildCharged = false;          // every forge is charged (and synced) once
   publishedGame = null;              // a re-forge is a NEW game — old share URL no longer applies
   forgeStart = Date.now();           // for the playtest progress counter
   realBuildPromise = (async () => {
-    /* DUAL-CHANNEL DELIVERY — the game must arrive even if this connection dies.
-       Channel 1: the forge request itself. Channel 2: the server persists every
-       finished build under this ticket, and we poll /api/forge-result for it.
-       Whichever channel produces the build first wins. */
+    /* A FORGE IS A JOB NOW, AND THIS DRIVES IT.
+       /api/forge-game queues the run and returns a ticket immediately — it can no
+       longer hand back a game, because a run that retries until the build clears
+       every quality gate takes longer than one serverless request may live. Two
+       loops follow it: the DRIVER advances the job a slice at a time, and the
+       POLLER reports progress and collects the finished build. Neither is a
+       fallback for the other; the driver makes it progress while this tab is
+       open, and the server's own sweep finishes it if the tab closes. */
     const base = (typeof window !== 'undefined' && window.JOSHRIX_API_BASE) || '';
     const ticket = (crypto.randomUUID ? crypto.randomUUID() : 'tk-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10));
     const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
     const finish = (j) => { if (!realBuild && j && j.html) { realBuild = j; return true; } return false; };
+    const mode = ($('chk3d') && $('chk3d').checked) ? '3d' : '2d';
     let mainErr = null;
     let fatal = false;   // a 4xx means the forge NEVER STARTED — stop waiting instantly
 
     // The two events that matter most: what an ad click actually came here to do,
     // and whether it succeeded. Fired around the real request, not around a click.
-    try { JX.track('forge_start', { mode: ($('chk3d') && $('chk3d').checked) ? '3d' : '2d' }); } catch (e) {}
+    try { JX.track('forge_start', { mode: mode }); } catch (e) {}
 
-    const main = (async () => {
-      try {
-        const r = await fetch(base + '/api/forge-game', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: $('prompt').value, title: lastBp.title, summary: lastBp.summary, language: $('selLang').value, walletId: serverWalletId || undefined, blueprint: lastBp, mode: ($('chk3d') && $('chk3d').checked) ? '3d' : '2d', ticket: ticket }),
-          signal: AbortSignal.timeout(295000)
-        });
-        const j = await r.json().catch(() => null);
-        if (r.ok) { finish(j); try { JX.track('forge_complete', { mode: ($('chk3d') && $('chk3d').checked) ? '3d' : '2d' }); } catch (e) {} }
-        else {
-          mainErr = (j && (j.error + (j.detail ? ' — ' + j.detail : ''))) || ('HTTP ' + r.status);
-          // 4xx = refused before any generation began (no wallet, bad prompt):
-          // there is no build in flight, so polling for one is a 13-minute lie
-          if (r.status >= 400 && r.status < 500) fatal = true;
-        }
-      } catch (e) { mainErr = 'connection dropped mid-forge'; }
-    })();
-
-    const poller = (async () => {
-      await sleep(45000);                        // builds take ≥45s — no point earlier
-      for (let i = 0; i < 45 && !realBuild && !fatal; i++) {
-        try {
-          const r = await fetch(base + '/api/forge-result?ticket=' + encodeURIComponent(ticket) + '&w=' + encodeURIComponent(serverWalletId || ''), { signal: AbortSignal.timeout(10000) });
-          const j = await r.json().catch(() => null);
-          if (j && j.ready && finish(j)) return;
-        } catch (e) { /* poll again */ }
-        await sleep(6000);
+    // ---- 1. QUEUE THE RUN -------------------------------------------------
+    try {
+      const r = await fetch(base + '/api/forge-game', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: $('prompt').value, title: lastBp.title, summary: lastBp.summary, language: $('selLang').value, walletId: serverWalletId || undefined, blueprint: lastBp, mode: mode, ticket: ticket }),
+        signal: AbortSignal.timeout(30000)
+      });
+      const j = await r.json().catch(() => null);
+      if (!r.ok) {
+        mainErr = (j && (j.error + (j.detail ? ' — ' + j.detail : ''))) || ('HTTP ' + r.status);
+        // 4xx = refused before any generation began (no wallet, bad prompt):
+        // there is no build in flight, so waiting for one is a lie
+        if (r.status >= 400 && r.status < 500) fatal = true;
+      } else {
+        // A server still building inline would return the game here. Honour it.
+        finish(j);
       }
-    })();
+    } catch (e) { mainErr = 'could not reach the forge to start it'; }
 
-    // resolve as soon as either channel lands the build (or the forge is refused);
-    // else when both are done
-    await new Promise((resolve) => {
-      const iv = setInterval(() => { if (realBuild || fatal) { clearInterval(iv); resolve(); } }, 400);
-      Promise.allSettled([main, poller]).then(() => { clearInterval(iv); resolve(); });
-    });
-    if (!realBuild) realBuildErr = mainErr || 'the forge did not return in time — any unused hold settles back automatically';
+    if (!fatal && !realBuild) {
+      // ---- 2. DRIVE AND WATCH --------------------------------------------
+      const qs = '?ticket=' + encodeURIComponent(ticket) + '&w=' + encodeURIComponent(serverWalletId || '');
+
+      const driver = (async () => {
+        /* Each call runs one slice on the server and returns when that slice
+           ends — up to a few minutes. `done` means the run finished; the poller
+           collects the payload, so there is nothing to parse here. */
+        while (!realBuild && !fatal && !forgeDone) {
+          try {
+            const r = await fetch(base + '/api/forge-worker', {
+              method: 'POST', headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ticket: ticket, walletId: serverWalletId || undefined }),
+              signal: AbortSignal.timeout(305000)
+            });
+            const j = await r.json().catch(() => null);
+            if (j && j.done) forgeDone = true;
+            if (r.status === 403 || r.status === 404) { fatal = true; mainErr = (j && j.error) || 'the forge could not be advanced'; }
+          } catch (e) { /* a dropped slice is retried; the job kept its state */ }
+          await sleep(1200);
+        }
+      })();
+
+      const poller = (async () => {
+        while (!realBuild && !fatal) {
+          try {
+            const r = await fetch(base + '/api/forge-result' + qs, { signal: AbortSignal.timeout(15000) });
+            const j = await r.json().catch(() => null);
+            if (j && j.ready && finish(j)) return;
+            if (j && !j.ready) {
+              /* Real progress, from the job row — attempt count and the exact
+                 reason the last attempt was refused. A multi-minute run with no
+                 detail is indistinguishable from a hang. */
+              forgeProgress = {
+                attempts: j.attempts || 0, stale: j.stale || 0,
+                allowance: j.staleAllowance || 0, acu: j.acuSpent || 0,
+                refusal: j.lastRefusal || null, status: j.status || 'queued'
+              };
+            }
+          } catch (e) { /* poll again */ }
+          await sleep(5000);
+        }
+      })();
+
+      await new Promise((resolve) => {
+        const iv = setInterval(() => { if (realBuild || fatal) { clearInterval(iv); resolve(); } }, 400);
+        Promise.allSettled([driver, poller]).then(() => { clearInterval(iv); resolve(); });
+      });
+    }
+
+    if (realBuild) { try { JX.track('forge_complete', { mode: mode }); } catch (e) {} }
+    else realBuildErr = mainErr || 'the forge did not finish in this tab — it keeps running on the server, so reopening the Studio will pick it up';
   })();
   $('qaRow').style.display = 'none';
   AGENTS.forEach((a, i) => {
@@ -910,7 +960,22 @@ async function renderPlaytest() {
     // live elapsed counter so a 1–3 min forge on a rich concept never looks frozen
     const tick = setInterval(() => {
       const s = Math.round((Date.now() - (forgeStart || Date.now())) / 1000);
-      $('protoNote4').innerHTML = '⚒ <b>Code Agent is writing your playable game…</b> ' + s + 's — rich concepts take a minute or two. Keep this tab open; you\'ll drop straight into your real build when it\'s ready.';
+      const mins = s < 90 ? s + 's' : Math.floor(s / 60) + 'm ' + (s % 60) + 's';
+      const p = forgeProgress;
+      /* An honest progress line. A run that retries takes minutes, and a creator
+         watching a spinner with no detail assumes it has hung — so say which
+         attempt it is on, what the gate refused last time, and that the run
+         survives this tab being closed. */
+      if (p && p.attempts > 1) {
+        $('protoNote4').innerHTML = '⚒ <b>Attempt ' + p.attempts + ' — the quality gate refused the last build, so the Code Agent is fixing it.</b> '
+          + mins + ' elapsed'
+          + (p.refusal ? '<br><span style="opacity:.75">Last refusal: ' + String(p.refusal).replace(/[<>&]/g, '') + '</span>' : '')
+          + '<br><span style="opacity:.75">It keeps running on the server even if you close this tab.</span>';
+      } else {
+        $('protoNote4').innerHTML = '⚒ <b>Code Agent is writing your playable game…</b> ' + mins
+          + ' — it runs until the build clears every quality gate, so a rich concept can take several minutes.'
+          + '<br><span style="opacity:.75">It keeps running on the server even if you close this tab.</span>';
+      }
     }, 1000);
     try { await realBuildPromise; } finally { clearInterval(tick); }
   }

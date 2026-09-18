@@ -187,10 +187,23 @@ export default async function handler(req: any, res: any) {
      *
      * "SEO optimised" is the kind of claim that is always asserted and never
      * measured. api/_seoscore.ts measures it, and a draft under MIN_SCORE is
-     * REWRITTEN ONCE with its own shortfalls handed back to the writer, then
-     * refused if it still misses. Refusing is the point: a thin post published
-     * anyway is a page that will never rank, competing with the archive for
-     * crawl budget, and it can never be un-indexed as cheaply as it was made.
+     * REWRITTEN with its own shortfalls handed back to the writer. Publishing a
+     * thin post anyway is the failure being prevented: it is a page that will
+     * never rank, competing with the archive for crawl budget, and it cannot be
+     * un-indexed as cheaply as it was made.
+     *
+     * REWRITTEN UNTIL IT PASSES — changed 18 Sep 2026. It used to be exactly one
+     * rewrite and then a refusal, which is the same mistake the forge made: one
+     * extra try is not "until it is right", it is one extra roll of the dice.
+     * Justin's rule applies to every AI path, not just the forge, so this loops on
+     * the same two honest conditions as api/_forgejobs.ts — keep going while the
+     * score is IMPROVING, stop when it is not. A writer that has stopped getting
+     * closer will not arrive on the next attempt, and each attempt is real money.
+     *
+     * This one still lives inside a single request, and that is a deliberate
+     * difference rather than an oversight: an article is one short call, measured
+     * in seconds, so several fit inside one window where a 3D game build does not.
+     * The time bound below is what keeps that true.
      *
      * The scorer runs on the draft body, not the finished page, so the renderer's
      * own contribution (schema, cards, canonical) is granted — those are fixed
@@ -199,13 +212,21 @@ export default async function handler(req: any, res: any) {
      * a direct opening answer, a real FAQ, and enough internal links to belong
      * to a cluster. */
     let audit = scoreArticleDraft(article);
-    if (audit.total < MIN_SCORE) {
+    let stale = 0;
+    /* Leave room to render, score and persist after the last attempt returns —
+       the same discipline the forge budgets use, for the same reason. */
+    const writeDeadline = Date.now() + 210_000;
+    while (audit.total < MIN_SCORE && stale < 3 && Date.now() < writeDeadline) {
       const retry = await generateArticle(
         `${topic}\n\nA previous attempt scored ${audit.total}/100 and was rejected. Fix EXACTLY these, keeping everything that already worked:\n${audit.failed.map((f) => `  - ${f.note}`).join("\n")}`,
         liveGames, priorPosts,
       );
-      const second = scoreArticleDraft(retry.article);
-      if (second.total > audit.total) { article = retry.article; provider = retry.provider; audit = second; }
+      const next = scoreArticleDraft(retry.article);
+      if (next.total > audit.total) {
+        article = retry.article; provider = retry.provider; audit = next; stale = 0;
+      } else {
+        stale++;
+      }
     }
     if (audit.total < MIN_SCORE) {
       return res.status(422).json({

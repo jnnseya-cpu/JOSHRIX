@@ -3,8 +3,100 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-09-11 (the forge runs to completion; three backends became one;
-Firestore rules are versioned for the first time)
+Last updated: 2026-09-18 (a forge is a durable job with no time or ACU ceiling;
+three backends became one; Firestore rules are versioned for the first time)
+
+---
+
+## NO TIME LIMIT, NO ACU LIMIT — 18 Sep
+
+Justin: *"every AI powered work must have no time limit and ACU limit, regardless
+how long it can take and how much it will cost — the AI powered functions must
+work until they produce the highly expected results."* And, separately:
+*"users are charged x4 the provider cost, so that remains as it is."*
+
+On 11 Sep I collapsed every forge timeout into one knob and reported that as
+finished. It was not. A knob cannot remove a ceiling that belongs to someone
+else: a Vercel function is killed at its `maxDuration`, and past that the socket
+dies with the model still writing, so the creator sees "Code Agent unreachable"
+and gets nothing at all. There were two ceilings, and both are now gone.
+
+**The clock.** A forge is a durable job. `/api/forge-game` validates, scans the
+concept, checks the wallet and returns a ticket in under a second.
+`/api/forge-worker` claims the job, does as much as fits safely inside one
+function invocation, writes its state to Postgres and returns; the next
+invocation continues from there. A run therefore has no time limit — ten slices
+or one, it is the same job. Closing the laptop stops nothing, because the work is
+in the database rather than in a socket: a per-minute cron sweeps anything whose
+creator walked away. `FORGE_MAX_SECONDS` still exists and still sits ten seconds
+under the platform ceiling, but it now bounds **one slice**, not the run.
+
+**The ACU ceiling was the hold, and almost nobody would have called it a limit.**
+There was a fixed reservation in front of every forge, 500 for 2D and 750 for 3D,
+debited before generating. A run could never cost more than its hold, so a build
+that needed a fourth attempt was refused a fourth attempt however close the third
+came. That is the "stops midway" failure arriving as a billing decision. It had
+already been raised twice for the same reason, which was the clue I missed both
+times: a reservation taken before the work is priced is a guess, and a guess in
+front of a paid operation is a limit whichever way it is wrong.
+
+It is gone. Each attempt now debits its **own metered cost** as that attempt
+finishes, and the run continues while the wallet can fund another. The only bound
+left is the balance, which is the honest one.
+
+**The rate did not change and must not.** A creator is charged 4× the provider's
+own cost for the tokens that attempt really used — the same `acuChargeForUsage`
+as before, asserted exactly in `tests/t45` so the multiplier cannot drift inside a
+refactor. What changed is *when* and *how many times*, never the rate.
+
+**"Until it produces the expected result" is a loop with a real judge.** The gates
+were written out inline in the provider chain; they are now one `judgeBuild`
+shared by the chain and the retry loop, because two copies of a quality bar drift
+and the drift ships bad games. A refused attempt hands its exact reasons to the
+next one as hard requirements — an identical retry is the same dice roll at the
+same price. The loop ends on success, when the wallet runs out, or when three
+consecutive attempts come no closer than the best so far.
+
+That last condition is not a disguised limit and the difference matters: a run
+that keeps improving is never stopped, however long it takes and however much it
+costs. A run that has stopped improving is buying the same failure repeatedly. It
+also protects the published promise — /refunds says "you never pay for a failed
+forge", so every ACU a doomed run spends is the platform's own money.
+
+**Money paths unchanged.** No new ledger table, no second charge path. The
+accumulated metered total becomes the hold on the existing charge-on-accept row,
+so publishing collects the true cost of the whole run and discarding hands it all
+back exactly as before. A failed run refunds every ACU it spent, then takes the
+flat engine charge only if the wallet can cover it — a creator whose run just
+failed is never left owing.
+
+**The blog agent got the same treatment**, because the instruction was about every
+AI path. It used to rewrite once and then refuse at 422; it now rewrites while the
+SEO score is improving, on the same stop-when-it-stops-improving rule.
+
+**What the Studio shows now.** A run can take minutes, and a spinner with no
+detail is indistinguishable from a hang. The progress line reports the real
+attempt number and the exact reason the last attempt was refused, both read from
+the job row, plus the fact that the run survives the tab being closed.
+
+**Verified:** 47 test files, 1,777 assertions, all passing. `tests/t45` is new and
+does not read source — it runs the state machine against an in-memory Postgres and
+checks the rows afterwards, which is how the two money bugs below were caught.
+
+**Two bugs I introduced and fixed in the same pass**, recorded because both were
+silent: crediting an attempt to the hold even when `debitWallet` had refused it
+(which would refund a creator money they never paid), and keeping the offline demo
+build as "best" (which would have shipped something weaker than the engine build
+and labelled it a bespoke AI game).
+
+**Not verified, and it is the same gap as always:** there are no provider keys in
+this environment, so no forge has been run against the new loop. Everything above
+is tested logic, not a finished game. What would change that is one real run.
+
+**One thing to check on the Vercel account:** the new sweep cron is `* * * * *`,
+and sub-daily cron frequency needs a plan above Hobby. Three existing crons and
+300-second functions say this account is already past that, but a schedule the
+plan disallows fails the **deployment**, not the request.
 
 ---
 

@@ -7,7 +7,7 @@ const GW = (() => {
   }
   throw new Error('compiled _gateway.js not found — run: npx tsc -p . in the audit workspace');
 })();
-const { acuChargeForUsage, FORGE_GAME_ACU_CHARGE, FORGE_GAME_3D_ACU_CHARGE, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE, ENHANCE_HOLD, BLUEPRINT_ACU_CHARGE } = GW;
+const { acuChargeForUsage, FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE, ENHANCE_HOLD, BLUEPRINT_ACU_CHARGE } = GW;
 const { ACU } = require('./build/shared/contracts.js');
 let pass=0, fail=0;
 const t=(name,cond,detail='')=>{ if(cond){pass++;console.log('  ok   '+name);} else {fail++;console.log('  FAIL '+name+(detail?' :: '+detail:''));} };
@@ -30,35 +30,42 @@ t('unknown model falls back, never returns NaN', Number.isFinite(acuChargeForUsa
 t('zero usage charges 0 not NaN', acuChargeForUsage('openai', {inputTokens:0,outputTokens:0}) === 0);
 t('negative usage cannot produce a credit', acuChargeForUsage('openai', {inputTokens:-999,outputTokens:-999}) <= 0);
 
-console.log('\n== HOLDS vs SETTLEMENT (creator must never be over-charged) ==');
-// Assert the PROPERTY, not the number. These were 300 and 1200 against real
-// settles of 32-51 ACU, so a creator holding 1,068 was refused a 3D forge they
-// could afford twenty times over. A hold is refunded in the same request, so its
-// only job is to cover the worst settle without gatekeeping affordable work.
+console.log('\n== WHAT IT COSTS TO RUN, now that nothing is reserved up front ==');
+/* THE FIXED HOLD IS GONE. Two constants used to live here, 500 for 2D and 750 for
+   3D, debited before generating. They were raised twice for the same reason — they
+   kept refusing work a wallet could afford — and they were also the real ACU
+   ceiling, because a run could never cost more than its hold. A forge now debits
+   each attempt's own metered cost as that attempt finishes, so the assertions
+   worth making are about the PER-ATTEMPT cost and what a real wallet can fund. */
 {
   /* Derived from the REAL output budgets, not a copy of them. This used to
      hard-code 18000/16000, so when the budgets rose on 11 Sep the test went on
-     scoring the old world and called a correctly-sized hold nine times too
-     large. A test that carries its own copy of a production constant stops
-     testing production the moment that constant moves. */
+     scoring the old world. A test carrying its own copy of a production constant
+     stops testing production the moment that constant moves. */
   const { OUTPUT_BUDGET } = require('./build/api/_gateway.js');
-  const worst3d = Math.max(FORGE_MIN_CHARGE,
+  const pay = require('./build/shared/payments.js');
+  const worstAttempt = Math.max(FORGE_MIN_CHARGE,
     acuChargeForUsage('claude-sonnet-5', { inputTokens: 8000, outputTokens: OUTPUT_BUDGET.claude3d }));
-  const worst2d = Math.max(FORGE_MIN_CHARGE,
-    acuChargeForUsage('claude-sonnet-5', { inputTokens: 8000, outputTokens: OUTPUT_BUDGET.claude2d }));
-  t(`3D hold ${FORGE_GAME_3D_ACU_CHARGE} covers the worst settle ${worst3d}`,
-    FORGE_GAME_3D_ACU_CHARGE > worst3d);
-  t(`2D hold ${FORGE_GAME_ACU_CHARGE} covers the worst settle ${worst2d}`,
-    FORGE_GAME_ACU_CHARGE > worst2d);
-  t('3D hold is not more than 5x the worst settle it protects',
-    FORGE_GAME_3D_ACU_CHARGE <= worst3d * 5,
-    `hold ${FORGE_GAME_3D_ACU_CHARGE} vs settle ${worst3d} — an over-large hold refuses affordable work`);
-  t('a 1,000-ACU wallet can start a 3D forge',
-    FORGE_GAME_3D_ACU_CHARGE <= 1000,
-    'the exact failure: "Not enough ACUs" on a balance worth ~20 real forges');
+
+  t(`the worst single attempt meters to ${worstAttempt} ACU`, worstAttempt > 0 && Number.isFinite(worstAttempt));
+  t('starting a forge costs only one attempt, not a reservation',
+    FORGE_MIN_CHARGE < worstAttempt,
+    'FORGE_MIN_CHARGE is the floor to BEGIN; a larger figure would gatekeep again');
+
+  /* THE POINT OF THE CHANGE. A run must be able to afford several attempts on one
+     funded wallet, or "retry until it is right" is a promise the economics break.
+     A tester wallet is the concrete case — it is the only wallet that can test
+     the forge at all. */
+  const attempts = Math.floor(pay.TESTER_CEILING_ACU / worstAttempt);
+  t(`a tester wallet funds ${attempts} worst-case attempts`, attempts >= 20,
+    `TESTER_CEILING_ACU ${pay.TESTER_CEILING_ACU} / worst attempt ${worstAttempt}`);
+
+  /* And the TYPICAL attempt is far cheaper than the worst, which is why an
+     uncapped run is affordable rather than reckless. */
+  t(`a typical attempt (${got}) is well under the worst case`, got * 4 < worstAttempt,
+    'if these ever converge, re-measure BUILD_COST_MINOR from /api/forge-log');
+  console.log(`       -> typical attempt ~${got} ACU, worst ~${worstAttempt}: a wallet of ` +
+    `${pay.TESTER_CEILING_ACU} funds ${Math.floor(pay.TESTER_CEILING_ACU / got)} typical attempts`);
 }
-t('metered floor 40 < 2D hold', FORGE_MIN_CHARGE < FORGE_GAME_ACU_CHARGE);
 t('engine-only charge 60 is small', ENGINE_BUILD_CHARGE === 60 && ENGINE_BUILD_CHARGE < FORGE_MIN_CHARGE*2);
-t('typical settle is far below hold', got < FORGE_GAME_ACU_CHARGE, `settle ${got} vs hold 300`);
-console.log(`       -> creator holds 300, real cost settles to ~${got}: ${300-got} refunded automatically`);
 process.exit(fail ? 1 : 0);
