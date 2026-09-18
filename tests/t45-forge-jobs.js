@@ -237,20 +237,64 @@ async function queue(sql, { wallet = 'w1', mode = '2d' } = {}) {
       'the Studio reads /api/forge-result, not the job table');
   }
 
-  console.log('\na run stops when the wallet does, and keeps nothing it did not pay for');
+  console.log('\nNO ACUs MEANS NO AI — the rule has no exception for accidents');
   {
-    /* A wallet that cannot fund even the first attempt. */
-    const { sql, db } = makeDb({ wallets: { w1: 1 } });
+    /* Justin, 18 Sep 2026: "no ACUs mean no ai powered functions and features."
+       An empty wallet is the easy case and was never in doubt. */
+    const { sql, db } = makeDb({ wallets: { w1: 0 } });
     await queue(sql);
     const job = await jobs.claimForgeJob(sql, TICKET);
     const out = await jobs.runForgeJobSlice(sql, job, Date.now() + 120_000);
-    t('the run ends immediately', out.status === 'failed', out.status);
-    t('with no attempts bought', out.attempts === 0);
+    t('an empty wallet buys nothing at all', out.attempts === 0 && out.status === 'failed');
     t('and the reason names the wallet', /ACU|top up/i.test(String(db.jobs.get(TICKET).error)),
       db.jobs.get(TICKET).error);
     t('a wallet too poor for the engine charge is not put into debt',
-      db.wallets.get('w1').balance === 1 && db.charges.length === 0,
+      db.wallets.get('w1').balance === 0 && db.charges.length === 0,
       'a creator whose run failed must never end up owing');
+  }
+  {
+    /* THE HARD CASE, and the one that was actually broken. Removing the fixed
+       hold removed the proof that a wallet could pay BEFORE a provider ran.
+       debitWallet is all-or-nothing and happens AFTER the attempt, so a wallet
+       holding the bare metered floor would have passed the start check, bought a
+       full generation, and failed the debit — the platform paying for AI the
+       creator could not afford. That is free AI through the back door. */
+    const floor = gw.FORGE_MIN_CHARGE;
+    const needed = gw.worstAttemptAcu(false);
+    t(`one attempt can cost ${needed}, far above the metered floor ${floor}`, needed > floor,
+      'if these were equal the gap below could not exist and this test would be theatre');
+
+    const { sql, db } = makeDb({ wallets: { w1: needed - 1 } });
+    await queue(sql);
+    const job = await jobs.claimForgeJob(sql, TICKET);
+    const out = await jobs.runForgeJobSlice(sql, job, Date.now() + 120_000);
+    t('a wallet one ACU short of an attempt gets NO attempt', out.attempts === 0,
+      `balance ${needed - 1}, attempt costs up to ${needed}`);
+    t('and the refusal says what is needed and what is there',
+      /\d+ needed/.test(String(db.jobs.get(TICKET).error)), db.jobs.get(TICKET).error);
+
+    /* And the gate must be affordability, not a flat number: 3D costs more per
+       attempt than 2D, so it must demand more. */
+    t('a 3D attempt is gated higher than a 2D one', gw.worstAttemptAcu(true) > gw.worstAttemptAcu(false),
+      `${gw.worstAttemptAcu(true)} vs ${gw.worstAttemptAcu(false)}`);
+    t('and the figure is DERIVED from the output budgets, not written down',
+      gw.worstAttemptAcu(true) ===
+        Math.max(floor, gw.acuChargeForUsage('claude-sonnet-5',
+          { inputTokens: 10_000, outputTokens: gw.OUTPUT_BUDGET.claude3d })),
+      'a hand-written figure goes stale the next time a budget moves');
+  }
+  {
+    /* A funded wallet is NOT gated. The check must refuse the broke and let
+       everyone else run — otherwise it is the old hold wearing a new name. */
+    const { sql, db } = makeDb({ wallets: { w1: gw.worstAttemptAcu(false) } });
+    await queue(sql);
+    const job = await jobs.claimForgeJob(sql, TICKET);
+    const out = await jobs.runForgeJobSlice(sql, job, Date.now() + 120_000);
+    t('a wallet with exactly one attempt in it does get attempts', out.attempts > 0,
+      `${out.attempts} attempts on a balance of ${gw.worstAttemptAcu(false)}`);
+    t('and the run is not capped at one', out.attempts === jobs.MAX_STALE_ATTEMPTS,
+      'the offline demo is free, so the balance never falls — this proves nothing stops it early');
+    void db;
   }
 
   console.log('\na job nobody could finish is given up on rather than holding ACUs for ever');

@@ -536,7 +536,14 @@ walletReady = (async () => {
       signal: AbortSignal.timeout(10000)
     });
     const j = await r.json().catch(() => null);
-    if (r.ok && j && j.mode === 'live') { serverMode = true; serverWalletId = j.walletId; syncBalance(j.balance); }
+    if (r.ok && j && j.mode === 'live') {
+      serverMode = true; serverWalletId = j.walletId; syncBalance(j.balance);
+      /* What a build attempt costs, FROM THE SERVER. The Studio used to carry its
+         own copy of this figure and it went stale every time the forge economics
+         moved, telling creators they needed a number the server did not want.
+         The server decides what a forge costs; this only renders it. */
+      if (j.forgeCost) forgeCost = j.forgeCost;
+    }
   } catch (e) { /* offline or no DB yet — local sim wallet stays authoritative */ }
 })();
 
@@ -608,6 +615,15 @@ let realBuild = null, realBuildPromise = null, realBuildErr = null;  // the Code
    record — never estimated here. A forge may now take several attempts, so the
    progress line reports which attempt it is on and why the last one was refused. */
 let forgeProgress = null;
+/* Per-attempt build cost, replaced by the server on wallet-init. The fallback is
+   deliberately the metered floor: if the server has not answered yet, hint low
+   and let the server's own 402 be the one that refuses, rather than blocking a
+   creator on a number this page invented. */
+let forgeCost = null;
+const forgeCostNow = () => {
+  const mode = ($('chk3d') && $('chk3d').checked) ? '3d' : '2d';
+  return (forgeCost && forgeCost[mode]) || 40;
+};
 let forgeDone = false;
 
 /* live character counter on the concept box */
@@ -764,13 +780,14 @@ function runAgent(i, done) {
   }, 260);
 }
 $('btnForge').addEventListener('click', () => {
-  /* WHAT IT TAKES TO START, not a guess at what it will cost. The server used to
-     reserve a fixed 300/1200 up front and that reservation was the real spending
-     limit; now every attempt is metered as it happens and the run continues while
-     the balance lasts, so the only thing to check before starting is that there
-     is enough for the first attempt. FORGE_MIN_CHARGE on the server is 40 — the
-     server refuses below it and is the authority; this is only the early hint. */
-  if (!needAcu(refining ? 60 : 40, $('btnForge').nextElementSibling)) return;
+  /* ENOUGH FOR ONE ATTEMPT, not a reservation for the whole run.
+     The server used to hold a fixed 300/1200 up front and that hold was the real
+     spending limit. Now each attempt is metered as it happens and the run keeps
+     going while the balance lasts — so the only thing to check before starting is
+     that the wallet can afford the NEXT attempt. The figure comes from
+     /api/wallet-init rather than living here, because the server decides what a
+     forge costs and it refuses precisely; this is the early hint, not the rule. */
+  if (!needAcu(refining ? 60 : forgeCostNow(), $('btnForge').nextElementSibling)) return;
   setStep(2);
   show('p2');
   forgeAcu0 = acu; simSpend = 0;

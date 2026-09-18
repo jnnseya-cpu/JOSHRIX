@@ -28,7 +28,7 @@
  * invented for it.
  */
 import { randomUUID } from "crypto";
-import { FORGE_MIN_CHARGE } from "./_gateway";
+import { worstAttemptAcu } from "./_gateway";
 import { getDb, ensureGameSchema, getWallet, releaseExpiredForgeHolds } from "./_ledger";
 import { ensureForgeJobSchema, createForgeJob, getForgeJob } from "./_forgejobs";
 import { recordSecurityEvent } from "./_guard";
@@ -98,14 +98,21 @@ export default async function handler(req: any, res: any) {
   }
   if (!walletId) return res.status(402).json({ error: "No wallet — open the Studio to initialise your ACU wallet, or top up at /wallet.html." });
 
-  /* THE ONLY SPENDING CHECK LEFT, and it is the honest one.
+  /* CAN THIS WALLET AFFORD THE FIRST ATTEMPT?
    *
    * There used to be a fixed hold here — 500 ACUs for 2D, 750 for 3D — debited
-   * before generating. That hold WAS the ACU limit: a run could not cost more
-   * than it, so a game needing a fourth attempt was refused a fourth attempt no
-   * matter how close the third came. Now each attempt debits what it actually
-   * cost and the run continues while the wallet can fund another, so the only
-   * question to answer here is whether it can fund the FIRST one. */
+   * before generating. That hold WAS the ACU limit on a run: a game needing a
+   * fourth attempt was refused a fourth attempt no matter how close the third
+   * came. It is gone, and each attempt now debits what it actually cost.
+   *
+   * But the hold was also doing a second job, and that one has to stay: proving
+   * the wallet could pay BEFORE a provider was called. "No ACUs means no AI" has
+   * no exception for accidents, and without this check a wallet holding the bare
+   * metered floor would pass, a provider would write a whole game, and the debit
+   * afterwards would fail — leaving the platform paying for AI the creator could
+   * not afford. So the gate is per ATTEMPT, sized to what one attempt can cost at
+   * the top of its output budget, and it never caps the run: a wallet that can
+   * afford attempt eleven gets attempt eleven. */
   let balance = 0;
   try {
     await ensureGameSchema(sql!);
@@ -118,11 +125,17 @@ export default async function handler(req: any, res: any) {
   } catch (err: any) {
     return res.status(502).json({ error: "Wallet check failed", detail: String(err?.message ?? err) });
   }
-  if (balance < FORGE_MIN_CHARGE) {
+  const perAttempt = worstAttemptAcu(is3d);
+  if (balance < perAttempt) {
     return res.status(402).json({
-      error: `Not enough ACUs to start a forge (at least ${FORGE_MIN_CHARGE} needed). Top up at /wallet.html.`,
-      acuCharge: FORGE_MIN_CHARGE,
+      error: `Not enough ACUs to start a forge (${perAttempt} needed to cover one build attempt). Top up at /wallet.html.`,
+      acuCharge: perAttempt,
       balance,
+      /* Say what the number IS, so it never reads as an arbitrary paywall: it is
+         one attempt at full stretch, and most attempts settle well below it. */
+      note: `That is what a single ${is3d ? "3D" : "2D"} attempt can cost at its largest. `
+          + `Most cost far less and you are only ever charged what a build actually used. `
+          + `The forge keeps retrying until the build passes every quality gate, for as long as your balance lasts.`,
     });
   }
 

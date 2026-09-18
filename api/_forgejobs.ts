@@ -49,7 +49,7 @@
 import { randomUUID } from "crypto";
 import {
   generateGameHtml, judgeBuild, looksPlayable, countLibraryModels, acuChargeForUsage,
-  FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE, FORGE_MAX_SECONDS,
+  FORGE_MIN_CHARGE, ENGINE_BUILD_CHARGE, FORGE_MAX_SECONDS, worstAttemptAcu,
   type BuildVerdict, type TokenUsage,
 } from "./_gateway";
 import { buildPlayableGame } from "./_engine";
@@ -310,18 +310,28 @@ export async function runForgeJobSlice(sql: Sql, job: ForgeJob, sliceDeadline: n
       return { status: "running", attempts, acuHeld };
     }
 
-    /* CAN THE WALLET FUND ANOTHER ATTEMPT? This is the only spending limit left,
-       and it is the honest one: a run stops when the money stops, not at a
-       number chosen in advance. A wallet with a balance keeps going. */
+    /* CAN THE WALLET FUND ANOTHER ATTEMPT? This is the only spending bound left,
+       and it is the honest one: a run stops when the money stops, not at a number
+       chosen in advance. A wallet that can afford attempt eleven gets it.
+
+       Checked against what an attempt can cost AT FULL STRETCH, not against the
+       metered floor. debitWallet is all-or-nothing and happens after the attempt,
+       so a balance that only covers the floor would buy a whole generation the
+       creator cannot pay for — free AI arriving through the back door, which the
+       standing rule forbids however it happens. */
     if (job.wallet_id) {
       const w = await getWallet(sql, job.wallet_id);
       const balance = w ? Number((w as any).balance ?? 0) : 0;
-      if (balance < FORGE_MIN_CHARGE) {
+      const needed = worstAttemptAcu(is3d);
+      if (balance < needed) {
         /* Deliver the best build the run DID produce rather than nothing: a
            creator out of ACUs mid-run still gets what their ACUs bought. */
         return await concludeRun(sql, job, {
           engineHtml, acuHeld, attempts, notes, is3d,
-          reason: `ran out of ACUs after ${attempts} attempt${attempts === 1 ? "" : "s"} — top up at /wallet.html to keep refining`,
+          reason: attempts === 0
+            ? `not enough ACUs to run a build attempt (${needed} needed, ${balance} available) — top up at /wallet.html`
+            : `ran out of ACUs after ${attempts} attempt${attempts === 1 ? "" : "s"} `
+              + `(${needed} needed for another, ${balance} left) — top up at /wallet.html to keep refining`,
         });
       }
     }

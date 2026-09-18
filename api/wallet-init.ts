@@ -13,12 +13,31 @@
  * Without DATABASE_URL responds { mode: "no_db" } so the client keeps its local sim.
  */
 import { randomUUID } from "node:crypto";
+import { worstAttemptAcu } from "./_gateway";
 import { getDb, ensureGameSchema, createWallet, getWallet, getWalletByEmail, refillTesterWallet, deleteWallet, updateWalletIdentity, claimWalletForUid, setWalletUid, walletOwnerUid } from "./_ledger";
 import { ensureReferralSchema, attributeReferral } from "./_ledger";
 import { callerIdentity } from "./_auth";
 import { normalizeEmail, clientIp, rateLimit, tooMany, claimNonce, recordSecurityEvent } from "./_guard";
 import { verifyHuman, isDisposableEmail, humanVerifyConfigured } from "./_human";
 import { DEFAULT_WALLET_CATEGORY, TESTER_CEILING_ACU, TESTER_REFILL_COOLDOWN_SECONDS } from "../shared/payments";
+
+/**
+ * WHAT ONE BUILD ATTEMPT COSTS, sent with every wallet response.
+ *
+ * The Studio needs this to say "not enough ACUs" before a creator clicks, and it
+ * used to carry its own copy of the figure — which went stale the moment the
+ * forge economics changed, and told creators they needed 300 when the server
+ * wanted something else entirely. The server is the authority on what a forge
+ * costs (rule 14: the frontend displays, it never decides), so the authority
+ * sends the number and the client only renders it.
+ *
+ * It is a per-ATTEMPT figure at full stretch, not the price of a forge: a run
+ * retries until the build passes and is charged for what each attempt really
+ * used. The wallet must simply be able to afford the next one.
+ */
+function forgeCosts() {
+  return { forgeCost: { "2d": worstAttemptAcu(false), "3d": worstAttemptAcu(true) } };
+}
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -84,7 +103,7 @@ export default async function handler(req: any, res: any) {
       const w = await getWallet(sql, walletId);
       if (w) {
         if (name || email) await updateWalletIdentity(sql, walletId, { name: name?.slice(0, 80) ?? null, email: email ?? null });
-        return res.status(200).json({ mode: "live", walletId: w.id, balance: Number(w.balance), category: w.category, plan: (w as any).plan ?? "explorer" });
+        return res.status(200).json({ mode: "live", walletId: w.id, balance: Number(w.balance), category: w.category, plan: (w as any).plan ?? "explorer", ...forgeCosts() });
       }
       // Unknown id (e.g. DB was reset) — fall through and mint a fresh one.
     }
@@ -103,7 +122,7 @@ export default async function handler(req: any, res: any) {
       const id0 = "w-" + randomUUID().replace(/-/g, "").slice(0, 20);
       await createWallet(sql, id0, 0, DEFAULT_WALLET_CATEGORY, null, name?.slice(0, 80) ?? null);
       return res.status(200).json({
-        mode: "live", walletId: id0, balance: 0, category: DEFAULT_WALLET_CATEGORY, plan: "explorer", created: true,
+        mode: "live", walletId: id0, balance: 0, category: DEFAULT_WALLET_CATEGORY, plan: "explorer", created: true, ...forgeCosts(),
         note: "Sign in with a verified email, then top up at /wallet to forge.",
       });
     }
@@ -129,7 +148,7 @@ export default async function handler(req: any, res: any) {
       if (owned) {
         if (name) { try { await updateWalletIdentity(sql, owned.id, { name: name.slice(0, 80), email: owned.email ?? addr }); } catch { /* best-effort */ } }
         return res.status(200).json({
-          mode: "live", walletId: owned.id, balance: Number(owned.balance),
+          mode: "live", walletId: owned.id, balance: Number(owned.balance), ...forgeCosts(),
           category: owned.category, plan: owned.plan ?? "explorer", created: false,
         });
       }
@@ -191,7 +210,7 @@ export default async function handler(req: any, res: any) {
       } catch { /* a failed attribution must never block a signup */ }
     }
     return res.status(200).json({
-      mode: "live", walletId: id, balance: 0, category: DEFAULT_WALLET_CATEGORY, plan: "explorer", created: true,
+      mode: "live", walletId: id, balance: 0, category: DEFAULT_WALLET_CATEGORY, plan: "explorer", created: true, ...forgeCosts(),
       ...(referredBy ? { referredBy } : {}),
       note: "Top up at /wallet to forge your first game.",
     });

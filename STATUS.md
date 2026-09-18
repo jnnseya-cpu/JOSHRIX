@@ -31,6 +31,26 @@ in the database rather than in a socket: a per-minute cron sweeps anything whose
 creator walked away. `FORGE_MAX_SECONDS` still exists and still sits ten seconds
 under the platform ceiling, but it now bounds **one slice**, not the run.
 
+**No ACUs still means no AI, and that needed fixing.** Justin: *"sufficient ACUs
+to be available, and no ACUs mean no AI powered functions and features."* Removing
+the fixed hold removed something it had been quietly doing besides capping a run —
+proving the wallet could pay BEFORE a provider was called. Without that, a wallet
+holding the bare metered floor of 40 passed the start check, a provider wrote a
+whole game, and the debit afterwards failed, because `debitWallet` is
+all-or-nothing. The platform would have paid for AI the creator could not afford:
+free AI arriving by accident, which the standing rule forbids however it happens.
+
+Affordability is now checked per ATTEMPT, against what one attempt can cost at the
+top of its output budget — **124 ACU for 2D and 162 for 3D**, derived from
+`OUTPUT_BUDGET` rather than written down, so they move when the budgets move. That
+is a fifth of the old holds and it caps nothing: a wallet that can afford attempt
+eleven gets attempt eleven. Blueprint, Enhance and the Growth Engine already
+refused on an empty wallet and were not touched.
+
+The Studio no longer carries its own copy of that figure either. It arrives with
+the wallet from `/api/wallet-init`, because the server decides what a forge costs
+and the page only renders it.
+
 **The ACU ceiling was the hold, and almost nobody would have called it a limit.**
 There was a fixed reservation in front of every forge, 500 for 2D and 750 for 3D,
 debited before generating. A run could never cost more than its hold, so a build
@@ -79,15 +99,16 @@ detail is indistinguishable from a hang. The progress line reports the real
 attempt number and the exact reason the last attempt was refused, both read from
 the job row, plus the fact that the run survives the tab being closed.
 
-**Verified:** 47 test files, 1,777 assertions, all passing. `tests/t45` is new and
+**Verified:** 47 test files, 1,784 assertions, all passing. `tests/t45` is new and
 does not read source — it runs the state machine against an in-memory Postgres and
 checks the rows afterwards, which is how the two money bugs below were caught.
 
-**Two bugs I introduced and fixed in the same pass**, recorded because both were
-silent: crediting an attempt to the hold even when `debitWallet` had refused it
-(which would refund a creator money they never paid), and keeping the offline demo
+**Three bugs I introduced and fixed in the same pass**, recorded because all three
+were silent: crediting an attempt to the hold even when `debitWallet` had refused
+it (which would refund a creator money they never paid), keeping the offline demo
 build as "best" (which would have shipped something weaker than the engine build
-and labelled it a bespoke AI game).
+and labelled it a bespoke AI game), and the affordability gap above, which was
+found only because Justin restated the rule.
 
 **Not verified, and it is the same gap as always:** there are no provider keys in
 this environment, so no forge has been run against the new loop. Everything above

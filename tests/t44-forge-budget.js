@@ -166,8 +166,15 @@ console.log('\nnothing is reserved up front any more');
   const jobs = fs.readFileSync(path.join(ROOT, 'api/_forgejobs.ts'), 'utf8')
     .replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
   t('the run stops on the WALLET, not on a counter',
-    /balance\s*<\s*FORGE_MIN_CHARGE/.test(jobs),
+    /balance\s*<\s*needed/.test(jobs) && /worstAttemptAcu\(is3d\)/.test(jobs),
     'the only honest spending bound is the money that exists');
+  /* And it is checked against what an attempt CAN cost, not the metered floor.
+     debitWallet is all-or-nothing and runs after the attempt, so gating on the
+     floor would let a near-empty wallet buy a whole generation it cannot pay
+     for — free AI arriving by accident, which the standing rule still forbids. */
+  t('affordability is judged per attempt, not against the floor',
+    !/balance\s*<\s*FORGE_MIN_CHARGE/.test(jobs),
+    'the floor is what a run settles to at minimum, never what one attempt may cost');
   t('each attempt debits what that attempt metered',
     /debitWallet\(sql,\s*job\.wallet_id,\s*cost\)/.test(jobs));
   t('the accumulated total becomes the existing charge-on-accept hold',

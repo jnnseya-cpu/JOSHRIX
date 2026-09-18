@@ -507,6 +507,35 @@ export const OUTPUT_BUDGET = {
  *
  * FORGE_MIN_CHARGE below is what it now takes to START: enough for one attempt. */
 export const FORGE_MIN_CHARGE = 40;             // metered floor when the Code Agent ran
+
+/**
+ * WHAT ONE ATTEMPT CAN COST AT FULL STRETCH — the affordability gate.
+ *
+ * Justin, 18 Sep 2026: "no ACUs mean no AI powered functions and features."
+ *
+ * Removing the fixed hold removed the ACU ceiling on a RUN, which was the point.
+ * It also removed something that was quietly doing a second job: proving the
+ * wallet could pay for an attempt BEFORE that attempt ran. Without it a wallet
+ * holding 40 ACUs passed the start check, a provider wrote a whole game, and the
+ * debit afterwards failed — debitWallet is all-or-nothing — so the platform paid
+ * for AI the creator could not afford. That is free AI arriving through the back
+ * door, and the standing rule has no exception for accidents.
+ *
+ * So affordability is checked per ATTEMPT, against what an attempt can actually
+ * cost at the top of its output budget. This is not a limit on the run: a wallet
+ * that can afford attempt eleven gets attempt eleven. It is the difference
+ * between "spend whatever it takes" and "spend what is not there".
+ *
+ * Derived, never written down — it moves when OUTPUT_BUDGET moves. Claude is the
+ * dearest provider in the chain and the input side assumes a brief at the full
+ * MAX_CONCEPT_CHARS, so this is the worst case rather than a typical one; a
+ * typical attempt settles far below it and the difference is never charged.
+ */
+export function worstAttemptAcu(is3d: boolean): number {
+  const outputTokens = is3d ? OUTPUT_BUDGET.claude3d : OUTPUT_BUDGET.claude2d;
+  return Math.max(FORGE_MIN_CHARGE,
+    acuChargeForUsage("claude-sonnet-5", { inputTokens: 10_000, outputTokens }));
+}
 /** A 3D build smaller than this is a stub, however well-formed. Dino Island,
  *  the leanest complete game on the runtime, is 10,975 bytes. */
 export const MIN_3D_BYTES = 9_500;
