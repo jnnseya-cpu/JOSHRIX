@@ -378,26 +378,42 @@ function packGltf(gltfPath, index) {
  * publishes to the model and that a generated game may already load. Later
  * collisions are qualified with the folder that distinguishes them, so the Blob
  * Alien arrives as blob_alien.glb rather than replacing anything. */
-const claimed = new Map();          // output name -> the source file that took it
 /** Folder names that describe a FORMAT or a finish, not a category — useless as
  *  a disambiguator because every sibling shares them. */
 const NOT_A_CATEGORY = /^(gltf|glb|fbx|obj|exports?|textured|flat[\s_-]*colors?|source|files?|godot|unreal|unity|standard)/i;
-function outName(f) {
-  const base = slug(f) + ".glb";
-  const prior = claimed.get(base);
-  if (prior === undefined || prior === f) { claimed.set(base, f); return base; }
 
-  const folders = path.relative(SRC, f).split(path.sep).slice(0, -1)
-    .filter((p) => !NOT_A_CATEGORY.test(p));
-  const qualifier = folders.length ? slug(folders[folders.length - 1]) : "";
-  let name = qualifier ? `${qualifier}_${slug(f)}.glb` : base;
-  /* Still taken, or nothing to qualify with: number it rather than lose it. */
-  for (let i = 2; claimed.has(name) && claimed.get(name) !== f; i++) {
-    name = `${qualifier ? qualifier + "_" : ""}${slug(f)}_${i}.glb`;
-  }
-  claimed.set(name, f);
-  return name;
+/**
+ * One claimer per PACK, because a name may only collide with its own pack —
+ * `tree.glb` in the nature kit and `tree.glb` in the graveyard kit are separate
+ * files in separate folders and neither should be renamed. A single shared map
+ * would qualify the second one for no reason.
+ *
+ * Exported because tools/ingest-packs.mjs needs exactly this behaviour for
+ * static props. It ships glTF in category folders the same way, so it loses
+ * models the same way, and a second copy of this logic is how the two tools
+ * would drift apart.
+ */
+function nameClaimer(root) {
+  const claimed = new Map();        // output name -> the source file that took it
+  return function outName(f) {
+    const base = slug(f) + ".glb";
+    const prior = claimed.get(base);
+    if (prior === undefined || prior === f) { claimed.set(base, f); return base; }
+
+    const folders = path.relative(root, f).split(path.sep).slice(0, -1)
+      .filter((p) => !NOT_A_CATEGORY.test(p));
+    const qualifier = folders.length ? slug(folders[folders.length - 1]) : "";
+    let name = qualifier ? `${qualifier}_${slug(f)}.glb` : base;
+    /* Still taken, or nothing to qualify with: number it rather than lose it. */
+    for (let i = 2; claimed.has(name) && claimed.get(name) !== f; i++) {
+      name = `${qualifier ? qualifier + "_" : ""}${slug(f)}_${i}.glb`;
+    }
+    claimed.set(name, f);
+    return name;
+  };
 }
+
+const outName = nameClaimer(SRC);
 
 /* --------------------------------- walk ---------------------------------- */
 function walk(dir, out = []) {
@@ -414,7 +430,7 @@ const slug = (s) => path.basename(s).replace(/\.[^.]+$/, "")
 
 /* Exported so tests can exercise the fiddly parts — clip naming, the embedded
    image scan and the GLB surgery — without running an ingest. */
-export { clipName, embeddedImage, injectTexture, slug, outName, packGltf, repairMaterials, resolveAsset, detachImage, dedupeClips, findTexture };
+export { clipName, embeddedImage, injectTexture, slug, outName, nameClaimer, packGltf, repairMaterials, resolveAsset, detachImage, dedupeClips, findTexture };
 
 /* ---------------------------------- run ----------------------------------- */
 const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;

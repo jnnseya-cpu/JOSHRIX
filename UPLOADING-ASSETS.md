@@ -161,12 +161,36 @@ Tell me the pack is in and I will run the ingest:
 - `tools/ingest-characters.mjs` — animated characters. Packs `.gltf` + `.bin` +
   textures losslessly into one `.glb`, repairs the known black-skin material
   bug, and writes into `packs/`.
-- `tools/ingest-packs.mjs` — static 3D packs.
+- `tools/ingest-packs.mjs` — static 3D packs. Reads **folders in
+  `_incoming/packs/`** as well as zips, and reads `.gltf` as well as `.glb`.
+  Both of those were fixed on 2 Oct: before that it looked only for zips, in the
+  wrong directory, and collected only `.glb`, so a Quaternius upload would have
+  landed **zero models** and said "GLTF-only (needs conversion)" — a line that
+  reads like a status rather than a failure.
 - `tools/ingest-sprites.mjs` — 2D sprite packs.
 
 Then `tools/build-model-manifest.mjs` rebuilds `manifest.json`, and
-`tools/validate-models.mjs` loads every new model in a real browser before any
-of it is offered to the forge. A model that fails to load never reaches a game.
+`tools/validate-models.mjs --write` loads every new model in a real browser
+before any of it is offered to the forge. A model that fails to load never
+reaches a game.
+
+**The order of those two matters and is easy to get wrong.** Rebuilding the
+manifest wipes the measured heights and clip names; `validate` only writes them
+back when given `--write`. Run them the other way round and `tests/t38` reports
+zero animated models in a library full of them.
+
+### One finish per model, on purpose
+
+Most Quaternius kits ship three times over — Textured, Flat Shaded, Flat Colors.
+The ingest keeps **one**, preferring Textured because it carries the maps, and
+prints how many duplicate finishes it skipped. That is deliberate: this
+repository's `.git` is already 381 MB against a 1 GB GitHub warning, and three
+copies of one tree is three times the history for a material change.
+
+If you want a flat-shaded look as well as a textured one, say so and it becomes a
+decision rather than an accident — but upload once and ingest twice into
+different pack names, rather than pushing all three finishes and sorting it out
+afterwards. Git keeps whatever you push, forever.
 
 You can check what landed at **`/library`** — it lists every pack with its
 supplier and shows which characters are animated.

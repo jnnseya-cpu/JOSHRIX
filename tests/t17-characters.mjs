@@ -12,7 +12,8 @@
  *   npm i three@0.160.0
  *   node tests/t17-characters.mjs
  */
-import { clipName, embeddedImage, injectTexture, slug, outName, packGltf, repairMaterials, detachImage, dedupeClips } from "../tools/ingest-characters.mjs";
+import { clipName, embeddedImage, injectTexture, slug, outName, nameClaimer, packGltf, repairMaterials, detachImage, dedupeClips } from "../tools/ingest-characters.mjs";
+import { pickOneFinish, categoryPath, finishRank, packName } from "../tools/ingest-packs.mjs";
 import { resolveAsset } from "../tools/_assets.mjs";
 import fs from "node:fs";
 import path from "node:path";
@@ -397,6 +398,65 @@ console.log("\n== a name collision loses a model, so it must not silently win ==
     if (new Set(files).size !== files.length) dupes.push(pack.name);
   }
   t("no pack holds two files under one name", dupes.length === 0, dupes.join(", "));
+}
+
+
+/* =========================================================================
+ * THE STATIC-PACK INGEST, which is what the next upload will go through.
+ *
+ * Until 2 Oct it read only `.glb`, and only from zips in the wrong directory.
+ * Quaternius ships `.gltf` with a sibling `.bin`, and UPLOADING-ASSETS.md tells
+ * a person to drop FOLDERS into _incoming/packs/ — so a Quaternius static
+ * upload would have landed zero models and reported it as
+ * "GLTF-only (needs conversion)", a line that reads like a status rather than a
+ * failure. Several gigabytes of git history for nothing.
+ *
+ * The other half of that fix matters just as much for a repository whose own
+ * runbook opens by warning that anything pushed to git stays forever: most
+ * Quaternius kits ship three times over, as Textured, Flat Shaded and Flat
+ * Colors. Ingesting all three is the same model at triple the bytes.
+ * ========================================================================= */
+console.log("\n== static packs: one finish per model, and glTF is readable ==");
+{
+  t("a pack folder name becomes a slug", packName("Nature Kit v2.zip") === "nature-kit-v2");
+
+  /* Textured carries the maps, so it wins; an unmarked path beats the flats. */
+  t("Textured outranks Flat Colors", finishRank("/p/Textured/glTF/Tree.gltf") < finishRank("/p/Flat Colors/glTF/Tree.gltf"));
+  t("Textured outranks Flat Shaded", finishRank("/p/Textured/x.gltf") < finishRank("/p/Flat Shaded/x.gltf"));
+  t("an unmarked path still beats the flats", finishRank("/p/glTF/x.gltf") < finishRank("/p/Flat Colors/x.gltf"));
+
+  /* A finish folder says nothing about WHICH model this is; a category folder does. */
+  t("a finish folder is not a category", categoryPath("/p", "/p/Textured/glTF/Tree.gltf") === "");
+  t("a real category folder survives", categoryPath("/p", "/p/Trees/glTF/Tree.gltf") === "trees");
+
+  const three = ["/p/Textured/glTF/Tree.gltf", "/p/Flat Shaded/glTF/Tree.gltf", "/p/Flat Colors/glTF/Tree.gltf"];
+  const picked = pickOneFinish(three, "/p");
+  t("one model shipped in three finishes is ingested once", picked.kept.length === 1, String(picked.kept.length));
+  t("and the Textured one is the one kept", /Textured/.test(picked.kept[0]), picked.kept[0]);
+  t("the two it skipped are reported, not hidden", picked.dropped === 2, String(picked.dropped));
+
+  /* The case that must NOT be deduplicated: same filename, different category. */
+  const twoCats = ["/p/Trees/glTF/Oak.gltf", "/p/Bushes/glTF/Oak.gltf"];
+  const both = pickOneFinish(twoCats, "/p");
+  t("two models that merely share a NAME are both kept", both.kept.length === 2,
+    "Trees/Oak and Bushes/Oak are different models — this is the Ultimate Monsters bug");
+  t("and nothing is reported as dropped", both.dropped === 0);
+
+  /* A kit with no finish folders at all must pass through untouched. */
+  const plain = ["/p/a.glb", "/p/b.glb", "/p/c.glb"];
+  t("a kit without finish folders is unaffected", pickOneFinish(plain, "/p").kept.length === 3);
+}
+
+console.log("\n== one namer, one claim map per pack ==");
+{
+  /* Two packs each holding tree.glb must BOTH get tree.glb. A shared map would
+     qualify the second for no reason, and the gateway catalogue would be wrong. */
+  const a = nameClaimer("/nature"), b = nameClaimer("/graveyard");
+  t("each pack claims names independently",
+    a("/nature/glTF/Tree.gltf") === "tree.glb" && b("/graveyard/glTF/Tree.gltf") === "tree.glb");
+  const c = nameClaimer("/kit");
+  t("within one pack the first claimant wins", c("/kit/Big/Alien.gltf") === "alien.glb");
+  t("and a real second model is qualified, not dropped", c("/kit/Blob/Alien.gltf") === "blob_alien.glb");
 }
 
 console.log(`\n  ${pass} passed, ${fail} failed`);
