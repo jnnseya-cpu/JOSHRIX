@@ -359,6 +359,46 @@ function packGltf(gltfPath, index) {
   return Buffer.concat([header, jh, jsonChunk, bh, bin]);
 }
 
+/* THE SAME FILENAME IN TWO CATEGORY FOLDERS IS TWO DIFFERENT CREATURES.
+ *
+ * Ultimate Monsters ships 50 models split across Big/, Blob/ and Flying/, and
+ * ten names appear in two of those folders. A Big Alien and a Blob Alien are
+ * not variants of one model — they are different creatures with different
+ * silhouettes. slug() reads only the basename, so both wrote alien.glb and
+ * whichever the walk reached second overwrote the first.
+ *
+ * The pack therefore landed with 40 of its 50 models, and nothing said so:
+ * no error, no skip line, and 40 is a plausible-looking number. It was found by
+ * counting distinct basenames against files on disk, which is now what
+ * tests/t17 does.
+ *
+ * THE FIRST CLAIMANT KEEPS THE PLAIN NAME. That is deliberate and it is what
+ * makes this safe to re-run over a pack that is already live: every model
+ * already in the library keeps the exact path that api/_gateway.ts's catalogue
+ * publishes to the model and that a generated game may already load. Later
+ * collisions are qualified with the folder that distinguishes them, so the Blob
+ * Alien arrives as blob_alien.glb rather than replacing anything. */
+const claimed = new Map();          // output name -> the source file that took it
+/** Folder names that describe a FORMAT or a finish, not a category — useless as
+ *  a disambiguator because every sibling shares them. */
+const NOT_A_CATEGORY = /^(gltf|glb|fbx|obj|exports?|textured|flat[\s_-]*colors?|source|files?|godot|unreal|unity|standard)/i;
+function outName(f) {
+  const base = slug(f) + ".glb";
+  const prior = claimed.get(base);
+  if (prior === undefined || prior === f) { claimed.set(base, f); return base; }
+
+  const folders = path.relative(SRC, f).split(path.sep).slice(0, -1)
+    .filter((p) => !NOT_A_CATEGORY.test(p));
+  const qualifier = folders.length ? slug(folders[folders.length - 1]) : "";
+  let name = qualifier ? `${qualifier}_${slug(f)}.glb` : base;
+  /* Still taken, or nothing to qualify with: number it rather than lose it. */
+  for (let i = 2; claimed.has(name) && claimed.get(name) !== f; i++) {
+    name = `${qualifier ? qualifier + "_" : ""}${slug(f)}_${i}.glb`;
+  }
+  claimed.set(name, f);
+  return name;
+}
+
 /* --------------------------------- walk ---------------------------------- */
 function walk(dir, out = []) {
   for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
@@ -374,7 +414,7 @@ const slug = (s) => path.basename(s).replace(/\.[^.]+$/, "")
 
 /* Exported so tests can exercise the fiddly parts — clip naming, the embedded
    image scan and the GLB surgery — without running an ingest. */
-export { clipName, embeddedImage, injectTexture, slug, packGltf, repairMaterials, resolveAsset, detachImage, dedupeClips, findTexture };
+export { clipName, embeddedImage, injectTexture, slug, outName, packGltf, repairMaterials, resolveAsset, detachImage, dedupeClips, findTexture };
 
 /* ---------------------------------- run ----------------------------------- */
 const invokedDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
@@ -393,14 +433,14 @@ const made = [], skipped = [];
 
 /* ---- 1. GLB fast path: lossless, always preferred ---- */
 for (const f of glbs) {
-  const name = slug(f) + ".glb";
+  const name = outName(f);
   fs.copyFileSync(f, path.join(OUT, name));
   made.push({ name, bytes: fs.statSync(f).size, how: "copied", clips: ["(as authored)"] });
 }
 
 /* ---- 1b. .gltf + .bin + loose textures: packed, not re-encoded ---- */
 for (const f of gltfs) {
-  const name = slug(f) + ".glb";
+  const name = outName(f);
   try {
     const out = packGltf(f, files);
     fs.writeFileSync(path.join(OUT, name), out);
@@ -515,7 +555,9 @@ if (fbxs.length) {
       console.log(`  ! ${path.basename(file)}: has UVs but no texture found — flat colour only`);
     }
 
-    const name = slug(file) + ".glb";
+    /* Same collision rule as the lossless paths — an FBX pack split into
+       category folders loses models the same way a glTF one does. */
+    const name = outName(file);
     fs.writeFileSync(path.join(OUT, name), out);
     made.push({ name, bytes: out.length, how: "converted", clips: clips.map((c) => c.name), scale: +scale.toFixed(4) });
   }

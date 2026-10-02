@@ -12,7 +12,7 @@
  *   npm i three@0.160.0
  *   node tests/t17-characters.mjs
  */
-import { clipName, embeddedImage, injectTexture, slug, packGltf, repairMaterials, detachImage, dedupeClips } from "../tools/ingest-characters.mjs";
+import { clipName, embeddedImage, injectTexture, slug, outName, packGltf, repairMaterials, detachImage, dedupeClips } from "../tools/ingest-characters.mjs";
 import { resolveAsset } from "../tools/_assets.mjs";
 import fs from "node:fs";
 import path from "node:path";
@@ -20,6 +20,15 @@ import os from "node:os";
 import * as THREE from "three";
 import { GLTFExporter } from "three/examples/jsm/exporters/GLTFExporter.js";
 import zlib from "node:zlib";
+
+/* THE SUITE RUNS FROM A COMPILED WORKSPACE, NOT THE REPO.
+   tools/run-tests.mjs spawns each test with cwd set to the audit workspace and
+   JOSHRIX_ROOT pointing at the repository, so path.resolve("frontend/...")
+   lands somewhere that does not exist. The library checks below were guarded by
+   fs.existsSync, so they did not fail — they silently did nothing, every run.
+   One constant, used by everything that reads the real asset tree. */
+const REPO = process.env.JOSHRIX_ROOT || path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const PACKS_DIR = path.join(REPO, "frontend/assets/models3d/packs");
 
 let pass = 0, fail = 0;
 const t = (n, c, d = "") => { c ? (pass++, console.log("  PASS " + n))
@@ -202,7 +211,7 @@ t("a document with no materials does not throw", repairMaterials({}) === 0);
 
 // and the library itself: no character may ship with a black face again
 {
-  const packs = path.resolve("frontend/assets/models3d/packs");
+  const packs = PACKS_DIR;
   let dark = 0, checked = 0;
   if (fs.existsSync(packs)) {
     for (const p of fs.readdirSync(packs)) {
@@ -330,7 +339,68 @@ console.log("\n== an unreadable texture is detached, not left dangling ==");
     (detachImage({ images: [{ uri: "x" }], textures: [{ source: 0 }] }, 0), true));
 }
 
+
+/* =========================================================================
+ * TWO FILES WITH THE SAME NAME ARE TWO MODELS, NOT ONE
+ *
+ * Ultimate Monsters ships 50 creatures across Big/, Blob/ and Flying/, and ten
+ * names appear in two of those folders. The ingest named its output from the
+ * basename alone, so each pair wrote the same file and the second overwrote the
+ * first. The pack sat in the live library for weeks holding 40 of its 50
+ * models, and nothing said so: no error, no skip line, and 40 looks plausible
+ * next to a pack that ships 50.
+ *
+ * Found by counting distinct basenames against files on disk, which is cheap
+ * and is now done here so it cannot go unnoticed for weeks again.
+ * ========================================================================= */
+console.log("\n== a name collision loses a model, so it must not silently win ==");
+{
+  const PACKS = PACKS_DIR;
+
+  t("the plain name goes to the first claimant",
+    outName("/src/Big/glTF/Alien.gltf") === "alien.glb");
+  const second = outName("/src/Blob/glTF/Alien.gltf");
+  t("a second file with the same basename is qualified, not dropped",
+    second !== "alien.glb" && second.endsWith("alien.glb"), second);
+  t("and it is qualified by the folder that distinguishes it",
+    second === "blob_alien.glb", second);
+  t("asking twice about the same file gives the same name",
+    outName("/src/Blob/glTF/Alien.gltf") === second,
+    "an ingest must be safe to re-run");
+  /* The qualifier must be the CATEGORY folder, not the format folder every
+     sibling shares. Checked on the prefix, because the suffix is always .glb. */
+  const third = outName("/src/Flying/glTF/Alien.gltf");
+  t("a format folder is never used as the qualifier", third === "flying_alien.glb",
+    `${third} — glTF/ is shared by every sibling, so it distinguishes nothing`);
+
+  /* The live pack, which is the thing that actually matters. */
+  const monsters = fs.existsSync(path.join(PACKS, "quaternius-monsters"))
+    ? fs.readdirSync(path.join(PACKS, "quaternius-monsters")).filter((f) => f.endsWith(".glb"))
+    : [];
+  t(`quaternius-monsters holds all 50 of its creatures (${monsters.length})`,
+    monsters.length === 50,
+    "ten were lost to the collision above; if this drops to 40 it has regressed");
+  for (const n of ["blob_alien", "blob_orc", "blob_yeti", "flying_demon", "flying_pigeon", "flying_tribal"]) {
+    t(`the recovered ${n} is on disk`, monsters.includes(n + ".glb"));
+  }
+  /* The originals must still be reachable: api/_gateway.ts publishes these
+     exact names to the model, and tests/t14 loads one by path. */
+  for (const n of ["alien", "orc", "yeti", "demon", "pigeon", "tribal"]) {
+    t(`the original ${n} is still there`, monsters.includes(n + ".glb"),
+      "the catalogue and tests/t14 reference the plain names");
+  }
+
+  /* NO PACK MAY CONTAIN A DUPLICATE NAME, which is the general form of the bug. */
+  const dupes = [];
+  for (const pack of fs.readdirSync(PACKS, { withFileTypes: true }).filter((e) => e.isDirectory())) {
+    const files = fs.readdirSync(path.join(PACKS, pack.name)).filter((f) => f.endsWith(".glb"));
+    if (new Set(files).size !== files.length) dupes.push(pack.name);
+  }
+  t("no pack holds two files under one name", dupes.length === 0, dupes.join(", "));
+}
+
 console.log(`\n  ${pass} passed, ${fail} failed`);
-console.log("  NOT COVERED: parsing a real FBX. That needs a real file and stays");
-console.log("  unproven until the first pack is uploaded.");
+console.log("  FBX: 159 real .fbx files are now in _incoming/characters-fbx and the");
+console.log("  156 models in packs/quaternius-fbx were produced from them, so the FBX");
+console.log("  path has run for real. These tests still exercise it only in pieces.");
 process.exit(fail ? 1 : 0);

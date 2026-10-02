@@ -3,8 +3,73 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-09-18 (a forge is a durable job with no time or ACU ceiling;
-three backends became one; Firestore rules are versioned for the first time)
+Last updated: 2026-10-02 (the character library is complete — 2,601 models, 291
+animated; a forge is a durable job with no time or ACU ceiling)
+
+---
+
+## THE CHARACTER LIBRARY IS COMPLETE — 2 Oct
+
+Justin: *"I want to finish the remaining part of characters which I bought and
+need to be in the GitHub for users to use."*
+
+**The upload half was already done.** All 28 packs of `Characters and Animals`
+are in the repository: 19 staged in `_incoming/characters-fbx/` and the rest in
+`_incoming/characters/`, 642 files and 869 MB, with `check-incoming.mjs`
+reporting every pack complete and nothing dropped by a `.gitignore`. The 18 that
+vanished on 22 Aug are all in.
+
+**A second loss was hiding at the other end of the pipe**, and it is the real
+find of this pass. `Ultimate Monsters` ships 50 creatures split across `Big/`,
+`Blob/` and `Flying/`, and ten names appear in two of those folders. A Big Alien
+and a Blob Alien are different creatures, not variants of one. The ingest named
+its output from the filename alone, so each pair wrote the same file and the
+second overwrote the first. **The pack had been live for weeks holding 40 of its
+50 models** — no error, no skip line, and 40 looks entirely plausible beside a
+pack that ships 50. It was found by counting distinct basenames against files on
+disk: 50 files, 40 distinct names, 40 installed.
+
+Fixed in `tools/ingest-characters.mjs`: the first claimant keeps the plain name
+and later collisions are qualified by the folder that distinguishes them, so the
+ten arrived as `blob_alien`, `blob_orc`, `flying_demon` and so on. Re-running the
+ingest is now byte-identical, which was verified rather than assumed.
+
+One consequence worth recording honestly: the ten plain names now resolve to the
+`Big/` variant rather than the `Blob/` one, because the rule changed from "last
+writer wins" to "first claimant keeps the name". Nothing referenced which
+creature those were — only `api/_gateway.ts`'s catalogue, which lists names, and
+one `tests/t14` fixture that needs `orc` to exist, which it does.
+
+**Library now: 2,601 models across 35 packs, 291 of them animated** (was 2,591
+and 281). All 2,601 load in a real browser through `validate-models.mjs`, and all
+ten recovered monsters carry clips. Every surface quoting those figures was
+updated from the one place that owns them — `api/_features.ts` — and the failing
+tests named all of them: the landing page, about, agent-fleet, library, and the
+gateway's own LIBRARY 4 header.
+
+**Three packs hold fewer models than they ship, on purpose**, each checked
+individually so nobody "fixes" them later: Animated Mech Pack 8→4 (four mechs in
+two finishes), Modular Character Outfits 24→4 (four complete outfits plus twenty
+separate arms, legs and boots, and the runtime has no modular assembly), and
+Universal Base Characters 18→2 (two full bodies plus hairstyles shipped twice for
+two rigging modes; a standalone wig loaded as a character is a floating wig).
+
+**Two dead tests found and made real.** `tests/t16` asserted the animated-model
+claim by counting files in `kenney-characters` — eight blocky *static* figures —
+and then checking that the string "8" appeared somewhere in the feature text. It
+passed for weeks because `LIBRARY.animated` was 281 and "281" contains an 8. It
+now compares `LIBRARY.animated` against the manifest's measured clip count.
+Separately, `tests/t17`'s library checks resolved paths with
+`path.resolve("frontend/...")`, which under the suite's workspace cwd pointed at
+nothing; guarded by `existsSync`, they silently did nothing on every run. Both
+now use `JOSHRIX_ROOT`.
+
+**Verified:** 47 files, 1,804 assertions, all passing — up from 1,785, with the
+new collision guard in `tests/t17`. The FBX path is no longer unproven: 159 real
+`.fbx` files are in the repository and the 156 models in `packs/quaternius-fbx`
+were produced from them.
+
+**Cost:** 1.8 MB for the ten recovered models. `.git` is 381 MB.
 
 ---
 
@@ -1224,8 +1289,8 @@ provider while the game path had three). 20 assertions in `tests/t20-blueprint-j
 
 | # | Thing | Detail |
 |---|---|---|
-| 1 | Upload the asset packs | **PART DONE.** 152 rigged Quaternius models landed 22 Aug and are live — but that was 10 of 28 character packs. **18 are still missing**, 8 of them having vanished silently into the `.gitignore`. Justin has the drive; `UPLOADING-ASSETS.md` is the runbook and `node tools/check-incoming.mjs` verifies the next upload before it is committed. |
-| 2 | **Forge a 3D game and send the log** | Attempted 22 Aug: the first run died on a runtime TypeError (fixed), the second shipped two models on an empty field (a gate now refuses that). Still no build Justin has judged good. Send `/api/forge-log` — `provider`, `bytes`, `models` — or the file from **View Build Source**, which turns guessing into fixing. |
+| ~~1~~ | ~~Upload the asset packs~~ | **DONE 2 Oct.** All 28 character packs are in and ingested; the library is 2,601 models, 291 animated. See "The character library is complete" at the top. |
+| 2 | **Forge a 3D game and send the log** | **Still the one that matters, and now six weeks old.** Attempted 22 Aug: the first run died on a runtime TypeError (fixed), the second shipped two models on an empty field (a gate now refuses that). Still no build Justin has judged good. Send `/api/forge-log` — `provider`, `bytes`, `models` — or the file from **View Build Source**. The library is no longer any part of the excuse: 2,601 models, 291 animated, all load. |
 | 2b | **Gate the legacy wallets** | Every account created before 18 Aug is still `tester` and can refill itself for free. One pass through `/admin` → "Revoke tester" on everyone who is not a real tester. |
 | 3 | **Set `NEWSLETTER_SECRET` in Vercel** | Any long random string. Without it the unsubscribe link still works, but the token is not signed, so anyone could unsubscribe another address. |
 | 4 | **Confirm the newsletter send** | It is live but has never sent to a real inbox. Run `GET /api/newsletter?dry=1` with `x-moderation-key` first — it reports the audience size and sends nothing. |
@@ -1284,10 +1349,13 @@ Everything asked for is committed and pushed. Nothing half-finished.
   undefined, one shipped a lone character and a crate on a bare disc in daylight. Both causes are
   fixed — `G.tint()` exists and the engine floor now demands five library models — but "fixed"
   means the failure cannot recur, not that the next build is good.
-- ~~Only 10 human characters~~ **152 rigged models, 178 animated, live since 22 Aug.** The library
-  is no longer the constraint; what the forge does with it is.
-- **Reading a real FBX is untested.** `tools/ingest-characters.mjs` handles `.glb` and `.gltf`
-  with 40 passing tests; the FBX path cannot be tested without a real file.
+- ~~Only 10 human characters~~ **2,601 models across 35 packs, 291 animated, complete since
+  2 Oct.** All 28 purchased character packs are in and ingested, and every model loads in a real
+  browser. The library is not the constraint and has not been for six weeks; what the forge does
+  with it is.
+- ~~Reading a real FBX is untested~~ **159 real `.fbx` files are in the repository** and the 156
+  models in `packs/quaternius-fbx` were produced from them, so the FBX path has run for real.
+  `tests/t17` still exercises it only in pieces rather than end to end.
 - **Zero customers.** SEO on a new domain is months, not weeks. The fast organic channel is
   shareable game links, which depends on the forge working.
 - **`t26` is still intermittent — roughly 1 full-suite run in 3.** It passes every time on its

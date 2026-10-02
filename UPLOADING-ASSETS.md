@@ -63,7 +63,21 @@ non-zero if any pack would land unplayable, so it can gate a commit.
 
 **Run it before you commit, not after.** This is the whole point:
 
-### What went wrong on 22 Aug, and the state now
+### The character upload is DONE — 2 Oct
+
+All 28 packs of `Characters and Animals` are in the repository and ingested. The
+library stands at **2,601 models across 35 packs, 291 of them animated**. Nothing
+below asks you to upload another character pack; the routes are kept for the next
+thing you buy.
+
+A second loss was found at the ingest end on 2 Oct and is also closed:
+`Ultimate Monsters` had been live holding 40 of its 50 creatures, because ten
+names repeat across its `Big/`, `Blob/` and `Flying/` folders and the ingest
+named output from the filename alone, so each pair overwrote itself. See
+`frontend/assets/models3d/_incoming/characters-fbx/README.md` for the detail and
+for the three packs that hold fewer models than they ship on purpose.
+
+### What went wrong on 22 Aug, and the state then
 
 All 28 packs of `Characters and Animals` were copied in. **10 arrived complete
 and are live. 10 arrived as nothing but a stray `Preview.png`. 8 never appeared
@@ -71,13 +85,14 @@ in the repository at all** — every file in them matched the `.gitignore`, and
 git cannot record a folder with no surviving files, so they vanished with no
 error and nothing in `git status` to notice.
 
-That is 18 of 28 packs missing, and it took nine days to find out, because
-nothing was checking. `check-incoming.mjs` is that check.
+That was 18 of 28 packs missing, and it took nine days to find out, because
+nothing was checking. `check-incoming.mjs` is that check, and it is why the
+remaining 18 landed cleanly: they went into
+`frontend/assets/models3d/_incoming/characters-fbx/`, which keeps every format —
+glTF, FBX and textures alike — so there was nothing to work out per pack.
 
-**The 18 go in `frontend/assets/models3d/_incoming/characters-fbx/`**, which
-keeps every format — glTF, FBX and textures alike — so you never have to work
-out what a pack ships. That folder's README names all 18, and names the 10
-already in that you must not copy again.
+**All 18 are now in and ingested** (2 Oct). That folder's README records the
+finished state and is where the next character pack goes.
 
 ---
 

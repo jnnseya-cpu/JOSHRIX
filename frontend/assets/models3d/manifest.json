@@ -34623,20 +34623,25 @@
             "space",
             "scifi"
           ],
-          "bytes": 126060,
-          "height": 3.243,
-          "width": 3.869,
-          "depth": 1.941,
-          "tris": 2616,
+          "bytes": 673408,
+          "height": 3.547,
+          "width": 4.649,
+          "depth": 1.488,
+          "tris": 7676,
           "clips": [
-            "Bite_Front",
-            "Dance",
             "Death",
-            "HitRecieve",
+            "Duck",
+            "HitReact",
             "Idle",
             "Jump",
+            "Jump_Idle",
+            "Jump_Land",
             "No",
+            "Punch",
+            "Run",
             "Walk",
+            "Wave",
+            "Weapon",
             "Yes"
           ]
         },
@@ -34729,11 +34734,174 @@
           "tags": [
             "prop"
           ],
+          "bytes": 618720,
+          "height": 3.328,
+          "width": 4.649,
+          "depth": 1.65,
+          "tris": 5704,
+          "clips": [
+            "Death",
+            "Duck",
+            "HitReact",
+            "Idle",
+            "Jump",
+            "Jump_Idle",
+            "Jump_Land",
+            "No",
+            "Punch",
+            "Run",
+            "Walk",
+            "Wave",
+            "Weapon",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/blob_alien.glb",
+          "tags": [
+            "space",
+            "scifi"
+          ],
+          "bytes": 126060,
+          "height": 3.243,
+          "width": 3.869,
+          "depth": 1.941,
+          "tris": 2616,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/blob_birb.glb",
+          "tags": [
+            "prop"
+          ],
           "bytes": 165368,
           "height": 2.612,
           "width": 2.795,
           "depth": 2.757,
           "tris": 3164,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/blob_cactoro.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 134136,
+          "height": 3.574,
+          "width": 4.074,
+          "depth": 3.669,
+          "tris": 2388,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/blob_fish.glb",
+          "tags": [
+            "animal",
+            "creature"
+          ],
+          "bytes": 156012,
+          "height": 2.731,
+          "width": 2.795,
+          "depth": 2.823,
+          "tris": 3346,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/blob_ninja.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 114328,
+          "height": 3.011,
+          "width": 2.483,
+          "depth": 2.663,
+          "tris": 2160,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/blob_orc.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 138060,
+          "height": 2.347,
+          "width": 2.638,
+          "depth": 1.653,
+          "tris": 2296,
+          "clips": [
+            "Bite_Front",
+            "Dance",
+            "Death",
+            "HitRecieve",
+            "Idle",
+            "Jump",
+            "No",
+            "Walk",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/blob_yeti.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 121520,
+          "height": 2.437,
+          "width": 2.547,
+          "depth": 2.592,
+          "tris": 2136,
           "clips": [
             "Bite_Front",
             "Dance",
@@ -34807,20 +34975,25 @@
           "tags": [
             "prop"
           ],
-          "bytes": 134136,
-          "height": 3.574,
-          "width": 4.074,
-          "depth": 3.669,
-          "tris": 2388,
+          "bytes": 647468,
+          "height": 3.957,
+          "width": 4.649,
+          "depth": 2.136,
+          "tris": 6398,
           "clips": [
-            "Bite_Front",
-            "Dance",
             "Death",
-            "HitRecieve",
+            "Duck",
+            "HitReact",
             "Idle",
             "Jump",
+            "Jump_Idle",
+            "Jump_Land",
             "No",
+            "Punch",
+            "Run",
             "Walk",
+            "Wave",
+            "Weapon",
             "Yes"
           ]
         },
@@ -34876,13 +35049,26 @@
             "character",
             "creature"
           ],
-          "bytes": 225108,
-          "height": 1.676,
-          "width": 5.472,
-          "depth": 2.064,
-          "tris": 4784,
+          "bytes": 659968,
+          "height": 3.12,
+          "width": 4.656,
+          "depth": 2.32,
+          "tris": 6712,
           "clips": [
-            "Flying_Idle"
+            "Death",
+            "Duck",
+            "HitReact",
+            "Idle",
+            "Jump",
+            "Jump_Idle",
+            "Jump_Land",
+            "No",
+            "Punch",
+            "Run",
+            "Walk",
+            "Wave",
+            "Weapon",
+            "Yes"
           ]
         },
         {
@@ -34987,20 +35173,83 @@
             "animal",
             "creature"
           ],
-          "bytes": 156012,
-          "height": 2.731,
-          "width": 2.795,
-          "depth": 2.823,
-          "tris": 3346,
+          "bytes": 647504,
+          "height": 3.755,
+          "width": 4.662,
+          "depth": 2.364,
+          "tris": 6854,
           "clips": [
-            "Bite_Front",
-            "Dance",
             "Death",
-            "HitRecieve",
+            "Duck",
+            "HitReact",
             "Idle",
             "Jump",
+            "Jump_Idle",
+            "Jump_Land",
             "No",
+            "Punch",
+            "Run",
             "Walk",
+            "Wave",
+            "Weapon",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/flying_demon.glb",
+          "tags": [
+            "enemy",
+            "character",
+            "creature"
+          ],
+          "bytes": 225108,
+          "height": 1.676,
+          "width": 5.472,
+          "depth": 2.064,
+          "tris": 4784,
+          "clips": [
+            "Flying_Idle"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/flying_pigeon.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 223816,
+          "height": 1.37,
+          "width": 4.135,
+          "depth": 2.172,
+          "tris": 3512,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
+            "Yes"
+          ]
+        },
+        {
+          "file": "packs/quaternius-monsters/flying_tribal.glb",
+          "tags": [
+            "prop"
+          ],
+          "bytes": 428236,
+          "height": 4.108,
+          "width": 5.5,
+          "depth": 1.377,
+          "tris": 5252,
+          "clips": [
+            "Death",
+            "Fast_Flying",
+            "Flying_Idle",
+            "Headbutt",
+            "HitReact",
+            "No",
+            "Punch",
             "Yes"
           ]
         },
@@ -35328,20 +35577,25 @@
           "tags": [
             "prop"
           ],
-          "bytes": 114328,
-          "height": 3.011,
-          "width": 2.483,
-          "depth": 2.663,
-          "tris": 2160,
+          "bytes": 631984,
+          "height": 3.021,
+          "width": 4.649,
+          "depth": 3.049,
+          "tris": 5964,
           "clips": [
-            "Bite_Front",
-            "Dance",
             "Death",
-            "HitRecieve",
+            "Duck",
+            "HitReact",
             "Idle",
             "Jump",
+            "Jump_Idle",
+            "Jump_Land",
             "No",
+            "Punch",
+            "Run",
             "Walk",
+            "Wave",
+            "Weapon",
             "Yes"
           ]
         },
@@ -35352,20 +35606,25 @@
             "character",
             "creature"
           ],
-          "bytes": 138060,
-          "height": 2.347,
-          "width": 2.638,
-          "depth": 1.653,
-          "tris": 2296,
+          "bytes": 671584,
+          "height": 3.209,
+          "width": 4.685,
+          "depth": 1.871,
+          "tris": 7344,
           "clips": [
-            "Bite_Front",
-            "Dance",
             "Death",
-            "HitRecieve",
+            "Duck",
+            "HitReact",
             "Idle",
             "Jump",
+            "Jump_Idle",
+            "Jump_Land",
             "No",
+            "Punch",
+            "Run",
             "Walk",
+            "Wave",
+            "Weapon",
             "Yes"
           ]
         },
@@ -35405,19 +35664,20 @@
           "tags": [
             "prop"
           ],
-          "bytes": 223816,
-          "height": 1.37,
-          "width": 4.135,
-          "depth": 2.172,
-          "tris": 3512,
+          "bytes": 111616,
+          "height": 1.802,
+          "width": 2.349,
+          "depth": 2.012,
+          "tris": 2184,
           "clips": [
+            "Bite_Front",
+            "Dance",
             "Death",
-            "Fast_Flying",
-            "Flying_Idle",
-            "Headbutt",
-            "HitReact",
+            "HitRecieve",
+            "Idle",
+            "Jump",
             "No",
-            "Punch",
+            "Walk",
             "Yes"
           ]
         },
@@ -35469,19 +35729,25 @@
           "tags": [
             "prop"
           ],
-          "bytes": 428236,
-          "height": 4.108,
-          "width": 5.5,
-          "depth": 1.377,
-          "tris": 5252,
+          "bytes": 696832,
+          "height": 3.929,
+          "width": 4.649,
+          "depth": 1.359,
+          "tris": 6620,
           "clips": [
             "Death",
-            "Fast_Flying",
-            "Flying_Idle",
-            "Headbutt",
+            "Duck",
             "HitReact",
+            "Idle",
+            "Jump",
+            "Jump_Idle",
+            "Jump_Land",
             "No",
             "Punch",
+            "Run",
+            "Walk",
+            "Wave",
+            "Weapon",
             "Yes"
           ]
         },
@@ -35512,20 +35778,25 @@
           "tags": [
             "prop"
           ],
-          "bytes": 121520,
-          "height": 2.437,
-          "width": 2.547,
-          "depth": 2.592,
-          "tris": 2136,
+          "bytes": 622220,
+          "height": 2.828,
+          "width": 4.649,
+          "depth": 1.472,
+          "tris": 6094,
           "clips": [
-            "Bite_Front",
-            "Dance",
             "Death",
-            "HitRecieve",
+            "Duck",
+            "HitReact",
             "Idle",
             "Jump",
+            "Jump_Idle",
+            "Jump_Land",
             "No",
+            "Punch",
+            "Run",
             "Walk",
+            "Wave",
+            "Weapon",
             "Yes"
           ]
         }

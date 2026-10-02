@@ -38,9 +38,29 @@ function countPacks() {
   const m = JSON.parse(fs.readFileSync(path.join(REPO, 'frontend/assets/models3d/manifest.json'), 'utf8'));
   return Object.keys(m.packs).length;
 }
-function countAnimatedChars() {
-  return fs.readdirSync(path.join(REPO, 'frontend/assets/models3d/packs/kenney-characters'))
-    .filter((f) => f.endsWith('.glb')).length;
+/**
+ * How many models in the library actually carry animation clips.
+ *
+ * This used to count the .glb files in kenney-characters — eight blocky static
+ * figures that have nothing to do with the animated claim — and then assert that
+ * the string "8" appeared somewhere in the feature text. It passed for weeks
+ * because LIBRARY.animated was 281 and "281" contains an 8, so the check was
+ * satisfied by a digit inside an unrelated number. When the count moved to 291
+ * it failed, which is the first true thing it ever said.
+ *
+ * The claim being guarded is "Includes <n> rigged, textured, animated
+ * characters", and the only honest source for n is the manifest: a model has
+ * clips or it does not, measured by validate-models.mjs in a real browser.
+ */
+function countAnimatedModels() {
+  const m = JSON.parse(fs.readFileSync(path.join(REPO, 'frontend/assets/models3d/manifest.json'), 'utf8'));
+  let n = 0;
+  for (const p of Object.values(m.packs || {})) {
+    for (const entry of (Array.isArray(p) ? p : p.models || [])) {
+      if (entry.clips && entry.clips.length) n++;
+    }
+  }
+  return n;
 }
 
 const models = countModels(), sprites = countSprites();
@@ -50,7 +70,18 @@ t(`claims ${models} 3D models, and there are ${models}`,
 t(`claims ${sprites} sprites, and there are ${sprites}`,
   all.includes(sprites.toLocaleString('en-GB')) || all.includes(String(sprites)));
 t(`claims ${countPacks()} model packs`, all.includes(String(countPacks())));
-t(`claims ${countAnimatedChars()} animated humans`, all.includes(String(countAnimatedChars())));
+/* Compared against LIBRARY.animated directly, not by hunting the number in the
+   prose — a substring search for a bare integer is satisfied by any digit of any
+   other figure, which is exactly how this check slept through two releases. */
+{
+  const measured = countAnimatedModels();
+  t(`claims ${F.LIBRARY.animated} animated models, and ${measured} carry clips`,
+    F.LIBRARY.animated === measured,
+    'update LIBRARY.animated in api/_features.ts, or re-run tools/validate-models.mjs --write');
+  t('and the published proof text quotes that figure',
+    all.includes(String(F.LIBRARY.animated)),
+    'the claim is generated from LIBRARY.animated, so a mismatch means the text was hard-coded');
+}
 
 console.log('\n== pricing claims must match shared/payments ==');
 let plans = null;

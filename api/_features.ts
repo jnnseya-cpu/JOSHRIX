@@ -26,10 +26,10 @@
  * the number to change and there is exactly one place to change it.
  */
 export const LIBRARY = {
-  models: 2591,
+  models: 2601,
   packs: 35,
   /** rigged characters carrying skeletal clips, not merely posed */
-  animated: 281,
+  animated: 291,
   sprites: 2553,
 } as const;
 
