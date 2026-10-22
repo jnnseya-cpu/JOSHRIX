@@ -96,11 +96,55 @@ async function generateArticle(topic: string, liveGames: Array<{ id: string; tit
   let brief = topic;
   const f = topic.startsWith("FEATURE:") ? featureById(topic.slice(8)) : undefined;
   if (f) {
+    /* A FEATURE POST HAS TO SELL, NOT ONLY EXPLAIN.
+     *
+     * This brief used to hand over the fact sheet and say "explain what it
+     * means in practice". The articles that came back were accurate and
+     * unpersuasive — product documentation with an FAQ bolted on, which ranks
+     * for a query and then converts nobody, because nothing in them said why a
+     * reader should choose this over what they already do.
+     *
+     * So the brief now carries the positioning from api/_features.ts as well as
+     * the proof: the edge a competitor cannot answer on price, the objection
+     * already in the reader's head, and the alternative they use today. The
+     * article is asked to argue, in a specific order, with the facts as its
+     * evidence rather than its subject.
+     *
+     * The honesty rules are part of the sell and not a limit on it. A technical
+     * buyer is this platform's audience, and an invented figure is the fastest
+     * way to lose one — so the fact sheet is the only source of specifics, and
+     * no claim about what a creator will earn is permitted at all. */
     brief = [
-      `Write the definitive article on this capability: "${f.name}".`,
+      `Write the definitive article on this capability, and SELL it: "${f.name}".`,
+      ``,
+      `THE ARGUMENT TO MAKE, in this order:`,
+      `  1. Answer the title in the first 40 words, and make that answer the EDGE below — not a definition of the feature.`,
+      `  2. Name the reader's objection early, in their words, and treat it as reasonable rather than ignorant.`,
+      `  3. Show what the alternative costs them. Argue against the ALTERNATIVE, never against a named company.`,
+      `  4. Use the proof as EVIDENCE for the edge. Facts are what make the argument credible; they are not the argument.`,
+      `  5. Close by telling the reader the one next thing to do, and link it.`,
+      ``,
+      `THE EDGE — the single claim a competitor cannot answer by cutting their price. This is the spine of the article:`,
+      `  ${f.usp.edge}`,
+      ``,
+      `THE OBJECTION the reader already holds, which this article has to dissolve:`,
+      `  "${f.usp.objection}"`,
+      ``,
+      `WHAT THEY DO INSTEAD today, and the cost of carrying on:`,
+      `  ${f.usp.insteadOf}`,
+      ``,
       `Search intent to satisfy: ${f.keywords.join("; ")}.`,
-      `These are the ONLY specifics you may state as fact — build the article on them, and do not add figures of your own:`,
+      ``,
+      `THE ONLY SPECIFICS YOU MAY STATE AS FACT. Build the article on these and add no figures of your own:`,
       ...f.proof.map((p) => `  - ${p}`),
+      ``,
+      `HARD RULES, and breaking one makes the article unusable:`,
+      `  - Never state or imply what a creator will earn, make or be paid. A fee, a rate or a commission may be described as what the PLATFORM CHARGES, never as income, profit, a return or an opportunity. No "earn", no "make money", no "side income".`,
+      `  - Do not introduce a competitor, storefront or rival product that the fact sheet has not already named. Where the fact sheet DOES name one with a published rate, you may state that rate as the plain fact it is — but never characterise the company, never call it bad, and keep the argument about what the alternative costs the reader rather than about who sells it.`,
+      `  - No invented statistics, player counts, revenue figures, timings or benchmarks. If a number is not in the fact sheet, make the point without one.`,
+      `  - No fake urgency, no scarcity, no "limited time".`,
+      `  - Write to someone deciding, not to someone browsing. Specific beats clever; no hype adjectives.`,
+      ``,
       `Link to ${f.href} where the capability itself is described, and to /features at least once.`,
       `Explain what it means for a creator in practice, not what it is called.`,
     ].join("\n");

@@ -70,6 +70,29 @@ export type Feature = {
   keywords: string[];
   /** The verifiable specifics an article must be built on. */
   proof: string[];
+  /**
+   * WHY SOMEONE CHOOSES THIS, as opposed to what it does.
+   *
+   * `proof` above is the factual base an article may state. It is not a reason
+   * to buy, and a blog built only on it reads like documentation: accurate,
+   * complete and unpersuasive. These three fields are the selling material, and
+   * they live here rather than in the blog agent because every surface that
+   * sells — a post, the features hub, an advert, a newsletter — must make the
+   * same argument. Two copies of a positioning claim is how a product ends up
+   * describing itself differently on two pages.
+   *
+   * The rules they obey: no earnings or income claim, ever, including by
+   * implication; no invented figure; no competitor named. A fee or a rate may be
+   * stated as what the platform charges, never as what a creator will make.
+   */
+  usp: {
+    /** The one claim a competitor cannot answer by cutting its price. */
+    edge: string;
+    /** The doubt already in the reader's head, in the reader's own words. */
+    objection: string;
+    /** What they do today instead, and what that costs them. */
+    insteadOf: string;
+  };
   /** Where on the platform this lives, so posts link to the thing they describe. */
   href: string;
 };
@@ -84,6 +107,11 @@ export const FEATURES: Feature[] = [
       "The concept box accepts any language; the Idea Agent detects it and writes every player-facing string in that language.",
       "Title, summary, characters, levels and marketplace category are all localised at blueprint time, not translated afterwards.",
     ],
+    usp: {
+      edge: "Every player-facing string is authored in the creator's language at blueprint time, not translated afterwards, so names and idiom read as native rather than as machine-translated English.",
+      objection: "\"Any language\" normally means an English game with the buttons swapped.",
+      insteadOf: "Writing the game in English and paying a localiser later, which redoes the work and still reads translated.",
+    },
     href: "/studio",
   },
   {
@@ -95,6 +123,11 @@ export const FEATURES: Feature[] = [
       "3D builds run on three.js with a hosted JOSHRIX runtime that owns the canvas, render loop, shadows, fog, sky and camera.",
       "No install, no plugin, no account to play — a finished game is a URL.",
     ],
+    usp: {
+      edge: "A hosted runtime owns the canvas, render loop, lights, shadows, sky and camera, so a generated game supplies only the concept — the part that is hardest to get right is never regenerated and cannot come out wrong.",
+      objection: "AI cannot produce real 3D; it will be a flat toy with a camera.",
+      insteadOf: "Learning a desktop game engine for months, then shipping a build nobody can open without a download first.",
+    },
     href: "/studio",
   },
   {
@@ -107,6 +140,11 @@ export const FEATURES: Feature[] = [
       `Includes ${LIBRARY.animated} rigged, textured, animated characters, creatures and animals — humans, monsters, mounts and mechs, with full skeletal clip sets.`,
       "All CC0, so a creator owns the output outright with no attribution burden.",
     ],
+    usp: {
+      edge: "Every model was load-tested in a real browser before it shipped, and the animated ones carry full skeletal clip sets rather than a single pose — all CC0, so the creator owns the output with no attribution burden.",
+      objection: "AI games look empty because there is no art behind them.",
+      insteadOf: "Commissioning a 3D artist, or trawling asset stores and finding half the files will not load.",
+    },
     href: "/studio",
   },
   {
@@ -118,6 +156,11 @@ export const FEATURES: Feature[] = [
       `${n(LIBRARY.sprites)} CC0 PNG sprites across six packs, every one decoded in a real browser before shipping.`,
       "A complete side-scroller set: six biomes of ground tiles, three players with 11-frame walk cycles, animated enemies, pickups, hazards and a HUD.",
     ],
+    usp: {
+      edge: "It is a complete side-scroller set rather than a bag of icons: biomes that tile, players with real walk cycles, enemies that animate, pickups, hazards and a HUD that match each other.",
+      objection: "Free sprite packs are never a whole game's worth of art.",
+      insteadOf: "Stitching five mismatched packs together and shipping something that looks assembled.",
+    },
     href: "/studio",
   },
   {
@@ -130,6 +173,11 @@ export const FEATURES: Feature[] = [
       "Charges are metered from real token usage, never a flat guess.",
       "The hold is an estimate; whatever the build did not use is refunded the moment it settles.",
     ],
+    usp: {
+      edge: "Billing is metered from the tokens a build actually used, and the unused part of the hold returns the moment it settles — so the price follows the work rather than a tier.",
+      objection: "Credit systems are designed so you overpay for what you did not use.",
+      insteadOf: "A monthly quota you either exhaust by the tenth or waste entirely.",
+    },
     href: "/pricing",
   },
   {
@@ -142,6 +190,11 @@ export const FEATURES: Feature[] = [
       "Refine it, discard it or walk away and the entire hold returns — a build you would not play costs you nothing.",
       "No competitor in this category refunds anything.",
     ],
+    usp: {
+      edge: "Payment collects only when the creator keeps the build; refining, discarding or walking away returns the whole hold. Nothing else in this category refunds anything.",
+      objection: "I will burn credits on failures before I get anything playable.",
+      insteadOf: "Paying per generation and absorbing the cost of every bad roll yourself.",
+    },
     href: "/refunds",
   },
   {
@@ -153,6 +206,11 @@ export const FEATURES: Feature[] = [
       "The creator holds the IP. The platform takes a commission on sales, never a stake in the work.",
       "Games are not locked to the platform the way a Roblox experience is.",
     ],
+    usp: {
+      edge: "The creator holds the IP and the platform takes a commission on sales, never a stake in the work, and the game is not locked to the runtime the way a platform-native experience is.",
+      objection: "If an AI wrote it, do I actually own it?",
+      insteadOf: "Building inside a walled platform that owns the runtime your game can never leave.",
+    },
     href: "/ip-registry",
   },
   {
@@ -164,6 +222,11 @@ export const FEATURES: Feature[] = [
       "Commission falls with plan: 25% on Creator down to 7.5% on Enterprise.",
       "Steam takes 30%, Apple takes 30%, and Roblox keeps roughly three quarters after its conversion.",
     ],
+    usp: {
+      edge: "The platform's cut falls with the plan and starts below what the large storefronts charge at their best rate.",
+      objection: "Marketplaces keep most of what a sale is worth.",
+      insteadOf: "A flat 30% storefront cut, taken at every tier regardless of what you do.",
+    },
     href: "/pricing",
   },
   {
@@ -175,6 +238,11 @@ export const FEATURES: Feature[] = [
       "Every build is attempted across three independent providers in turn.",
       "A truncated, unparseable or empty build is rejected server-side and the next provider is asked instead.",
     ],
+    usp: {
+      edge: "Every build is attempted across three independent providers in turn, and a truncated, unparseable or empty result is rejected server-side before the next one is asked.",
+      objection: "These tools stop working the moment one AI vendor has an outage.",
+      insteadOf: "A single-vendor tool that returns an error page when its one provider is down.",
+    },
     href: "/agent-fleet",
   },
   {
@@ -186,6 +254,11 @@ export const FEATURES: Feature[] = [
       "Every generated file must parse, must draw a canvas, and must contain an actual game loop with something to reach or avoid.",
       "A build that only sets up a world and forgets the gameplay is thrown away rather than delivered.",
     ],
+    usp: {
+      edge: "A build must parse, draw a canvas and contain a real game loop with something to reach or avoid before the creator ever sees it; one that sets up a world and forgets the gameplay is thrown away rather than delivered.",
+      objection: "AI output is plausible-looking and broken, and I will be the one debugging it.",
+      insteadOf: "Being handed the first thing the model produced and finding out yourself what is wrong with it.",
+    },
     href: "/how-it-works",
   },
   {
@@ -197,6 +270,11 @@ export const FEATURES: Feature[] = [
       "Generated HTML is scanned for outside network calls, password fields, eval-hidden code, embedded pages and crypto miners.",
       "Anything that trips the scan is discarded and another provider is asked, so it is never stored or played.",
     ],
+    usp: {
+      edge: "Generated code is scanned for outside network calls, password fields, eval-hidden code, embedded pages and miners, and anything that trips the scan is discarded rather than stored — so a hostile build never reaches a player.",
+      objection: "Is it safe to host and share code an AI wrote?",
+      insteadOf: "Publishing model output unexamined and finding out from a player.",
+    },
     href: "/how-it-works",
   },
   {
@@ -208,6 +286,11 @@ export const FEATURES: Feature[] = [
       "Publishing is gated on human review, which is what keeps the catalogue store-compliant and age-appropriate.",
       "Private playtesting is unlimited and free before that gate.",
     ],
+    usp: {
+      edge: "A person reviews every game before it goes public, which is what keeps the catalogue store-compliant and age-appropriate — while private playtesting before that gate is unlimited and free.",
+      objection: "An open AI catalogue fills with junk and worse.",
+      insteadOf: "An unmoderated feed, or a store review queue you wait weeks in.",
+    },
     href: "/how-it-works",
   },
   {
@@ -219,6 +302,11 @@ export const FEATURES: Feature[] = [
       "Hosted on publication — no install, no download, no account for the player.",
       "The link is the product, and it works on a phone as well as a desktop.",
     ],
+    usp: {
+      edge: "The link is the product: hosted on publication, with no install, no download and no account for the player, and it works on a phone as well as a desktop.",
+      objection: "Nobody will download an unknown indie game.",
+      insteadOf: "A large download and a store page standing between your game and the first second of play.",
+    },
     href: "/arcade",
   },
   {
@@ -230,6 +318,11 @@ export const FEATURES: Feature[] = [
       "Approved games appear in the JOSHRIX Arcade the moment moderation clears them.",
       "The Arcade installs as an app from the browser.",
     ],
+    usp: {
+      edge: "An approved game appears in the catalogue the moment moderation clears it, and the Arcade itself installs from the browser as an app.",
+      objection: "A new game launches into silence with nowhere to be found.",
+      insteadOf: "Publishing to your own empty page and hoping traffic arrives.",
+    },
     href: "/arcade",
   },
   {
@@ -241,6 +334,11 @@ export const FEATURES: Feature[] = [
       "Pricing is server-authoritative, so a listing cannot be bought at a price the seller did not set.",
       "Payment runs through Stripe.",
     ],
+    usp: {
+      edge: "Pricing is server-authoritative, so a listing cannot be bought at a price the seller did not set.",
+      objection: "Can someone tamper with my price or buy it for nothing?",
+      insteadOf: "A storefront that trusts the price the buyer's browser sends.",
+    },
     href: "/marketplace",
   },
   {
@@ -252,6 +350,11 @@ export const FEATURES: Feature[] = [
       "A remixed game keeps its ancestry, and ancestors earn automatically from what their work seeds.",
       "No other platform in this category tracks lineage or pays it.",
     ],
+    usp: {
+      edge: "A remixed game keeps its ancestry and the original creator is paid automatically from what their work seeds. Nothing else in this category tracks lineage or pays it.",
+      objection: "If someone forks my game I get nothing for it.",
+      insteadOf: "Open remixing where the person who went first is credited at best.",
+    },
     href: "/ip-registry",
   },
   {
@@ -263,6 +366,11 @@ export const FEATURES: Feature[] = [
       "Payout rails include mobile money, not just card and bank transfer.",
       "For many creators outside the US and EU, the alternatives are not merely worse — they are unavailable.",
     ],
+    usp: {
+      edge: "Payout rails include mobile money, not only card and bank transfer. For many creators outside the US and EU the alternatives are not merely worse — they are unavailable.",
+      objection: "Platforms like this never actually pay out to my country.",
+      insteadOf: "A platform that requires a US bank account you have no way to open.",
+    },
     href: "/wallet",
   },
   {
@@ -274,6 +382,11 @@ export const FEATURES: Feature[] = [
       "Social posts, adverts, email campaigns, landing copy, hashtags, video scripts, audience and timing guidance.",
       "About £0.05 per generated asset, metered like everything else.",
     ],
+    usp: {
+      edge: "The tools that market the finished game are metered the same way the build is, so a launch kit costs pennies an asset instead of a freelancer's day rate.",
+      objection: "I can make a game but I have no idea how to get it played.",
+      insteadOf: "Paying per asset for a freelancer, or posting nothing and wondering why it is quiet.",
+    },
     href: "/growth",
   },
   {
@@ -285,6 +398,11 @@ export const FEATURES: Feature[] = [
       "Every figure is counted from the platform's own database.",
       "Anything that cannot be known — traffic source, demographics, off-platform shares — is listed as not measured rather than estimated.",
     ],
+    usp: {
+      edge: "Every figure is counted from the platform's own database, and anything that cannot be known — traffic source, demographics, off-platform shares — is shown as not measured rather than estimated.",
+      objection: "Dashboards invent numbers that happen to look encouraging.",
+      insteadOf: "An analytics panel that fills its gaps with plausible guesses you then act on.",
+    },
     href: "/dashboard",
   },
   {
@@ -296,6 +414,11 @@ export const FEATURES: Feature[] = [
       "The Studio and the Arcade both install from the browser as a PWA.",
       "No store review, no 30% platform cut, no 100MB download before the first play.",
     ],
+    usp: {
+      edge: "It installs from the browser, so there is no store review, no store cut and no large download before the first play.",
+      objection: "Reaching phones means a platform store, a developer account and a review queue.",
+      insteadOf: "Waiting on store review and handing over a cut for the privilege.",
+    },
     href: "/arcade",
   },
   {
@@ -307,6 +430,11 @@ export const FEATURES: Feature[] = [
       "An Enhance pass stacks improvements onto an existing build rather than regenerating it from scratch.",
       "Refining the concept re-forges only what changed, at a fraction of the original run.",
     ],
+    usp: {
+      edge: "An Enhance pass stacks improvements onto the existing build instead of regenerating it, so refining a game costs a fraction of the run that made it.",
+      objection: "Iterating will cost me the full price every single time.",
+      insteadOf: "Re-rolling the whole generation and paying in full for each attempt.",
+    },
     href: "/studio",
   },
 ];

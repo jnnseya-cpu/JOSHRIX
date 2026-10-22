@@ -3,8 +3,78 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-10-02 (the character library is complete — 2,601 models, 291
-animated; a forge is a durable job with no time or ACU ceiling)
+Last updated: 2026-10-22 (every feature now has a USP and a blog article that
+sells it; the character library is complete at 2,601 models)
+
+---
+
+## THE BLOG SELLS THE FEATURES NOW, NOT JUST EXPLAINS THEM — 22 Oct
+
+Justin: *"write and program blog on each feature, each functionality — you need
+to sell these features or functionality with its USP."*
+
+**Coverage already existed.** `allTopics()` interleaves one `FEATURE:<id>` topic
+per feature with the 14 editorial pieces, so all 21 capabilities were already on
+the calendar. What did not exist was a reason to buy any of them.
+
+**The brief handed over facts and asked for an explanation.** It passed each
+feature's `proof` lines and said "explain what it means for a creator in
+practice". That produces accurate, complete, unpersuasive articles — product
+documentation with an FAQ bolted on, which can rank for a query and convert
+nobody, because nothing in them says why a reader should choose this over what
+they already do.
+
+**So positioning became a field.** Every feature in `api/_features.ts` now
+carries a `usp` with three parts: the **edge** (the one claim a competitor cannot
+answer by cutting price), the **objection** already in the reader's head in their
+own words, and the **insteadOf** — what they do today and what it costs them. It
+lives there rather than in the blog agent because every surface that sells — a
+post, the features hub, an advert, the newsletter — has to make the same
+argument, and two copies of a positioning claim is how a product ends up
+describing itself differently on two pages.
+
+**The brief now asks for an argument in a fixed order:** answer the title with
+the edge in the first 40 words, name the objection early and treat it as
+reasonable, show what the alternative costs, use the proof as evidence rather
+than as subject, close with one next action. The honesty rules are part of the
+sell: no income claim of any kind, no invented figure, no fake urgency, and no
+competitor the fact sheet has not already named.
+
+**A contradiction I introduced and caught.** The first draft of the brief banned
+every competitor mention — while `proof` for commission rates names published
+storefront rates as fact. That left the writer stuck between "these are the only
+specifics you may state" and "never name a competitor". The rule now permits a
+rate the fact sheet already carries, while still forbidding characterising the
+company behind it.
+
+**Two defects in my own selling copy, found by the new tests rather than by
+reading it back.** One USP named a desktop engine and another named a platform
+store, both breaking the rule I had just written. A third assertion failed on the
+word "returns" in "the unused part of the hold returns" — a refund described
+correctly. That one was the test's fault, not the copy's: the pattern now targets
+the income sense ("good returns", "return on investment") rather than the
+vocabulary, because a test that punishes accurate copy gets the copy changed,
+which is the wrong repair.
+
+**`tools/seed-feature-blog.mjs` is new**, because the cron would reach the
+twenty-first feature about forty days out and "sell every feature" is not a
+forty-day job. It drives `/api/blog-agent` once per feature, in the order a
+reader should meet the platform — what it does, then what it costs, then what
+happens after publishing — with `--dry-run`, `--only <id>` and `--skip-existing`.
+It writes nothing itself: every article still goes through the same USP brief and
+the same 90/100 gate, and a draft the gate refuses is reported rather than
+published thin.
+
+**Verified:** 47 files, 1,943 assertions, green — up from 1,819. The new
+assertions cover every feature having a complete USP, the income/urgency/
+competitor rules over the whole USP corpus, the brief actually reading those
+fields, the brief not contradicting the fact sheet, and the seeder's text parse
+of `_features.ts` matching what the module exports.
+
+**Not verified:** no article has been generated against the new brief. That needs
+`ANTHROPIC_API_KEY` on the deployment, which this environment does not have. Run
+`node tools/seed-feature-blog.mjs --dry-run` first, then `--only metered-pricing`
+to read one before committing to all 21.
 
 ---
 
