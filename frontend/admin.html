@@ -191,6 +191,76 @@
   });
 })();
 </script>
+<h2 class="jx reveal">API Keys <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— WHAT IS CONFIGURED, WHAT IS MISSING, AND WHAT IT COSTS YOU</span></h2>
+<div class="reveal" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
+  <p style="margin:0 0 .5rem;color:var(--muted,#9d9db3);font-size:.85rem">
+    Keys are never shown here and cannot be set from this page. They live in the hosting
+    platform's secret store, which encrypts them at rest and never serves them to a browser.
+    This panel reports whether each one is present and gives you the command to set it.
+    The fingerprint is a one-way hash, so you can confirm a rotation took effect.
+  </p>
+  <div style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+    <button class="btn" id="keysGo">Check keys</button>
+    <label style="font-size:.8rem;color:var(--muted,#9d9db3)">
+      <input type="checkbox" id="keysOnlyGaps" checked> only show what is missing
+    </label>
+    <span id="keysHint" style="font-size:.85rem;color:var(--muted,#9d9db3)"></span>
+  </div>
+  <div id="keysReady" style="margin-top:.9rem"></div>
+  <div id="keysList" style="margin-top:.6rem;display:grid;gap:.5rem"></div>
+</div>
+<script>
+(function(){
+  var API = (window.JOSHRIX_API_BASE || '');
+  var $k = function(x){ return document.getElementById(x); };
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
+  var hdr = function(){ var k = ''; try { k = sessionStorage.getItem('jx.modKey') || ''; } catch(e){} return { 'x-admin-key': k }; };
+
+  var TONE = { required: '#E8455A', recommended: '#b08a4a', optional: '#6A7180', cosmetic: '#6A7180' };
+
+  function row(k){
+    var colour = k.set ? '#5a8f6b' : TONE[k.need];
+    var state = k.set ? 'SET' : (k.need === 'cosmetic' ? 'not set — and that is fine' : 'MISSING');
+    return '<div style="border:1px solid var(--stroke,#26263a);border-left:2px solid ' + colour +
+      ';border-radius:8px;padding:.6rem .8rem">' +
+      '<div style="display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap">' +
+        '<code style="font-size:.85rem;color:var(--bone,#EDEFF3)">' + esc(k.env) + '</code>' +
+        '<span style="font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:' + colour + '">' + esc(state) + '</span>' +
+        '<span style="font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted,#9d9db3)">' + esc(k.need) + ' · ' + esc(k.group) + '</span>' +
+        (k.fingerprint ? '<span style="font-size:.7rem;color:var(--muted,#9d9db3);margin-left:auto">fp ' + esc(k.fingerprint) + '</span>' : '') +
+      '</div>' +
+      '<div style="font-size:.82rem;color:var(--muted,#9d9db3);margin-top:.3rem">' + esc(k.powers) + '</div>' +
+      (k.set ? '' : '<div style="font-size:.82rem;color:#c9a06a;margin-top:.25rem">Without it: ' + esc(k.without) + '</div>' +
+        '<div style="margin-top:.35rem"><code style="font-size:.78rem;user-select:all">' + esc(k.howTo) + '</code></div>') +
+      '</div>';
+  }
+
+  function check(){
+    $k('keysHint').textContent = 'Checking…';
+    $k('keysList').innerHTML = '';
+    $k('keysReady').innerHTML = '';
+    fetch(API + '/api/admin-keys', { headers: hdr(), cache: 'no-store' })
+      .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+      .then(function(res){
+        if (!res.ok) { $k('keysHint').textContent = '⚠ ' + (res.j.error || 'failed'); return; }
+        var j = res.j, s = j.summary;
+        $k('keysHint').textContent = s.set + ' of ' + s.total + ' set';
+        $k('keysReady').innerHTML = j.ready
+          ? '<div style="color:#5a8f6b;font-size:.9rem">Every required key is present. The platform can take payment and build a game.</div>'
+          : '<div style="color:#E8455A;font-size:.9rem">' + s.blocking + ' required key' + (s.blocking === 1 ? '' : 's') +
+            ' missing. Until each is set, the thing it powers does not work.</div>';
+        var onlyGaps = $k('keysOnlyGaps').checked;
+        var list = j.keys.filter(function(k){ return onlyGaps ? !k.set && k.need !== 'cosmetic' && k.need !== 'optional' : true; });
+        if (!list.length) { $k('keysList').innerHTML = '<div style="color:var(--muted,#9d9db3);font-size:.85rem">Nothing missing.</div>'; return; }
+        $k('keysList').innerHTML = list.map(row).join('');
+      })
+      .catch(function(){ $k('keysHint').textContent = '⚠ Could not reach the key status API'; });
+  }
+
+  $k('keysGo').addEventListener('click', check);
+  $k('keysOnlyGaps').addEventListener('change', function(){ if ($k('keysList').innerHTML) check(); });
+})();
+</script>
 <h2 class="jx reveal">Wallets <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— DESIGNATE TESTERS · GRANT ACUs · SET PLANS</span></h2>
 <div class="reveal" id="grantPanel" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
   <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">

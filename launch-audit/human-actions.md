@@ -81,3 +81,30 @@ lawyer's call, not mine.
 `MODERATION_KEY` is the only admin credential and is never shared with an agent,
 including me. Anything that needs it is yours to run. I will always hand you the
 exact command instead.
+
+---
+
+## How to see what is still missing — added 24 Oct
+
+`/admin` now has an **API Keys** panel, backed by `GET /api/admin-keys`. It
+reports every one of the 31 variables the platform reads: whether it is set,
+what it powers, what breaks while it is missing, and the exact command to set
+it. Tick "only show what is missing" and the list is your to-do.
+
+It never shows a key and cannot set one. Keys stay in the hosting platform's
+secret store, which encrypts them at rest and never serves them to a browser;
+the panel shows a one-way fingerprint so you can confirm a rotation took effect.
+Storing them in the database behind an admin form would have meant the admin
+password alone was enough to walk away with every credential the business owns.
+
+Three things the panel will tell you that are easy to miss:
+
+- **`STRIPE_WEBHOOK_SECRET` is the silent one.** Without it a customer pays
+  successfully and receives nothing, because credit is applied only from a
+  verified webhook.
+- **The three AI providers are a chain, not three requirements.** One is enough
+  to run; the panel marks the set satisfied rather than demanding all three.
+- **Four keys buy you nothing.** `IMAGE_GEN_API_KEY`, `MESHY_API_KEY`,
+  `TRIPO_API_KEY` and `ELEVENLABS_API_KEY` flip a boolean on `/api/health` and
+  change no behaviour. They are marked cosmetic so you do not buy a
+  subscription for a feature that does not exist.
