@@ -45,7 +45,8 @@ export const TelemetryEventSchema = z.object({
   /** BCP-47 creation/play language — powers the language-conquest analytics. */
   language: z.string().max(16).optional(),
   /** Event-specific payload: scores, ACU spend, level, provider, price, lineage ids… */
-  props: z.record(z.union([z.string(), z.number(), z.boolean()])).optional(),
+  // zod 4 requires an explicit key schema; see shared/payments.ts for why.
+  props: z.record(z.string(), z.union([z.string(), z.number(), z.boolean()])).optional(),
 });
 export type TelemetryEvent = z.infer<typeof TelemetryEventSchema>;
 

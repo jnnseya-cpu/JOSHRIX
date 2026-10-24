@@ -222,7 +222,9 @@ export const LedgerTxSchema = z
     ts: z.number().int(),
     currency: z.literal(CURRENCY),
     postings: z.array(LedgerPostingSchema).min(2),
-    refs: z.record(z.string()).optional(), // gameId, listingId, userId, gatewayRef…
+    // zod 4 requires an explicit KEY schema: z.record(value) was removed, and the
+    // single-argument form silently meant "string keys" before.
+    refs: z.record(z.string(), z.string()).optional(), // gameId, listingId, userId, gatewayRef…
   })
   .refine((tx) => tx.postings.reduce((s, p) => s + p.deltaMinor, 0) === 0, {
     message: "Ledger postings must sum to zero (double-entry)",
