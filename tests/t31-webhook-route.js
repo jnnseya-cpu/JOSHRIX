@@ -83,5 +83,61 @@ console.log('\nthe events the money code depends on are all handled');
   for (const ev of NEEDED) t(`${ev} is handled`, src.includes(ev));
 }
 
+
+/* =========================================================================
+ * ONE RENEWAL IS ONE CREDIT, HOWEVER MANY EVENTS DESCRIBE IT.
+ *
+ * Stripe fires BOTH invoice.paid and invoice.payment_succeeded for a single
+ * subscription renewal, each with its own event id. The webhook's idempotency
+ * was claimEvent(event.id), which dedupes a RETRY of one event and cannot
+ * dedupe two different events about one invoice — so with both subscribed, a
+ * renewal credited a month's ACUs twice.
+ *
+ * Found on 7 Nov 2026 when Justin reported the endpoint failing after
+ * selecting all 238 events in the dashboard. Selecting everything did not
+ * cause the failure, but it did turn this latent bug live.
+ *
+ * The guard is a claim on the INVOICE id. Asserted here rather than left to
+ * the dashboard configuration, because "do not tick that box" is not a
+ * control: anyone re-selecting events would reintroduce it silently, and the
+ * symptom is a wallet with too many ACUs, which nobody reports.
+ * ========================================================================= */
+console.log('\none renewal credits once, whichever invoice event arrives');
+{
+  const wh = fs.readFileSync(path.join(ROOT, 'api/stripe-webhook.ts'), 'utf8');
+  /* Comments here necessarily describe the bug; judge the code. */
+  const code = wh.replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/\/\/[^\n]*/g, ' ');
+
+  t('both invoice events are still handled',
+    /case "invoice\.paid":/.test(code) && /case "invoice\.payment_succeeded":/.test(code),
+    'dropping one would work until Stripe changed which it sends');
+  t('the renewal carries the invoice id, not just the event id',
+    /invoiceId:\s*typeof inv\.id === "string"/.test(code),
+    'the invoice is the thing that was paid; the event is not');
+  t('the credit is claimed against the INVOICE before it is granted',
+    /claimEvent\(sql,\s*`renewal:\$\{invoiceId\}`/.test(code),
+    'without this, two events for one invoice credit twice');
+  /* Scoped to the RENEWAL branch. The same creditWallet call also appears in
+     the first-month path under checkout.session.completed, which is a single
+     event type and needs no invoice guard — an unscoped search finds that one
+     first and the ordering check passes or fails for the wrong reason. */
+  /* Anchored on where the action is APPLIED, not where it is returned: the
+     switch returns "plan_renewed" long before the handler acts on it, and a
+     slice from the return still contains the first-month credit. */
+  const renewal = code.slice(code.indexOf('action === "plan_renewed"'));
+  t('the claim is checked before creditWallet runs, inside the renewal branch',
+    renewal.indexOf('firstForInvoice') > -1 &&
+    renewal.indexOf('firstForInvoice') < renewal.indexOf('await creditWallet(sql, wid, plan.monthlyAcu)'),
+    'claiming after crediting guards nothing');
+  t('a second event for the same invoice is logged, not silently dropped',
+    /renewalAlreadyCredited/.test(code),
+    'a skipped credit must be visible or a real missed grant looks identical');
+  /* An invoice with no id must still credit: a customer who paid is owed the
+     grant, and the event-level guard still prevents a retry double-credit. */
+  t('an invoice with no id falls back rather than skipping the grant',
+    /invoiceId\s*\n?\s*\?\s*await claimEvent|:\s*true;/.test(code),
+    'failing closed here would withhold ACUs from someone who paid');
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -163,6 +163,13 @@ export function handleStripeEvent(event: Stripe.Event) {
           amountPaidMinor: typeof inv.amount_paid === "number" ? inv.amount_paid : null,
           // needed so a later refund can find the commission this renewal books
           paymentIntent: typeof inv.payment_intent === "string" ? inv.payment_intent : null,
+          /* THE INVOICE IS THE THING THAT WAS PAID, AND THE EVENT IS NOT.
+             Stripe fires BOTH invoice.paid and invoice.payment_succeeded for one
+             renewal, with a different event id each. claimEvent dedupes on the
+             event id, so with both subscribed — which is what happens when
+             someone selects every event in the dashboard — one renewal credited
+             a month's ACUs twice. The invoice id is what must be claimed. */
+          invoiceId: typeof inv.id === "string" ? inv.id : null,
         };
       }
       return { ok: true as const, action: "invoice_logged", eventId: event.id };
@@ -370,7 +377,18 @@ export default async function handler(req: any, res: any) {
           if (plan && wid && plan.monthlyAcu > 0) {
             await ensureGameSchema(sql);
             const gc = grantCheck(paid, plan.monthlyMinor);
-            if (gc.grant) {
+            /* One credit per INVOICE, whichever of the two events arrives first.
+               Claimed against the same ledger_events table the event id uses, so
+               the guard is one atomic insert and needs no new schema. An invoice
+               with no id cannot be claimed, so it falls back to the event-level
+               guard rather than skipping the credit a customer has paid for. */
+            const invoiceId = (result as any).invoiceId as string | null;
+            const firstForInvoice = invoiceId
+              ? await claimEvent(sql, `renewal:${invoiceId}`, "renewal_credit", { invoiceId, walletId: wid, eventId: event.id })
+              : true;
+            if (gc.grant && !firstForInvoice) {
+              console.log(JSON.stringify({ renewalAlreadyCredited: { walletId: wid, invoiceId, eventId: event.id, type: event.type } }));
+            } else if (gc.grant) {
               await creditWallet(sql, wid, plan.monthlyAcu);
               // A plan switch made outside this codebase only becomes visible
               // here, so the wallet's tier is corrected on the renewal that

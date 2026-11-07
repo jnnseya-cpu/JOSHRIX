@@ -22,6 +22,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { findChromium } from "./_chromium.mjs";
 
 const require = createRequire(import.meta.url);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -108,7 +109,7 @@ console.log('\nand it is actually playable (real browser, real keys)');
   fs.writeFileSync(probe, html);
 
   const browser = await chromium.launch({
-    executablePath: process.env.CHROMIUM_PATH || '/opt/pw-browsers/chromium',
+    executablePath: findChromium(),
     args: ['--no-sandbox', '--use-gl=swiftshader', '--enable-unsafe-swiftshader'],
   });
   const page = await (await browser.newContext({ viewport: { width: 1280, height: 800 } })).newPage();

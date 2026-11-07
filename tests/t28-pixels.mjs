@@ -18,21 +18,13 @@ import { chromium } from 'playwright';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
+import { findChromium } from "./_chromium.mjs";
 
 const ROOT = path.join(process.env.JOSHRIX_ROOT || process.cwd(), 'frontend');
 const PORT = 8108;
 const PIXEL = '111122223333444';
 const GAID = 'G-TEST123456';
 
-function findChromium() {
-  if (process.env.CHROMIUM_PATH) return process.env.CHROMIUM_PATH;
-  const base = process.env.PLAYWRIGHT_BROWSERS_PATH || '/opt/pw-browsers';
-  try {
-    const dir = fs.readdirSync(base).find((d) => /^chromium-\d+$/.test(d));
-    if (dir) return path.join(base, dir, 'chrome-linux', 'chrome');
-  } catch { /* let playwright look */ }
-  return undefined;
-}
 
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png' };
 const srv = http.createServer((req, res) => {
