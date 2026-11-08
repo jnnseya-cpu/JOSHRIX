@@ -6,7 +6,11 @@
  *   npm test -- --filter t6   only tests whose filename contains "t6"
  *   npm test -- --build-only  compile, run nothing
  *
- * Needs `npm install` first. Two files (t22, t25) drive a real browser: if
+ * Needs `npm ci` first, NOT `npm install`. On 7 Nov 2026 an `npm install` moved
+ * Playwright inside its ^ range and five browser tests failed at once with
+ * "executable doesn't exist", and it pruned @types/node so the type check could
+ * not run at all. `npm ci` installs exactly the lockfile and refuses if
+ * package.json and the lockfile disagree. Two files (t22, t25) drive a real browser: if
  * Chromium is not already on the machine, `npx playwright install chromium`
  * once. CHROMIUM_PATH overrides the lookup.
  *
@@ -119,6 +123,29 @@ const files = fs.readdirSync(WS)
   .filter((f) => !filter || f.includes(filter))
   .sort((a, b) => (parseInt(a.slice(1), 10) - parseInt(b.slice(1), 10)) || a.localeCompare(b));
 
+/* ONE TEST RACES A CLOCK, AND IT GOES FIRST.
+ *
+ * t26 plays Midnight Post to the end with a scripted driver and asserts the
+ * round's outcome. Every other file asserts structure, bytes or pixels, which do
+ * not care how much CPU is free; t26 does, because the autopilot gets fewer
+ * steering decisions per game-second when the box is busy. It passed every
+ * standalone run and failed roughly one full-suite run in three — as file 26 of
+ * 48, by which point the container has been compiling and rendering for minutes.
+ *
+ * This is a SCHEDULING fix and deliberately not an assertion change. The
+ * threshold was already narrowed once, from 3 of 8 parcels to 1, because
+ * requiring three measured the driver's skill rather than the game's mechanism.
+ * Narrowing it again would be weakening a test to make a suite green, which is
+ * the thing that must never happen here — so instead it runs on a cold box,
+ * where its own assertions hold at full strength.
+ *
+ * This is not a proof of determinism. The honest fix is for the drive loop to
+ * step the game's clock rather than race it, which needs the runtime to expose a
+ * fixed step; until then this file stays the suite's one environment-sensitive
+ * test and is recorded as such in launch-audit/gates.md. */
+const RUN_FIRST = ['t26-midnight-post.mjs'];
+files.sort((a, b) => (RUN_FIRST.includes(b) ? 1 : 0) - (RUN_FIRST.includes(a) ? 1 : 0));
+
 if (!files.length) { console.error(`no tests matched --filter ${filter}`); process.exit(1); }
 
 // t17 re-exports GLB through three's exporter, which needs browser globals.
@@ -126,6 +153,26 @@ const EXTRA_NODE_ARGS = { 't17-characters.mjs': ['--import', path.join(ROOT, 'to
 
 let failed = 0, totalPass = 0, totalFail = 0;
 console.log('');
+/* ---------- the ratchet ----------
+ *
+ * "Nothing silently changes or drops." A green run proves nothing if the file
+ * that used to make 123 assertions now makes 4, or has quietly stopped existing.
+ * Both have happened here: tests/t17's library checks resolved a path that did
+ * not exist under the suite's working directory and, guarded by existsSync, did
+ * nothing at all on every run while reporting PASS.
+ *
+ * So the per-file counts are committed in tests/coverage-baseline.json and
+ * compared after every full run. A file below its baseline, or missing
+ * entirely, fails the suite — raising the bar needs --update-baseline, which
+ * puts the new numbers in a diff a human reads. Four files report "ok" instead
+ * of a count and are tracked for PRESENCE only; that is recorded as 0 rather
+ * than pretended otherwise.
+ *
+ * Not applied to --filter runs, which deliberately execute a subset. */
+const BASELINE_PATH = path.join(ROOT, 'tests', 'coverage-baseline.json');
+const updateBaseline = args.includes('--update-baseline');
+const perFile = {};
+
 for (const f of files) {
   const r = spawnSync(process.execPath, [...(EXTRA_NODE_ARGS[f] || []), f], {
     cwd: WS, encoding: 'utf8', env: { ...process.env, JOSHRIX_ROOT: ROOT },
@@ -138,6 +185,7 @@ for (const f of files) {
   // exactly that for weeks, so its one real finding read as green in every run.
   const ok = r.status === 0 && !(m && Number(m[2]) > 0);
   if (!ok) failed++;
+  perFile[f] = m ? Number(m[1]) : 0;
   const summary = m ? `${m[1]} passed, ${m[2]} failed` : (ok ? 'ok' : 'FAILED');
   console.log(`  ${(ok ? 'PASS' : 'FAIL').padEnd(5)} ${f.padEnd(28)} ${summary}`);
   if (!ok) out.trim().split('\n').filter((l) => /FAIL|Error|error/.test(l)).slice(0, 6)
@@ -145,4 +193,31 @@ for (const f of files) {
 }
 
 console.log(`\n  ${files.length} files · ${totalPass} assertions passed, ${totalFail} failed · ${failed} file(s) failing`);
-process.exit(failed ? 1 : 0);
+
+/* ---------- compare against the committed baseline ---------- */
+let ratchet = 0;
+if (!filter) {
+  if (updateBaseline) {
+    fs.writeFileSync(BASELINE_PATH, JSON.stringify({ files: perFile }, null, 2) + '\n');
+    console.log(`\n  baseline updated: ${Object.keys(perFile).length} files — commit tests/coverage-baseline.json so the change is reviewable`);
+  } else if (fs.existsSync(BASELINE_PATH)) {
+    const base = JSON.parse(fs.readFileSync(BASELINE_PATH, 'utf8')).files || {};
+    const gone = Object.keys(base).filter((f) => !(f in perFile));
+    const shrunk = Object.keys(base).filter((f) => f in perFile && perFile[f] < base[f]);
+    for (const f of gone) console.log(`  DROPPED  ${f} — in the baseline and not in this run`);
+    for (const f of shrunk) console.log(`  SHRANK   ${f} — ${perFile[f]} assertions, baseline ${base[f]}`);
+    const added = Object.keys(perFile).filter((f) => !(f in base));
+    for (const f of added) console.log(`  NEW      ${f} — run with --update-baseline to record it`);
+    ratchet = gone.length + shrunk.length;
+    if (ratchet) {
+      console.log(`\n  RATCHET FAILED: ${ratchet} file(s) lost coverage. If the loss is intended, say so in a commit`);
+      console.log('  message and re-run with --update-baseline; do not delete the baseline.');
+    } else {
+      console.log(`  ratchet ok — no file below its baseline (${Object.keys(base).length} tracked)`);
+    }
+  } else {
+    console.log('  no baseline yet — run with --update-baseline to create one');
+  }
+}
+
+process.exit(failed || ratchet ? 1 : 0);
