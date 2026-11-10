@@ -283,6 +283,46 @@ console.log('\nthe landing page states only what can be counted');
     !/getElementById\('stars'\)/.test(page) && !/spawnMeteor/.test(page));
 }
 
+/* A TEST THAT ONLY RUNS ON ONE MACHINE IS NOT A TEST.
+ *
+ * t4-crawl and t5-404-gate opened with `const ROOT='/home/user/JOSHRIX/frontend'`
+ * — an absolute path from the container they were written in. They passed here
+ * on every run and had never executed anywhere else; the CI gate went red on its
+ * first run with ENOENT on that path and stayed red through three pushes. The
+ * same two files also hardcoded this image's Chromium path, which is the bug
+ * tests/_chromium.mjs exists to prevent.
+ *
+ * So the check is mechanical from now on. The repository root is discovered, it
+ * is never spelled out. */
+{
+  const containerPaths = /(^|[^\w])\/(?:home|Users)\/[A-Za-z0-9._-]+\/|(^|[^\w])\/opt\/pw-browsers\//;
+  const dirs = ['tests', 'tools', 'api', 'shared'];
+  const offenders = [];
+  for (const d of dirs) {
+    const dir = path.join(ROOT, d);
+    if (!fs.existsSync(dir)) continue;
+    for (const f of fs.readdirSync(dir)) {
+      if (!/\.(js|mjs|ts)$/.test(f)) continue;
+      /* _chromium.mjs is the ONE place allowed to name this image's layout,
+         because answering "where is Chromium" is its entire job. */
+      if (d === 'tests' && f === '_chromium.mjs') continue;
+      /* Comments are stripped WHOLE rather than line by line. A per-line test
+         for a leading `*` missed the continuation lines of a block comment —
+         including the one in these very tools explaining the bug — which is a
+         detector that reports its own documentation. A comment recording this
+         history is not a dependency on it. */
+      const src = fs.readFileSync(path.join(dir, f), 'utf8')
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .replace(/^[ \t]*\/\/.*$/gm, '');
+      for (const line of src.split('\n')) {
+        if (containerPaths.test(line)) offenders.push(`${d}/${f}: ${line.trim().slice(0, 90)}`);
+      }
+    }
+  }
+  t('no test or tool depends on a path from one developer\'s machine',
+    offenders.length === 0, offenders.join(' | '));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 })();

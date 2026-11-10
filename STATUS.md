@@ -3,8 +3,46 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-11-10 (Trend Intelligence merged as a contract + scorer, on
-this stack, not a second service)
+Last updated: 2026-11-10 (Trend Intelligence merged end to end; the CI gate was
+red from the day it was added and is now green)
+
+---
+
+## THE GATE WAS RED THE WHOLE TIME — 10 Nov
+
+I added `.github/workflows/gate.yml` on 8 Nov, wrote "every job in it has already
+caught a real defect here", and never looked at a single run. All three were
+**failures**, starting with the push that introduced it.
+
+The cause was two files: `t4-crawl.js` and `t5-404-gate.js` opened with
+`const ROOT='/home/user/JOSHRIX/frontend'` — an absolute path from this
+container. In CI the checkout is at `/home/runner/work/JOSHRIX/JOSHRIX`, so both
+died with `ENOENT` on every run. They passed here on every run and had never
+executed anywhere else, which is precisely the assumption a gate exists to
+break. They are also two of the four files the coverage ratchet tracks for
+presence only, so the ratchet had nothing to notice — but the runner's own exit
+code did, and nobody read it.
+
+The same two files also hardcoded `/opt/pw-browsers/chromium`. That is this
+image's layout, and `tests/_chromium.mjs` already exists to answer "where is
+Chromium" in one place; these two were missed when it was written because they
+are CommonJS and the five it replaced were ESM. They now resolve through it by
+dynamic import rather than a CommonJS copy, because a second copy of that answer
+is the original bug.
+
+**The check that stops it coming back found nine more.** `t35` now sweeps
+`tests/ tools/ api/ shared/` for a path under `/home/<user>/`, `/Users/<user>/`
+or `/opt/pw-browsers/` outside the one file whose job it is. Nine tools were
+carrying their own copy of the Chromium path — `validate-models.mjs` among them,
+the tool that checks all 2,601 models. All nine now call `findChromium()`, and
+`validate-sprites.mjs` was run afterwards to prove it: 2,553 of 2,553 decoded.
+
+That sweep's first version reported its own documentation, because it skipped
+comment lines by looking for a leading `*` and a block comment's continuation
+lines do not have one. It strips comments whole now.
+
+**Verified:** 50 files, 2,184 assertions green locally, and — for the first
+time — the CI gate asked for its verdict rather than assumed.
 
 ---
 

@@ -24,6 +24,11 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+/* ONE answer to "where is Chromium", shared with the suite. These nine tools
+   each carried their own copy of `/opt/pw-browsers/chromium`, which is this
+   image's layout and not a universal one — the same guess that broke five tests
+   at once on 7 Nov when a Playwright bump changed the directory name. */
+import { findChromium } from "../tests/_chromium.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const WEB = path.join(ROOT, "frontend");
@@ -65,7 +70,7 @@ const serve = () =>
 
 const srv = await serve();
 const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_PATH || "/opt/pw-browsers/chromium",
+  executablePath: findChromium(),
   args: ["--use-gl=swiftshader", "--enable-unsafe-swiftshader", "--ignore-gpu-blocklist"],
 });
 

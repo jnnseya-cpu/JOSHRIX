@@ -29,6 +29,11 @@
 import { chromium } from "playwright";
 import fs from "node:fs";
 import path from "node:path";
+/* ONE answer to "where is Chromium", shared with the suite. These nine tools
+   each carried their own copy of `/opt/pw-browsers/chromium`, which is this
+   image's layout and not a universal one — the same guess that broke five tests
+   at once on 7 Nov when a Playwright bump changed the directory name. */
+import { findChromium } from "../tests/_chromium.mjs";
 
 const OUT = path.resolve("frontend/assets/splash");
 
@@ -93,7 +98,7 @@ const media = (d, orientation) =>
 fs.mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch({
-  executablePath: "/opt/pw-browsers/chromium",
+  executablePath: findChromium(),
   args: ["--no-sandbox", "--proxy-bypass-list=127.0.0.1", "--proxy-server=direct://"],
 });
 

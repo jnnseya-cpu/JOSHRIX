@@ -19,6 +19,11 @@ import fs from "node:fs";
 import path from "node:path";
 import http from "node:http";
 import { createRequire } from "node:module";
+/* ONE answer to "where is Chromium", shared with the suite. These nine tools
+   each carried their own copy of `/opt/pw-browsers/chromium`, which is this
+   image's layout and not a universal one — the same guess that broke five tests
+   at once on 7 Nov when a Playwright bump changed the directory name. */
+import { findChromium } from "../tests/_chromium.mjs";
 
 // Playwright is a heavy dev-only dependency and deliberately not in package.json
 // (it would ship to Vercel). Resolve it from wherever it is installed; ESM
@@ -68,7 +73,7 @@ const server = http.createServer((req, res) => {
 }).listen(PORT, "127.0.0.1");
 
 const browser = await chromium.launch({
-  executablePath: "/opt/pw-browsers/chromium",
+  executablePath: findChromium(),
   args: ["--no-sandbox", "--use-gl=swiftshader", "--proxy-bypass-list=127.0.0.1"],
 });
 const page = await browser.newPage();

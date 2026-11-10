@@ -29,6 +29,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
+/* ONE answer to "where is Chromium", shared with the suite. These nine tools
+   each carried their own copy of `/opt/pw-browsers/chromium`, which is this
+   image's layout and not a universal one — the same guess that broke five tests
+   at once on 7 Nov when a Playwright bump changed the directory name. */
+import { findChromium } from "../tests/_chromium.mjs";
 
 const require = createRequire(import.meta.url);
 let chromium;
@@ -133,7 +138,7 @@ const kb = (n) => (n / 1024).toFixed(0).padStart(6) + "KB";
 // Same pinned binary the model validator uses — the bundled Playwright download
 // is deliberately absent in this image.
 const browser = await chromium.launch({
-  executablePath: "/opt/pw-browsers/chromium",
+  executablePath: findChromium(),
   args: ["--no-sandbox", "--use-gl=swiftshader"],
 });
 const page = await browser.newPage();

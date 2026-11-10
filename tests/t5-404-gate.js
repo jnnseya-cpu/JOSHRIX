@@ -1,6 +1,23 @@
+/* THE PATHS IN THIS FILE ONLY EVER WORKED ON ONE MACHINE.
+ *
+ * Until 10 Nov 2026 line 3 read `const ROOT='/home/user/JOSHRIX/frontend'` — an
+ * absolute path from the container these tests were written in. It passed here
+ * every time and had never run anywhere else. The CI gate added on 8 Nov went
+ * red on its very first run with ENOENT on that path, and stayed red, because
+ * nobody looked: the suite was green locally, which is exactly the assumption
+ * the gate exists to break.
+ *
+ * The browser path was the same mistake twice over. `/opt/pw-browsers/chromium`
+ * is this image's layout, not a universal one, and `tests/_chromium.mjs` already
+ * exists to answer "where is Chromium" in one place — it was missed here because
+ * this file is CommonJS and the five it replaced were ESM. Resolved by dynamic
+ * import rather than a CommonJS copy of the same logic, because a second copy of
+ * that answer is the original bug.
+ */
 const { chromium } = require('playwright');
 const http=require('http'), fs=require('fs'), path=require('path');
-const ROOT='/home/user/JOSHRIX/frontend';
+const ROOT=path.join(process.env.JOSHRIX_ROOT || path.resolve(__dirname,'..'),'frontend');
+if(!fs.existsSync(ROOT)){ console.error('FAIL: no frontend directory at '+ROOT+' — set JOSHRIX_ROOT to the repository root'); process.exit(1); }
 const missing=[];
 const srv=http.createServer((req,res)=>{
   let p=decodeURIComponent(req.url.split('?')[0]); if(p==='/')p='/index.html';
@@ -13,7 +30,8 @@ const srv=http.createServer((req,res)=>{
   missing.push(p); res.writeHead(404); res.end('404');
 });
 srv.listen(8988, async()=>{
-  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium',args:['--no-sandbox','--proxy-bypass-list=127.0.0.1']});
+  const { findChromium } = await import('./_chromium.mjs');
+  const b=await chromium.launch({executablePath:findChromium(),args:['--no-sandbox','--proxy-bypass-list=127.0.0.1']});
   console.log('\n== MISSING LOCAL RESOURCES (real 404s) ==');
   for (const pg of ['about.html','press.html','index.html','studio.html','wallet.html','pricing.html']) {
     missing.length=0;
