@@ -103,7 +103,10 @@ export type GrowthBrief = z.infer<typeof GrowthBriefSchema>;
  */
 export function briefRuntimeFailures(
   brief: GrowthBrief,
-  opts: { now?: Date; channel?: BriefChannel; locales?: readonly string[]; market?: string } = {},
+  opts: {
+    now?: Date; channel?: BriefChannel; locales?: readonly string[]; market?: string;
+    tenantId?: string; platformId?: string;
+  } = {},
 ): string[] {
   const out: string[] = [];
   const now = opts.now ?? new Date();
@@ -134,7 +137,100 @@ export function briefRuntimeFailures(
   if (opts.market && brief.market === "ZZ" && opts.market !== "ZZ") {
     out.push("a global (ZZ) brief does not satisfy a country-targeted lookup");
   }
+  /* §6: tenant_id and platform_id identify the issuing scope and MUST match the
+     installation binding. A brief issued for another installation is not a
+     weaker brief, it is somebody else's instructions — so this is checked where
+     the brief is used, not only where it is written. */
+  if (opts.tenantId && brief.tenant_id !== opts.tenantId) {
+    out.push(`brief tenant ${brief.tenant_id} is not this installation (${opts.tenantId})`);
+  }
+  if (opts.platformId && brief.platform_id !== opts.platformId) {
+    out.push(`brief platform ${brief.platform_id} is not this installation (${opts.platformId})`);
+  }
   return out;
+}
+
+/* ------------------------------------------------------------------ *
+ * §14 — THE INSTALLATION BINDING.
+ *
+ * The spec's minimum profile is "a platform identifier, a primary market and
+ * locale". It lives here as a constant rather than as four environment
+ * variables because it is not a secret, it does not differ between
+ * environments, and a value that is read in three places and set in none is
+ * exactly the drift this repository keeps paying for. Changing market means
+ * editing one line, which is a reviewable diff; four env vars set correctly in
+ * production and wrongly in preview are not.
+ * ------------------------------------------------------------------ */
+export const INSTALL = {
+  tenantId: "joshrix",
+  platformId: "joshrix-studio",
+  /** Primary market. GB because the platform prices in GBP and pays out in GBP. */
+  market: "GB",
+  locale: "en-GB",
+} as const;
+
+/** The installed locale set. One entry today; the brief check takes a list so a
+ *  second locale is a data change rather than a code change. */
+export const INSTALLED_LOCALES: readonly string[] = [INSTALL.locale];
+
+/* ------------------------------------------------------------------ *
+ * §13 GET /briefs:effective — WHICH brief applies, decided purely.
+ *
+ * The database narrows the candidates; this decides between them. Keeping the
+ * decision out of SQL is deliberate: the stored payload is jsonb, so Postgres
+ * cannot enforce the contract, and a brief written by an older build must not be
+ * able to steer an agent just because its row still looks eligible. Every
+ * candidate is therefore re-validated against the schema AND the runtime rules
+ * at the moment of use.
+ *
+ * `rejected` is returned rather than discarded because "no brief applied" is the
+ * answer an operator will question, and the reason is the only useful reply.
+ * ------------------------------------------------------------------ */
+export type BriefRejection = { briefId: string; briefVersion: number | null; reasons: string[] };
+
+export function pickEffectiveBrief(
+  candidates: readonly unknown[],
+  opts: { now?: Date; channel?: BriefChannel; locales?: readonly string[]; market?: string } = {},
+): { brief: GrowthBrief | null; rejected: BriefRejection[] } {
+  const bound = {
+    tenantId: INSTALL.tenantId,
+    platformId: INSTALL.platformId,
+    locales: opts.locales ?? INSTALLED_LOCALES,
+    market: opts.market ?? INSTALL.market,
+    now: opts.now,
+    channel: opts.channel,
+  };
+  const rejected: BriefRejection[] = [];
+  let best: GrowthBrief | null = null;
+
+  for (const raw of candidates) {
+    const parsed = GrowthBriefSchema.safeParse(raw);
+    if (!parsed.success) {
+      const r = raw as Record<string, unknown> | null;
+      rejected.push({
+        briefId: typeof r?.brief_id === "string" ? r.brief_id : "(unidentifiable)",
+        briefVersion: typeof r?.brief_version === "number" ? r.brief_version : null,
+        reasons: parsed.error.issues.map((i) => `${i.path.join(".") || "(root)"}: ${i.message}`),
+      });
+      continue;
+    }
+    const brief = parsed.data;
+    const failures = briefRuntimeFailures(brief, bound);
+    if (failures.length) {
+      rejected.push({ briefId: brief.brief_id, briefVersion: brief.brief_version, reasons: failures });
+      continue;
+    }
+    /* Highest version wins; a later valid_from breaks a tie. Two briefs at the
+       same version with the same start are a data fault upstream, and taking the
+       first is as defensible as any other choice — the write path refuses to
+       create that collision in the first place. */
+    if (!best
+      || brief.brief_version > best.brief_version
+      || (brief.brief_version === best.brief_version && Date.parse(brief.valid_from) > Date.parse(best.valid_from))) {
+      best = brief;
+    }
+  }
+  return { brief: best, rejected };
 }
 
 /* ------------------------------------------------------------------ *

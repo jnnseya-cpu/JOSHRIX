@@ -658,11 +658,18 @@ export async function ensureBlogSchema(sql: Sql) {
     provider text,
     created_at timestamptz NOT NULL DEFAULT now()
   )`;
+  /* WHICH BRIEF STEERED THIS POST. Recorded on the post rather than inferred
+     from timestamps, because a brief is revised and withdrawn and "what was the
+     agent told when it wrote this" has to stay answerable afterwards. Null is
+     the honest value for every post written before Trend Intelligence existed
+     and for every post written under baseline behaviour. */
+  await sql`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS brief_id text`;
+  await sql`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS brief_version integer`;
 }
 
-export async function saveBlogPost(sql: Sql, p: { slug: string; title: string; description: string; keywords?: string | null; excerpt?: string | null; html: string; social?: unknown; topic?: string | null; provider?: string | null }) {
-  await sql`INSERT INTO blog_posts (slug, title, description, keywords, excerpt, html, social, topic, provider)
-    VALUES (${p.slug}, ${p.title}, ${p.description}, ${p.keywords ?? null}, ${p.excerpt ?? null}, ${p.html}, ${JSON.stringify(p.social ?? null)}::jsonb, ${p.topic ?? null}, ${p.provider ?? null})
+export async function saveBlogPost(sql: Sql, p: { slug: string; title: string; description: string; keywords?: string | null; excerpt?: string | null; html: string; social?: unknown; topic?: string | null; provider?: string | null; briefId?: string | null; briefVersion?: number | null }) {
+  await sql`INSERT INTO blog_posts (slug, title, description, keywords, excerpt, html, social, topic, provider, brief_id, brief_version)
+    VALUES (${p.slug}, ${p.title}, ${p.description}, ${p.keywords ?? null}, ${p.excerpt ?? null}, ${p.html}, ${JSON.stringify(p.social ?? null)}::jsonb, ${p.topic ?? null}, ${p.provider ?? null}, ${p.briefId ?? null}, ${p.briefVersion ?? null})
     ON CONFLICT (slug) DO NOTHING`;
 }
 
@@ -703,6 +710,121 @@ export async function blogViews(sql: Sql, slugs: string[]): Promise<Record<strin
 export async function countBlogPosts(sql: Sql): Promise<number> {
   const rows = (await sql`SELECT count(*) AS n FROM blog_posts`) as Array<{ n: string | number }>;
   return Number(rows[0]?.n ?? 0);
+}
+
+/* ---------------- Trend Intelligence: approved Growth Briefs ---------------- */
+
+/**
+ * WHERE AN APPROVED BRIEF LIVES.
+ *
+ * One row per (brief_id, brief_version), and a version is NEVER updated in
+ * place. The spec treats the brief as a frozen, auditable object — §17 freezes
+ * the hypothesis, baseline and outcome at approval — so "what was the agent
+ * told on 3 December" has to stay answerable after someone revises the brief.
+ * An UPDATE would destroy that answer, which is why a revision is a new version
+ * and the only mutable column is `status`.
+ *
+ * The payload is stored whole, as jsonb, rather than exploded into columns. The
+ * contract is closed and versioned in `shared/trend.ts`; splitting it across 22
+ * columns would mean two definitions of the same object, and the one in SQL
+ * cannot be type-checked. The columns that do exist are only the ones the
+ * lookup filters on.
+ */
+export async function ensureBriefSchema(sql: Sql) {
+  await sql`CREATE TABLE IF NOT EXISTS growth_briefs (
+    brief_id text NOT NULL,
+    brief_version integer NOT NULL,
+    tenant_id text NOT NULL,
+    platform_id text NOT NULL,
+    market text NOT NULL,
+    locale text NOT NULL,
+    topic_id text NOT NULL,
+    status text NOT NULL DEFAULT 'approved',
+    valid_from timestamptz NOT NULL,
+    expires_at timestamptz NOT NULL,
+    payload jsonb NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (brief_id, brief_version)
+  )`;
+  /* The lookup runs on every autopilot post and must not table-scan as the
+     archive grows. Status and expiry are in the index because the overwhelming
+     majority of rows will be neither approved nor fresh. */
+  await sql`CREATE INDEX IF NOT EXISTS growth_briefs_lookup
+    ON growth_briefs (market, locale, status, expires_at DESC)`;
+}
+
+/**
+ * Store an approved brief. Idempotent by (brief_id, brief_version) and
+ * CONFLICT-SAFE RATHER THAN LAST-WRITE-WINS: re-posting an identical version is
+ * a no-op, and posting a DIFFERENT payload under a version that already exists
+ * is refused, because silently replacing the instructions an agent has already
+ * acted on is the one thing a frozen object must not allow. The caller turns
+ * that refusal into a 409.
+ */
+export async function saveGrowthBrief(
+  sql: Sql,
+  b: { briefId: string; briefVersion: number; tenantId: string; platformId: string; market: string; locale: string; topicId: string; validFrom: string; expiresAt: string; payload: unknown },
+): Promise<"created" | "duplicate" | "conflict"> {
+  const json = JSON.stringify(b.payload);
+  const rows = (await sql`INSERT INTO growth_briefs
+      (brief_id, brief_version, tenant_id, platform_id, market, locale, topic_id, valid_from, expires_at, payload)
+    VALUES (${b.briefId}, ${b.briefVersion}, ${b.tenantId}, ${b.platformId}, ${b.market}, ${b.locale},
+            ${b.topicId}, ${b.validFrom}::timestamptz, ${b.expiresAt}::timestamptz, ${json}::jsonb)
+    ON CONFLICT (brief_id, brief_version) DO NOTHING
+    RETURNING brief_id`) as any[];
+  if (rows.length) return "created";
+  const existing = (await sql`SELECT payload FROM growth_briefs
+    WHERE brief_id = ${b.briefId} AND brief_version = ${b.briefVersion}`) as Array<{ payload: unknown }>;
+  const same = existing.length && JSON.stringify(existing[0].payload) === json;
+  return same ? "duplicate" : "conflict";
+}
+
+/** Withdraw a brief before its expiry. The only mutation this table allows. */
+export async function archiveGrowthBrief(sql: Sql, briefId: string, briefVersion: number): Promise<boolean> {
+  const rows = (await sql`UPDATE growth_briefs SET status = 'archived'
+    WHERE brief_id = ${briefId} AND brief_version = ${briefVersion} AND status = 'approved'
+    RETURNING brief_id`) as any[];
+  return rows.length > 0;
+}
+
+/**
+ * The candidates for an effective-brief lookup: approved, in window, matching
+ * market and locale, optionally narrowed to one topic.
+ *
+ * This NARROWS; it does not decide. `pickEffectiveBrief` in shared/trend.ts
+ * re-validates every row against the contract and the runtime rules before one
+ * of them is allowed to steer an agent — the payload is jsonb and Postgres
+ * cannot enforce a closed object, so an eligible-looking row is not yet a valid
+ * brief. Expiry is filtered here AND re-checked there, per §17's "check expiry
+ * on every lookup and write".
+ */
+export async function effectiveBriefCandidates(
+  sql: Sql,
+  q: { market: string; locale: string; topicId?: string | null; now?: Date; limit?: number },
+): Promise<unknown[]> {
+  const now = (q.now ?? new Date()).toISOString();
+  const limit = Math.min(Math.max(q.limit ?? 20, 1), 200);
+  const rows = q.topicId
+    ? ((await sql`SELECT payload FROM growth_briefs
+        WHERE status = 'approved' AND market = ${q.market} AND locale = ${q.locale}
+          AND topic_id = ${q.topicId}
+          AND valid_from <= ${now}::timestamptz AND expires_at > ${now}::timestamptz
+        ORDER BY brief_version DESC, valid_from DESC LIMIT ${limit}`) as Array<{ payload: unknown }>)
+    : ((await sql`SELECT payload FROM growth_briefs
+        WHERE status = 'approved' AND market = ${q.market} AND locale = ${q.locale}
+          AND valid_from <= ${now}::timestamptz AND expires_at > ${now}::timestamptz
+        ORDER BY brief_version DESC, valid_from DESC LIMIT ${limit}`) as Array<{ payload: unknown }>);
+  return rows.map((r) => r.payload);
+}
+
+/** The brief archive for the operator view — bounded, newest first (§12: 50 default, 200 max). */
+export async function listGrowthBriefs(sql: Sql, limit = 50) {
+  const n = Math.min(Math.max(limit, 1), 200);
+  return (await sql`SELECT brief_id, brief_version, market, locale, topic_id, status, valid_from, expires_at, created_at,
+      payload->>'objective' AS objective,
+      (payload->>'opportunity_score')::numeric AS opportunity_score,
+      (payload->>'confidence')::numeric AS confidence
+    FROM growth_briefs ORDER BY created_at DESC LIMIT ${n}`) as any[];
 }
 
 /** All wallets, newest first — for the admin grants panel (key-gated at the endpoint). */

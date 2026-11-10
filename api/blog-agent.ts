@@ -8,10 +8,17 @@
  * Authorization: Bearer CRON_SECRET header. Fail closed otherwise.
  * Every post ships with meta description, keywords, internal links to live
  * pages/games (dynamic linking), and ready-to-paste social captions.
+ *
+ * Before drafting it resolves the effective Growth Brief for the `seo` channel
+ * (Trend Intelligence, §14.5) and passes it to the writer as data. With no
+ * eligible brief — the normal state until one is approved at
+ * /api/growth-brief — it writes exactly what it wrote before, which is the
+ * spec's required baseline behaviour rather than a degraded mode.
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { scoreArticleDraft, MIN_SCORE, scoreReport } from "./_seoscore";
-import { getDb, ensureBlogSchema, ensureGameSchema, saveBlogPost, getBlogPost, listBlogPosts, countBlogPosts, listApprovedGames, blogViews } from "./_ledger";
+import { getDb, ensureBlogSchema, ensureGameSchema, saveBlogPost, getBlogPost, listBlogPosts, countBlogPosts, listApprovedGames, blogViews, ensureBriefSchema, effectiveBriefCandidates } from "./_ledger";
+import { pickEffectiveBrief, INSTALL, type GrowthBrief } from "../shared/trend";
 
 const SITE = "https://www.joshrix.com";
 
@@ -88,7 +95,74 @@ function demoArticle(topic: string) {
   };
 }
 
-async function generateArticle(topic: string, liveGames: Array<{ id: string; title: string }>, priorPosts: Array<{ slug: string; title: string }> = []) {
+/**
+ * §14.5 — RESOLVE THE EFFECTIVE BRIEF, OR USE BASELINE BEHAVIOUR.
+ *
+ * The spec is explicit about the failure mode: "on timeout, disabled
+ * entitlement, missing capability or no approved brief, use host baseline
+ * behaviour". So every path out of here that is not a valid brief returns null
+ * and the agent writes exactly what it wrote before Trend Intelligence existed.
+ * A content pipeline that stops publishing because a strategy lookup failed has
+ * traded a working feature for a new one.
+ *
+ * No cache. The spec permits a 60-second one and forbids ever treating it as
+ * authority to publish; this runs once per post on a daily cron, so a cache
+ * would save one query a day and introduce the one bug (TI-05: acting on an
+ * expired brief) the rule exists to prevent.
+ */
+async function resolveSeoBrief(sql: any): Promise<{ brief: GrowthBrief | null; why: string }> {
+  try {
+    await ensureBriefSchema(sql);
+    const candidates = await effectiveBriefCandidates(sql, { market: INSTALL.market, locale: INSTALL.locale });
+    const { brief, rejected } = pickEffectiveBrief(candidates, { channel: "seo" });
+    if (brief) return { brief, why: `${brief.brief_id} v${brief.brief_version}` };
+    return {
+      brief: null,
+      why: candidates.length
+        ? `baseline — ${candidates.length} candidate(s), none eligible: ${rejected.map((r) => `${r.briefId}: ${r.reasons[0]}`).join("; ").slice(0, 300)}`
+        : "baseline — no approved brief in window",
+    };
+  } catch (err: any) {
+    return { brief: null, why: `baseline — brief lookup failed: ${String(err?.message ?? err).slice(0, 160)}` };
+  }
+}
+
+/**
+ * The brief, handed to the writer AS DATA.
+ *
+ * §7 and §14: "pass the returned brief and claims as data alongside the existing
+ * agent instructions… do not rewrite agent prompts permanently." CONTENT_SYSTEM
+ * is therefore untouched. A system prompt that a strategy engine edits is a
+ * system prompt nobody can reason about, and the editorial and honesty rules in
+ * it are the ones that must survive every brief.
+ *
+ * WHAT THE BRIEF STEERS TODAY, honestly: audience, intent, objective and the
+ * claims to avoid. It does NOT choose the topic, because topic_id is an
+ * identifier and the topic registry that would give it a title is not built.
+ * The editorial calendar still picks the subject; the brief decides who it is
+ * written for and what it is trying to achieve.
+ *
+ * PROHIBITED CLAIMS ARE PASSED, NOT ENFORCED, and the difference matters. Real
+ * enforcement needs the approved-claim registry and asset binding from §10,
+ * which does not exist here; matching the free-text phrases as substrings would
+ * look like a gate and catch nothing. The hard honesty rules that ARE enforced
+ * are the ones already in CONTENT_SYSTEM and api/_seoscore.ts.
+ */
+function briefDirective(b: GrowthBrief): string {
+  return [
+    `APPROVED GROWTH BRIEF ${b.brief_id} v${b.brief_version} — steering data, not a replacement for the rules above.`,
+    `  Objective: ${b.objective}`,
+    `  Audience: ${b.audience}`,
+    `  Search intent to serve: ${b.intent}`,
+    `  Market and locale: ${b.market} / ${b.locale}`,
+    b.prohibited_claims.length
+      ? `  Do NOT make any of these claims, in any wording:\n${b.prohibited_claims.map((c) => `    - ${c}`).join("\n")}`
+      : `  No claim restrictions beyond the hard rules above.`,
+    `Write the assigned topic FOR THAT AUDIENCE and TOWARD THAT OBJECTIVE. Where the brief and the rules above disagree, the rules above win.`,
+  ].join("\n");
+}
+
+async function generateArticle(topic: string, liveGames: Array<{ id: string; title: string }>, priorPosts: Array<{ slug: string; title: string }> = [], growthBrief: GrowthBrief | null = null) {
   // A FEATURE: topic carries a verified fact sheet. Handing the writer real
   // specifics is the difference between an article a technical buyer trusts and
   // one that reads like every other AI-generated product page — and it removes
@@ -149,6 +223,7 @@ async function generateArticle(topic: string, liveGames: Array<{ id: string; tit
       `Explain what it means for a creator in practice, not what it is called.`,
     ].join("\n");
   }
+  if (growthBrief) brief = `${brief}\n\n${briefDirective(growthBrief)}`;
   if (!process.env.ANTHROPIC_API_KEY) return { article: demoArticle(f ? f.name : topic), provider: "demo" as const };
   const anthropic = new Anthropic();
   // A wide, real link inventory: platform pages, live player games, and every
@@ -225,7 +300,12 @@ export default async function handler(req: any, res: any) {
     const liveGames = (await listApprovedGames(sql, 5)) as Array<{ id: string; title: string }>;
     // prior posts feed the interlinking: each new article links back into the archive
     const priorPosts = (await listBlogPosts(sql, 12)) as Array<{ slug: string; title: string }>;
-    let { article, provider } = await generateArticle(topic, liveGames, priorPosts);
+    /* Resolved once per post, before drafting, and logged either way — "which
+       brief was in force" is the first question asked of any article that turns
+       out wrong, and baseline is a legitimate answer rather than a silence. */
+    const { brief: growthBrief, why: briefWhy } = await resolveSeoBrief(sql);
+    console.log(JSON.stringify({ blogAgent: { topic, brief: growthBrief ? `${growthBrief.brief_id} v${growthBrief.brief_version}` : null, resolution: briefWhy } }));
+    let { article, provider } = await generateArticle(topic, liveGames, priorPosts, growthBrief);
 
     /* THE FLOOR, ENFORCED BEFORE PUBLICATION.
      *
@@ -263,7 +343,7 @@ export default async function handler(req: any, res: any) {
     while (audit.total < MIN_SCORE && stale < 3 && Date.now() < writeDeadline) {
       const retry = await generateArticle(
         `${topic}\n\nA previous attempt scored ${audit.total}/100 and was rejected. Fix EXACTLY these, keeping everything that already worked:\n${audit.failed.map((f) => `  - ${f.note}`).join("\n")}`,
-        liveGames, priorPosts,
+        liveGames, priorPosts, growthBrief,
       );
       const next = scoreArticleDraft(retry.article);
       if (next.total > audit.total) {
@@ -275,7 +355,7 @@ export default async function handler(req: any, res: any) {
     if (audit.total < MIN_SCORE) {
       return res.status(422).json({
         error: `Draft scored ${audit.total}/100 — below the ${MIN_SCORE} floor, so it was not published.`,
-        report: scoreReport(audit), topic, provider,
+        report: scoreReport(audit), topic, provider, briefResolution: briefWhy,
       });
     }
 
@@ -287,8 +367,13 @@ export default async function handler(req: any, res: any) {
       keywords: (article.keywords || []).join(", "), excerpt: article.excerpt ?? null, html: article.html,
       social: { x: article.socialX, linkedin: article.socialLinkedIn, facebook: article.socialFacebook, hashtags: article.hashtags },
       topic: topic.startsWith("FEATURE:") ? (featureById(topic.slice(8))?.name ?? topic) : topic, provider,
+      briefId: growthBrief?.brief_id ?? null, briefVersion: growthBrief?.brief_version ?? null,
     });
-    return res.status(200).json({ ok: true, slug, url: `/blog/${slug}`, title: article.title, provider, topic, seoScore: audit.total });
+    return res.status(200).json({
+      ok: true, slug, url: `/blog/${slug}`, title: article.title, provider, topic, seoScore: audit.total,
+      brief: growthBrief ? { briefId: growthBrief.brief_id, briefVersion: growthBrief.brief_version, expiresAt: growthBrief.expires_at } : null,
+      briefResolution: briefWhy,
+    });
   } catch (err: any) {
     return res.status(502).json({ error: "Content Agent failed", detail: String(err?.message ?? err) });
   }

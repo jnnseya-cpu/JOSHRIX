@@ -612,6 +612,119 @@
   });
 })();
 </script>
+<h2 class="jx reveal">Growth Briefs <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— WHAT THE CONTENT AGENT IS STEERED BY</span></h2>
+<div class="reveal" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
+  <p style="font-size:.88rem;color:var(--muted,#9d9db3);margin:0 0 .8rem">An approved Growth Brief tells the Content Agent <em>who</em> a post is for, what it is trying to achieve, and which claims to avoid. With no brief in force the agent writes exactly what it always wrote — that is the intended default, not a fault. A brief is frozen once approved: to change it, approve a higher <code>brief_version</code>. Briefs are written by hand for now; the detection stage that would propose them does not exist yet.</p>
+  <div id="briefInForce" style="font-size:.9rem;border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.7rem .9rem;margin-bottom:.9rem;background:rgba(255,255,255,.02)">Checking which brief is in force…</div>
+  <div id="briefList" style="font-size:.85rem;margin-bottom:.9rem;color:var(--muted,#9d9db3)">Loading the brief archive…</div>
+  <label for="briefJson" style="display:block;font-size:.78rem;letter-spacing:.08em;color:var(--muted,#9d9db3);margin-bottom:.35rem">APPROVE A BRIEF — paste one Growth Brief v1 object</label>
+  <textarea id="briefJson" rows="6" spellcheck="false" placeholder='{"schema_version":1,"brief_id":"gb_001","brief_version":1, … }' style="width:100%;box-sizing:border-box;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.55rem .8rem;color:inherit;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.8rem"></textarea>
+  <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;margin-top:.6rem">
+    <button class="btn btn-primary btn-sm" id="btnApproveBrief">✓ Approve &amp; Freeze</button>
+    <button class="btn btn-ghost btn-sm" id="btnRefreshBriefs">↻ Refresh</button>
+    <span id="briefMsg" style="font-size:.85rem;color:var(--muted,#9d9db3)"></span>
+  </div>
+</div>
+<script>
+/* The Growth Brief desk. Everything here is key-gated at /api/growth-brief; this
+   screen only displays and submits — every rule about what a valid brief is, and
+   who may approve one, is enforced server-side. */
+(function(){
+  var API = (window.JOSHRIX_API_BASE || '');
+  var esc = function(x){ return String(x == null ? '' : x).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
+  var key = function(){ try { return sessionStorage.getItem('jx.modKey') || ''; } catch(e){ return ''; } };
+  var force = document.getElementById('briefInForce');
+  var list = document.getElementById('briefList');
+  var msg = document.getElementById('briefMsg');
+
+  function loadInForce(){
+    /* 204 is the normal answer, so it is reported as baseline rather than as a
+       failure — the one state an operator must not misread. */
+    fetch(API + '/api/growth-brief?channel=seo', { headers: { 'x-admin-key': key() } })
+      .then(function(r){
+        if (r.status === 204) { force.innerHTML = '<strong>No brief in force.</strong> The Content Agent is on baseline behaviour — the editorial calendar, as before.'; return null; }
+        if (!r.ok) return r.json().then(function(j){ force.textContent = '⚠ ' + (j.error || ('HTTP ' + r.status)); return null; });
+        return r.json();
+      })
+      .then(function(j){
+        if (!j || !j.brief) return;
+        var b = j.brief;
+        force.innerHTML = '<strong>In force:</strong> ' + esc(b.brief_id) + ' v' + esc(b.brief_version)
+          + ' · ' + esc(b.market) + '/' + esc(b.locale)
+          + ' · expires ' + esc(b.expires_at)
+          + '<br><span style="color:var(--muted,#9d9db3)">Objective: ' + esc(b.objective) + ' — audience: ' + esc(b.audience) + '</span>';
+      })
+      .catch(function(){ force.textContent = '⚠ Could not reach the brief desk'; });
+  }
+
+  function loadList(){
+    fetch(API + '/api/growth-brief?list=1', { headers: { 'x-admin-key': key() } })
+      .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+      .then(function(res){
+        if (!res.ok) { list.textContent = '⚠ ' + (res.j.error || 'could not load the archive'); return; }
+        var rows = res.j.briefs || [];
+        if (!rows.length) { list.textContent = 'No briefs have been approved yet.'; return; }
+        list.innerHTML = rows.map(function(b){
+          var withdraw = b.status === 'approved'
+            ? ' <button class="btn btn-ghost btn-sm jxWithdraw" data-id="' + esc(b.briefId) + '" data-v="' + esc(b.briefVersion) + '" style="padding:.1rem .5rem;font-size:.72rem">withdraw</button>'
+            : '';
+          return '<div style="padding:.35rem 0;border-bottom:1px solid var(--stroke,#26263a)">'
+            + '<code>' + esc(b.briefId) + ' v' + esc(b.briefVersion) + '</code> · ' + esc(b.status)
+            + ' · ' + esc(b.market) + '/' + esc(b.locale)
+            + ' · score ' + esc(b.opportunityScore) + ' / confidence ' + esc(b.confidence)
+            + ' · expires ' + esc(b.expiresAt) + withdraw
+            + (b.objective ? '<br><span style="opacity:.8">' + esc(b.objective) + '</span>' : '')
+            + '</div>';
+        }).join('');
+        Array.prototype.forEach.call(list.querySelectorAll('.jxWithdraw'), function(btn){
+          btn.addEventListener('click', function(){
+            msg.textContent = 'Withdrawing…';
+            fetch(API + '/api/growth-brief', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-key': key() },
+              body: JSON.stringify({ archive: { briefId: btn.getAttribute('data-id'), briefVersion: Number(btn.getAttribute('data-v')) } }) })
+              .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+              .then(function(res){ msg.textContent = res.ok ? '✓ Withdrawn' : '⚠ ' + (res.j.error || 'failed'); loadList(); loadInForce(); })
+              .catch(function(){ msg.textContent = '⚠ Could not reach the brief desk'; });
+          });
+        });
+      })
+      .catch(function(){ list.textContent = '⚠ Could not reach the brief desk'; });
+  }
+
+  document.getElementById('btnApproveBrief').addEventListener('click', function(){
+    var raw = document.getElementById('briefJson').value.trim();
+    if (!raw) { msg.textContent = '⚠ Paste a brief first'; return; }
+    var parsed;
+    /* Parsed here only to catch a typo before a round trip. The contract itself
+       is checked server-side, where it cannot be skipped. */
+    try { parsed = JSON.parse(raw); } catch (e) { msg.textContent = '⚠ That is not valid JSON: ' + e.message; return; }
+    var btn = this; btn.disabled = true; msg.textContent = 'Validating against Growth Brief v1…';
+    fetch(API + '/api/growth-brief', { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-key': key() },
+      body: JSON.stringify({ brief: parsed }) })
+      .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, status: r.status, j: j }; }); })
+      .then(function(res){
+        btn.disabled = false;
+        if (res.ok) {
+          msg.textContent = '✓ ' + (res.j.result === 'duplicate' ? 'Already approved, unchanged' : 'Approved and frozen') + ': ' + res.j.briefId + ' v' + res.j.briefVersion;
+          loadList(); loadInForce();
+          return;
+        }
+        /* 422 carries the exact field failures, which is the only useful reply
+           to "it did not work". */
+        var detail = (res.j.issues || []).map(function(i){ return i.path + ': ' + i.message; })
+          .concat(res.j.failures || []).join(' · ');
+        msg.innerHTML = '⚠ ' + esc(res.j.error || ('HTTP ' + res.status)) + (detail ? '<br><span style="opacity:.8">' + esc(detail) + '</span>' : '');
+      })
+      .catch(function(){ btn.disabled = false; msg.textContent = '⚠ Could not reach the brief desk'; });
+  });
+
+  document.getElementById('btnRefreshBriefs').addEventListener('click', function(){ loadList(); loadInForce(); });
+
+  /* The panel waits for the admin key rather than firing a guaranteed 401 — the
+     same pattern the stats block above uses. */
+  (function waitForKey(){ if (!key()) { setTimeout(waitForKey, 1500); return; } loadInForce(); loadList(); })();
+})();
+</script>
+
 <h2 class="jx reveal">Content Agent <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— SEO BLOG ON AUTOPILOT</span></h2>
 <div class="reveal" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
   <p style="font-size:.88rem;color:var(--muted,#9d9db3);margin:0 0 .8rem">Publishes one SEO article a day automatically (Vercel Cron, 09:00 UTC) rotating a 14-topic editorial calendar, with dynamic internal links to live games. Every post is server-rendered with OpenGraph + JSON-LD, listed in <a href="/sitemap.xml" style="color:var(--signal)">sitemap.xml</a> and <a href="/feed.xml" style="color:var(--signal)">the RSS feed</a> — point Buffer/Zapier/IFTTT at the feed to auto-share each post to your social accounts.</p>

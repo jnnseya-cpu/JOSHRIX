@@ -52,16 +52,87 @@ draft-only *by arithmetic*, and §20's keyless release gate is only satisfiable
 with at least two independent first-party families — which §22 confirms is the
 intent. That is a property of the spec, not a defect to code around.
 
-**Not built yet, and not claimed:** the observation / topic / opportunity / brief
-schema and ledger functions, `POST /api/trend-observe`, `GET
-/api/trend-opportunities`, `GET /api/brief-effective`, and wiring the existing
-blog agent to resolve the effective brief with baseline fallback (spec §14.5).
-The spec estimates six to eight weeks for its full scope; this is the first
-slice.
+### The brief now reaches an agent — second increment, same day
 
-**Verified:** 49 files, 2,124 assertions, green, ratchet clean, type check clean.
-The test file numbering gap at t47 is closed — there was never a t47, and a gap
-invites someone to go looking for a deleted test.
+A contract nothing consumes is a document. So the path from an approved brief to
+a published article is finished end to end, and it is the only vertical path
+built: storage → resolution → the agent → the record of which brief steered it.
+
+**`/api/growth-brief` is the approval desk, and only that.** `POST { brief }`
+validates against Growth Brief v1 and freezes it; `GET ?channel=seo` returns the
+effective brief or **204**, which §12 requires because "no brief applies" is a
+normal answer and not an error; `POST { archive }` withdraws one before expiry,
+because otherwise a brief that should never have been approved steers every post
+for up to seven days. Admin key or cron secret, failing closed before any
+database work — a brief carries the objective, the audience and the prohibited
+claims, which is strategy and, in that last list, legal exposure. It generates
+nothing and publishes nothing: drafting stays in the agents that already exist.
+
+**A brief version is frozen, never updated.** The primary key is
+`(brief_id, brief_version)` and the only `UPDATE` the table allows is the status
+withdrawal. Re-posting an identical version is a no-op; posting different content
+under a version that already exists is a **409**. Replacing instructions an agent
+has already acted on would destroy the answer to "what was it told", which §17
+exists to keep.
+
+**The blog agent resolves the brief and passes it as data.** `CONTENT_SYSTEM` is
+untouched — the spec forbids permanently rewriting agent prompts, and the honesty
+rules that must survive every brief live in that prompt. The brief steers
+audience, intent, objective and claims to avoid; it does **not** choose the
+topic, because `topic_id` is an identifier and the topic registry that would give
+it a title is not built. Which brief steered a post is recorded on the post, so
+the question stays answerable after the brief is revised. Every non-brief
+outcome — none approved, none eligible, lookup failed — returns baseline
+behaviour and the agent writes exactly what it wrote before. A content pipeline
+that stops publishing because a strategy lookup failed has traded a working
+feature for a new one.
+
+**One thing is passed and not enforced, and the comment says so.**
+`prohibited_claims` is free text; real enforcement needs §10's approved-claim
+registry and asset binding, which does not exist. Substring-matching those
+phrases would look like a gate and catch nothing.
+
+**THE SQL WAS EXECUTED THIS TIME.** `/usr/lib/postgresql/16/bin` has a complete
+PostgreSQL 16.15 server and nobody had ever used it — every SQL statement in
+`api/_ledger.ts` has been asserted by regular expression and run by no engine,
+and `launch-audit/` said schema and migrations were untestable here, which was an
+unchecked assumption rather than a fact. A temporary cluster ran this change's
+statements verbatim: the frozen-version write really does leave the original
+payload in place, the lookup really does exclude an expired brief and another
+market's brief, the withdrawal really is true-then-false, `EXPLAIN` really shows
+an index scan, and the `blog_posts` migration really does leave a populated table
+intact when run twice. Eight results in `launch-audit/evidence-ledger.md`, H-01
+to H-08, and the corrected row above them.
+
+**Recorded, not done:** the other ~20 tables in `api/_ledger.ts` have still never
+had their DDL executed, and there is no database harness in `tests/`. Building
+one needs a Postgres client in `devDependencies`, a decision about what a skipped
+DB test must do, and Postgres in the CI gate. Also still absent: the observation
+and scoring stages (`POST /api/trend-observe`, `GET /api/trend-opportunities`),
+which is how a brief would be *detected* rather than hand-approved. The spec
+estimates six to eight weeks for its full scope.
+
+**The desk has an operator surface, and it was rendered.** `/admin` gained a
+Growth Briefs panel: what is in force, the archive with its scores, a withdraw
+control on approved versions only, and a paste-and-approve box that shows the
+exact field that failed on a 422. `tests/t48-brief-desk.mjs` drives it in real
+Chromium, and the state it exists for is the 204: it asserts that "no brief in
+force" reads as baseline rather than as a fault, because an operator who
+misreads that will go hunting for a broken endpoint. It also asserts that a
+hostile `objective` is rendered as text — a brief is operator-supplied text on
+the one screen that holds the admin key.
+
+**Two of my own mistakes, caught by that test rather than by me.** Its first
+version counted the page's own pageview beacon as "the page sent something", so
+an assertion passed for the wrong reason. Its second version waited for the
+string "Growth Brief v1", which the *pending* message also contains — so the wait
+returned immediately and the assertion raced the response. Green alone, red
+under load. Fixed by waiting on a string only the settled state contains, which
+is the fix t26 still needs and did not get.
+
+**Verified:** 50 files, 2,183 assertions, green, ratchet clean, type check clean,
+plus the eight database results above. The test numbering gap at t47 is closed —
+there was never a t47, and a gap invites a hunt for a deleted test.
 
 ---
 

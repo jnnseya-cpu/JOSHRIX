@@ -31,7 +31,8 @@ and is marked UNTESTABLE rather than inferred.
 
 | Area | Why | Unblocked by |
 |---|---|---|
-| Database schema, migrations, tenancy, restore drill | no `DATABASE_URL` | human-actions #4, #10 |
+| Production data: tenancy, restore drill, ledger difference | no `DATABASE_URL`, no snapshot access | human-actions #4, #10 |
+| ~~Database schema and migrations~~ | **CORRECTED 10 Nov — see H-01 below. This row was wrong: a real Postgres 16 is installed in this container, so DDL and migrations execute here. Only production DATA was ever out of reach.** | — |
 | Payments, webhooks, refunds, entitlements, ledger difference | no Stripe key, no staging | #5, #10 |
 | AI quality, hallucination, injection, cost per task | no provider key | #1 |
 | Load, p95, throughput, breaking point, recovery | no deployment reachable | #10 |
@@ -39,3 +40,36 @@ and is marked UNTESTABLE rather than inferred.
 | Deploy, rollback, DR drill | no CI/CD access | #10 |
 | Real deletion request end to end | no DB, no email platform | #10 |
 | Notification delivery | no SMTP credentials | #10 |
+
+---
+
+## Cycle 2 — 10 Nov 2026. The SQL was executed, not read.
+
+`/usr/lib/postgresql/16/bin` holds a complete PostgreSQL 16.15 server. It was
+never used, and the row above said schema and migrations were untestable — which
+was an assumption that went unchecked for seven weeks while every SQL statement
+in `api/_ledger.ts` was asserted by regular expression and run by nobody.
+
+A temporary cluster (`initdb` as the `postgres` user, unix socket, port 5433,
+discarded afterwards) executed the statements this change adds, verbatim. These
+are results, not readings.
+
+| ID | Check | Result |
+|---|---|---|
+| H-01 | Cluster starts | PostgreSQL 16.15 up on a private socket; `select version()` answered |
+| H-02 | `growth_briefs` DDL + index | `CREATE TABLE`, `CREATE INDEX` both clean |
+| H-03 | Frozen-version write | second `INSERT` of the same `(brief_id, brief_version)` with a DIFFERENT payload inserted 0 rows **and the stored payload was still the original** — so `saveGrowthBrief` returns `conflict` and nothing is overwritten |
+| H-04 | Effective lookup | at a fixed clock, returned only the in-window approved rows for the asked market and locale, ordered `brief_version DESC` — correctly excluding an expired brief and another market's brief |
+| H-05 | Withdrawal | first `UPDATE … status='approved'` returned 1 row, the second returned 0 — so `archiveGrowthBrief` is true then false, with no double-archive |
+| H-06 | Archive listing | the `payload->>` / `::numeric` expressions parsed and returned 86.25 and 83.5; null-safe where the key is absent |
+| H-07 | Index actually used | `EXPLAIN` shows `Index Scan using growth_briefs_lookup`, not `Seq Scan` |
+| H-08 | `blog_posts` migration on a POPULATED table | built the table as production has it today, inserted a post, then ran both `ADD COLUMN IF NOT EXISTS` twice: pre-existing row intact with NULL brief columns, second run a NOTICE and a no-op, and `ON CONFLICT (slug) DO NOTHING` still refused to overwrite an existing post |
+
+**Recorded, not acted on (CLAUDE.md rule 33).** This cycle proved the mechanism
+on one table. The other ~20 tables in `api/_ledger.ts` — wallets, the double-entry
+ledger, `acu_credits`, `forge_jobs`, payouts, commission — have still never had
+their DDL executed, and `tests/` has no database harness. Standing one up needs a
+Postgres client in `devDependencies` (the Neon driver speaks only to Neon's
+proxy), a decision about what a skipped DB test must do on a machine with no
+Postgres, and Postgres in `.github/workflows/gate.yml`. That is its own piece of
+work with its own design questions, and it was not folded into this one.
