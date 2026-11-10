@@ -10,6 +10,7 @@ import Stripe from "stripe";
 import { PLANS } from "../shared/payments";
 import { safeOrigin, clientIp, rateLimit, tooMany } from "./_guard";
 import { getDb } from "./_ledger";
+import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -51,7 +52,7 @@ export default async function handler(req: any, res: any) {
       });
       return res.status(200).json({ mode: "live", checkoutUrl: session.url, planId: plan.id, note: "Plan activates when the verified webhook confirms payment." });
     } catch (err: any) {
-      return res.status(502).json({ error: "Stripe session creation failed", detail: String(err?.message ?? err) });
+      return failing(res, "subscribe.session", err, "Stripe session creation failed");
     }
   }
 

@@ -8,6 +8,7 @@
  */
 import { BUILD_ID } from "./_gateway";
 import { getDb, ensureGameSchema, listForgeLog } from "./_ledger";
+import { failing } from "./_observe";
 
 export default async function handler(_req: any, res: any) {
   const sql = getDb();
@@ -17,6 +18,6 @@ export default async function handler(_req: any, res: any) {
     const entries = await listForgeLog(sql, 20);
     return res.status(200).json({ build: BUILD_ID, entries });
   } catch (err: any) {
-    return res.status(502).json({ error: "forge log unavailable", detail: String(err?.message ?? err) });
+    return failing(res, "forge.log", err, "forge log unavailable");
   }
 }

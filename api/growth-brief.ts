@@ -32,6 +32,7 @@ import {
   pickEffectiveBrief, INSTALL, INSTALLED_LOCALES,
   type BriefChannel,
 } from "../shared/trend";
+import { failing } from "./_observe";
 
 /** A brief payload is a bounded object, not a document. 16 KiB is generous for
  *  22 fields and refuses a megabyte of jsonb before it reaches the parser. */
@@ -203,6 +204,6 @@ export default async function handler(req: any, res: any) {
 
     return res.status(405).json({ error: "GET or POST only" });
   } catch (err: any) {
-    return res.status(502).json({ error: "Growth Brief desk failed", detail: String(err?.message ?? err) });
+    return failing(res, "growth.brief", err, "Growth Brief desk failed");
   }
 }

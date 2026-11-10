@@ -9,6 +9,7 @@ import { z } from "zod";
 import { GROWTH, GROWTH_LADDER, NET_REVENUE_DEDUCTIONS, NEVER_COMMISSIONABLE, FRAUD_SIGNALS, REWARD_PATH, RISK_PATH, REFERRAL_REWARD_ACU, statusForPaidReferrals } from "../shared/growth";
 import { getDb, ensureReferralSchema, claimReferralCode, referralStats, walletOwnerUid } from "./_ledger";
 import { callerIdentity } from "./_auth";
+import { failing } from "./_observe";
 
 const CreateLinkSchema = z.object({ handle: z.string().min(2).max(24).regex(/^[a-zA-Z0-9_-]+$/) });
 
@@ -69,7 +70,7 @@ export default function handler(req: any, res: any) {
           ? "Your link is live. Anyone who signs up through it and then pays is attributed to you."
           : "This is the link already registered to your account.",
       });
-    })().catch((err: any) => res.status(502).json({ error: "Referral link failed", detail: String(err?.message ?? err).slice(0, 200) }));
+    })().catch((err: any) => failing(res, "referrals.link", err, "Referral link failed"));
   }
 
   if (req.method !== "GET") return res.status(405).json({ error: "GET or POST" });

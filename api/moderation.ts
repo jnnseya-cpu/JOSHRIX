@@ -8,6 +8,7 @@
 import { getDb, ensureGameSchema, listPendingGames, setGameStatus, getGame } from "./_ledger";
 import { tooManyBadKeys } from "./_guard";
 import { notify } from "./_notify";
+import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -54,6 +55,6 @@ export default async function handler(req: any, res: any) {
 
     return res.status(405).json({ error: "GET or POST only" });
   } catch (err: any) {
-    return res.status(502).json({ error: "Moderation action failed", detail: String(err?.message ?? err) });
+    return failing(res, "moderation.action", err, "Moderation action failed");
   }
 }

@@ -1,5 +1,5 @@
 /**
- * THE GROWTH BRIEF DESK, IN A REAL BROWSER.
+ * THE OPERATOR SURFACES, IN A REAL BROWSER — the brief desk and the failure panel.
  *
  * /api/growth-brief is tested in t47 by reading it. What a source test cannot
  * see is whether an operator can actually reach it, and this repository has been
@@ -195,6 +195,67 @@ async function open(handlers) {
   t('while the text itself is still visible to the operator',
     /onerror/.test(await page.locator('#briefInForce').textContent()));
   t('no page error on hostile input', errors.length === 0, errors.join(' | '));
+  await ctx.close();
+}
+
+/* ------------------------------------------------ the failure panel */
+{
+  /* The panel that answers "what is breaking". It renders error text, which is
+     the one thing on an admin screen that an attacker can influence: a crafted
+     input produces a crafted error message. */
+  const hostileMessage = '<img src=x onerror="window.__xss=1">relation "wallets" does not exist';
+  const { page, ctx, errors } = await open((url) => {
+    if (url.includes('reference=')) {
+      return { body: { reference: 'a1b2c3d4', found: 1, failures: [{ operation: 'forge.enqueue', category: 'database', message: hostileMessage, at: '2026-11-10T21:00:00Z' }] } };
+    }
+    if (url.includes('/api/admin-stats')) {
+      return { body: { games: {}, money: {}, failures: { windowHours: 24, total: 7, groups: [
+        { operation: 'forge.enqueue', category: 'database', count: 5, latestReference: 'a1b2c3d4', latestMessage: hostileMessage, lastSeen: '2026-11-10T21:00:00Z' },
+        { operation: 'blog.generate', category: 'provider', count: 2, latestReference: 'b2c3d4e5', latestMessage: 'overloaded_error', lastSeen: '2026-11-10T20:00:00Z' },
+      ] } } };
+    }
+    if (url.includes('channel=seo')) return { status: 204 };
+    if (url.includes('list=1')) return { body: { briefs: [], count: 0 } };
+  });
+  await page.locator('#failList').filter({ hasText: 'forge.enqueue' }).waitFor({ timeout: 15000 }).catch(() => {});
+  const txt = await page.locator('#failList').textContent();
+  t('the panel groups failures by operation and category',
+    /forge\.enqueue/.test(txt) && /database/.test(txt) && /blog\.generate/.test(txt) && /provider/.test(txt), JSON.stringify(txt).slice(0, 220));
+  t('and shows the reference an operator needs to quote', /a1b2c3d4/.test(txt));
+  t('a hostile error message is rendered as text, not executed',
+    (await page.evaluate(() => window.__xss)) === undefined
+      && (await page.locator('#failList img').count()) === 0);
+
+  /* A malformed reference must be refused locally rather than sent. */
+  await page.fill('#failRef', 'not-hex!');
+  await page.click('#btnFailRef');
+  t('a malformed reference is refused before a request is made',
+    /8 hexadecimal/.test(await page.locator('#failMsg').textContent()));
+
+  await page.fill('#failRef', 'a1b2c3d4');
+  await page.click('#btnFailRef');
+  await page.locator('#failMsg').filter({ hasText: 'forge.enqueue' }).waitFor({ timeout: 15000 }).catch(() => {});
+  const m = await page.locator('#failMsg').textContent();
+  t('a valid reference resolves to the operation and category', /forge\.enqueue/.test(m) && /database/.test(m), JSON.stringify(m).slice(0, 200));
+  t('the looked-up message is escaped too',
+    (await page.evaluate(() => window.__xss)) === undefined && (await page.locator('#failMsg img').count()) === 0);
+  t('no page error on the failure panel', errors.length === 0, errors.join(' | '));
+  await ctx.close();
+}
+
+/* ------------------------------------------- the empty state matters here too */
+{
+  const { page, ctx, errors } = await open((url) => {
+    if (url.includes('/api/admin-stats')) return { body: { games: {}, money: {}, failures: { windowHours: 24, total: 0, groups: [] } } };
+    if (url.includes('channel=seo')) return { status: 204 };
+    if (url.includes('list=1')) return { body: { briefs: [], count: 0 } };
+  });
+  await page.locator('#failList').filter({ hasText: 'Nothing has failed' }).waitFor({ timeout: 15000 }).catch(() => {});
+  const txt = await page.locator('#failList').textContent();
+  t('zero failures says so plainly rather than staying on "Loading…"',
+    /Nothing has failed in the last 24 hours/.test(txt), JSON.stringify(txt));
+  t('and does not look like an error', !/⚠/.test(txt));
+  t('no page error in the empty state', errors.length === 0, errors.join(' | '));
   await ctx.close();
 }
 

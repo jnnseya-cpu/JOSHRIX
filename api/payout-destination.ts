@@ -25,6 +25,7 @@ import {
 import { callerIdentity } from "./_auth";
 import { encryptSecret, maskTail, payoutSecretConfigured } from "./_secrets";
 import { clientIp, rateLimit, tooMany, recordSecurityEvent } from "./_guard";
+import { failing } from "./_observe";
 
 const RAILS = Object.keys(PAYOUT.rails);
 
@@ -119,6 +120,6 @@ export default async function handler(req: any, res: any) {
 
     return res.status(405).json({ error: "GET, POST or DELETE" });
   } catch (err: any) {
-    return res.status(502).json({ error: "Destination request failed", detail: String(err?.message ?? err).slice(0, 200) });
+    return failing(res, "payout.destination", err, "Destination request failed");
   }
 }

@@ -13,6 +13,7 @@
 import { generateGrowthCopy, acuChargeForUsage, GROWTH_HOLD, GROWTH_MIN_CHARGE } from "./_gateway";
 import { getDb, ensureGameSchema, debitWallet, creditWallet, getGame, listGamesByWallet } from "./_ledger";
 import { clientIp, rateLimit, tooMany, forgeDisabled, ledgerRequired } from "./_guard";
+import { failing } from "./_observe";
 
 export const GROWTH_TOOLS = [
   "social_posts", "game_advert", "email_campaign", "landing_page",
@@ -125,9 +126,9 @@ export default async function handler(req: any, res: any) {
     } catch (err: any) {
       // the AI failed — give the hold straight back, in full
       try { await creditWallet(sql, walletId, GROWTH_HOLD); } catch { /* reconciliation */ }
-      return res.status(502).json({ error: "The Growth Engine could not complete this request — your hold was refunded in full.", detail: String(err?.message ?? err).slice(0, 200) });
+      return failing(res, "growth.tool", err, "The Growth Engine could not complete this request — your hold was refunded in full.");
     }
   } catch (err: any) {
-    return res.status(502).json({ error: "Growth request failed", detail: String(err?.message ?? err).slice(0, 200) });
+    return failing(res, "growth.request", err, "Growth request failed");
   }
 }

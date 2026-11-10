@@ -8,6 +8,7 @@
  */
 import { getDb, ensureBlogSchema, ensureGameSchema, listBlogPosts, getBlogPost, listApprovedGames } from "./_ledger";
 import { autoLink, extractFaq, readingMinutes, SITE } from "./_seo";
+import { failing } from "./_observe";
 
 export default async function handler(_req: any, res: any) {
   const sql = getDb();
@@ -82,7 +83,7 @@ export default async function handler(_req: any, res: any) {
       verdict: buildVerdict({ posts: posts.length, avgInternal, orphans: orphans.length, thin, dupTitles: dupTitles.length }),
     });
   } catch (err: any) {
-    return res.status(502).json({ error: "SEO health check failed", detail: String(err?.message ?? err).slice(0, 200) });
+    return failing(res, "seo.health", err, "SEO health check failed");
   }
 }
 

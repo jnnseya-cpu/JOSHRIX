@@ -38,6 +38,7 @@ import {
 } from "./_forgejobs";
 import { FORGE_MAX_SECONDS } from "./_gateway";
 import { clientIp, rateLimit, tooMany, forgeDisabled, ledgerRequired } from "./_guard";
+import { failing } from "./_observe";
 
 /** Leave room after the slice to write state and reply — the same discipline as
  *  the generation budgets, applied to the function that owns them. */
@@ -103,7 +104,7 @@ export default async function handler(req: any, res: any) {
       job = await claimForgeJob(sql!, ticket);
     }
   } catch (err: any) {
-    return res.status(502).json({ error: "job lookup failed", detail: String(err?.message ?? err) });
+    return failing(res, "forge.worker.lookup", err, "job lookup failed");
   }
 
   /* Nothing to do is a normal, successful outcome: either the queue is empty or
@@ -123,6 +124,6 @@ export default async function handler(req: any, res: any) {
       await sql!`UPDATE forge_jobs SET lease_until = NULL, error = ${String(err?.message ?? err).slice(0, 600)},
           updated_at = now() WHERE ticket = ${job.ticket} AND status = 'running'`;
     } catch { /* the lease expires on its own */ }
-    return res.status(502).json({ error: "slice failed", detail: String(err?.message ?? err) });
+    return failing(res, "forge.worker.slice", err, "slice failed");
   }
 }

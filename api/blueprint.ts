@@ -9,6 +9,7 @@
 import { generateBlueprint, acuChargeForUsage, BLUEPRINT_ACU_CHARGE, BLUEPRINT_MIN_CHARGE } from "./_gateway";
 import { clientIp, rateLimit, tooMany, forgeDisabled, ledgerRequired } from "./_guard";
 import { getDb, ensureGameSchema, debitWallet, creditWallet } from "./_ledger";
+import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -44,7 +45,7 @@ export default async function handler(req: any, res: any) {
       await ensureGameSchema(sql);
       balanceAfter = await debitWallet(sql, walletId, BLUEPRINT_ACU_CHARGE);
     } catch (err: any) {
-      return res.status(502).json({ error: "Wallet check failed", detail: String(err?.message ?? err) });
+      return failing(res, "blueprint.walletCheck", err, "Wallet check failed");
     }
     if (balanceAfter === null) {
       return res.status(402).json({ error: `Not enough ACUs (blueprint costs ${BLUEPRINT_ACU_CHARGE}). Top up at /wallet.html.`, acuCharge: BLUEPRINT_ACU_CHARGE });
@@ -76,6 +77,6 @@ export default async function handler(req: any, res: any) {
       // generation failed AFTER the debit — put the ACUs back
       try { await creditWallet(sql, walletId, BLUEPRINT_ACU_CHARGE); } catch { /* refund best-effort; ledger reconciliation catches strays */ }
     }
-    return res.status(502).json({ error: "Blueprint generation failed", detail: String(err?.message ?? err) });
+    return failing(res, "blueprint.generate", err, "Blueprint generation failed");
   }
 }

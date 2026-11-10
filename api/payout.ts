@@ -18,6 +18,7 @@ import { getDb, ensurePayoutSchema, ensureGameSchema, getEarnings, reserveForPay
   ensurePayoutDestinationSchema, getPayoutDestination, ensureCommissionSchema, releaseClearedCommission } from "./_ledger";
 import { callerIdentity } from "./_auth";
 import { clientIp, recordSecurityEvent } from "./_guard";
+import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -143,6 +144,6 @@ export default async function handler(req: any, res: any) {
         : "Reserved and queued for operator release. Funds move once the payout rail is executed.",
     });
   } catch (err: any) {
-    return res.status(502).json({ error: "Payout request failed", detail: String(err?.message ?? err).slice(0, 200), queued: false });
+    return failing(res, "payout.request", err, "Payout request failed", { extra: { queued: false } });
   }
 }

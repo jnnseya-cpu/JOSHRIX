@@ -12,6 +12,7 @@ import Stripe from "stripe";
 import { CheckoutRequestSchema, marketplaceSplit, salePostings, MIN_LISTING_PRICE_MINOR, effectiveSellerPlan, canSell } from "../shared/payments";
 import { getDb, ensureGameSchema, getListing, getWallet } from "./_ledger";
 import { safeOrigin, clientIp, rateLimit, tooMany } from "./_guard";
+import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -108,6 +109,6 @@ export default async function handler(req: any, res: any) {
       note: "Entitlement is granted ONLY when the verified webhook receives checkout.session.completed.",
     });
   } catch (err: any) {
-    return res.status(502).json({ error: "Checkout failed", detail: String(err?.message ?? err).slice(0, 200) });
+    return failing(res, "checkout.session", err, "Checkout failed");
   }
 }

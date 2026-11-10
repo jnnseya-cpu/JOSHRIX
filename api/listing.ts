@@ -21,6 +21,7 @@
 import { getDb, ensureGameSchema, getWallet, setListingPrice, getListing } from "./_ledger";
 import { PLANS, MIN_LISTING_PRICE_MINOR, marketplaceSplit } from "../shared/payments";
 import { clientIp, rateLimit, tooMany } from "./_guard";
+import { failing } from "./_observe";
 
 /** Matches the ceiling CheckoutRequestSchema enforces, so a price that can be
  *  set is always a price that can be bought. */
@@ -106,6 +107,6 @@ export default async function handler(req: any, res: any) {
         : "Priced — it goes on sale the moment moderation approves it.",
     });
   } catch (err: any) {
-    return res.status(502).json({ error: "Could not update the listing", detail: String(err?.message ?? err) });
+    return failing(res, "listing.update", err, "Could not update the listing");
   }
 }

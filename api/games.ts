@@ -15,6 +15,7 @@ import { getDb, ensureGameSchema, saveGame, getWallet, countPendingByWallet, acc
 import { looksPlayable } from "./_gateway";
 import { notify } from "./_notify";
 import { EMAIL_RE } from "./_guard";
+import { failing } from "./_observe";
 
 const MAX_PENDING_PER_WALLET = 10;
 
@@ -154,6 +155,6 @@ export default async function handler(req: any, res: any) {
       previewUrl: `/play/${id}?preview=1&w=${encodeURIComponent(walletId)}`,
     });
   } catch (err: any) {
-    return res.status(502).json({ error: "Could not save game", detail: String(err?.message ?? err) });
+    return failing(res, "game.save", err, "Could not save game");
   }
 }

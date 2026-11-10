@@ -7,6 +7,7 @@
  * 300-ACU debit — so a refund can never exceed what was paid and cannot be farmed.
  */
 import { getDb, ensureGameSchema, claimForgeRefund, creditWallet, getWallet, recordForgeLog } from "./_ledger";
+import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -43,6 +44,6 @@ export default async function handler(req: any, res: any) {
     const balanceAfter = await creditWallet(sql, walletId, amount);
     return res.status(200).json({ refunded: true, amount, ...(balanceAfter !== null ? { balanceAfter } : {}) });
   } catch (err: any) {
-    return res.status(502).json({ error: "Refund failed", detail: String(err?.message ?? err) });
+    return failing(res, "forge.refund", err, "Refund failed");
   }
 }

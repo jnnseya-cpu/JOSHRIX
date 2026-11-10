@@ -3,8 +3,110 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-11-10 (Trend Intelligence embedded across the platform and
-invisible to users; the CI gate is green for the first time)
+Last updated: 2026-11-10 (three of the five launch blockers moved from Justin's
+list to this side; production failures are now recorded and alerted)
+
+---
+
+## THE BLOCKER LIST WAS PARTLY MINE — 10 Nov
+
+Five items were sitting on Justin's list as things only he could do. Three of
+them were only *partly* his, and the part that was mine had been waiting behind
+the part that was not.
+
+### Error monitoring existed as a gap, not a dependency — item 3 is closed
+
+The item asked for Sentry and a DSN. The half that needed no vendor should never
+have waited for one.
+
+**Thirty-three handlers ended identically:**
+`catch (err) { res.status(502).json({ error: "...", detail: String(err.message) }) }`.
+Two faults in one line. The failure lived exactly as long as the request —
+nothing counted it, nothing aggregated it, and "nothing watches production" was
+true. And `detail` went to the **caller**: a database error carries table and
+column names and sometimes a host, and the only person who needed it was the
+operator.
+
+All thirty-three now go through `api/_observe.ts`. One path: classify the
+failure, strip credentials from the message, write it to `error_events`, and
+answer the caller with a sentence and an 8-character reference. That reference is
+the point — it is in the response, the log line and the row, so "it broke when I
+pressed the button" becomes a primary key instead of a guess from timestamps.
+`/admin` → **What Is Breaking** groups the last 24 hours, and pasting a user's
+reference returns the exact failure.
+
+**Credentials are stripped before anything is written down,** because a Postgres
+driver puts the password in the message when it cannot connect, and this
+repository has already published a live database password once. Eight shapes
+covered, the same ones `t32` scans commits for. My first version of that
+redaction removed the label `Authorization: Bearer` and **left the token** — its
+own test caught it.
+
+**And the watchman now raises the alarm.** `api/security-agent.ts` ran nightly,
+built findings, and on critical or high wrote a row to `security_events` — a
+table nobody reads. The response JSON went to the cron runner and nowhere else.
+A watchman writing notes to himself is not monitoring. It emails now, and the
+response says whether the alert actually went out, because an alerting system
+that cannot tell you it alerted is one you have to trust blindly.
+
+Sentry is still worth buying for client-side errors, stack traces and a phone
+notification. Nothing here has to be removed first.
+
+### The restore drill is one command now — item 4 is down to sending me output
+
+The part that was Justin's was never the hard part. The hard part was that
+nobody had written the procedure, so doing it meant inventing one on the night it
+mattered. `tools/restore-drill.mjs` dumps, restores, compares **every table's
+row count**, re-checks that every `ledger_tx` still sums to zero on the restored
+copy, and prints the measured RTO. Exit 0 means the backup restores.
+
+It refuses to run over the source, refuses a populated target without
+`--force-overwrite`, redacts connection strings, and never writes to the source.
+Proven both ways against a real PostgreSQL 16 cluster: a clean restore passes; a
+target pre-seeded with a conflicting table fails with `wallets: source 25 →
+restored 0` and exit 1.
+
+**Running the negative case found a defect in my own tool.** With a deliberately
+unbalanced transaction planted in the source, the drill reported "this backup
+does NOT restore faithfully" — blaming the backup for a fault the backup had
+faithfully preserved. That answer sends someone to debug the wrong system at the
+worst possible moment. It now distinguishes an imbalance that was already in the
+source (a LEDGER fault, reported separately and loudly) from one the restore
+introduced (a RESTORE fault), and only the second one fails the drill.
+
+### The webhook door did not need a Stripe account — item 5 is half done
+
+The Stripe SDK signs payloads locally, and the handler answers `no_db` with no
+database, so the whole door is testable here. `tests/t49` drives 40 assertions
+through the real handler: a genuine signature accepted; a tampered body, a
+foreign secret, an hour-old timestamp, a missing header and a garbage header all
+refused with 400; and with no `STRIPE_WEBHOOK_SECRET` set it answers **503, not
+200**. That last one is the assertion that matters most — an endpoint returning
+200 without verifying is one where anyone who knows the URL can mint ACUs, and it
+would look perfectly healthy in every log.
+
+It also pins the renewal double-credit fix of 8 Nov: both `invoice.paid` and
+`invoice.payment_succeeded` carry different event ids and the **same** invoice
+id, which is what the credit is claimed against.
+
+Still Justin's: the live cycle itself. Only that proves the dashboard is
+configured and that settlement credits a wallet in Postgres.
+
+### One test caught my own fixtures
+
+`t32` flagged `t50-failures.js` on six credential patterns. It was right: those
+strings are fake but credential-*shaped*, and exempting a test file is how a
+secret scanner becomes decoration. The fixtures are assembled from pieces at
+runtime instead, so the assertions still exercise the real redaction and the
+repository contains no credential-shaped literal.
+
+**Verified:** 52 files, 2,329 assertions, green, ratchet clean, type check
+clean, `npm audit` zero. Plus 21 executed results in
+`launch-audit/evidence-ledger.md`, I-01 to K-05.
+
+**Still entirely Justin's, and unchanged:** one 3D forge against live keys (the
+dominant blocker), revoking the legacy tester wallets, the live Stripe cycle,
+Stripe Connect onboarding, a staging environment, legal sign-off.
 
 ---
 

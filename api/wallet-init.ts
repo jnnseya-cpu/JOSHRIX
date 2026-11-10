@@ -20,6 +20,7 @@ import { callerIdentity } from "./_auth";
 import { normalizeEmail, clientIp, rateLimit, tooMany, claimNonce, recordSecurityEvent } from "./_guard";
 import { verifyHuman, isDisposableEmail, humanVerifyConfigured } from "./_human";
 import { DEFAULT_WALLET_CATEGORY, TESTER_CEILING_ACU, TESTER_REFILL_COOLDOWN_SECONDS } from "../shared/payments";
+import { failing } from "./_observe";
 
 /**
  * WHAT ONE BUILD ATTEMPT COSTS, sent with every wallet response.
@@ -215,6 +216,6 @@ export default async function handler(req: any, res: any) {
       note: "Top up at /wallet to forge your first game.",
     });
   } catch (err: any) {
-    return res.status(502).json({ error: "Wallet init failed", detail: String(err?.message ?? err) });
+    return failing(res, "wallet.init", err, "Wallet init failed");
   }
 }

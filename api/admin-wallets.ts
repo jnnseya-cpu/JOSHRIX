@@ -13,6 +13,7 @@ import { getDb, ensureGameSchema, listWallets, creditWallet, getWallet, setWalle
 import { tooManyBadKeys } from "./_guard";
 import { notify } from "./_notify";
 import { PLANS, ASSIGNABLE_WALLET_CATEGORIES } from "../shared/payments";
+import { failing } from "./_observe";
 
 const MAX_GRANT = 100_000;
 
@@ -102,6 +103,6 @@ export default async function handler(req: any, res: any) {
 
     return res.status(405).json({ error: "GET or POST only" });
   } catch (err: any) {
-    return res.status(502).json({ error: "Wallet admin action failed", detail: String(err?.message ?? err) });
+    return failing(res, "admin.wallets", err, "Wallet admin action failed");
   }
 }

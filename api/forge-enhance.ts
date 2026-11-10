@@ -14,6 +14,7 @@ import { randomUUID } from "crypto";
 import { clientIp, rateLimit, tooMany, forgeDisabled, ledgerRequired } from "./_guard";
 import { enhanceGameHtml, looksPlayable, acuChargeForUsage, ENHANCE_HOLD, FORGE_MIN_CHARGE } from "./_gateway";
 import { getDb, ensureGameSchema, debitWallet, creditWallet, recordForgeCharge, acceptForgeCharge } from "./_ledger";
+import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -57,7 +58,7 @@ export default async function handler(req: any, res: any) {
       }
       balanceAfter = await debitWallet(sql, walletId, ENHANCE_HOLD);
     } catch (err: any) {
-      return res.status(502).json({ error: "Wallet check failed", detail: String(err?.message ?? err) });
+      return failing(res, "forge.enhance.walletCheck", err, "Wallet check failed");
     }
     if (balanceAfter === null) {
       return res.status(402).json({ error: `Not enough ACUs (an enhance pass holds ${ENHANCE_HOLD}; the unused part refunds when it settles). Top up at /wallet.html.`, acuCharge: ENHANCE_HOLD });
@@ -98,6 +99,6 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json({ html: out.html, provider: out.provider, acuCharge: settled, ...(forgeId ? { forgeId } : {}), ...(balanceAfter !== null ? { balanceAfter } : {}) });
   } catch (err: any) {
     await refundHold();
-    return res.status(502).json({ error: "Enhance pass failed — hold refunded", detail: String(err?.message ?? err) });
+    return failing(res, "forge.enhance", err, "Enhance pass failed — hold refunded");
   }
 }

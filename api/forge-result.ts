@@ -23,6 +23,7 @@
  */
 import { getDb, ensureGameSchema, getForgeResult } from "./_ledger";
 import { ensureForgeJobSchema, getForgeJob, MAX_STALE_ATTEMPTS } from "./_forgejobs";
+import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -77,7 +78,7 @@ export default async function handler(req: any, res: any) {
       startedAt: job.created_at ?? null,
     });
   } catch (err: any) {
-    return res.status(502).json({ error: "lookup failed", detail: String(err?.message ?? err) });
+    return failing(res, "forge.result", err, "lookup failed");
   }
 }
 

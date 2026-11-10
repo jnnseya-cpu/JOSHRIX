@@ -34,6 +34,7 @@ import { ensureForgeJobSchema, createForgeJob, getForgeJob } from "./_forgejobs"
 import { recordSecurityEvent } from "./_guard";
 import { scanConcept, sanitiseConcept } from "./_security";
 import { clientIp, rateLimit, tooMany, forgeDisabled, ledgerRequired } from "./_guard";
+import { failing } from "./_observe";
 
 /**
  * The most a creator may paste. The BUILD prompt is capped separately and much
@@ -123,7 +124,7 @@ export default async function handler(req: any, res: any) {
     const w = await getWallet(sql!, walletId);
     balance = w ? Number((w as any).balance ?? 0) : 0;
   } catch (err: any) {
-    return res.status(502).json({ error: "Wallet check failed", detail: String(err?.message ?? err) });
+    return failing(res, "forge.walletCheck", err, "Wallet check failed");
   }
   const perAttempt = worstAttemptAcu(is3d);
   if (balance < perAttempt) {
@@ -165,7 +166,7 @@ export default async function handler(req: any, res: any) {
       }
     }
   } catch (err: any) {
-    return res.status(502).json({ error: "could not queue the forge", detail: String(err?.message ?? err) });
+    return failing(res, "forge.enqueue", err, "could not queue the forge");
   }
 
   /* 202, not 200: the work is accepted and has not happened yet. The two URLs

@@ -8,6 +8,7 @@ import Stripe from "stripe";
 import { TopupRequestSchema, TOPUP_PACKAGES, topupPostings } from "../shared/payments";
 import { safeOrigin, clientIp, rateLimit, tooMany } from "./_guard";
 import { getDb } from "./_ledger";
+import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -51,7 +52,7 @@ export default async function handler(req: any, res: any) {
         note: "ACUs credit ONLY when the verified webhook receives checkout.session.completed.",
       });
     } catch (err: any) {
-      return res.status(502).json({ error: "Stripe session creation failed", detail: String(err?.message ?? err) });
+      return failing(res, "topup.session", err, "Stripe session creation failed");
     }
   }
 

@@ -12,6 +12,7 @@
  */
 import { getDb, ensureGameSchema, getGame, saveDistRequest } from "./_ledger";
 import { EMAIL_RE, clientIp, rateLimit, tooMany } from "./_guard";
+import { failing } from "./_observe";
 
 const LANES = ["dedicated", "own"];
 const STORES = ["android", "ios", "both"];
@@ -67,6 +68,6 @@ export default async function handler(req: any, res: any) {
           : "Queued for export — you'll receive a signed, store-ready build plus the completed listing pack to upload to your own developer console.",
     });
   } catch (err: any) {
-    return res.status(502).json({ error: "Could not queue distribution request", detail: String(err?.message ?? err) });
+    return failing(res, "distribution.queue", err, "Could not queue distribution request");
   }
 }

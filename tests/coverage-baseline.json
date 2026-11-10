@@ -49,6 +49,8 @@
     "t45-forge-jobs.js": 44,
     "t46-key-registry.js": 123,
     "t47-trend-intelligence.js": 129,
-    "t48-brief-desk.mjs": 22
+    "t48-brief-desk.mjs": 32,
+    "t49-stripe-signature.js": 40,
+    "t50-failures.js": 55
   }
 }

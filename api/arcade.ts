@@ -5,6 +5,7 @@
  * at /arcade is live from day one.
  */
 import { getDb, ensureGameSchema, listApprovedGames } from "./_ledger";
+import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -28,6 +29,6 @@ export default async function handler(req: any, res: any) {
     }));
     return res.status(200).json({ games, count: games.length, forSale: games.filter((g) => g.priceMinor).length });
   } catch (err: any) {
-    return res.status(502).json({ error: "Arcade feed failed", detail: String(err?.message ?? err) });
+    return failing(res, "arcade.feed", err, "Arcade feed failed");
   }
 }

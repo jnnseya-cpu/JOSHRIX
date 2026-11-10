@@ -25,6 +25,7 @@ const SITE = "https://www.joshrix.com";
 
 /** Rotating editorial calendar — high-intent queries for the AI game-creation market. */
 import { FEATURES, featureById } from "./_features";
+import { failing } from "./_observe";
 
 /** Every capability gets its own article. Interleaving them with the broader
  *  editorial pieces means the calendar alternates "what this does" with "why it
@@ -311,6 +312,6 @@ export default async function handler(req: any, res: any) {
       briefResolution: briefWhy,
     });
   } catch (err: any) {
-    return res.status(502).json({ error: "Content Agent failed", detail: String(err?.message ?? err) });
+    return failing(res, "blog.generate", err, "Content Agent failed");
   }
 }

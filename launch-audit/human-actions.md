@@ -24,24 +24,81 @@ Every account created before 18 Aug is still `tester` and refills itself for
 free. One pass through `/admin` → "Revoke tester". This is the only item on the
 list that is costing you money today.
 
-## 3. Set up error monitoring  — blocks gate 9
+## 3. ~~Set up error monitoring~~ — DONE from this side, 10 Nov. Nothing left for you.
 
-Nothing watches production. Sentry or equivalent, DSN in Vercel. Until then the
-first production failure reaches you as a complaint from the person it happened
-to. **What I do next:** wire the client and server handlers and verify an alert
-actually fires by triggering a controlled failure.
+This asked for Sentry and a DSN, which is yours to buy. The half that needed no
+vendor and no key should not have waited for one, and it has now been built.
 
-## 4. Take and restore one Neon snapshot  — blocks gate 5
+Thirty-three handlers used to end in
+`catch (err) { res.status(502).json({ error: "...", detail: String(err.message) }) }`
+— the failure lived exactly as long as the request, nothing counted it, and the
+error message went to the *caller*. All thirty-three now go through
+`api/_observe.ts`: the failure is categorised, credentials are stripped from the
+message, it is written to `error_events`, and the caller gets a sentence and an
+8-character **reference**.
 
-Snapshots have never been restored. An unrestored backup is not a backup. Take
-one, restore it into an isolated branch, and record how long it took. **What I do
-next:** write that into a runbook with the measured RTO.
+Three things that changed for you:
 
-## 5. Run one live payment cycle in Stripe test mode  — blocks gate 6
+- `/admin` → **What Is Breaking** lists the last 24 hours grouped by operation.
+- When a user quotes a reference, paste it into that panel and you get the exact
+  operation, category and message. That is what the reference is for.
+- `/api/security-agent` ran nightly, built findings, and on critical or high
+  wrote a row to a table nobody reads. **It emails you now.** "Nothing watches
+  production" was true even though that file existed.
 
-`tests/live-payment-cycle.md` has never been executed. **What I do next:** verify
-the ledger difference is zero and produce the financial invariants report the
-brief asks for.
+**Still worth buying Sentry for:** client-side JavaScript errors, stack traces,
+release tracking and a phone notification. This covers server failures, counts
+them, keeps 30 days and puts them in the one mail that already goes out. Set the
+DSN whenever you like and I will wire it alongside; nothing here has to be
+removed first.
+
+## 4. Take and restore one Neon snapshot  — blocks gate 5. NOW ONE COMMAND.
+
+Snapshots have never been restored, and an unrestored backup is not a backup.
+The part that was yours was never the hard part — it was that nobody had written
+the procedure, so doing it meant inventing one on the night it mattered.
+
+`tools/restore-drill.mjs` is that procedure. Create a Neon branch, then:
+
+```
+node tools/restore-drill.mjs --source "$DATABASE_URL" --into "<the branch's connection string>"
+```
+
+It dumps, restores, compares **every table's row count**, re-checks that every
+`ledger_tx` still sums to zero on the restored copy, and prints the measured
+RTO. Exit code 0 means the backup restores; 1 means it does not.
+
+It refuses to run over the source, refuses a target that already has tables
+unless you pass `--force-overwrite`, redacts connection strings in its output,
+and never writes to the source. Verified against a real PostgreSQL 16 cluster
+both ways — a clean restore passes, a broken one fails with the table named. See
+`launch-audit/evidence-ledger.md` J-01 to J-06.
+
+**Send me the output** and I will put the measured RTO in the runbook. That is
+all that is left of this item.
+
+## 5. Run one live payment cycle in Stripe test mode  — blocks gate 6. HALF DONE.
+
+`tests/live-payment-cycle.md` still has to be run by you: only a real cycle
+proves the dashboard is configured correctly and that settlement actually
+credits a wallet in Postgres.
+
+But the webhook door itself no longer needed your account to test. The Stripe
+SDK can sign a payload locally, so `tests/t49-stripe-signature.js` now drives 40
+assertions through the real handler: a genuine signature is accepted, a tampered
+body is refused, a payload signed with another secret is refused, a replayed
+timestamp is refused, a missing header is refused — and with no
+`STRIPE_WEBHOOK_SECRET` configured it answers **503, not 200**. That last one is
+the assertion that matters: an endpoint that returns 200 without verifying is
+one where anyone who knows the URL can mint ACUs, and it would look perfectly
+healthy in every log.
+
+It also pins the renewal double-credit fix: both `invoice.paid` and
+`invoice.payment_succeeded` carry the same invoice id, which is what the credit
+is claimed against.
+
+**What I do next, unchanged:** verify the ledger difference is zero from your
+real cycle and produce the financial invariants report.
 
 ## 6. Add the three Stripe webhook events  — silent revenue leak
 

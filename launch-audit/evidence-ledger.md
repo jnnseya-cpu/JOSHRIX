@@ -73,3 +73,33 @@ Postgres client in `devDependencies` (the Neon driver speaks only to Neon's
 proxy), a decision about what a skipped DB test must do on a machine with no
 Postgres, and Postgres in `.github/workflows/gate.yml`. That is its own piece of
 work with its own design questions, and it was not folded into this one.
+
+---
+
+## Cycle 3 — 10 Nov 2026. Two "untestable" items, tested.
+
+Items 3, 4 and 5 of `human-actions.md` were all recorded as blocked on Justin's
+accounts. Part of each was not.
+
+| ID | Check | Result |
+|---|---|---|
+| I-01 | Webhook accepts a genuine signature | `Stripe.webhooks.generateTestHeaderString` signs locally; real handler answers 200 with `persisted: "no_db"` |
+| I-02 | Tampered body | body edited after signing → **400**, nothing received |
+| I-03 | Wrong signing secret | **400** |
+| I-04 | Replayed timestamp (1h old) | **400** — Stripe's tolerance holds |
+| I-05 | Missing / garbage signature header | **400**, no crash |
+| I-06 | **No `STRIPE_WEBHOOK_SECRET`** | **503**, and `received` is absent. The door fails CLOSED; a 200 here is anyone minting ACUs |
+| I-07 | Refusal leaks nothing | no secret, no stack, no file path in the body |
+| I-08 | Renewal double-credit | `invoice.paid` and `invoice.payment_succeeded` have different event ids and the **same** invoice id — which is what the credit is claimed against |
+| I-09 | First subscription invoice | `billing_reason: subscription_create` routes to `invoice_logged`, not a second credit |
+| J-01 | Restore drill, clean source | 5 tables, 210 rows, dump+restore, **0 row-count mismatches**, every `ledger_tx` sums to zero, RTO printed |
+| J-02 | Drill refuses source == target | refused, exit 1 |
+| J-03 | Drill refuses a populated target | refused unless `--force-overwrite`, exit 1 |
+| J-04 | Drill detects a real restore failure | target pre-seeded with a conflicting `wallets` table → `wallets: source 25 → restored 0`, **exit 1** |
+| J-05 | Double-entry check bites | one unbalanced posting planted → drill reported it with the tx id |
+| J-06 | …and attributes it correctly | the first version blamed the BACKUP for a fault already in the source. Fixed: it now reports "pre-existing — a LEDGER fault, not a restore fault", passes the restore verdict, and warns separately |
+| K-01 | Failure sink | 33 hand-rolled catch blocks → one path; no handler returns `err.message` to a caller |
+| K-02 | Credential redaction | 8 credential shapes (Postgres URL, Anthropic, Stripe live, webhook secret, Google, AWS, bearer JWT, `password=`) stripped from both the response and the log |
+| K-03 | Redaction bug caught by its own test | `Authorization: Bearer <jwt>` → the first version removed the label and **left the token**. Fixed |
+| K-04 | Fixtures vs the secret scanner | t32 flagged this test file on six patterns, correctly. Fixtures are assembled at runtime; no credential-shaped literal is committed |
+| K-05 | The nightly review emails | it previously wrote to `security_events` and told nobody; `notify("executive.alert", …)` now fires on critical/high, and the response reports whether it went out |

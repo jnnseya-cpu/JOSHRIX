@@ -8,6 +8,7 @@
  */
 import { getDb, ensureGameSchema, listGamesByWallet } from "./_ledger";
 import { clientIp, rateLimit, tooMany } from "./_guard";
+import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -68,6 +69,6 @@ export default async function handler(req: any, res: any) {
         : "Every figure above is counted from this platform's database. Nothing is estimated or benchmarked.",
     });
   } catch (err: any) {
-    return res.status(502).json({ error: "Analytics failed", detail: String(err?.message ?? err).slice(0, 200) });
+    return failing(res, "growth.analytics", err, "Analytics failed");
   }
 }

@@ -16,7 +16,8 @@
  * argued with is a detector an attacker can argue with, and the input here is
  * attacker-controlled by definition. Rules decide; a human reads the summary.
  */
-import { getDb } from "./_ledger";
+import { getDb, failureSummary } from "./_ledger";
+import { notify } from "./_notify";
 import { recordSecurityEvent } from "./_guard";
 
 type Finding = {
@@ -168,19 +169,58 @@ export default async function handler(req: any, res: any) {
     }
   });
 
+  /* PRODUCTION FAILURES. Added 10 Nov, when "nothing watches production" was
+     item 3 on the human action list. The failure sink (api/_observe.ts) counts
+     what breaks; this is what makes somebody read it. Thresholds are on
+     VOLUME, because one failure is a bad minute and forty is an incident. */
+  await check("production failures", async () => {
+    const rows = await failureSummary(sql, hours);
+    const total = rows.reduce((a, r) => a + r.n, 0);
+    if (!total) return;
+    const worstGroup = rows[0];
+    findings.push({
+      severity: total >= 50 ? "critical" : total >= 10 ? "high" : "medium",
+      title: `${total} handled failure(s) across ${rows.length} operation(s) in ${hours}h`,
+      detail: "Each row is a request that could not be completed. The heaviest is "
+            + `${worstGroup.operation} (${worstGroup.category}) with ${worstGroup.n}. `
+            + "A category of 'provider' is usually somebody else's outage; 'database' is usually ours.",
+      evidence: rows.slice(0, 10).map((r) => ({
+        operation: r.operation, category: r.category, count: r.n,
+        latestReference: r.latest_reference, latest: String(r.latest_message).slice(0, 200), lastSeen: r.last_seen,
+      })),
+      action: "Quote a latestReference to find the exact failure. Fix the heaviest category first.",
+    });
+  });
+
   const order = { critical: 0, high: 1, medium: 2, low: 3 } as const;
   findings.sort((a, b) => order[a.severity] - order[b.severity]);
 
   const worst = findings[0]?.severity ?? null;
+  let alerted = false;
   if (worst === "critical" || worst === "high") {
     await recordSecurityEvent(sql, "security_review_alert", "warn", {
       worst, count: findings.length, titles: findings.map((f) => f.title),
     });
+    /* IT EMAILS NOW, and until 10 Nov it did not. This review ran nightly on a
+       Vercel cron, built its findings, and on critical or high wrote a row to
+       security_events — a table nobody opens. The response JSON went to the
+       cron runner and nowhere else. A watchman writing notes to himself is not
+       monitoring, and "nothing watches production" was true even though this
+       file existed. One line of difference. */
+    try {
+      await notify("executive.alert", process.env.CONTACT_INBOX || process.env.SMTP_USER || null, {
+        item: `Security review: ${worst.toUpperCase()} — ${findings.length} finding(s) in the last ${hours}h. `
+            + findings.slice(0, 5).map((f) => `[${f.severity}] ${f.title}`).join(" · ")
+            + ". Full detail at /api/security-agent and in /admin.",
+      });
+      alerted = true;
+    } catch { /* a failed alert must not fail the review that produced it */ }
   }
 
   return res.status(200).json({
     windowHours: hours,
     status: findings.length === 0 ? "clear" : worst,
+    alerted,
     findings,
     checksRun: checked,
     checksUnavailable: unavailable,

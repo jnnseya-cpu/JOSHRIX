@@ -4,6 +4,7 @@
  * and each game's play + preview links. Empty list when they haven't forged yet.
  */
 import { getDb, ensureGameSchema, listGamesByWallet } from "./_ledger";
+import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -36,6 +37,6 @@ export default async function handler(req: any, res: any) {
     const totalPlays = games.reduce((s, g) => s + g.plays, 0);
     return res.status(200).json({ games, count: games.length, totalPlays });
   } catch (err: any) {
-    return res.status(502).json({ error: "Could not load your games", detail: String(err?.message ?? err) });
+    return failing(res, "games.mine", err, "Could not load your games");
   }
 }

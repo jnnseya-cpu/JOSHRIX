@@ -875,6 +875,72 @@ export async function listGrowthBriefs(sql: Sql, limit = 50) {
     FROM growth_briefs b ORDER BY b.created_at DESC LIMIT ${n}`) as any[];
 }
 
+/* ---------------- failures: what broke, when, and for whom ---------------- */
+
+/**
+ * WHERE A PRODUCTION FAILURE IS KEPT.
+ *
+ * Deliberately NOT `security_events`. An attack and a bug want different
+ * reactions and different people, and mixing them means the security review's
+ * signal is buried under whatever is merely broken this week.
+ *
+ * No user identifier, no IP, no request body. A failure row exists to answer
+ * "what is broken and how often", and the correlation id already connects it to
+ * the person who hit it — through the reference they were given, which they
+ * choose to quote. Storing who they were as well would be collecting personal
+ * data to answer a question that is already answered.
+ *
+ * Thirty days. Long enough to see a weekly pattern, short enough that nobody
+ * inherits a table of years-old noise.
+ */
+export async function ensureErrorSchema(sql: Sql) {
+  await sql`CREATE TABLE IF NOT EXISTS error_events (
+    id bigserial PRIMARY KEY,
+    operation text NOT NULL,
+    category text NOT NULL,
+    reference text NOT NULL,
+    message text NOT NULL,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`;
+  await sql`CREATE INDEX IF NOT EXISTS error_events_recent ON error_events (created_at DESC)`;
+  await sql`CREATE INDEX IF NOT EXISTS error_events_reference ON error_events (reference)`;
+}
+
+/** Record one failure. The caller already has its HTTP answer in flight, so this
+ *  must stay cheap and must never be the reason a request fails. */
+export async function recordError(
+  sql: Sql,
+  e: { operation: string; category: string; reference: string; message: string },
+) {
+  await sql`INSERT INTO error_events (operation, category, reference, message)
+    VALUES (${e.operation}, ${e.category}, ${e.reference}, ${e.message.slice(0, 2000)})`;
+  /* Pruned on write rather than by a second cron: one more statement on a path
+     that is already failing is cheaper than a job that can silently stop. */
+  await sql`DELETE FROM error_events WHERE created_at < now() - interval '30 days'`;
+}
+
+/** What is breaking, grouped — the shape a daily digest and the admin panel both
+ *  want. One query, newest-first by volume. */
+export async function failureSummary(sql: Sql, hours = 24) {
+  return (await sql`SELECT operation, category, count(*)::int AS n,
+      max(created_at) AS last_seen, min(created_at) AS first_seen,
+      (array_agg(reference ORDER BY created_at DESC))[1] AS latest_reference,
+      (array_agg(message ORDER BY created_at DESC))[1] AS latest_message
+    FROM error_events
+    WHERE created_at > now() - make_interval(hours => ${hours})
+    GROUP BY operation, category ORDER BY n DESC LIMIT 40`) as Array<{
+      operation: string; category: string; n: number; last_seen: string; first_seen: string;
+      latest_reference: string; latest_message: string;
+    }>;
+}
+
+/** One failure by the reference a user quotes. The reason the reference exists. */
+export async function failureByReference(sql: Sql, reference: string) {
+  const rows = (await sql`SELECT operation, category, reference, message, created_at
+    FROM error_events WHERE reference = ${reference} ORDER BY created_at DESC LIMIT 5`) as any[];
+  return rows;
+}
+
 /** All wallets, newest first — for the admin grants panel (key-gated at the endpoint). */
 export async function listWallets(sql: Sql, limit = 100) {
   return (await sql`SELECT id, balance, category, email, name, plan, created_at FROM wallets ORDER BY created_at DESC LIMIT ${limit}`) as any[];

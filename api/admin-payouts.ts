@@ -13,6 +13,7 @@ import { getDb, ensurePayoutSchema, listPayoutRequests, decidePayoutRequest, rel
   ensurePayoutDestinationSchema, getPayoutDestinationForRelease } from "./_ledger";
 import { decryptSecret } from "./_secrets";
 import { tooManyBadKeys } from "./_guard";
+import { failing } from "./_observe";
 
 const DECISIONS = ["approved", "rejected", "paid"] as const;
 
@@ -98,6 +99,6 @@ export default async function handler(req: any, res: any) {
 
     return res.status(405).json({ error: "GET or POST only" });
   } catch (err: any) {
-    return res.status(502).json({ error: "Payout desk action failed", detail: String(err?.message ?? err).slice(0, 200) });
+    return failing(res, "admin.payouts", err, "Payout desk action failed");
   }
 }

@@ -18,6 +18,7 @@
  * public URL while its store page asked for money.
  */
 import { getDb, ensureGameSchema, getGame, bumpPlays, hasEntitlement } from "./_ledger";
+import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -86,6 +87,6 @@ export default async function handler(req: any, res: any) {
     }
     return res.status(200).json({ ...meta, note: "This game was not approved for public play." });
   } catch (err: any) {
-    return res.status(502).json({ error: "Could not load game", detail: String(err?.message ?? err) });
+    return failing(res, "game.render", err, "Could not load game");
   }
 }

@@ -17,6 +17,7 @@ import { PAYOUT, EARNINGS_CLEARING_DAYS } from "../shared/payments";
 import { getDb, ensureGameSchema, ensurePayoutSchema, getWallet, getEarnings, releaseExpiredForgeHolds, listGamesByWallet } from "./_ledger";
 import { callerIdentity } from "./_auth";
 import { walletOwnerUid } from "./_ledger";
+import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -83,6 +84,6 @@ export default async function handler(req: any, res: any) {
         : undefined,
     });
   } catch (err: any) {
-    return res.status(502).json({ error: "Could not read the wallet", detail: String(err?.message ?? err).slice(0, 200) });
+    return failing(res, "wallet.read", err, "Could not read the wallet");
   }
 }
