@@ -238,5 +238,54 @@ console.log('\nit retries until the build is good, and says why');
     'the score is what tells improvement from churn, so it must be stable');
 }
 
+
+console.log('\nTHE SELF-TEST PROBES WHAT PRODUCTION ACTUALLY RUNS');
+{
+  /* /api/forge-selftest answers the one question that has blocked this launch
+     for six weeks — "can a provider actually build a whole 3D game" — from one
+     URL, with no wallet and no Studio session. Until 10 Nov it probed only the
+     2D lane and was linked from no page, so it tested the lane nobody was
+     asking about. These assertions exist so that cannot drift back. */
+  const gwSrc = fs.readFileSync(path.join(ROOT, 'api/_gateway.ts'), 'utf8');
+  const probe = gwSrc.slice(gwSrc.indexOf('export async function fullSizeProbe'), gwSrc.indexOf('export async function generateGameHtml'));
+
+  t('the probe takes a mode and defaults to 2d, so existing callers are unchanged',
+    /fullSizeProbe\(mode: "2d" \| "3d" = "2d"\)/.test(probe));
+  t('3D uses the 3D system prompt, not the 2D one with a different concept',
+    /is3d \? GAME_SYSTEM_3D : GAME_SYSTEM/.test(probe));
+  t('and the 3D budgets production uses',
+    /OUTPUT_BUDGET\.claude3d/.test(probe) && /OUTPUT_BUDGET\.gemini3d/.test(probe)
+      && /OUTPUT_BUDGET\.openai/.test(probe));
+  t('every result is judged by the gate the live forge uses',
+    /judgeBuild\(r\.html, is3d\)/.test(probe),
+    'a probe more forgiving than production reports a health the product does not have');
+  t('it reports whether the build WOULD SHIP, not just that bytes arrived',
+    /wouldShip: verdict\.ok/.test(probe) && /gateNotes/.test(probe));
+  t('it records whether the 3D runtime was used',
+    /usesEngine/.test(probe),
+    'a 3D build that writes its own canvas has ignored the runtime that owns it');
+  t('and the probe returns only the three providers',
+    /return \{ claude, gemini, openai \};/.test(probe),
+    'an earlier version returned the mode alongside them, which made the endpoint count a string as a provider');
+
+  const st = fs.readFileSync(path.join(ROOT, 'api/forge-selftest.ts'), 'utf8');
+  t('the endpoint validates the mode', /mode must be 2d, 3d or both/.test(st));
+  t('the cache is per mode, so a 2D result is never served as an answer about 3D',
+    /cacheTicket = \(mode: string\)/.test(st) && /cacheTicket\(asked\)/.test(st));
+  t('both lanes run in sequence, not in parallel',
+    /for \(const mode of modes\)/.test(st) && /Lanes run in SEQUENCE/.test(st),
+    'six simultaneous full-size builds trip a rate limit the probe then reports as a provider failure');
+  t('it reports answered AND wouldShip separately',
+    /answered: names\.filter/.test(st) && /wouldShip: names\.filter/.test(st),
+    'all three answering and none shipping is the exact failure the old probe could not describe');
+
+  const admin = fs.readFileSync(path.join(ROOT, 'frontend/admin.html'), 'utf8');
+  t('and it is REACHABLE — /admin has a button per lane',
+    /forge-selftest\?mode=/.test(admin) && /btnSelf3d/.test(admin),
+    'the tool that answers the dominant blocker was linked from no page at all');
+  t('the buttons say what the run costs before it runs',
+    /spends real money/.test(admin) && /confirm\(/.test(admin));
+}
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

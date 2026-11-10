@@ -7,22 +7,47 @@ do the moment it is done.
 
 **Why it blocks.** The forge is the product. It has never produced a build you
 judged good, and that is now six weeks old. Every marketing claim, the whole
-truth gate, and the AI quality gate rest on it. No amount of code work moves
-this.
+truth gate, and the AI quality gate rest on it.
 
-**What is needed.** A funded or tester wallet (`/admin` → "Make tester", refills
-to 20,000 ACU), then one 3D forge. Send `/api/forge-log` — provider, bytes,
-models — or the file from **View Build Source**.
+**It is now ONE BUTTON, and I was wrong that no code work moved it.**
+`/api/forge-selftest` has existed for weeks: it asks every configured provider
+for a complete game at live forge size and reports size, canvas, tokens,
+duration — or the exact error it died with. Two things were wrong with it, and
+both were mine. It probed only the **2D** lane, so it tested the lane nobody was
+asking about. And it was **linked from no page at all**, so using it meant
+knowing the URL.
 
-**What I do next.** Diagnose the actual output rather than the mechanism, and fix
-what the log shows. The library is no longer any part of the excuse: 2,601
-models, 291 animated, all load-tested.
+Fixed 10 Nov. `/admin` → **Forge Self-Test** has three buttons: *Run 3D lane*,
+*Run 2D lane*, *Run both*. The 3D lane uses the 3D system prompt, the 3D
+budgets, and judges each result with `judgeBuild` — the same gate the live forge
+uses — so you get two separate numbers: how many providers **answered**, and how
+many produced a build that **would actually ship**. Where one is rejected you
+get the gate's own reasons.
+
+**No wallet, no tester designation and no Studio session needed.** It spends real
+provider money (three full-size generations per lane) and tells you so before it
+runs.
+
+**What to send me.** The panel's output, or the raw JSON from
+`/api/forge-selftest?mode=3d`. If a provider answers but the gate rejects it,
+that output names exactly what was missing — which is the diagnosis, not just
+the symptom.
+
+**What I do next.** Fix what the gate notes show. The library is no part of the
+excuse: 2,601 models, 291 animated, all load-tested.
 
 ## 2. Revoke the legacy tester wallets  — live money leaving now
 
 Every account created before 18 Aug is still `tester` and refills itself for
 free. One pass through `/admin` → "Revoke tester". This is the only item on the
 list that is costing you money today.
+
+**You can now see what it is costing.** The Wallets panel shows a banner when any
+tester wallet exists: how many there are, how many ACUs they are holding right
+now, how many have already refilled themselves, and when the most recent free
+refill happened. The Revoke control was always there; what was missing was any
+reason to look at it. If the banner is absent, there are no testers and this item
+is already done.
 
 ## 3. ~~Set up error monitoring~~ — DONE from this side, 10 Nov. Nothing left for you.
 

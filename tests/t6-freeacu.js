@@ -252,6 +252,43 @@ console.log('\n== closing an account ==');
   t('and is still there', wallets.has(b));
 }
 
+
+  console.log('\nTHE ONLY FREE AI ON THE PLATFORM IS COUNTED, SO IT CAN BE SEEN');
+  {
+    /* Revoking a tester has been one click in /admin since August, and
+       launch-audit/human-actions.md has called it "the only item costing you
+       money today" for weeks. Nothing anywhere said how many testers existed or
+       what they were holding, so there was no reason to look at the control. A
+       control nobody can see the need for is a control nobody uses. */
+    const fs = require('fs');
+    const path = require('path');
+    const ROOT = process.env.JOSHRIX_ROOT || path.resolve(__dirname, '..');
+    const ledger = fs.readFileSync(path.join(ROOT, 'api/_ledger.ts'), 'utf8');
+    const stats = ledger.slice(ledger.indexOf('export async function adminStats'), ledger.indexOf('export async function adminStats') + 2600);
+
+    t('the admin counters include how many tester wallets exist',
+      /count\(\*\) FROM wallets WHERE category = 'tester'\)\s+AS testers/.test(stats), 'testers');
+    t('and how many ACUs they are holding right now',
+      /sum\(balance\), 0\) FROM wallets WHERE category = 'tester'\) AS tester_acu_held/.test(stats));
+    t('and how many have actually refilled themselves',
+      /AND last_refill_at IS NOT NULL\) AS testers_refilled/.test(stats),
+      'a designated tester who never forged has cost nothing; one that refills is spending');
+    t('and when the most recent free refill happened',
+      /max\(last_refill_at\)/.test(stats));
+
+    const admin = fs.readFileSync(path.join(ROOT, 'frontend/admin.html'), 'utf8');
+    t('the wallets panel warns when testers exist',
+      /testerWarn/.test(admin) && /can refill for free/.test(admin));
+    t('and stays silent when there are none',
+      /if \(!n\) \{ warn\.style\.display = 'none'; return; \}/.test(admin),
+      'a warning that is always on is wallpaper');
+    t('it names the real spend rather than describing it vaguely',
+      /real provider spend/.test(admin) && /Revoke tester/.test(admin));
+    t('and it still states that a purchased wallet can never be reclassified',
+      /cannot be reclassified/.test(admin),
+      'purchased is terminal in both directions, and the panel must not imply otherwise');
+  }
+
 console.log(`\n  ${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
 })();

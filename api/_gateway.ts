@@ -1023,28 +1023,72 @@ export async function openaiGenerate(system: string, user: string, maxTokens: nu
  * "say OK" self-test can't see the failures that only appear at real generation
  * size — token-budget truncation, deadline aborts, output limits. This can.
  */
-export async function fullSizeProbe(): Promise<Record<string, any>> {
-  const userMsg = `Creator's game concept:\nA vibrant arcade game: catch falling stars in a basket before they hit the ground. 3 lives, speed rises each level, combo scoring.\n\nBlueprint title: Star Catcher (diagnostic probe)\nBlueprint summary: full-size provider diagnostic — write the complete game as normal\nCreation language: English`;
+/**
+ * EVERY PROVIDER, A COMPLETE GAME, AT LIVE FORGE SIZE.
+ *
+ * The health probe asks a model to say OK, which answers nothing about whether
+ * a full build survives. This asks each configured provider for a whole game at
+ * the budgets production uses, and reports what came back or the exact error it
+ * died with.
+ *
+ * NOW COVERS 3D, added 10 Nov. It was 2D only, while the one blocker that has
+ * held this launch for six weeks is "run one 3D forge and send the build log" —
+ * so the diagnostic tested the lane nobody was asking about. 3D is not the same
+ * question with a different prompt:
+ *
+ *   - a different system prompt (GAME_SYSTEM_3D) and different budgets;
+ *   - a HIGHER substance floor, because a 3D file that is 8KB is a tech demo;
+ *   - and the canvas verdict INVERTS. frontend/assets/vendor/joshrix3d-1.js owns
+ *     the canvas, the render loop and the lights, so a 3D build that writes its
+ *     own `<canvas>` has ignored the runtime. In 2D a missing canvas is the
+ *     failure; in 3D a present one is.
+ *
+ * Both lanes are judged by `judgeBuild`, the same gate the live forge uses, so a
+ * provider that "returns something" is not reported as working when the forge
+ * would have rejected it.
+ */
+export async function fullSizeProbe(mode: "2d" | "3d" = "2d"): Promise<Record<string, any>> {
+  const is3d = mode === "3d";
+  const system = is3d ? GAME_SYSTEM_3D : GAME_SYSTEM;
+  const userMsg = is3d
+    ? `Creator's game concept:\nA moonlit temple courtyard: a third-person explorer runs between pillars, collecting lantern shards while stone guardians patrol. 3 lives, a visible shard counter, and the courtyard lights up as shards are collected.\n\nBlueprint title: Lantern Courtyard (diagnostic probe)\nBlueprint summary: full-size 3D provider diagnostic — write the complete game as normal\nCreation language: English`
+    : `Creator's game concept:\nA vibrant arcade game: catch falling stars in a basket before they hit the ground. 3 lives, speed rises each level, combo scoring.\n\nBlueprint title: Star Catcher (diagnostic probe)\nBlueprint summary: full-size provider diagnostic — write the complete game as normal\nCreation language: English`;
+
   const run = async (fn: () => Promise<{ html: string; usage?: TokenUsage }>) => {
     const t0 = Date.now();
     try {
       const r = await fn();
+      /* Judged by the gate the forge itself uses. "ok" here means the build
+         would have SHIPPED, not merely that bytes arrived — a probe that is
+         more forgiving than production reports a health the product does not
+         have. */
+      const verdict = judgeBuild(r.html, is3d);
       return {
         ok: true, ms: Date.now() - t0, bytes: r.html.length,
         hasCanvas: r.html.includes("<canvas"),
+        usesEngine: r.html.includes("joshrix3d"),
         outputTokens: r.usage?.outputTokens ?? null,
+        wouldShip: verdict.ok,
+        gateNotes: verdict.ok ? [] : verdict.notes,
       };
     } catch (e: any) {
       return { ok: false, ms: Date.now() - t0, error: String(e?.message ?? e).slice(0, 400) };
     }
   };
-  // Budgets mirror the live 2D forge chain exactly — a probe that tests different
-  // numbers than production answers a different question.
+
+  /* Budgets mirror the live chain for this lane exactly — a probe that tests
+     different numbers than production answers a different question. */
+  const claudeMax = is3d ? OUTPUT_BUDGET.claude3d : OUTPUT_BUDGET.claude2d;
+  const geminiMax = is3d ? OUTPUT_BUDGET.gemini3d : OUTPUT_BUDGET.gemini2d;
   const [claude, gemini, openai] = await Promise.all([
-    process.env.ANTHROPIC_API_KEY ? run(() => claudeGenerate(GAME_SYSTEM, userMsg, 16000)) : Promise.resolve({ ok: false, error: "no ANTHROPIC_API_KEY" }),
-    process.env.GEMINI_API_KEY ? run(() => geminiGenerate(GAME_SYSTEM, userMsg, 12000)) : Promise.resolve({ ok: false, error: "no GEMINI_API_KEY" }),
-    process.env.OPENAI_API_KEY ? run(() => openaiGenerate(GAME_SYSTEM, userMsg, 12000)) : Promise.resolve({ ok: false, error: "no OPENAI_API_KEY" }),
+    process.env.ANTHROPIC_API_KEY ? run(() => claudeGenerate(system, userMsg, claudeMax)) : Promise.resolve({ ok: false, error: "no ANTHROPIC_API_KEY" }),
+    process.env.GEMINI_API_KEY ? run(() => geminiGenerate(system, userMsg, geminiMax)) : Promise.resolve({ ok: false, error: "no GEMINI_API_KEY" }),
+    process.env.OPENAI_API_KEY ? run(() => openaiGenerate(system, userMsg, OUTPUT_BUDGET.openai)) : Promise.resolve({ ok: false, error: "no OPENAI_API_KEY" }),
   ]);
+  /* Only the three providers. An earlier version put `mode` in here too, which
+     made Object.values(...).filter(p => p.ok) in the endpoint count a string as
+     a provider — the kind of off-by-one that reports 3 of 3 healthy when one is
+     down. The caller knows the mode; it asked for it. */
   return { claude, gemini, openai };
 }
 

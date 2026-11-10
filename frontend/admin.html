@@ -265,6 +265,7 @@
 <div class="reveal" id="grantPanel" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
   <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">
     <button class="btn btn-primary btn-sm" id="btnLoadWallets">⟳ Load Wallets</button>
+    <div id="testerWarn" style="display:none;flex:1 1 100%;border:1px solid #ffb347;border-radius:10px;padding:.7rem .9rem;margin-bottom:.6rem;font-size:.88rem"></div>
     <span id="walletsHint" style="font-size:.85rem;color:var(--muted,#9d9db3)">Everyone gets a wallet when they open the Studio, and it starts empty — public accounts top up to forge. "Make tester" is the only way to grant free refills; a wallet that has purchased is locked and cannot be reclassified.</span>
   </div>
   <input id="walletFilter" placeholder="🔍 Filter loaded wallets by name, email, or ID…" style="display:none;width:100%;max-width:420px;margin-top:1rem;background:rgba(255,255,255,.04);border:1px solid var(--stroke,#26263a);border-radius:8px;padding:.55rem .8rem;color:inherit;font-size:.85rem">
@@ -553,6 +554,76 @@
   });
 })();
 </script>
+<h2 class="jx reveal">Forge Self-Test <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— EVERY PROVIDER, A WHOLE GAME, AT LIVE SIZE</span></h2>
+<div class="reveal" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
+  <p style="font-size:.88rem;color:var(--muted,#9d9db3);margin:0 0 .8rem">Asks every configured AI provider for a <b>complete game at the size a real forge uses</b>, then judges each result with the same quality gate the live forge uses. No wallet, no tester designation, no Studio session needed — this is the build log to send me. <b>It spends real provider money:</b> three full-size generations per lane, six for both.</p>
+  <div style="display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">
+    <button class="btn btn-primary btn-sm" id="btnSelf3d">▶ Run 3D lane</button>
+    <button class="btn btn-ghost btn-sm" id="btnSelf2d">▶ Run 2D lane</button>
+    <button class="btn btn-ghost btn-sm" id="btnSelfBoth">▶ Run both</button>
+    <span id="selfMsg" style="font-size:.85rem;color:var(--muted,#9d9db3)"></span>
+  </div>
+  <div id="selfOut" style="display:grid;gap:.6rem;margin-top:1rem"></div>
+</div>
+<script>
+/* The forge self-test. Read-only on this platform's data; it spends provider
+   money, so every button asks first and says what it will cost in calls. */
+(function(){
+  var API = (window.JOSHRIX_API_BASE || '');
+  var esc = function(x){ return String(x == null ? '' : x).replace(/[<>&"]/g, function(c){ return ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'})[c]; }); };
+  var key = function(){ try { return sessionStorage.getItem('jx.modKey') || ''; } catch(e){ return ''; } };
+  var out = document.getElementById('selfOut');
+  var msg = document.getElementById('selfMsg');
+
+  function row(name, p){
+    if (!p || p.ok === false) {
+      return '<div style="border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.6rem .8rem">'
+        + '<b>' + esc(name) + '</b> — <span style="color:#ff6b6b">did not answer</span>'
+        + '<br><span style="opacity:.8;font-size:.82rem">' + esc((p && p.error) || 'no result') + '</span></div>';
+    }
+    var ship = p.wouldShip
+      ? '<span style="color:var(--signal)">would ship</span>'
+      : '<span style="color:#ffb347">answered but the gate REJECTED it</span>';
+    return '<div style="border:1px solid var(--stroke,#26263a);border-radius:10px;padding:.6rem .8rem">'
+      + '<b>' + esc(name) + '</b> — ' + ship
+      + '<br><span style="opacity:.8;font-size:.82rem">'
+      + esc((p.bytes || 0).toLocaleString()) + ' bytes · ' + esc(Math.round((p.ms || 0) / 1000)) + 's'
+      + (p.outputTokens ? ' · ' + esc(p.outputTokens.toLocaleString()) + ' output tokens' : '')
+      + ' · canvas ' + (p.hasCanvas ? 'present' : 'absent')
+      + (p.usesEngine ? ' · uses the 3D runtime' : '')
+      + '</span>'
+      + ((p.gateNotes && p.gateNotes.length)
+          ? '<br><span style="opacity:.9;font-size:.82rem;color:#ffb347">' + esc(p.gateNotes.join(' · ')) + '</span>'
+          : '')
+      + '</div>';
+  }
+
+  function run(mode, calls){
+    if (!confirm('Run the ' + mode + ' self-test?\n\nThis makes ' + calls + ' full-size generation(s) against live AI providers and spends real money. It can take a few minutes.')) return;
+    msg.textContent = 'Running — full-size builds take a while…';
+    out.innerHTML = '';
+    fetch(API + '/api/forge-selftest?mode=' + mode, { headers: { 'x-admin-key': key() } })
+      .then(function(r){ return r.json().then(function(j){ return { ok: r.ok, j: j }; }); })
+      .then(function(res){
+        if (!res.ok) { msg.textContent = '⚠ ' + (res.j.error || 'self-test failed'); return; }
+        var lanes = res.j.lanes || {};
+        msg.textContent = 'Done in ' + Math.round((res.j.totalMs || 0) / 1000) + 's · build ' + (res.j.build || '?') + (res.j.cached ? ' (cached)' : '');
+        out.innerHTML = Object.keys(lanes).map(function(m){
+          var l = lanes[m];
+          return '<div><b style="font-family:var(--mono,monospace);letter-spacing:.08em">' + esc(m.toUpperCase()) + ' LANE</b> — '
+            + esc(l.answered) + '/' + esc(l.of) + ' answered, <b>' + esc(l.wouldShip) + '/' + esc(l.of) + ' would ship</b></div>'
+            + ['claude','gemini','openai'].map(function(n){ return row(n, l.providers[n]); }).join('');
+        }).join('');
+      })
+      .catch(function(){ msg.textContent = '⚠ Could not reach the forge self-test'; });
+  }
+
+  document.getElementById('btnSelf3d').addEventListener('click', function(){ run('3d', 3); });
+  document.getElementById('btnSelf2d').addEventListener('click', function(){ run('2d', 3); });
+  document.getElementById('btnSelfBoth').addEventListener('click', function(){ run('both', 6); });
+})();
+</script>
+
 <h2 class="jx reveal">What Is Breaking <span style="font-size:.7rem;letter-spacing:.1em;color:var(--muted,#9d9db3)">— HANDLED FAILURES, LAST 24 HOURS</span></h2>
 <div class="reveal" style="border:1px solid var(--stroke,#26263a);border-radius:14px;padding:1.1rem 1.2rem;margin-bottom:2rem">
   <p style="font-size:.88rem;color:var(--muted,#9d9db3);margin:0 0 .8rem">Every request a handler could not complete, grouped by operation. Users are shown a <b>reference</b> and nothing else — paste one below to see exactly what failed for them. The nightly security review emails you when this gets heavy, so an empty panel here is the honest answer rather than a silent one.</p>
@@ -836,6 +907,24 @@
         set('sApproved', g.games_approved, 'sApprovedBar', Number(g.games_approved || 0) * 5);
         set('sPlays', g.plays_total, 'sPlaysBar', Number(g.plays_total || 0) / 5);
         set('sWallets', g.wallets, 'sWalletsBar', Number(g.wallets || 0) * 2);
+        /* THE ONE ITEM COSTING MONEY TODAY, made visible. The Revoke control
+           has always been there; what was missing was any reason to look at
+           it. Only shown when there is something to say. */
+        (function(){
+          var warn = document.getElementById('testerWarn');
+          if (!warn) return;
+          var n = Number(g.testers || 0);
+          if (!n) { warn.style.display = 'none'; return; }
+          var held = Number(g.tester_acu_held || 0);
+          var refilled = Number(g.testers_refilled || 0);
+          var last = g.tester_last_refill ? String(g.tester_last_refill) : null;
+          warn.style.display = 'block';
+          warn.innerHTML = '<b>' + n.toLocaleString() + ' tester wallet' + (n === 1 ? '' : 's')
+            + ' can refill for free</b> — holding ' + held.toLocaleString() + ' ACUs right now.'
+            + (refilled ? ' ' + refilled.toLocaleString() + ' ' + (refilled === 1 ? 'has' : 'have') + ' already refilled'
+                + (last ? ', most recently ' + last.replace('T', ' ').slice(0, 16) : '') + '.' : '')
+            + '<br><span style="opacity:.85">This is the only free AI on the platform and it is real provider spend. Use <b>Revoke tester</b> below on any you no longer need; a wallet that has purchased is locked and cannot be reclassified either way.</span>';
+        })();
         document.getElementById('sWalletsRead').textContent = 'ACU OUTSTANDING: ' + Number(g.acu_outstanding || 0).toLocaleString();
         set('sDist', g.dist_requests, 'sDistBar', Number(g.dist_requests || 0) * 10);
         set('sMoney', m.events, 'sMoneyBar', Number(m.events || 0) * 5);

@@ -957,7 +957,20 @@ export async function adminStats(sql: Sql) {
       (SELECT coalesce(sum(plays), 0) FROM games)                         AS plays_total,
       (SELECT count(*) FROM wallets)                                      AS wallets,
       (SELECT coalesce(sum(balance), 0) FROM wallets)                     AS acu_outstanding,
-      (SELECT count(*) FROM dist_requests)                                AS dist_requests
+      (SELECT count(*) FROM dist_requests)                                AS dist_requests,
+      /* THE ONLY FREE AI ON THIS PLATFORM, counted.
+       *
+       * A tester wallet refills itself to TESTER_CEILING_ACU for nothing, which
+       * is real provider spend. Revoking one has been possible from /admin
+       * since August and has sat on the human action list as "the only item
+       * costing you money today" -- because nothing anywhere said HOW MANY
+       * there were or what they were holding. A control nobody can see the need
+       * for is a control nobody uses.
+       * (No backticks in here: this comment lives inside a tagged template.) */
+      (SELECT count(*) FROM wallets WHERE category = 'tester')            AS testers,
+      (SELECT coalesce(sum(balance), 0) FROM wallets WHERE category = 'tester') AS tester_acu_held,
+      (SELECT count(*) FROM wallets WHERE category = 'tester' AND last_refill_at IS NOT NULL) AS testers_refilled,
+      (SELECT max(last_refill_at) FROM wallets WHERE category = 'tester')  AS tester_last_refill
   `) as Array<Record<string, string | number>>;
   return row;
 }
