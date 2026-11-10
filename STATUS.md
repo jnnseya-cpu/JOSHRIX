@@ -3,8 +3,65 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-11-08 (the gate runs on every push; coverage cannot silently
-shrink; one renewal is one credit)
+Last updated: 2026-11-10 (Trend Intelligence merged as a contract + scorer, on
+this stack, not a second service)
+
+---
+
+## TREND INTELLIGENCE — the contract and the scorer, 10 Nov
+
+Justin supplied a 530-line build spec for a Trend Intelligence system and, asked
+whether it should be a separate service or merged, answered **"Merge"**. So it is
+being built into this platform on this stack. The spec's own §12 proposes a
+Python/FastAPI service with `services/` and `adapters/` directories; that part is
+**deliberately not implemented**, because "never a second backend" is a standing
+rule here and breaking it was already the P1 of 11 Sep.
+
+**What exists now: `shared/trend.ts` and nothing else.** It is the Growth Brief v1
+contract plus the §5 scoring, with no database, no HTTP and no model call —
+because the deterministic part is the only part of this spec that can be *proven*
+in an environment with no keys, no deployment and no traffic. 274 lines:
+
+- `GrowthBriefSchema` — zod, `.strict()`, so an unexpected field is **rejected**
+  rather than quietly ignored. 22 required fields, UTC-with-`Z` timestamps,
+  `evidence_ids` with a minimum of one.
+- `briefRuntimeFailures()` — the checks a schema cannot express: expiry, channel
+  enabled, locale and market agreement.
+- `logLift`, `robustZ` (MAD-based), `COUNT_GATE` (count ≥ 20 **and** z ≥ 2),
+  `demandFromZ` = `clamp(50 + 10z, 0, 100)`.
+- `opportunityScore` (25/25/20/15/15) returning `{score, vetoed}` — readiness ≤ 0
+  is a **veto**, not a low score, so an opportunity the platform cannot act on
+  never reaches a brief by scoring well elsewhere.
+- `confidenceScore` (35/25/20/20) with `SINGLE_FAMILY_CONFIDENCE_CAP = 69`
+  returning `cappedBySingleFamily`, and `corroborationScore` (0 / 80 / 100).
+- `disposition()` with `autoOptIn` defaulting to **false**.
+
+**`tests/t47-trend-intelligence.js` — 52 assertions, against the spec's own
+published numbers, not my reading of them.** It reproduces TI-03 (86.25
+opportunity, 83.5 confidence, to the exact decimal), TI-04 syndication, TI-05
+expiry, TI-14's market rules including "ZZ never matches a country", the §5.3
+arithmetic, and the §6 payload verbatim as the positive case. It also asserts
+the closed-object rejections, and that the merge created no `services/`, no
+`adapters/` and no `pyproject.toml` — so a future increment cannot quietly stand
+the second backend up after all.
+
+**One finding about the spec itself, reported before any code was written:** §5
+caps confidence at 69 for a single source family while a brief needs 75. An
+installation with one instrumented signal stream is therefore permanently
+draft-only *by arithmetic*, and §20's keyless release gate is only satisfiable
+with at least two independent first-party families — which §22 confirms is the
+intent. That is a property of the spec, not a defect to code around.
+
+**Not built yet, and not claimed:** the observation / topic / opportunity / brief
+schema and ledger functions, `POST /api/trend-observe`, `GET
+/api/trend-opportunities`, `GET /api/brief-effective`, and wiring the existing
+blog agent to resolve the effective brief with baseline fallback (spec §14.5).
+The spec estimates six to eight weeks for its full scope; this is the first
+slice.
+
+**Verified:** 49 files, 2,124 assertions, green, ratchet clean, type check clean.
+The test file numbering gap at t47 is closed — there was never a t47, and a gap
+invites someone to go looking for a deleted test.
 
 ---
 
