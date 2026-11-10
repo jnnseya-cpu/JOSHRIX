@@ -672,7 +672,8 @@
             + '<code>' + esc(b.briefId) + ' v' + esc(b.briefVersion) + '</code> · ' + esc(b.status)
             + ' · ' + esc(b.market) + '/' + esc(b.locale)
             + ' · score ' + esc(b.opportunityScore) + ' / confidence ' + esc(b.confidence)
-            + ' · expires ' + esc(b.expiresAt) + withdraw
+            + ' · expires ' + esc(b.expiresAt)
+            + ' · steered ' + esc(b.artefacts == null ? 0 : b.artefacts) + ' item(s)' + withdraw
             + (b.objective ? '<br><span style="opacity:.8">' + esc(b.objective) + '</span>' : '')
             + '</div>';
         }).join('');

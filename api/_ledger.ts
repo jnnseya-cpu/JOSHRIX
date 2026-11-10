@@ -658,18 +658,19 @@ export async function ensureBlogSchema(sql: Sql) {
     provider text,
     created_at timestamptz NOT NULL DEFAULT now()
   )`;
-  /* WHICH BRIEF STEERED THIS POST. Recorded on the post rather than inferred
-     from timestamps, because a brief is revised and withdrawn and "what was the
-     agent told when it wrote this" has to stay answerable afterwards. Null is
-     the honest value for every post written before Trend Intelligence existed
-     and for every post written under baseline behaviour. */
-  await sql`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS brief_id text`;
-  await sql`ALTER TABLE blog_posts ADD COLUMN IF NOT EXISTS brief_version integer`;
+  /* NOTE ON TWO UNUSED COLUMNS. A build on 10 Nov added brief_id and
+     brief_version here, before the brief reached a second surface. Attribution
+     now lives in ONE table for every surface (brief_attribution, below),
+     because a column per surface is a copy of the same fact per surface. The
+     ALTERs are gone, so a fresh database never grows them; any installation
+     that already ran that build keeps two nullable, unwritten columns, and they
+     are left alone deliberately — dropping a column in production to tidy a
+     schema is not a risk worth taking for cosmetics. */
 }
 
-export async function saveBlogPost(sql: Sql, p: { slug: string; title: string; description: string; keywords?: string | null; excerpt?: string | null; html: string; social?: unknown; topic?: string | null; provider?: string | null; briefId?: string | null; briefVersion?: number | null }) {
-  await sql`INSERT INTO blog_posts (slug, title, description, keywords, excerpt, html, social, topic, provider, brief_id, brief_version)
-    VALUES (${p.slug}, ${p.title}, ${p.description}, ${p.keywords ?? null}, ${p.excerpt ?? null}, ${p.html}, ${JSON.stringify(p.social ?? null)}::jsonb, ${p.topic ?? null}, ${p.provider ?? null}, ${p.briefId ?? null}, ${p.briefVersion ?? null})
+export async function saveBlogPost(sql: Sql, p: { slug: string; title: string; description: string; keywords?: string | null; excerpt?: string | null; html: string; social?: unknown; topic?: string | null; provider?: string | null }) {
+  await sql`INSERT INTO blog_posts (slug, title, description, keywords, excerpt, html, social, topic, provider)
+    VALUES (${p.slug}, ${p.title}, ${p.description}, ${p.keywords ?? null}, ${p.excerpt ?? null}, ${p.html}, ${JSON.stringify(p.social ?? null)}::jsonb, ${p.topic ?? null}, ${p.provider ?? null})
     ON CONFLICT (slug) DO NOTHING`;
 }
 
@@ -751,7 +752,48 @@ export async function ensureBriefSchema(sql: Sql) {
      majority of rows will be neither approved nor fresh. */
   await sql`CREATE INDEX IF NOT EXISTS growth_briefs_lookup
     ON growth_briefs (market, locale, status, expires_at DESC)`;
+
+  /* WHAT WAS PRODUCED UNDER WHICH BRIEF — one table for every surface.
+   *
+   * §17 freezes the hypothesis and the baseline at approval, which is only
+   * useful if the artefacts can be matched back to it afterwards. The grain is
+   * the ARTEFACT (a blog slug, a newsletter issue), never a reader: a brief
+   * steers what gets written and says nothing about any individual, so
+   * attributing one to a person's session would be wrong and a privacy problem
+   * invented for nothing.
+   *
+   * Baseline is recorded too, with null brief columns. An experiment that keeps
+   * no record of its control is not an experiment.
+   *
+   * A column per surface was the first design and is the wrong one: it is the
+   * same fact copied once per surface, going stale in all but the newest.
+   */
+  await sql`CREATE TABLE IF NOT EXISTS brief_attribution (
+    surface text NOT NULL,
+    artefact_id text NOT NULL,
+    channel text NOT NULL,
+    brief_id text,
+    brief_version integer,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (surface, artefact_id)
+  )`;
+  await sql`CREATE INDEX IF NOT EXISTS brief_attribution_brief
+    ON brief_attribution (brief_id, brief_version) WHERE brief_id IS NOT NULL`;
 }
+
+/** Record one artefact against the brief in force when it was produced.
+ *  Idempotent on (surface, artefact_id): a retried cron re-publishing the same
+ *  issue must not double-count it, and the FIRST brief recorded is the one that
+ *  actually steered the work, so a later run never overwrites it. */
+export async function recordBriefUse(
+  sql: Sql,
+  a: { surface: string; artefactId: string; channel: string; briefId: string | null; briefVersion: number | null },
+) {
+  await sql`INSERT INTO brief_attribution (surface, artefact_id, channel, brief_id, brief_version)
+    VALUES (${a.surface}, ${a.artefactId}, ${a.channel}, ${a.briefId}, ${a.briefVersion})
+    ON CONFLICT (surface, artefact_id) DO NOTHING`;
+}
+
 
 /**
  * Store an approved brief. Idempotent by (brief_id, brief_version) and
@@ -820,11 +862,17 @@ export async function effectiveBriefCandidates(
 /** The brief archive for the operator view — bounded, newest first (§12: 50 default, 200 max). */
 export async function listGrowthBriefs(sql: Sql, limit = 50) {
   const n = Math.min(Math.max(limit, 1), 200);
-  return (await sql`SELECT brief_id, brief_version, market, locale, topic_id, status, valid_from, expires_at, created_at,
-      payload->>'objective' AS objective,
-      (payload->>'opportunity_score')::numeric AS opportunity_score,
-      (payload->>'confidence')::numeric AS confidence
-    FROM growth_briefs ORDER BY created_at DESC LIMIT ${n}`) as any[];
+  /* The artefact count is the §17 read side: a brief that has been in force for
+     a week and steered nothing is the one an operator needs to notice. One
+     correlated subquery rather than a second round trip per row. */
+  return (await sql`SELECT b.brief_id, b.brief_version, b.market, b.locale, b.topic_id, b.status,
+      b.valid_from, b.expires_at, b.created_at,
+      b.payload->>'objective' AS objective,
+      (b.payload->>'opportunity_score')::numeric AS opportunity_score,
+      (b.payload->>'confidence')::numeric AS confidence,
+      (SELECT count(*) FROM brief_attribution a
+        WHERE a.brief_id = b.brief_id AND a.brief_version = b.brief_version)::int AS artefacts
+    FROM growth_briefs b ORDER BY b.created_at DESC LIMIT ${n}`) as any[];
 }
 
 /** All wallets, newest first — for the admin grants panel (key-gated at the endpoint). */

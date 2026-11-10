@@ -45,6 +45,10 @@ const bound = () => ({
   experiment_id: 'exp_1', policy_version: 1,
 });
 
+/* Wrapped in an async IIFE because one block RUNS the newsletter's own
+   buildIssue, which is async. This file is CommonJS, so a top-level await here
+   makes the module format ambiguous and nothing runs at all. */
+(async () => {
 console.log('\nTI-03 — the spec publishes the expected scores, so reproduce them exactly');
 {
   /* §5 example: "80 demand, 95 fit, 85 intent, 90 timing and 80 readiness. Its
@@ -223,12 +227,23 @@ console.log('\nthe Growth Brief is a CLOSED object, per Appendix A');
       .some((r) => /not yet valid/.test(r)));
   t('a channel outside the brief is refused',
     T.briefRuntimeFailures(parsed, { now: inWindow, channel: 'paid' }).some((r) => /allowed channels/.test(r)));
+  /* `paid` is the example because it has no adapter and must not gain one by
+     accident. `lifecycle` was the example until the newsletter was wired on
+     10 Nov — a channel joins ENABLED_BRIEF_CHANNELS when code steers it, which
+     is exactly the distinction this assertion guards. */
   t('a channel with no adapter is refused even if the brief allows it',
     T.briefRuntimeFailures(
-      T.GrowthBriefSchema.parse({ ...valid, allowed_channels: ['seo', 'lifecycle'] }),
-      { now: inWindow, channel: 'lifecycle' },
+      T.GrowthBriefSchema.parse({ ...valid, allowed_channels: ['seo', 'paid'] }),
+      { now: inWindow, channel: 'paid' },
     ).some((r) => /no adapter/.test(r)),
     'the enum reserves routing values; it does not enable features');
+  t('the channels with an adapter are exactly the ones with code behind them',
+    T.ENABLED_BRIEF_CHANNELS.length === 3
+      && ['seo', 'organic_social', 'lifecycle'].every((c) => T.ENABLED_BRIEF_CHANNELS.includes(c))
+      && !T.ENABLED_BRIEF_CHANNELS.includes('paid')
+      && !T.ENABLED_BRIEF_CHANNELS.includes('sales_enablement')
+      && !T.ENABLED_BRIEF_CHANNELS.includes('owned_placement'),
+    T.ENABLED_BRIEF_CHANNELS.join(','));
 
   console.log('\nTI-14 / §16 — market scoping, including the ZZ rule');
   t('a brief for another market does not match',
@@ -299,7 +314,7 @@ console.log('\n§13 — WHICH brief applies, decided purely and re-validated at 
   t('an expired row is refused even though SQL returned it',
     T.pickEffectiveBrief([bound()], { now: new Date('2026-12-25T00:00:00Z'), channel: 'seo' }).brief === null);
   t('a brief that does not allow this channel is refused',
-    T.pickEffectiveBrief([{ ...bound(), allowed_channels: ['lifecycle'] }], { now: NOW, channel: 'seo' }).brief === null);
+    T.pickEffectiveBrief([{ ...bound(), allowed_channels: ['paid'] }], { now: NOW, channel: 'seo' }).brief === null);
   t('a brief for another installation is refused WITHOUT the caller asking',
     T.pickEffectiveBrief([{ ...bound(), tenant_id: 'someone_else' }], { now: NOW, channel: 'seo' }).brief === null,
     'the binding is applied by pickEffectiveBrief itself, so a caller cannot forget it');
@@ -345,43 +360,196 @@ console.log('\nthe approval desk: /api/growth-brief');
     /Math\.min\(Math\.max\(limit, 1\), 200\)/.test(ledger));
 }
 
-console.log('\n§14.5 — the blog agent resolves the brief, and falls back to baseline');
+console.log('\n§14.5 — ONE resolver, used by every steered surface');
 {
-  const src = fs.readFileSync(path.join(ROOT, 'api/blog-agent.ts'), 'utf8');
-  t('the brief is resolved BEFORE the first draft',
-    src.indexOf('resolveSeoBrief(sql)') < src.indexOf('await generateArticle(topic'));
-  t('it resolves in-process, not by calling its own platform over HTTP',
-    !/fetch\(/.test(src),
-    'a second path to one answer is the rule this repository keeps enforcing');
-  t('it uses the same two functions the endpoint uses',
-    /effectiveBriefCandidates/.test(src) && /pickEffectiveBrief/.test(src));
+  const brief = fs.readFileSync(path.join(ROOT, 'api/_brief.ts'), 'utf8');
+  const blog = fs.readFileSync(path.join(ROOT, 'api/blog-agent.ts'), 'utf8');
+  const news = fs.readFileSync(path.join(ROOT, 'api/newsletter.ts'), 'utf8');
 
-  /* THE BASELINE RULE. Every non-brief outcome has to return null and let the
-     agent write what it always wrote — a content pipeline that stops publishing
-     because a strategy lookup failed has traded a working feature for a new one. */
-  const resolver = src.slice(src.indexOf('async function resolveSeoBrief'), src.indexOf('function briefDirective'));
-  t('a failed lookup falls back to baseline instead of throwing',
+  /* Justin: "everything attached must be embedded onto the whole existing
+     platform, not a separate one." The first version put resolution inside the
+     blog agent, which made the blog the only steered surface and guaranteed the
+     second one would be a copy. */
+  t('resolution lives in api/_brief.ts', /export async function resolveBrief/.test(brief));
+  t('and the agents call in rather than each owning a copy',
+    /resolveBrief\(sql, "seo"\)/.test(blog) && /resolveBrief\(sql, "lifecycle"\)/.test(news));
+  for (const [name, src] of [['blog-agent', blog], ['newsletter', news]]) {
+    t(`${name} contains no resolution logic of its own`,
+      !/pickEffectiveBrief|effectiveBriefCandidates/.test(src),
+      'the candidate query and the decision belong to one module');
+  }
+  t('the model-facing directive has one definition',
+    /export function briefDirective/.test(brief) && !/function briefDirective/.test(blog));
+
+  /* THE BASELINE RULE. Every non-brief outcome returns null and the surface
+     behaves exactly as it did before Trend Intelligence existed. */
+  const resolver = brief.slice(brief.indexOf('export async function resolveBrief'), brief.indexOf('export function briefDirective'));
+  t('no database falls back to baseline', /if \(!sql\) return \{ brief: null/.test(resolver));
+  t('a channel with no adapter falls back to baseline', /ENABLED_BRIEF_CHANNELS\.includes\(channel\)/.test(resolver));
+  t('a thrown lookup falls back to baseline rather than propagating',
     /catch \(err: any\)/.test(resolver) && /brief: null/.test(resolver));
   t('every non-brief outcome names itself baseline and says why',
-    (resolver.match(/why:/g) || []).length >= 3 && (resolver.match(/baseline/g) || []).length >= 3,
-    'no approved brief, none eligible, and a failed lookup are three different answers');
-  t('the resolution is logged whether or not a brief applied',
-    /blogAgent: \{ topic, brief:/.test(src));
+    (resolver.match(/why:/g) || []).length >= 5 && (resolver.match(/baseline/g) || []).length >= 5,
+    'no database, no adapter, none approved, none eligible and a failed lookup are five different answers');
 
-  t('the brief is passed as DATA, not written into the system prompt',
-    (src.match(/CONTENT_SYSTEM\s*=/g) || []).length === 1
-      && /brief = `\$\{brief\}\\n\\n\$\{briefDirective\(growthBrief\)\}`/.test(src),
-    'the spec forbids permanently rewriting agent prompts, and the honesty rules live in that prompt');
+  t('the brief is passed as DATA, not written into any system prompt',
+    (blog.match(/CONTENT_SYSTEM\s*=/g) || []).length === 1
+      && /brief = `\$\{brief\}\\n\\n\$\{briefDirective\(growthBrief\)\}`/.test(blog),
+    'the spec forbids permanently rewriting agent prompts, and the honesty rules live in those prompts');
   t('the retry attempts carry the same brief',
-    /liveGames, priorPosts, growthBrief,/.test(src),
+    /liveGames, priorPosts, growthBrief,/.test(blog),
     'a rewrite steered differently from the first draft is a different article');
-  t('which brief steered the post is recorded on the post',
-    /briefId: growthBrief\?\.brief_id \?\? null/.test(src)
-      && /ADD COLUMN IF NOT EXISTS brief_id/.test(fs.readFileSync(path.join(ROOT, 'api/_ledger.ts'), 'utf8')));
   t('prohibited claims are passed without being claimed as enforced',
-    /PROHIBITED CLAIMS ARE PASSED, NOT ENFORCED/.test(src),
+    /PROHIBITED CLAIMS ARE PASSED, NOT ENFORCED/.test(brief),
     'substring-matching free text would look like a gate and catch nothing');
+
+  /* WHAT MUST NEVER BE STEERED. A creator paid ACUs for the game they
+     described; the platform's marketing objective has no business in it. */
+  for (const f of ['api/_gateway.ts', 'api/_forgejobs.ts', 'api/forge-game.ts', 'api/forge-enhance.ts',
+                   'api/growth.ts', 'api/comms.ts', 'api/_notify.ts']) {
+    const src = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    t(`${f} is not steered by a brief`,
+      !/_brief|resolveBrief|briefDirective/.test(src),
+      'the forge and the growth tools spend a creator\'s ACUs on the creator\'s own work; transactional mail must read the same on every day of every campaign');
+  }
 }
+
+console.log('\nsteering a surface that calls no model');
+{
+  const B = require('./build/api/_brief.js');
+  const items = [
+    { name: 'Payouts', keywords: ['withdraw earnings', 'mobile money payout'] },
+    { name: 'Multilingual forge', keywords: ['create a game in french', 'any language game maker'] },
+    { name: 'Asset library', keywords: ['free 3d game assets', 'low poly models'] },
+  ];
+  const b = T.GrowthBriefSchema.parse({ ...bound(),
+    audience: 'French speaking creators', intent: 'create a game in french without coding', objective: 'forge starts' });
+
+  const steered = B.steerByBrief(items, b);
+  t('the item matching the brief leads', steered[0].name === 'Multilingual forge', steered.map((x) => x.name).join(' > '));
+  t('and nothing is dropped', steered.length === items.length);
+
+  /* The baseline case has to be byte-identical, or "no brief in force" would
+     quietly change the newsletter anyway. */
+  t('with no brief the order is untouched',
+    B.steerByBrief(items, null).map((x) => x.name).join() === items.map((x) => x.name).join());
+  const noMatch = T.GrowthBriefSchema.parse({ ...bound(), audience: 'zzzz', intent: 'zzzz', objective: 'zzzz' });
+  t('with a brief that matches nothing the order is also untouched',
+    B.steerByBrief(items, noMatch).map((x) => x.name).join() === items.map((x) => x.name).join(),
+    'a stable sort is what keeps the newsletter rotation intact underneath the steering');
+  t('it mutates nothing', (() => { const copy = items.map((x) => x.name).join(); B.steerByBrief(items, b); return copy === items.map((x) => x.name).join(); })());
+
+  /* RUN IT, do not read it. buildIssue is the thing that ships, and without a
+     DATABASE_URL it still assembles the feature and "start here" sections, so
+     the steering is observable for real rather than asserted from source. */
+  const N = require('./build/api/newsletter.js');
+  const baseIssue = await N.buildIssue('2026-W46');
+  const steeredIssue = await N.buildIssue('2026-W46', T.GrowthBriefSchema.parse({ ...bound(),
+    audience: 'creators who want to sell what they make',
+    intent: 'sell a finished game and get paid',
+    objective: 'marketplace listings per active creator' }));
+  const lead = (iss) => iss.sections[0].links.map((l) => l.label);
+  t('a real issue is assembled either way',
+    baseIssue.sections.length >= 2 && steeredIssue.sections.length >= 2 && lead(baseIssue).length === 4);
+  t('the brief changes which capabilities lead the issue',
+    lead(baseIssue).join() !== lead(steeredIssue).join(),
+    `${lead(baseIssue).join(' | ')}  ->  ${lead(steeredIssue).join(' | ')}`);
+  t('and the issue copy itself is untouched',
+    baseIssue.intro === steeredIssue.intro
+      && baseIssue.sections[0].blurb === steeredIssue.sections[0].blurb,
+    'a brief reorders real capabilities; it never rewrites a word of the copy');
+  t('the headline still names the lead capability, so it stays true to the issue',
+    steeredIssue.headline.startsWith(lead(steeredIssue)[0]), steeredIssue.headline);
+
+  const news = fs.readFileSync(path.join(ROOT, 'api/newsletter.ts'), 'utf8');
+  t('the newsletter steers the WHOLE feature list, not this week\'s four',
+    /steerByBrief\(FEATURES, brief\)\.slice\(0, 4\)/.test(news),
+    'reordering four already-picked features cannot surface a relevant fifth');
+  t('and falls back to the week rotation with no brief',
+    /: featuresForIssue\(issue\)/.test(news));
+  t('a dry run attributes nothing', news.indexOf('nothing was attributed') > 0 && news.indexOf('if (sent > 0)') > news.indexOf('nothing was attributed'));
+}
+
+console.log('\n§17 — what was produced under which brief, in ONE table');
+{
+  const ledger = fs.readFileSync(path.join(ROOT, 'api/_ledger.ts'), 'utf8');
+  const brief = fs.readFileSync(path.join(ROOT, 'api/_brief.ts'), 'utf8');
+  t('attribution has one table for every surface',
+    /CREATE TABLE IF NOT EXISTS brief_attribution/.test(ledger));
+  t('and the grain is the artefact, not the reader',
+    /PRIMARY KEY \(surface, artefact_id\)/.test(ledger)
+      && !/session_id|user_id|email/.test(ledger.slice(ledger.indexOf('brief_attribution'), ledger.indexOf('brief_attribution') + 700)),
+    'a brief says nothing about any individual; attributing it to one would be wrong and a privacy problem invented for nothing');
+  t('a retried cron cannot double-count an artefact',
+    /ON CONFLICT \(surface, artefact_id\) DO NOTHING/.test(ledger));
+  t('baseline is recorded too, with null brief columns',
+    /brief_id text,/.test(ledger) && /brief: GrowthBrief \| null/.test(brief),
+    'an experiment with no record of its control is not an experiment');
+  t('the per-surface columns are gone, so the fact has one home',
+    !/ADD COLUMN IF NOT EXISTS brief_id/.test(ledger));
+  t('a failed attribution write never breaks the thing it measures',
+    /briefAttributionFailed/.test(brief));
+  t('both wired surfaces attribute',
+    /surface: "blog"/.test(fs.readFileSync(path.join(ROOT, 'api/blog-agent.ts'), 'utf8'))
+      && /surface: "newsletter"/.test(fs.readFileSync(path.join(ROOT, 'api/newsletter.ts'), 'utf8')));
+}
+
+console.log('\nIT WORKS INVISIBLY — nothing reaches a user');
+{
+  /* Justin: "nothing to be visible to users as it needs to work invisible."
+     Asserted as a property of the repository, because a promise in a comment is
+     not a guarantee. The operator desk at /admin is excluded by design: it is
+     key-gated, it is how a brief is approved at all, and an operator is not a
+     user. */
+  const PUBLIC_PAGES = fs.readdirSync(path.join(ROOT, 'frontend')).filter((f) => f.endsWith('.html') && f !== 'admin.html');
+  const leaks = [];
+  for (const f of PUBLIC_PAGES) {
+    const src = fs.readFileSync(path.join(ROOT, 'frontend', f), 'utf8');
+    if (/growth-brief|growthBrief|brief_id|briefVersion|Growth Brief/.test(src)) leaks.push(f);
+  }
+  t('no public page mentions a brief', leaks.length === 0, leaks.join(', '));
+
+  /* The endpoint must not be discoverable: not in the sitemap, not in llms.txt,
+     not in the feed, and not in the feature inventory that drives marketing. */
+  for (const f of ['api/sitemap.ts', 'api/llms.ts', 'api/rss.ts', 'api/_seo.ts', 'api/_features.ts', 'api/features-hub.ts']) {
+    const src = fs.readFileSync(path.join(ROOT, f), 'utf8');
+    t(`${f} does not advertise it`, !/growth-brief|Growth Brief|trend intelligence/i.test(src));
+  }
+
+  /* The blog is the steered surface, so it is the one that could leak. */
+  const html = fs.readFileSync(path.join(ROOT, 'api/blog-html.ts'), 'utf8');
+  t('a rendered post carries no brief marking',
+    !/brief/i.test(html),
+    'a reader must not be able to tell which campaign a post belongs to');
+  const blog = fs.readFileSync(path.join(ROOT, 'api/blog-agent.ts'), 'utf8');
+  const publicIndex = blog.slice(blog.indexOf('public post index'), blog.indexOf('generation — cron'));
+  t('the public post index returns no brief fields',
+    !/brief/i.test(publicIndex),
+    'the index is served to /blog with no key');
+
+  /* Every surface that returns brief data must be key-gated. */
+  const gated = fs.readFileSync(path.join(ROOT, 'api/growth-brief.ts'), 'utf8');
+  t('the only endpoint that serves a brief requires a key',
+    /Admin key or cron secret required/.test(gated)
+      && gated.indexOf('Admin key or cron secret required') < gated.indexOf('await ensureBriefSchema(sql)'));
+  const apiFiles = fs.readdirSync(path.join(ROOT, 'api')).filter((f) => f.endsWith('.ts'));
+  /* The pattern names the GROWTH BRIEF, not the English word. api/growth.ts
+     takes a `brief` field that is the CREATOR's brief for a paid growth tool,
+     api/forge-game.ts calls the creator's prompt "the whole brief", and
+     api/llms.ts calls itself "a brief written for answer engines" — three
+     pre-existing, unrelated meanings that a loose /brief/i sweep reports as
+     leaks. A test that cries wolf gets switched off. */
+  const GROWTH_BRIEF = /Growth Brief|growth-brief|growthBrief|brief_id|briefVersion|brief_attribution|resolveBrief|briefDirective|attributeBrief|from "\.\/_brief"/;
+  const unguarded = apiFiles.filter((f) => {
+    const src = fs.readFileSync(path.join(ROOT, 'api', f), 'utf8');
+    if (!GROWTH_BRIEF.test(src)) return false;
+    /* A surface may READ a brief without serving it; what matters is that no
+       endpoint hands one to an unauthenticated caller. */
+    return !/MODERATION_KEY|CRON_SECRET|x-admin-key|x-moderation-key/.test(src) && !f.startsWith('_');
+  });
+  t('no unauthenticated endpoint touches a brief', unguarded.length === 0, unguarded.join(', '));
+}
+
 
 console.log('\nthe merge did not create a second backend');
 {
@@ -404,3 +572,4 @@ console.log('\nthe merge did not create a second backend');
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
+})();

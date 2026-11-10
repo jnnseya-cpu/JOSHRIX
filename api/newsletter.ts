@@ -31,6 +31,8 @@ import {
   recordNewsletterSend, listBlogPosts, listApprovedGames,
 } from "./_ledger";
 import { unsubscribeUrl } from "./unsubscribe";
+import { resolveBrief, steerByBrief, attributeBrief } from "./_brief";
+import { type GrowthBrief } from "../shared/trend";
 
 const SITE = "https://www.joshrix.com";
 /** One run mails at most this many. Vercel caps a function's wall clock, and a
@@ -58,8 +60,28 @@ export function featuresForIssue(issue: string, count = 4) {
   return out;
 }
 
-export async function buildIssue(issue: string) {
-  const picked = featuresForIssue(issue);
+/**
+ * STEERED, BUT NOT REWRITTEN.
+ *
+ * This issue is assembled from verified facts in api/_features.ts, so there is
+ * no prompt for a Growth Brief to steer and nothing a brief should be allowed to
+ * invent. What a brief CAN legitimately change is which of the platform's real
+ * capabilities lead the issue — so when one is in force the four features are
+ * chosen from the whole list by relevance to the brief's own audience and
+ * intent, instead of by week number alone.
+ *
+ * `steerByBrief` is a stable sort, so with no brief, or a brief that matches
+ * nothing, the week rotation is exactly what it was. Not one word of copy
+ * changes: the same proof lines, the same links, the same "nothing here is a
+ * promise" intro.
+ */
+export async function buildIssue(issue: string, brief: GrowthBrief | null = null) {
+  /* Steering reads the WHOLE feature list and then takes four, because
+     reordering the four the rotation already picked could not surface a
+     relevant capability that was not in this week's slot. */
+  const picked = brief
+    ? steerByBrief(FEATURES, brief).slice(0, 4)
+    : featuresForIssue(issue);
   const sections: NewsletterSection[] = [{
     heading: "What you can do with your account",
     blurb: "Four capabilities this week, each with the specifics behind it.",
@@ -126,11 +148,16 @@ export default async function handler(req: any, res: any) {
   }
 
   const issue = isoWeek();
-  const built = await buildIssue(issue);
   const dry = String(req.query?.dry ?? "") === "1";
 
   const sql = getDb();
   if (!sql) return res.status(503).json({ error: "No database configured — cannot determine the audience." });
+
+  /* Resolved BEFORE the issue is assembled, because the brief decides which
+     capabilities lead it. With no eligible brief this is null and the issue is
+     byte-for-byte what it was — the spec's required baseline behaviour. */
+  const { brief, why: briefWhy } = await resolveBrief(sql, "lifecycle");
+  const built = await buildIssue(issue, brief);
 
   await ensureNewsletterSchema(sql);
   const audience = await newsletterAudience(sql, issue, BATCH);
@@ -139,7 +166,10 @@ export default async function handler(req: any, res: any) {
     return res.status(200).json({
       issue, provider: emailProvider(), wouldSend: audience.length,
       sections: built.sections.map((s) => ({ heading: s.heading, links: s.links.length })),
-      note: "Dry run — nothing was sent and no address was claimed.",
+      leadFeatures: built.sections[0].links.map((l) => l.label),
+      brief: brief ? { briefId: brief.brief_id, briefVersion: brief.brief_version } : null,
+      briefResolution: briefWhy,
+      note: "Dry run — nothing was sent, no address was claimed, and nothing was attributed.",
     });
   }
 
@@ -157,6 +187,13 @@ export default async function handler(req: any, res: any) {
       await recordNewsletterSend(sql, email, issue, "failed", emailProvider()).catch(() => {});
       failed++;
     }
+  }
+
+  /* Attributed once per ISSUE, and only when the issue actually went out. The
+     write is idempotent, so the partial-batch continuation runs record nothing
+     further and the brief credited stays the one that steered the first send. */
+  if (sent > 0) {
+    await attributeBrief(sql, { surface: "newsletter", artefactId: issue, channel: "lifecycle", brief, resolution: briefWhy });
   }
 
   return res.status(200).json({

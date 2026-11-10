@@ -76,6 +76,9 @@ export default async function handler(req: any, res: any) {
             objective: r.objective ?? null,
             opportunityScore: r.opportunity_score === null ? null : Number(r.opportunity_score),
             confidence: r.confidence === null ? null : Number(r.confidence),
+            /* §17's read side: what this brief has actually steered. A brief in
+               force all week with zero artefacts is the thing to notice. */
+            artefacts: Number(r.artefacts ?? 0),
           })),
           count: rows.length,
           install: { tenantId: INSTALL.tenantId, platformId: INSTALL.platformId, market: INSTALL.market, locale: INSTALL.locale },

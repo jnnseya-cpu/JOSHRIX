@@ -3,8 +3,91 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-11-10 (Trend Intelligence merged end to end; the CI gate was
-red from the day it was added and is now green)
+Last updated: 2026-11-10 (Trend Intelligence embedded across the platform and
+invisible to users; the CI gate is green for the first time)
+
+---
+
+## EMBEDDED, AND INVISIBLE — 10 Nov
+
+Justin, twice over: *"everything attached must be embedded onto the whole
+existing platform, not a separate one"*, and *"nothing to be visible to users as
+it needs to work invisible."*
+
+Both are architectural instructions and both are now properties the suite
+enforces rather than claims a comment makes.
+
+**EMBEDDED means one resolver, and every steered surface calls it.** The first
+version put brief resolution inside `api/blog-agent.ts`, which made the blog the
+only steered surface and guaranteed the second one would be a copy — the failure
+this repository has paid for more than any other. `api/_brief.ts` now owns
+resolution, the model-facing directive, the deterministic steering used by
+surfaces that call no model, and the attribution record. `t47` asserts that
+neither agent contains `pickEffectiveBrief` or the candidate query, so a third
+surface cannot arrive with its own.
+
+**Two surfaces are wired, and `lifecycle` has an adapter now.** The blog agent
+(`seo`, and `organic_social` because the captions come out of the same draft) and
+the newsletter (`lifecycle`). `ENABLED_BRIEF_CHANNELS` is the availability list
+and a channel joins it when code steers it, not before — `paid`,
+`sales_enablement` and `owned_placement` stay out so a brief naming one cannot
+authorise work nothing will do.
+
+**The newsletter calls no model, so the brief reorders rather than writes.** It
+is assembled from verified facts in `api/_features.ts`; there is no prompt to
+append to and nothing a brief should be allowed to invent. So a brief in force
+picks the issue's four lead capabilities from the whole list by relevance to its
+own audience and intent, instead of by week number. Not one word of copy
+changes. Run, not asserted — a brief for "sell a finished game and get paid" led
+with payouts, the 75–92.5% share and the marketplace, where baseline led with
+share links and the arcade, and `intro` came back byte-identical. The sort is
+stable, so a brief that matches nothing leaves the rotation exactly as it was.
+
+**What is deliberately NOT steered, and this is a boundary, not an omission.**
+The forge (`_gateway`, `_forgejobs`, `forge-game`, `forge-enhance`) and the
+creator growth tools (`api/growth.ts`): a creator paid ACUs for their own work,
+and letting the platform's marketing objective into it would be spending
+someone else's money on our growth. Transactional mail (`comms`, `_notify`): a
+receipt must read the same on every day of every campaign. `t47` asserts all six
+files are free of any brief import.
+
+**Attribution is one table at the grain of the artefact.** `brief_attribution`,
+keyed `(surface, artefact_id)` — a blog slug, a newsletter issue — never a
+reader, because a brief says nothing about any individual and attributing one to
+a person's session would be wrong and a privacy problem invented for nothing.
+Baseline is recorded too, with null brief columns: an experiment with no record
+of its control is not an experiment. The two `blog_posts` columns added earlier
+the same day are gone from the migration — a column per surface is the same fact
+copied once per surface. Any installation that ran that build keeps two
+nullable, unwritten columns, left alone on purpose, because dropping a column in
+production to tidy a schema is not a risk worth taking.
+
+**Verified against real Postgres again:** the table and its partial index create
+clean; a retried cron attributing the same issue to a *different* brief changed
+nothing, so the brief credited stays the one that steered the work; the operator
+desk's artefact count returns 2 while ignoring the baseline row; and baseline and
+steered rows stay distinguishable.
+
+**INVISIBLE is a test, not a promise.** `t47` asserts: no public page mentions a
+brief; `sitemap.ts`, `llms.ts`, `rss.ts`, `_seo.ts`, `_features.ts` and
+`features-hub.ts` do not advertise it, so it is absent from the feature
+inventory that drives all marketing copy; a rendered blog post carries no brief
+marking, so a reader cannot tell which campaign a post belongs to; the public
+post index returns no brief fields; and no unauthenticated endpoint touches one.
+That last sweep first reported three false leaks — `api/growth.ts` takes a
+`brief` field that is the *creator's* brief, `forge-game.ts` calls the creator's
+prompt "the whole brief", and `llms.ts` calls itself "a brief written for answer
+engines". The pattern names the Growth Brief now, because a test that cries wolf
+gets switched off.
+
+**`/admin` keeps its Growth Briefs panel** and now shows how many items each
+brief has steered — a brief in force all week having steered nothing is the thing
+an operator needs to notice. An operator is not a user: the desk is key-gated and
+it is the only way a brief gets approved at all.
+
+**Verified:** 50 files, 2,224 assertions, green, ratchet clean, type check clean,
+and the CI gate green on the previous commit — the first green run since it was
+added.
 
 ---
 

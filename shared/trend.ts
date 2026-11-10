@@ -50,8 +50,14 @@ export type BriefChannel = (typeof BriefChannels)[number];
 
 /** Which channels actually have an adapter. The enum above reserves stable
  *  routing values; the spec is clear that listing one "makes no feature
- *  available on its own", so availability lives here and not in the schema. */
-export const ENABLED_BRIEF_CHANNELS: readonly BriefChannel[] = ["seo", "organic_social"];
+ *  available on its own", so availability lives here and not in the schema.
+ *
+ *  seo and organic_social are api/blog-agent.ts — the article and the social
+ *  captions come out of one draft. lifecycle is api/newsletter.ts. A channel
+ *  joins this list when code steers it and not before: sales_enablement,
+ *  owned_placement and paid have no adapter and must stay out, so a brief that
+ *  names one cannot authorise work nothing will do. */
+export const ENABLED_BRIEF_CHANNELS: readonly BriefChannel[] = ["seo", "organic_social", "lifecycle"];
 
 const idPattern = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
 const Id = z.string().regex(idPattern, "id must be 1-128 chars of [A-Za-z0-9_-] starting alphanumeric");
