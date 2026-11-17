@@ -8,6 +8,8 @@
  * valid structured data whether the model bothered or not.
  */
 
+import { LEGAL } from "../shared/legal";
+
 export const SITE = "https://www.joshrix.com";
 
 /** Escape for HTML attribute/text contexts. */
@@ -256,15 +258,29 @@ export function editorialNode() {
   };
 }
 
-/** The publisher identity every page points at — one canonical entity. */
+/** The publisher identity every page points at — one canonical entity.
+ *
+ *  CARRIES THE ICO REGISTRATION, added 17 Nov 2026. A registration number in
+ *  prose on the privacy page is for a reader; in `identifier` it is also for a
+ *  machine, and the engines this site is optimised for weigh verifiable
+ *  publisher identity when they decide whether to trust a source. An
+ *  anonymous Organization node is the weakest form of publisher a page can
+ *  claim. The value comes from shared/legal.ts, so the structured data cannot
+ *  state a different number from the legal pages. */
 export function orgNode() {
   return {
     "@type": "Organization",
     "@id": `${SITE}/#org`,
-    name: "JOSHRIX Studio",
+    name: LEGAL.controller,
     url: SITE,
     logo: { "@type": "ImageObject", url: `${SITE}/assets/icons/icon-512.png`, width: 512, height: 512 },
     sameAs: [] as string[],
+    identifier: {
+      "@type": "PropertyValue",
+      name: "ICO registration number",
+      value: LEGAL.icoRegistration,
+      description: `${LEGAL.regulator} public register of fee payers`,
+    },
     description: "AI game creation platform — describe a game in any language and get a real, playable browser game.",
   };
 }

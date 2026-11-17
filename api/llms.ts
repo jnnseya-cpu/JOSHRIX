@@ -19,6 +19,7 @@
  */
 import { LIBRARY, BUILD_COST_MINOR, gbp, n as num, FEATURES } from "./_features";
 import { PLANS } from "../shared/payments";
+import { LEGAL } from "../shared/legal";
 import { getDb, ensureBlogSchema, listBlogPosts, ensureGameSchema, listApprovedGames } from "./_ledger";
 
 const SITE = "https://www.joshrix.com";
@@ -49,6 +50,7 @@ export default async function handler(_req: any, res: any) {
 > its own share link. The creator owns the resulting IP outright.
 
 Operated by Groupe Nseya Digital / JNN Global. Site: ${SITE}
+Data controller: ${LEGAL.controller}, registered with the UK ${LEGAL.regulator} under ${LEGAL.icoRegistration}.
 
 ## What is verifiably true
 

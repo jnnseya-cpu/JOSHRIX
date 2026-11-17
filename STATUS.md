@@ -3,8 +3,77 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-11-10 (three of the five launch blockers moved from Justin's
-list to this side; production failures are now recorded and alerted)
+Last updated: 2026-11-17 (ICO registration published; every bold term on the
+legal pages had been invisible)
+
+---
+
+## THE ICO NUMBER, AND WHAT PUBLISHING IT EXPOSED — 17 Nov
+
+Justin supplied the ICO registration number: **C2089949**. It now appears on the
+privacy policy, the terms, the contact page, in `/llms.txt` and in the site's
+`Organization` structured data.
+
+**One source of truth.** `shared/legal.ts` declares it once and
+`tests/t51-legal-identity.js` asserts that every page stating a registration
+number states that one — found by scanning `frontend/*.html`, not from a list,
+so a fifth page added later is caught without anyone remembering. The static
+pages must carry the digits literally; that test is the only thing between them
+and drift. A stale commission rate is embarrassing; a stale registration number
+is a misleading public statement about a regulated registration, on the page a
+regulator reads first.
+
+**It closed a real gap.** UK GDPR Article 13(1)(a) requires the controller's
+identity and contact details to be given to the data subject. The privacy policy
+set out in detail what was collected, why, and for how long, and never said
+**who** was collecting it. The new "Who we are" block sits above section 1 rather
+than renumbering eight sections, so every existing reference still means what it
+said.
+
+**NOT VERIFIED, and not presented as if it were.** This environment cannot reach
+ico.org.uk — the proxy refuses it — so the number is published as supplied. The
+only check made is that its shape matches the ICO's current scheme.
+
+**One thing needs Justin's answer.** `/llms.txt` says "Operated by Groupe Nseya
+Digital / JNN Global", the Terms say "JOSHRIX Studio … operates joshrix.com",
+and every footer says "JOSHRIX Studio". A privacy policy should name the **legal
+entity** holding the registration, which may be the former with the latter as a
+trading name. The controller follows the existing public copy rather than
+silently introducing a different entity onto a legal page. If C2089949 is
+registered to Groupe Nseya Digital / JNN Global, one line in `shared/legal.ts`
+changes it everywhere and t51 proves it propagated.
+
+### EVERY BOLD TERM ON THE LEGAL PAGES WAS INVISIBLE
+
+Screenshotting the finished block is what found it. `.legal b` was
+`color: var(--ink, #ececf4)` — written as if `--ink` were undefined and the
+near-white fallback would apply. `--ink` **is** defined, as `#07080B`: the page
+background. So every `<b>` on privacy, terms and refunds had been rendering
+background-on-background, and `doc.html` had the same mistake on its table
+headers.
+
+Fifteen runs of text, invisible to every reader. Among them: *"unused money is
+refundable, consumed AI…"* on the refunds page, *"All AI features are paid"* on
+the terms, *"Account data"*, *"ACUs"* — and, as of today, the registration
+number itself. The copy is commercially and legally load-bearing, and nobody
+could see any of it.
+
+**No test could have caught it, because every one of them read the HTML.** The
+text was present, correct and in the DOM; it simply could not be seen. So the
+check is a rendered one: `t4-crawl` already opens all 33 pages in Chromium, and
+now compares each text run's computed colour against the first opaque background
+behind it. It found all 15 before the fix and reports 0 after.
+
+**`t4-crawl` used to end in `process.exit(0)` unconditionally** — load failures,
+JS errors and thin pages were printed and then forgiven, which is why it reports
+"ok" and the ratchet tracks it for presence only. Invisible text fails the run
+from today. The other findings are left as reporting and **recorded here**:
+turning them into failures is a separate decision with its own fallout (12 pages
+currently log a JS error), and smuggling it into a legal-copy commit would be the
+wrong way to make it.
+
+**Verified:** 53 files, 2,376 assertions, green; ratchet clean; type check clean;
+the block screenshotted at desktop and phone width with no page errors.
 
 ---
 
