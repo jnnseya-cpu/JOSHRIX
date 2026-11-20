@@ -6,7 +6,7 @@
  * Without MODERATION_KEY set the endpoint refuses everything (fail closed).
  */
 import { getDb, ensureGameSchema, listPendingGames, setGameStatus, getGame } from "./_ledger";
-import { tooManyBadKeys } from "./_guard";
+import { tooManyBadKeys, adminKey } from "./_guard";
 import { notify } from "./_notify";
 import { failing } from "./_observe";
 
@@ -16,9 +16,9 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-key");
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  const key = process.env.MODERATION_KEY;
+  const key = adminKey();
   if (!key) return res.status(503).json({ error: "Moderation not configured (MODERATION_KEY missing) — review queue is locked." });
-  if (req.headers?.["x-admin-key"] !== key) {
+  if (String(req.headers?.["x-admin-key"] ?? "").trim() !== key) {
     // count the failure before refusing, so the only credential on the
     // platform cannot be guessed at network speed
     if (await tooManyBadKeys(getDb(), req, res)) return;

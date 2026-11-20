@@ -33,6 +33,7 @@ import {
 import { unsubscribeUrl } from "./unsubscribe";
 import { resolveBrief, steerByBrief, attributeBrief } from "./_brief";
 import { type GrowthBrief } from "../shared/trend";
+import { adminKey } from "./_guard";
 
 const SITE = "https://www.joshrix.com";
 /** One run mails at most this many. Vercel caps a function's wall clock, and a
@@ -135,9 +136,9 @@ export async function buildIssue(issue: string, brief: GrowthBrief | null = null
 }
 
 function authorised(req: any): boolean {
-  const key = process.env.MODERATION_KEY;
+  const key = adminKey();
   const cron = process.env.CRON_SECRET;
-  if (key && String(req.headers?.["x-moderation-key"] ?? "") === key) return true;
+  if (key && String(req.headers?.["x-moderation-key"] ?? "").trim() === key) return true;
   if (cron && String(req.headers?.["authorization"] ?? "") === `Bearer ${cron}`) return true;
   return false;
 }

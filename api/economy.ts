@@ -13,6 +13,7 @@
  * credential convention as /api/traffic: MODERATION_KEY, or the cron secret.
  */
 import { SKU_CATALOGUE, CostObservationBatchSchema, evaluateSku, fixedMonthlyOverheadMinor, ECON } from "../shared/economics";
+import { adminKey } from "./_guard";
 
 function summarise(rows: ReturnType<typeof evaluateSku>[]) {
   const order = { ok: 0, warn: 1, act: 2, panic: 3 } as const;
@@ -35,9 +36,9 @@ export default function handler(req: any, res: any) {
 
   // Fail CLOSED: with no credential configured this stays shut rather than
   // falling back to open, which is how it was readable in the first place.
-  const key = process.env.MODERATION_KEY;
+  const key = adminKey();
   const cron = process.env.CRON_SECRET;
-  const authorised = (!!key && String(req.headers["x-moderation-key"] ?? "") === key) ||
+  const authorised = (!!key && String(req.headers["x-moderation-key"] ?? "").trim() === key) ||
                      (!!cron && String(req.headers["authorization"] ?? "") === `Bearer ${cron}`);
   if (!key && !cron) return res.status(503).json({ error: "Economy unavailable — set MODERATION_KEY." });
   if (!authorised) return res.status(401).json({ error: "Unauthorised." });

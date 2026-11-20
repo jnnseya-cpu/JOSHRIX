@@ -198,3 +198,38 @@ export async function recordSecurityEvent(
               VALUES (${kind}, ${severity}, ${JSON.stringify(detail)}::jsonb)`;
   } catch { /* observation must never break the thing observed */ }
 }
+
+/**
+ * THE ADMIN CREDENTIAL, READ THE SAME WAY EVERYWHERE.
+ *
+ * On 20 Nov 2026 /admin answered "Wrong key" against a healthy deployment. A
+ * secret pasted into a hosting dashboard from a file or a terminal very often
+ * carries a trailing newline or a space, and the stored value then differs from
+ * the one a human types by a character nobody can see. The comparison was
+ * nineteen separate `process.env.MODERATION_KEY` reads, so there was no single
+ * place to be careful in.
+ *
+ * Leading and trailing whitespace is never part of a key. Trimming both sides
+ * removes an entire class of "wrong key" that is not wrong, and weakens nothing:
+ * a credential whose security depends on an invisible trailing space is not a
+ * credential.
+ */
+export function adminKey(): string | null {
+  const k = (process.env.MODERATION_KEY ?? "").trim();
+  return k || null;
+}
+
+/** The scheduled-run credential, read with the same care. */
+export function cronSecret(): string | null {
+  const k = (process.env.CRON_SECRET ?? "").trim();
+  return k || null;
+}
+
+/** Does this request carry the admin credential? Compares trimmed on both
+ *  sides, so a header with a stray space is treated as the key it plainly is. */
+export function isAdmin(req: any): boolean {
+  const key = adminKey();
+  if (!key) return false;
+  const sent = String(req?.headers?.["x-admin-key"] ?? req?.headers?.["x-moderation-key"] ?? "").trim();
+  return sent.length > 0 && sent === key;
+}

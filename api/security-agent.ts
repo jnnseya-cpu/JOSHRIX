@@ -18,7 +18,7 @@
  */
 import { getDb, failureSummary } from "./_ledger";
 import { notify } from "./_notify";
-import { recordSecurityEvent } from "./_guard";
+import { recordSecurityEvent, adminKey } from "./_guard";
 
 type Finding = {
   severity: "critical" | "high" | "medium" | "low";
@@ -37,9 +37,9 @@ export default async function handler(req: any, res: any) {
      hand; the nightly Vercel cron cannot set custom headers, so it carries
      Bearer CRON_SECRET — the same pattern the blog cron already uses. Fails
      closed when neither secret is configured. */
-  const key = process.env.MODERATION_KEY;
+  const key = adminKey();
   const cron = process.env.CRON_SECRET;
-  const byOperator = !!key && String(req.headers["x-moderation-key"] ?? "") === key;
+  const byOperator = !!key && String(req.headers["x-moderation-key"] ?? "").trim() === key;
   const byCron = !!cron && String(req.headers["authorization"] ?? "") === `Bearer ${cron}`;
   if (!key && !cron) {
     return res.status(503).json({ error: "Security review unavailable — set MODERATION_KEY (operator) or CRON_SECRET (scheduled run)." });

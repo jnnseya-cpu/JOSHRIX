@@ -26,6 +26,7 @@ const SITE = "https://www.joshrix.com";
 /** Rotating editorial calendar — high-intent queries for the AI game-creation market. */
 import { FEATURES, featureById } from "./_features";
 import { failing } from "./_observe";
+import { adminKey } from "./_guard";
 
 /** Every capability gets its own article. Interleaving them with the broader
  *  editorial pieces means the calendar alternates "what this does" with "why it
@@ -191,7 +192,7 @@ async function generateArticle(topic: string, liveGames: Array<{ id: string; tit
 }
 
 function authorised(req: any): boolean {
-  const key = process.env.MODERATION_KEY;
+  const key = adminKey();
   if (key && req.headers?.["x-admin-key"] === key) return true;
   const cron = process.env.CRON_SECRET;
   if (cron && req.headers?.["authorization"] === `Bearer ${cron}`) return true;

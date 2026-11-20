@@ -26,7 +26,7 @@
  * fail while the database is perfectly healthy.
  */
 import { getDb, ensureBriefSchema, saveGrowthBrief, archiveGrowthBrief, effectiveBriefCandidates, listGrowthBriefs } from "./_ledger";
-import { tooManyBadKeys } from "./_guard";
+import { tooManyBadKeys, adminKey } from "./_guard";
 import {
   GrowthBriefSchema, BriefChannels, ENABLED_BRIEF_CHANNELS, briefRuntimeFailures,
   pickEffectiveBrief, INSTALL, INSTALLED_LOCALES,
@@ -39,7 +39,7 @@ import { failing } from "./_observe";
 const MAX_BRIEF_BYTES = 16_384;
 
 function authorised(req: any): boolean {
-  const key = process.env.MODERATION_KEY;
+  const key = adminKey();
   if (key && req.headers?.["x-admin-key"] === key) return true;
   const cron = process.env.CRON_SECRET;
   if (cron && req.headers?.["authorization"] === `Bearer ${cron}`) return true;
@@ -52,7 +52,7 @@ export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, x-admin-key");
   if (req.method === "OPTIONS") return res.status(204).end();
 
-  const key = process.env.MODERATION_KEY;
+  const key = adminKey();
   const cron = process.env.CRON_SECRET;
   if (!key && !cron) return res.status(503).json({ error: "MODERATION_KEY not configured" });
   if (!authorised(req)) {

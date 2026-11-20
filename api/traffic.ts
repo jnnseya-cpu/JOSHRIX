@@ -19,15 +19,16 @@
  * than no funnel: it feels like evidence.
  */
 import { getDb } from "./_ledger";
+import { adminKey } from "./_guard";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Cache-Control", "no-store");
   if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
 
-  const key = process.env.MODERATION_KEY;
+  const key = adminKey();
   const cron = process.env.CRON_SECRET;
-  const ok = (!!key && String(req.headers["x-moderation-key"] ?? "") === key) ||
+  const ok = (!!key && String(req.headers["x-moderation-key"] ?? "").trim() === key) ||
              (!!cron && String(req.headers["authorization"] ?? "") === `Bearer ${cron}`);
   if (!key && !cron) return res.status(503).json({ error: "Traffic unavailable — set MODERATION_KEY." });
   if (!ok) return res.status(401).json({ error: "Unauthorised." });

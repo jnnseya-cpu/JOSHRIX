@@ -11,16 +11,16 @@
  * timestamps in a log.
  */
 import { getDb, ensureGameSchema, adminStats, settledSummary, ensureSchema, ensureErrorSchema, failureSummary, failureByReference } from "./_ledger";
-import { tooManyBadKeys } from "./_guard";
+import { tooManyBadKeys, adminKey } from "./_guard";
 import { failing } from "./_observe";
 
 export default async function handler(req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   if (req.method !== "GET") return res.status(405).json({ error: "GET only" });
 
-  const key = process.env.MODERATION_KEY;
+  const key = adminKey();
   if (!key) return res.status(503).json({ error: "MODERATION_KEY not configured" });
-  if (req.headers?.["x-admin-key"] !== key) {
+  if (String(req.headers?.["x-admin-key"] ?? "").trim() !== key) {
     // count the failure before refusing, so the only credential on the
     // platform cannot be guessed at network speed
     if (await tooManyBadKeys(getDb(), req, res)) return;
