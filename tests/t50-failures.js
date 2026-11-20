@@ -218,8 +218,12 @@ function captureLogs(fn) {
       typeof led.getDbError() === 'string' && /not a valid URL|neon/i.test(led.getDbError()),
       String(led.getDbError()).slice(0, 90));
     t('with the connection string scrubbed out of it',
-      !/postgres(ql)?:\/\/[^\s<]/i.test(led.getDbError() || ''),
-      'the reason is returned by a PUBLIC endpoint');
+      !/postgres(ql)?:\/\/[^\s<]/i.test(led.getDbError() || '')
+        && !/Connection string:\s*(?!<redacted>)\S/i.test(led.getDbError() || ''),
+      'the driver appends the whole string to its message, and this is returned by a PUBLIC endpoint: ' + led.getDbError());
+    t('and /api/health is immune to a module that fails to load',
+      /await import\("\.\/_gateway"\)/.test(fs.readFileSync(path.join(ROOT, 'api/health.ts'), 'utf8')),
+      'a module-scope import that throws kills the function before any try/catch of ours runs');
 
     led.__setDbForTests(undefined);
     delete process.env.DATABASE_URL;

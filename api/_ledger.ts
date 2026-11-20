@@ -44,6 +44,11 @@ export function getDb(): Sql | null {
        worth one shared regex. */
     _sqlError = String(err?.message ?? err)
       .replace(/postgres(?:ql)?:\/\/[^\s]*/gi, "postgresql://<redacted>")
+      /* The driver appends "Connection string: <the whole thing>" to its
+         message. A string malformed enough to be rejected can still contain a
+         real password, and this error is both logged AND returned by the public
+         /api/health, so the value goes whatever shape it is in. */
+      .replace(/Connection string:\s*\S*/gi, "Connection string: <redacted>")
       .slice(0, 300);
     console.error(JSON.stringify({ databaseUrlInvalid: { detail: _sqlError } }));
     _sql = null;

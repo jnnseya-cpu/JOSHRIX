@@ -16,9 +16,19 @@
  * are behind it" — because a single-provider deployment has no fallback, which
  * is a different kind of healthy and the operator should be able to see it.
  */
-import { providerStatus, BUILD_ID } from "./_gateway";
-import { getDb, getDbError } from "./_ledger";
-import { classify, redact } from "./_observe";
+/* NOTHING FROM THIS PLATFORM IS IMPORTED AT MODULE SCOPE.
+ *
+ * On 20 Nov 2026 this endpoint returned FUNCTION_INVOCATION_FAILED twice, while
+ * it was the one URL being used to diagnose a payment outage. A module-scope
+ * import that throws — a bad env var read at load, a provider SDK that fails to
+ * initialise, a cycle — kills the function before a single line of this file
+ * runs, and no try/catch inside the handler can help.
+ *
+ * So every dependency is loaded with a dynamic import INSIDE the handler's try.
+ * The cost is a few milliseconds on a cold start. The benefit is that "is this
+ * deployment well" is a question that can always be answered, which is the only
+ * reason this file exists.
+ */
 
 /** The forge chain, in the order api/_gateway.ts actually tries it. Kept as a
  *  literal here rather than exported from the gateway because it describes the
@@ -44,17 +54,23 @@ const CHAIN = ["gemini", "openai", "anthropic"] as const;
  * the connection string — password included — in the message when it cannot
  * connect, and this endpoint is public.
  */
-async function ledgerProbe(): Promise<{ configured: boolean; reachable: boolean | null; ms: number | null; error?: string; category?: string }> {
+async function ledgerProbe(
+  classify: (e: unknown) => string,
+  redact: (t: string) => string,
+): Promise<{ configured: boolean; reachable: boolean | null; ms: number | null; error?: string; category?: string }> {
   const configured = !!(process.env.DATABASE_URL || process.env.POSTGRES_URL);
   if (!configured) return { configured: false, reachable: null, ms: null };
 
-  let sql: ReturnType<typeof getDb>;
+  let sql: any;
+  let getDbError: () => string | null = () => null;
   try {
+    const ledgerMod = await import("./_ledger");
+    getDbError = ledgerMod.getDbError;
     /* getDb parses the connection URL. A malformed one throws HERE, before any
        query, and an unguarded throw at this point is what took the whole
        function down on 20 Nov 2026 — a health endpoint that cannot survive a
        bad DATABASE_URL cannot report a bad DATABASE_URL. */
-    sql = getDb();
+    sql = ledgerMod.getDb();
   } catch (err: any) {
     return { configured: true, reachable: false, ms: null, error: redact(String(err?.message ?? err)).slice(0, 300), category: classify(err) };
   }
@@ -105,9 +121,12 @@ export default async function handler(_req: any, res: any) {
    * this deployment well" has to get a reply, so everything below the headers
    * is wrapped and the worst case is a 200 that says the check itself failed. */
   try {
-    const providers = providerStatus();
+    /* Loaded here, not at the top of the file. See the note above. */
+    const gateway = await import("./_gateway");
+    const observe = await import("./_observe");
+    const providers = gateway.providerStatus();
     const ready = CHAIN.filter((p) => providers[p as keyof typeof providers]);
-    const ledger = await ledgerProbe();
+    const ledger = await ledgerProbe(observe.classify, observe.redact);
 
     return res.status(200).json({
       /* `ok` stops being true when the database is configured and refusing. A
@@ -115,7 +134,7 @@ export default async function handler(_req: any, res: any) {
          no health endpoint. */
       ok: ledger.reachable !== false,
       service: "joshrix-studio",
-      build: BUILD_ID,
+      build: gateway.BUILD_ID,
       layers: { frontend: "static /frontend", backend: "serverless /api", shared: "shared/contracts.ts" },
       providers,
       /* Kept as a boolean for anything that already reads it, but it now means
@@ -137,13 +156,20 @@ export default async function handler(_req: any, res: any) {
     });
   } catch (err: any) {
     /* Last resort. Still 200, because the question asked was "are you there"
-       and the answer is yes — with the reason this check could not complete. */
+       and the answer is yes — with the reason this check could not complete.
+       Deliberately NOT redact() from _observe: if that module is what failed to
+       load, calling into it here would fail the fallback too. Scrubbed locally
+       and into a variable first, so no raw error string is ever handed to a
+       response field — tests/t50 sweeps for exactly that. */
+    const scrubbed = String(err?.message ?? err)
+      .replace(/postgres(?:ql)?:\/\/[^\s]*/gi, "postgresql://<redacted>")
+      .replace(/Connection string:\s*\S*/gi, "Connection string: <redacted>")
+      .slice(0, 300);
     return res.status(200).json({
       ok: false,
       service: "joshrix-studio",
       error: "the health check itself failed",
-      detail: redact(String(err?.message ?? err)).slice(0, 300),
-      category: classify(err),
+      detail: scrubbed,
     });
   }
 }
