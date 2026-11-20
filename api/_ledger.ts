@@ -260,8 +260,6 @@ export async function ensureGameSchema(sql: Sql) {
   // are left exactly as they are (reclassifying live wallets is an admin
   // decision, not a migration's), but nothing new is born entitled. Keep this
   // literal in step with DEFAULT_WALLET_CATEGORY in shared/payments.ts.
-  await sql`ALTER TABLE forge_log ADD COLUMN IF NOT EXISTS bytes bigint`;
-  await sql`ALTER TABLE forge_log ADD COLUMN IF NOT EXISTS models integer`;
   await sql`ALTER TABLE wallets ALTER COLUMN category SET DEFAULT 'standard'`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS plan text NOT NULL DEFAULT 'explorer'`;
   await sql`ALTER TABLE wallets ADD COLUMN IF NOT EXISTS name text`;
@@ -320,6 +318,17 @@ export async function ensureGameSchema(sql: Sql) {
     error text,
     created_at timestamptz NOT NULL DEFAULT now()
   )`;
+  /* THESE TWO ALTERS USED TO RUN 52 LINES EARLIER, BEFORE THE CREATE ABOVE.
+   *
+   * On the production database that worked, because an older build had already
+   * created forge_log — so the ALTER always found its table. On a FRESH
+   * database it threw `relation "forge_log" does not exist` and took the whole
+   * of ensureGameSchema with it, which means a new Neon branch, a restore, or a
+   * second environment could never be initialised. Nothing caught it because
+   * nothing had ever run this schema against an empty database until
+   * tests/t52 did, on 20 Nov 2026. */
+  await sql`ALTER TABLE forge_log ADD COLUMN IF NOT EXISTS bytes bigint`;
+  await sql`ALTER TABLE forge_log ADD COLUMN IF NOT EXISTS models integer`;
   await sql`CREATE TABLE IF NOT EXISTS dist_requests (
     id bigserial PRIMARY KEY,
     game_id text,
