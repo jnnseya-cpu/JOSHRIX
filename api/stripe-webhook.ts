@@ -48,9 +48,16 @@ async function rawBody(req: any): Promise<Buffer> {
 async function payReferrer(sql: any, buyerWallet: string, eventId: string) {
   try {
     await ensureReferralSchema(sql);
+    /* This path writes a KEYED credit, so it needs wallet_credits to exist.
+       Every caller happens to have ensured it already; depending on that is how
+       a future caller discovers the dependency in production. */
+    await ensureGameSchema(sql);
     const conv = await convertReferral(sql, buyerWallet, REFERRAL_REWARD_ACU);
     if (!conv) return;
-    await creditWallet(sql, conv.referrer_wallet, REFERRAL_REWARD_ACU);
+    /* Keyed on the REFERRED wallet, not the event: the reward is for bringing
+       one paying customer, so it must be payable once per account for ever —
+       which outlives whichever payment happened to trigger it. */
+    await creditWallet(sql, conv.referrer_wallet, REFERRAL_REWARD_ACU, `referral:${buyerWallet}`, `referral reward for ${buyerWallet}`);
     console.log(JSON.stringify({ referralPaid: { referrer: conv.referrer_wallet, code: conv.code, acu: REFERRAL_REWARD_ACU, eventId } }));
     await notify("referral.converted", null, { acu: String(REFERRAL_REWARD_ACU) });
   } catch (e) {
@@ -301,7 +308,9 @@ export default async function handler(req: any, res: any) {
           const walletId = session.metadata?.walletId;
           if (walletId) {
             await ensureGameSchema(sql);
-            await creditWallet(sql, walletId, r.acu);
+            /* Keyed on the Checkout session: one session is one payment, so
+               this credit can be attempted any number of times and land once. */
+            await creditWallet(sql, walletId, r.acu, `topup:${session.id ?? event.id}`, `${r.packageId} top-up`);
             await markWalletPurchased(sql, walletId);   // paid wallets leave tester status forever
             await payReferrer(sql, walletId, event.id);
             await accrueCommission(sql, walletId, gc.paidMinor, event.id, typeof (session as any).payment_intent === "string" ? (session as any).payment_intent : null);
@@ -375,7 +384,7 @@ export default async function handler(req: any, res: any) {
             await accrueCommission(sql, wid, grantCheck((session as any).amount_total, plan.monthlyMinor).paidMinor, event.id, typeof (session as any).payment_intent === "string" ? (session as any).payment_intent : null);
             const gc = grantCheck((session as any).amount_total, plan.monthlyMinor);
             if (plan.monthlyAcu > 0 && gc.grant) {
-              await creditWallet(sql, wid, plan.monthlyAcu);
+              await creditWallet(sql, wid, plan.monthlyAcu, `plan_start:${session.id ?? event.id}`, `${plan.name} first month`);
             } else if (plan.monthlyAcu > 0) {
               console.error(JSON.stringify({ planAcuNotGranted: { planId: plan.id, walletId: wid, reason: gc.reason, eventId: event.id } }));
               await notify("executive.alert", process.env.CONTACT_INBOX || process.env.SMTP_USER || null, {
@@ -415,7 +424,15 @@ export default async function handler(req: any, res: any) {
             if (gc.grant && !firstForInvoice) {
               console.log(JSON.stringify({ renewalAlreadyCredited: { walletId: wid, invoiceId, eventId: event.id, type: event.type } }));
             } else if (gc.grant) {
-              await creditWallet(sql, wid, plan.monthlyAcu);
+              /* Keyed on the INVOICE, not the event: Stripe fires both
+                 invoice.paid and invoice.payment_succeeded for one renewal with
+                 a different event id each, so the event id would let one
+                 renewal credit twice. The claim above already guards this; the
+                 key makes it true in the data rather than only in the control
+                 flow, which is what survives the next edit to this function. */
+              await creditWallet(sql, wid, plan.monthlyAcu,
+                invoiceId ? `renewal:${invoiceId}` : `renewal_event:${event.id}`,
+                `${plan.name} renewal`);
               // A plan switch made outside this codebase only becomes visible
               // here, so the wallet's tier is corrected on the renewal that
               // proves it — otherwise commission would keep using the old tier.

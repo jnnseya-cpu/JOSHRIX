@@ -103,3 +103,22 @@ accounts. Part of each was not.
 | K-03 | Redaction bug caught by its own test | `Authorization: Bearer <jwt>` → the first version removed the label and **left the token**. Fixed |
 | K-04 | Fixtures vs the secret scanner | t32 flagged this test file on six patterns, correctly. Fixtures are assembled at runtime; no credential-shaped literal is committed |
 | K-05 | The nightly review emails | it previously wrote to `security_events` and told nobody; `notify("executive.alert", …)` now fires on critical/high, and the response reports whether it went out |
+
+---
+
+## Cycle 4 — 20 Nov 2026. The wallet credit idempotency key, proven under concurrency.
+
+`creditWallet` was `balance = balance + n`. Every protection against paying
+twice lived in a CALLER. Now the guarantee is in the data: a keyed credit claims
+`wallet_credits.settlement_key` and moves the balance **in one SQL statement**.
+
+Executed against a throwaway PostgreSQL 16 cluster.
+
+| ID | Check | Result |
+|---|---|---|
+| L-01 | First keyed credit | `claimed=1`, balance 0 → 1000 |
+| L-02 | Same key again (a Stripe retry) | `claimed=0`, balance stays 1000 |
+| L-03 | A different payment | `claimed=1`, balance 1500 — dedupe is per key, not per wallet |
+| L-04 | **20 SIMULTANEOUS credits, one key** | exactly **1 claimed, 19 rejected**, final balance **1000**, one credit row |
+| L-05 | The same 20 against the OLD statement | balance **20,000** — the bug was real, not theoretical |
+| L-06 | Credit to a non-existent wallet | `claimed=0` and the key is **not** burned; once the wallet exists the same key credits properly |

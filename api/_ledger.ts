@@ -188,6 +188,34 @@ export async function ensureGameSchema(sql: Sql) {
     email text,
     created_at timestamptz NOT NULL DEFAULT now()
   )`;
+
+  /* ONE SETTLEMENT, ONE CREDIT — FOR EVER.
+   *
+   * `creditWallet` was a bare `balance = balance + n`. Nothing recorded that a
+   * particular payment had already been credited, so every protection against
+   * paying twice lived in the CALLER: the Stripe event claim, the per-invoice
+   * claim, `convertReferral` returning once. Each of those is correct and each
+   * of them is one mistake away from a free month of AI — on 17 Nov 2026 the
+   * webhook's error path released the event claim after the wallet had been
+   * credited, and only the shape of the retry saved it.
+   *
+   * This row is the guarantee itself. A keyed credit INSERTs here and adds to
+   * the balance IN ONE STATEMENT, so the claim and the money cannot disagree
+   * even if the connection dies between them. A second attempt with the same
+   * key hits the primary key, changes nothing, and reports the balance it
+   * already had.
+   *
+   * Keys are namespaced by what settled them — `topup:cs_…`, `renewal:in_…` —
+   * so the table also answers "why does this wallet hold what it holds", which
+   * nothing could answer before. */
+  await sql`CREATE TABLE IF NOT EXISTS wallet_credits (
+    settlement_key text PRIMARY KEY,
+    wallet_id text NOT NULL,
+    acu bigint NOT NULL,
+    reason text,
+    created_at timestamptz NOT NULL DEFAULT now()
+  )`;
+  await sql`CREATE INDEX IF NOT EXISTS wallet_credits_wallet ON wallet_credits (wallet_id, created_at DESC)`;
   // NO FREE AI. The column default used to be 'tester', which made every public
   // signup a tester — the one category entitled to free refills. Existing rows
   // are left exactly as they are (reclassifying live wallets is an admin
@@ -320,9 +348,77 @@ export async function debitWallet(sql: Sql, id: string, cost: number): Promise<n
   return rows.length ? Number(rows[0].balance) : null;
 }
 
-export async function creditWallet(sql: Sql, id: string, amount: number): Promise<number | null> {
-  const rows = (await sql`UPDATE wallets SET balance = balance + ${amount} WHERE id = ${id} RETURNING balance`) as Array<{ balance: number }>;
-  return rows.length ? Number(rows[0].balance) : null;
+/**
+ * Add ACUs to a wallet. With a `key`, AT MOST ONCE, for ever.
+ *
+ * WHY THE KEY IS OPTIONAL rather than required. Two genuinely different things
+ * call this. A SETTLEMENT — a Stripe payment, a subscription renewal, a
+ * referral reward — must produce exactly one credit no matter how many times
+ * the webhook is retried, and passes a key naming what settled it. An
+ * OPERATOR GRANT from /admin, or the refund of a hold this same request placed,
+ * is a deliberate act that is allowed to happen twice if a human does it twice;
+ * forcing a key on those would mean inventing one per click, and an invented
+ * key protects nothing.
+ *
+ * WHY ONE STATEMENT. The claim and the balance change are a single SQL
+ * statement with data-modifying CTEs, so there is no window in which the key is
+ * consumed but the money never arrives, or the reverse. Two statements and a
+ * dropped connection between them is precisely how a customer ends up paying
+ * for ACUs that the ledger believes were already granted.
+ *
+ * The claim is only inserted when the wallet EXISTS — otherwise a credit to a
+ * deleted wallet would burn the key and a later retry against a restored wallet
+ * would silently do nothing.
+ *
+ * Returns the balance after the call (unchanged when the key was already used),
+ * or null when there is no such wallet.
+ */
+export async function creditWallet(
+  sql: Sql, id: string, amount: number, key?: string | null, reason?: string | null,
+): Promise<number | null> {
+  if (!key) {
+    const rows = (await sql`UPDATE wallets SET balance = balance + ${amount} WHERE id = ${id} RETURNING balance`) as Array<{ balance: number }>;
+    return rows.length ? Number(rows[0].balance) : null;
+  }
+
+  const rows = (await sql`
+    WITH target AS (
+      SELECT id FROM wallets WHERE id = ${id}
+    ),
+    claim AS (
+      INSERT INTO wallet_credits (settlement_key, wallet_id, acu, reason)
+      SELECT ${key}, ${id}, ${amount}, ${reason ?? null} FROM target
+      ON CONFLICT (settlement_key) DO NOTHING
+      RETURNING acu
+    ),
+    applied AS (
+      UPDATE wallets SET balance = balance + ${amount}
+       WHERE id = ${id} AND EXISTS (SELECT 1 FROM claim)
+      RETURNING balance
+    )
+    SELECT (SELECT count(*) FROM claim)::int            AS claimed,
+           (SELECT balance FROM applied)                AS new_balance,
+           (SELECT balance FROM wallets WHERE id = ${id}) AS prior_balance
+  `) as Array<{ claimed: number; new_balance: string | number | null; prior_balance: string | number | null }>;
+
+  const row = rows[0];
+  if (!row || row.prior_balance === null || row.prior_balance === undefined) return null;   // no such wallet
+  if (row.claimed === 0) {
+    /* Already settled. Logged rather than silent: a duplicate settlement is
+       normal (Stripe retries) but a FLOOD of them is a symptom. */
+    console.log(JSON.stringify({ walletCreditDuplicate: { walletId: id, key, acu: amount } }));
+    return Number(row.prior_balance);
+  }
+  return Number(row.new_balance ?? row.prior_balance);
+}
+
+/** What a wallet's balance is actually made of — every keyed settlement, newest
+ *  first. Nothing could answer this before; the balance was a number with no
+ *  provenance. */
+export async function walletCreditHistory(sql: Sql, walletId: string, limit = 50) {
+  const n = Math.min(Math.max(limit, 1), 200);
+  return (await sql`SELECT settlement_key, acu, reason, created_at FROM wallet_credits
+    WHERE wallet_id = ${walletId} ORDER BY created_at DESC LIMIT ${n}`) as any[];
 }
 
 /**

@@ -125,10 +125,19 @@ console.log('\none renewal credits once, whichever invoice event arrives');
      switch returns "plan_renewed" long before the handler acts on it, and a
      slice from the return still contains the first-month credit. */
   const renewal = code.slice(code.indexOf('action === "plan_renewed"'));
+  /* Anchored on the CALL, not its argument list. This used to search for
+     `await creditWallet(sql, wid, plan.monthlyAcu)` verbatim, so adding the
+     settlement key on 20 Nov made indexOf return -1 and the ordering check
+     failed while the ordering was perfectly correct. A test that breaks when a
+     parameter is added is pinning the wrong thing. */
+  const creditAt = renewal.indexOf('await creditWallet(');
   t('the claim is checked before creditWallet runs, inside the renewal branch',
-    renewal.indexOf('firstForInvoice') > -1 &&
-    renewal.indexOf('firstForInvoice') < renewal.indexOf('await creditWallet(sql, wid, plan.monthlyAcu)'),
+    renewal.indexOf('firstForInvoice') > -1 && creditAt > -1 &&
+    renewal.indexOf('firstForInvoice') < creditAt,
     'claiming after crediting guards nothing');
+  t('and the renewal credit carries the INVOICE as its settlement key',
+    /creditWallet\(sql, wid, plan\.monthlyAcu,\s*\n\s*invoiceId \? `renewal:\$\{invoiceId\}`/.test(renewal),
+    'the control-flow guard and the data guard must name the same thing');
   t('a second event for the same invoice is logged, not silently dropped',
     /renewalAlreadyCredited/.test(code),
     'a skipped credit must be visible or a real missed grant looks identical');

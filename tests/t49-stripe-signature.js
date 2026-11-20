@@ -274,6 +274,62 @@ const EVENTS = {
       'an operator reading the Stripe dashboard needs to know whether a resend is safe');
   }
 
+  console.log('\nONE SETTLEMENT, ONE CREDIT — FOR EVER');
+  {
+    /* creditWallet was `balance = balance + n`. Every protection against paying
+       twice lived in a CALLER — the event claim, the per-invoice claim,
+       convertReferral returning once — and each of those is one mistake away
+       from a free month of AI. On 17 Nov the webhook's error path released the
+       event claim AFTER the wallet had been credited, and only the shape of the
+       retry saved it.
+       Proven against a real PostgreSQL 16 cluster (evidence-ledger L-01..L-06):
+       20 simultaneous credits with one key produced exactly 1 claim and a
+       balance of 1,000, where the old statement produced 20,000. */
+    const led = fs.readFileSync(path.join(ROOT, 'api/_ledger.ts'), 'utf8');
+    const fn = led.slice(led.indexOf('export async function creditWallet'), led.indexOf('export async function walletCreditHistory'));
+
+    t('the claim and the balance change are ONE statement',
+      /WITH target AS \(/.test(fn) && /INSERT INTO wallet_credits/.test(fn) && /UPDATE wallets SET balance/.test(fn)
+        && (fn.match(/await sql`/g) || []).length === 2,
+      'two statements and a dropped connection between them is how a payment is credited twice');
+    t('the key is the primary key, so a duplicate cannot be inserted',
+      /settlement_key text PRIMARY KEY/.test(led));
+    t('a duplicate changes nothing and reports the balance it already had',
+      /ON CONFLICT \(settlement_key\) DO NOTHING/.test(fn) && /row\.claimed === 0/.test(fn));
+    t('the balance only moves when the claim was won',
+      /EXISTS \(SELECT 1 FROM claim\)/.test(fn),
+      'the UPDATE is conditional on this attempt having inserted the key');
+    t('the claim is only taken when the wallet EXISTS',
+      /SELECT \$\{key\}, \$\{id\}, \$\{amount\}, \$\{reason \?\? null\} FROM target/.test(fn)
+        || /FROM target/.test(fn),
+      'crediting a missing wallet would burn the key and a later retry would silently do nothing');
+    t('a duplicate is logged, not silent', /walletCreditDuplicate/.test(fn));
+    t('and an unkeyed credit still works, because an admin grant is allowed to repeat',
+      /if \(!key\) \{/.test(fn),
+      'forcing a key on a human clicking Grant would mean inventing one per click');
+
+    /* THE KEYS THEMSELVES. Each must name the thing that settled, not the
+       event that happened to carry it. */
+    const hook = fs.readFileSync(path.join(ROOT, 'api/stripe-webhook.ts'), 'utf8');
+    t('a top-up is keyed on the Checkout session', /`topup:\$\{session\.id \?\? event\.id\}`/.test(hook));
+    t('a first subscription month is keyed on its session', /`plan_start:\$\{session\.id \?\? event\.id\}`/.test(hook));
+    t('a renewal is keyed on the INVOICE, not the event',
+      /`renewal:\$\{invoiceId\}`/.test(hook),
+      'Stripe fires two events with different ids for one renewal, so an event key would credit twice');
+    t('a referral reward is keyed on the REFERRED WALLET, not the payment',
+      /`referral:\$\{buyerWallet\}`/.test(hook),
+      'the reward is for bringing one paying customer, so it is once per account for ever');
+    t('every settlement credit in the webhook passes a key',
+      (hook.match(/creditWallet\(sql,[^)]*`/g) || []).length === 4
+        && (hook.match(/creditWallet\(sql/g) || []).length === 4,
+      'an unkeyed credit on a settlement path is the bug coming back');
+    t('and the referral path ensures the table it writes to',
+      /await ensureGameSchema\(sql\);\n    const conv = await convertReferral/.test(hook));
+
+    t('a balance can finally be explained', /export async function walletCreditHistory/.test(led),
+      'before this the balance was a number with no provenance');
+  }
+
   console.log('\nHEALTH TELLS THE TRUTH ABOUT THE DATABASE');
   {
     /* /api/health reported `ledger: true` throughout the outage, because it
