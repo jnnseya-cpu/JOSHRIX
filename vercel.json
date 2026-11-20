@@ -194,6 +194,5 @@
         }
       ]
     }
-  ],
-  "//forge-duration": "FORGE_MAX_SECONDS must stay about 10s BELOW the maxDuration of api/forge-worker.ts (tests/t44 fails if it does not). It now bounds ONE SLICE of a forge, not the whole forge: a run continues across as many worker invocations as it needs, so raising it makes each slice longer, not the run. The '* * * * *' forge-worker cron sweeps jobs whose creator closed the tab; sub-daily cron frequency requires a Vercel plan above Hobby."
+  ]
 }

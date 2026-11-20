@@ -199,6 +199,31 @@ console.log('\nthe run outlives the request, which is what removes the time limi
   t('a slice hands its lease back rather than holding it', /releaseLease/.test(jobs));
   t('the lease is what stops two workers spending twice',
     /lease_until IS NULL OR lease_until < now\(\)/.test(jobs));
+  /* THE KEY THAT COST TWO MONTHS.
+   *
+   * vercel.json carried a "//forge-duration" property as a pseudo-comment. JSON
+   * has no comments, Vercel validates this file against a strict schema, and it
+   * rejected the unknown property — so EVERY deployment from 18 September 2026
+   * failed with "should NOT have additional property `//forge-duration`" and the
+   * site kept serving the last build that worked. Nothing noticed: the suite was
+   * green, CI was green, and nobody looked at Vercel.
+   *
+   * So the file is validated here against the properties Vercel actually
+   * accepts. A note about configuration goes in code, where comments are legal. */
+  {
+    const ALLOWED = new Set(['$schema', 'buildCommand', 'cleanUrls', 'crons', 'devCommand',
+      'env', 'framework', 'functions', 'git', 'github', 'headers', 'ignoreCommand', 'images',
+      'installCommand', 'outputDirectory', 'public', 'redirects', 'regions', 'rewrites',
+      'trailingSlash', 'cleanUrls', 'build', 'routes', 'crons']);
+    const unknown = Object.keys(vercel).filter((k) => !ALLOWED.has(k));
+    t('vercel.json has no property Vercel will reject',
+      unknown.length === 0,
+      `unknown: ${unknown.join(', ')} — this fails the BUILD, and the site then serves the last deployment that worked`);
+    t('and no pseudo-comment keys at any level',
+      !/"(?:\/\/|_comment|#)[^"]*"\s*:/.test(fs.readFileSync(path.join(ROOT, 'vercel.json'), 'utf8')),
+      'JSON has no comments; a note that looks like one is a property');
+  }
+
   t('a cron sweeps jobs whose creator closed the tab',
     (vercel.crons || []).some((c) => c.path === '/api/forge-worker'),
     'without this the promise depends on a browser staying open');

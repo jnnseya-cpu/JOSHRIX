@@ -32,6 +32,18 @@
  * sooner. They cannot make it cost more than they have, and they cannot touch
  * anyone else's.
  */
+
+/* DEPLOYMENT NOTE — this lived in vercel.json as a "//forge-duration" key until
+ * 20 Nov 2026, and it broke every deployment from 18 September onwards.
+ *
+ * JSON has no comments. Vercel validates vercel.json against a strict schema
+ * and rejects any property it does not know, so that one key failed the build
+ * with "should NOT have additional property `//forge-duration`" — and the site
+ * silently kept serving the last deployment that worked, two months old. Notes
+ * about configuration belong in code, which is where this one is now.
+ *
+ * FORGE_MAX_SECONDS must stay about 10s BELOW the maxDuration of api/forge-worker.ts (tests/t44 fails if it does not). It now bounds ONE SLICE of a forge, not the whole forge: a run continues across as many worker invocations as it needs, so raising it makes each slice longer, not the run. The '* * * * *' forge-worker cron sweeps jobs whose creator closed the tab; sub-daily cron frequency requires a Vercel plan above Hobby.
+ */
 import { getDb, ensureGameSchema } from "./_ledger";
 import {
   ensureForgeJobSchema, claimForgeJob, runForgeJobSlice, getForgeJob,
