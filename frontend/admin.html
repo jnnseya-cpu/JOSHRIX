@@ -75,9 +75,18 @@
       if (ok) { try { sessionStorage.setItem('jx.modKey', key); } catch(e){} unlock(); }
       else {
         msg.style.color = '#f87171';
-        msg.textContent = status === 401 ? 'Wrong key.' :
+        /* A 500 used to fall through to "check your connection", so a server
+           that was crashing looked like a network problem and was diagnosed as
+           one. The status is shown now, because the difference between "your
+           wifi" and "the API is throwing" is the difference between waiting and
+           fixing. */
+        msg.textContent =
+          status === 401 ? 'Wrong key.' :
+          status === 403 ? 'That key is not permitted.' :
+          status === 429 ? 'Too many attempts — wait a minute and try again.' :
           status === 503 ? 'Server not fully configured (MODERATION_KEY or database missing).' :
-          'Could not reach the server — check your connection.';
+          status === 0   ? 'Could not reach the server — check your connection.' :
+          'The server returned an error (HTTP ' + status + '). Open /api/health — the "database" section names the cause.';
       }
     });
   }

@@ -273,6 +273,21 @@ function captureLogs(fn) {
       /\^\[0-9a-f\]\{8\}\$/.test(fs.readFileSync(path.join(ROOT, 'api/admin-stats.ts'), 'utf8')));
   }
 
+  console.log('\nA SERVER ERROR MUST NOT LOOK LIKE A NETWORK ERROR');
+  {
+    /* /admin showed "Could not reach the server — check your connection" for
+       ANY status that was not 401 or 503, including 500. So a crashing API read
+       as a wifi problem, and was diagnosed as one. */
+    const admin = fs.readFileSync(path.join(ROOT, 'frontend/admin.html'), 'utf8');
+    t('only a real network failure says "check your connection"',
+      /status === 0\s*\? 'Could not reach the server/.test(admin),
+      'status 0 is fetch failing to reach anything; everything else got a reply');
+    t('any other status reports itself',
+      /The server returned an error \(HTTP ' \+ status/.test(admin));
+    t('and points at the endpoint that names the cause',
+      /api\/health/.test(admin) && /"database" section/.test(admin));
+  }
+
   console.log('\nTHE WATCHMAN ACTUALLY RAISES THE ALARM NOW');
   {
     const sa = fs.readFileSync(path.join(ROOT, 'api/security-agent.ts'), 'utf8');
