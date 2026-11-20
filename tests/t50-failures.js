@@ -222,7 +222,7 @@ function captureLogs(fn) {
         && !/Connection string:\s*(?!<redacted>)\S/i.test(led.getDbError() || ''),
       'the driver appends the whole string to its message, and this is returned by a PUBLIC endpoint: ' + led.getDbError());
     t('and /api/health is immune to a module that fails to load',
-      /await import\("\.\/_gateway"\)/.test(fs.readFileSync(path.join(ROOT, 'api/health.ts'), 'utf8')),
+      /await import\("\.\/_gateway\.js"\)/.test(fs.readFileSync(path.join(ROOT, 'api/health.ts'), 'utf8')),
       'a module-scope import that throws kills the function before any try/catch of ours runs');
 
     led.__setDbForTests(undefined);
@@ -290,6 +290,68 @@ function captureLogs(fn) {
       /The server returned an error \(HTTP ' \+ status/.test(admin));
     t('and points at the endpoint that names the cause',
       /api\/health/.test(admin) && /"database" section/.test(admin));
+  }
+
+  console.log('\nTHE DEPLOYED CODE MUST LOAD IN THE RUNTIME THAT RUNS IT');
+  {
+    /* 20 Nov 2026. The first deployment to succeed since 18 September went live
+       and EVERY function died on its first line:
+         SyntaxError: Cannot use import statement outside a module
+       Vercel emitted ESM .js from tsconfig's `module: "esnext"`, while
+       package.json has no `"type": "module"`, so Node loaded those files as
+       CommonJS. Health, arcade, track, sitemap, the forge worker — all of them.
+       Nothing caught it because the test harness compiles with its OWN settings
+       and requires the result, so it proved CommonJS worked while the
+       deployment was building ESM. Same code, two compilers, one of them
+       untested. */
+    const { execFileSync } = require('child_process');
+    const tsconfig = JSON.parse(fs.readFileSync(path.join(ROOT, 'tsconfig.json'), 'utf8').replace(/^\s*"\/\/"[\s\S]*?\],/m, ''));
+    const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+
+    const mod = String(tsconfig.compilerOptions.module || '').toLowerCase();
+    t('package.json declares no "type": "module", so .js means CommonJS',
+      !pkg.type || pkg.type === 'commonjs', String(pkg.type));
+    t(`tsconfig emits a module format that matches it (${mod})`,
+      ['commonjs', 'node16', 'nodenext'].includes(mod),
+      'esnext/es2022 emit `export default`, which Node refuses to load from a .js file in a CommonJS package');
+
+    /* Asserted by EMITTING, not by reading a setting: the compiler is the only
+       thing that knows what it will produce. */
+    /* Emitted INSIDE the repository, not in /tmp: a handler that statically
+       imports @neondatabase/serverless can only be required from somewhere
+       node_modules resolves, and an emit dir outside the tree fails for that
+       reason alone — which looks exactly like the bug being tested for. */
+    const out = fs.mkdtempSync(path.join(ROOT, '.emitcheck-'));
+    let emitted = true;
+    try {
+      execFileSync('npx', ['tsc', '-p', path.join(ROOT, 'tsconfig.json'), '--noEmit', 'false', '--outDir', out],
+        { cwd: ROOT, stdio: 'pipe' });
+    } catch (e) { emitted = false; }
+    t('the deployed sources compile', emitted);
+
+    if (emitted) {
+      const health = path.join(out, 'api/health.js');
+      const src = fs.readFileSync(health, 'utf8');
+      t('the emitted handler is CommonJS, not ESM',
+        /exports\.default\s*=/.test(src) && !/^\s*export\s+default/m.test(src) && !/^\s*import\s+\{/m.test(src),
+        src.split('\n').slice(0, 3).join(' | '));
+
+      /* The real test: load it the way the serverless runtime does. */
+      let loaded = null, loadErr = null;
+      try { loaded = require(health); } catch (e) { loadErr = e; }
+      t("Node's CommonJS loader accepts it",
+        loadErr === null && typeof (loaded && loaded.default) === 'function',
+        loadErr ? String(loadErr.message).slice(0, 120) : typeof (loaded && loaded.default));
+
+      /* And a handler with STATIC imports, which is where the crash actually
+         showed: health is unusual in importing dynamically. */
+      const arcade = path.join(out, 'api/arcade.js');
+      let arcErr = null;
+      try { require(arcade); } catch (e) { arcErr = e; }
+      t('a statically-importing handler loads too', arcErr === null,
+        arcErr ? String(arcErr.message).slice(0, 120) : 'ok');
+    }
+    fs.rmSync(out, { recursive: true, force: true });
   }
 
   console.log('\nTHE WATCHMAN ACTUALLY RAISES THE ALARM NOW');

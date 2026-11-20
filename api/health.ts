@@ -64,7 +64,7 @@ async function ledgerProbe(
   let sql: any;
   let getDbError: () => string | null = () => null;
   try {
-    const ledgerMod = await import("./_ledger");
+    const ledgerMod = await import("./_ledger.js");
     getDbError = ledgerMod.getDbError;
     /* getDb parses the connection URL. A malformed one throws HERE, before any
        query, and an unguarded throw at this point is what took the whole
@@ -122,8 +122,8 @@ export default async function handler(_req: any, res: any) {
    * is wrapped and the worst case is a 200 that says the check itself failed. */
   try {
     /* Loaded here, not at the top of the file. See the note above. */
-    const gateway = await import("./_gateway");
-    const observe = await import("./_observe");
+    const gateway = await import("./_gateway.js");
+    const observe = await import("./_observe.js");
     const providers = gateway.providerStatus();
     const ready = CHAIN.filter((p) => providers[p as keyof typeof providers]);
     const ledger = await ledgerProbe(observe.classify, observe.redact);
