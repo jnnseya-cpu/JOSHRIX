@@ -10,14 +10,53 @@ import { neon } from "@neondatabase/serverless";
 export type Sql = ReturnType<typeof neon>;
 
 let _sql: Sql | null | undefined;
+let _sqlError: string | null = null;
+
+/**
+ * THIS FUNCTION MUST NEVER THROW, and until 20 Nov 2026 it did.
+ *
+ * `neon(url)` rejects a malformed connection string by throwing. Nearly every
+ * handler calls `getDb()` OUTSIDE its try block — `const sql = getDb()` on the
+ * line before — so a mangled DATABASE_URL did not produce a handled 503, it
+ * crashed the invocation. On Vercel that is FUNCTION_INVOCATION_FAILED: an
+ * HTTP 500 with no log line from this codebase, because no catch of ours ever
+ * ran.
+ *
+ * That is the exact shape of the Stripe outage that began on 17 Nov: every
+ * event answered 500, deterministically, and the handler's own `ledgerError`
+ * line never appeared in the logs because the handler never got that far.
+ *
+ * So a bad URL is now the same as no URL — null, and every caller's existing
+ * `if (!sql) return 503` path handles it — while the reason is kept for
+ * /api/health to report. A platform that answers "no database configured" can
+ * be diagnosed in a minute; one that crashes cannot be diagnosed at all.
+ */
 export function getDb(): Sql | null {
   if (_sql !== undefined) return _sql;
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL || "";
-  _sql = url ? neon(url) : null;
+  if (!url) { _sql = null; return _sql; }
+  try {
+    _sql = neon(url);
+    _sqlError = null;
+  } catch (err: any) {
+    /* Scrubbed here rather than through api/_observe.ts: that module imports
+       this one, and a cycle between the ledger and the failure sink is not
+       worth one shared regex. */
+    _sqlError = String(err?.message ?? err)
+      .replace(/postgres(?:ql)?:\/\/[^\s]*/gi, "postgresql://<redacted>")
+      .slice(0, 300);
+    console.error(JSON.stringify({ databaseUrlInvalid: { detail: _sqlError } }));
+    _sql = null;
+  }
   return _sql;
 }
+
+/** Why `getDb()` returned null, when it was not simply unset. Read by
+ *  /api/health so a malformed URL names itself instead of looking like an
+ *  absent one. */
+export function getDbError(): string | null { return _sqlError; }
 /** test hook — lets the test suite inject a fake sql client */
-export function __setDbForTests(sql: Sql | null | undefined) { _sql = sql; }
+export function __setDbForTests(sql: Sql | null | undefined) { _sql = sql; _sqlError = null; }
 
 let schemaReady = false;
 export async function ensureSchema(sql: Sql) {

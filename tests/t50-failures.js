@@ -196,6 +196,66 @@ function captureLogs(fn) {
       'redaction downstream of the log is no redaction at all');
   }
 
+  console.log('\nA BAD DATABASE_URL IS A 503, NOT A CRASHED FUNCTION');
+  {
+    /* 20 Nov 2026: /api/health returned FUNCTION_INVOCATION_FAILED while it was
+       the one URL being used to diagnose a payment outage. `neon(url)` throws on
+       a malformed connection string, and nearly every handler calls getDb()
+       OUTSIDE its try block — so a mangled DATABASE_URL crashed the invocation
+       instead of producing a handled 503, with no log line from this codebase
+       because no catch of ours ever ran. The same shape as the Stripe webhook
+       returning 500 on every event since 17 Nov. */
+    const led = require('./build/api/_ledger.js');
+    const prev = process.env.DATABASE_URL;
+
+    led.__setDbForTests(undefined);
+    process.env.DATABASE_URL = 'not-a-url';
+    let threw = null, sql;
+    try { sql = led.getDb(); } catch (e) { threw = e; }
+    t('getDb does not throw on a malformed URL', threw === null, String(threw && threw.message).slice(0, 90));
+    t('it returns null, so every `if (!sql) return 503` path handles it', sql === null);
+    t('and it keeps the reason, so the URL can be named as the fault',
+      typeof led.getDbError() === 'string' && /not a valid URL|neon/i.test(led.getDbError()),
+      String(led.getDbError()).slice(0, 90));
+    t('with the connection string scrubbed out of it',
+      !/postgres(ql)?:\/\/[^\s<]/i.test(led.getDbError() || ''),
+      'the reason is returned by a PUBLIC endpoint');
+
+    led.__setDbForTests(undefined);
+    delete process.env.DATABASE_URL;
+    t('an unset URL is still simply null, with no error',
+      led.getDb() === null && led.getDbError() === null,
+      'not configured and misconfigured are different answers');
+
+    /* The endpoint that reports it must survive every one of those states. */
+    const health = require('./build/api/health.js');
+    for (const [name, url] of [['unset', undefined], ['malformed', 'not-a-url'], ['unreachable', 'postgresql://u:p@127.0.0.1:1/none']]) {
+      led.__setDbForTests(undefined);
+      if (url === undefined) delete process.env.DATABASE_URL; else process.env.DATABASE_URL = url;
+      const res = mkRes();
+      let crashed = null;
+      try { await health.default({ method: 'GET', headers: {}, query: {} }, res); } catch (e) { crashed = e; }
+      t(`/api/health answers with a ${name} DATABASE_URL`,
+        crashed === null && res.code === 200, crashed ? String(crashed.message).slice(0, 80) : `HTTP ${res.code}`);
+      if (name !== 'unset') {
+        t(`  …and reports it as unhealthy rather than fine`,
+          res.body.ok === false && res.body.database.reachable === false,
+          JSON.stringify(res.body.database).slice(0, 110));
+      }
+    }
+
+    led.__setDbForTests(undefined);
+    if (prev !== undefined) process.env.DATABASE_URL = prev; else delete process.env.DATABASE_URL;
+
+    const h = fs.readFileSync(path.join(ROOT, 'api/health.ts'), 'utf8');
+    t('the health handler wraps everything, so it can always answer',
+      /the health check itself failed/.test(h),
+      'a health endpoint that can 500 is worse than none');
+    t('the probe clears its timeout, so the race loser cannot become an unhandled rejection',
+      /clearTimeout\(timer\)/.test(h) && /probe\.catch\(\(\) => \{/.test(h),
+      'an unhandled rejection fails the whole invocation on this platform');
+  }
+
   console.log('\nTHE SINK IS SEPARATE FROM THE SECURITY LOG, AND HOLDS NO PERSONAL DATA');
   {
     const ledger = fs.readFileSync(path.join(ROOT, 'api/_ledger.ts'), 'utf8');

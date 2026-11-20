@@ -17,7 +17,7 @@
  * is a different kind of healthy and the operator should be able to see it.
  */
 import { providerStatus, BUILD_ID } from "./_gateway";
-import { getDb } from "./_ledger";
+import { getDb, getDbError } from "./_ledger";
 import { classify, redact } from "./_observe";
 
 /** The forge chain, in the order api/_gateway.ts actually tries it. Kept as a
@@ -47,20 +47,49 @@ const CHAIN = ["gemini", "openai", "anthropic"] as const;
 async function ledgerProbe(): Promise<{ configured: boolean; reachable: boolean | null; ms: number | null; error?: string; category?: string }> {
   const configured = !!(process.env.DATABASE_URL || process.env.POSTGRES_URL);
   if (!configured) return { configured: false, reachable: null, ms: null };
-  const sql = getDb();
-  if (!sql) return { configured: true, reachable: null, ms: null, error: "no client could be created from the configured URL" };
-  const t0 = Date.now();
+
+  let sql: ReturnType<typeof getDb>;
   try {
-    /* Bounded, so a hung connection reports a timeout instead of holding the
-       health check open until the platform kills the function. */
-    await Promise.race([
-      sql`SELECT 1`,
-      new Promise((_, reject) => setTimeout(() => reject(new Error("database probe timed out after 5000ms")), 5_000)),
-    ]);
+    /* getDb parses the connection URL. A malformed one throws HERE, before any
+       query, and an unguarded throw at this point is what took the whole
+       function down on 20 Nov 2026 — a health endpoint that cannot survive a
+       bad DATABASE_URL cannot report a bad DATABASE_URL. */
+    sql = getDb();
+  } catch (err: any) {
+    return { configured: true, reachable: false, ms: null, error: redact(String(err?.message ?? err)).slice(0, 300), category: classify(err) };
+  }
+  if (!sql) {
+    /* Configured but no client: the URL is malformed. getDb() keeps the reason
+       so this reads as "your DATABASE_URL is wrong" rather than "not set". */
+    const why = getDbError();
+    return why
+      ? { configured: true, reachable: false, ms: null, error: why, category: "database" }
+      : { configured: true, reachable: null, ms: null, error: "no client could be created from the configured URL" };
+  }
+
+  const t0 = Date.now();
+  let timer: any = null;
+  try {
+    /* TWO RULES, AND THE FIRST VERSION BROKE BOTH.
+     *
+     * A `Promise.race` leaves the LOSER unsettled. When the query won, the
+     * 5-second timer still fired and rejected a promise nobody was listening
+     * to any more — an unhandled rejection, which on this platform fails the
+     * whole invocation. So the timer is cleared in `finally`, and the query is
+     * given a no-op catch so that a late failure after a timeout cannot
+     * surface the same way. */
+    const probe = sql`SELECT 1`;
+    probe.catch(() => { /* the race loser must never become an unhandled rejection */ });
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error("database probe timed out after 5000ms")), 5_000);
+    });
+    await Promise.race([probe, timeout]);
     return { configured: true, reachable: true, ms: Date.now() - t0 };
   } catch (err: any) {
     const message = redact(String(err?.message ?? err)).slice(0, 300);
     return { configured: true, reachable: false, ms: Date.now() - t0, error: message, category: classify(err) };
+  } finally {
+    if (timer) clearTimeout(timer);
   }
 }
 
@@ -68,34 +97,53 @@ export default async function handler(_req: any, res: any) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Cache-Control", "no-store");
 
-  const providers = providerStatus();
-  const ready = CHAIN.filter((p) => providers[p as keyof typeof providers]);
-  const ledger = await ledgerProbe();
+  /* THIS ENDPOINT MUST ALWAYS ANSWER.
+   *
+   * On 20 Nov 2026 it returned FUNCTION_INVOCATION_FAILED — a 500 from the
+   * platform, not from this code — while it was the one URL being used to
+   * diagnose a payment outage. Whatever else is broken, an operator asking "is
+   * this deployment well" has to get a reply, so everything below the headers
+   * is wrapped and the worst case is a 200 that says the check itself failed. */
+  try {
+    const providers = providerStatus();
+    const ready = CHAIN.filter((p) => providers[p as keyof typeof providers]);
+    const ledger = await ledgerProbe();
 
-  res.status(200).json({
-    /* `ok` stops being true when the database is configured and refusing. A
-       health endpoint that says ok while settlement is failing is worse than no
-       health endpoint. */
-    ok: ledger.reachable !== false,
-    service: "joshrix-studio",
-    build: BUILD_ID,
-    layers: { frontend: "static /frontend", backend: "serverless /api", shared: "shared/contracts.ts" },
-    providers,
-    /* Kept as a boolean for anything that already reads it, but it now means
-       "the database answered", not "a variable is set". */
-    ledger: ledger.reachable === true,
-    database: ledger,
-    moderation: !!process.env.MODERATION_KEY,
-    stripe: { checkout: !!process.env.STRIPE_SECRET_KEY, webhook: !!process.env.STRIPE_WEBHOOK_SECRET },
-    forge: {
-      /** Which provider a forge would try first, or null if none can run. */
-      leadProvider: ready[0] ?? null,
-      /** How many are behind it. 0 means a single vendor outage stops every build. */
-      fallbacks: Math.max(0, ready.length - 1),
-      ready,
-    },
-    mode: ready.length
-      ? "live"
-      : "demo (no AI provider key is set — every build would fall back to the deterministic engine)",
-  });
+    return res.status(200).json({
+      /* `ok` stops being true when the database is configured and refusing. A
+         health endpoint that says ok while settlement is failing is worse than
+         no health endpoint. */
+      ok: ledger.reachable !== false,
+      service: "joshrix-studio",
+      build: BUILD_ID,
+      layers: { frontend: "static /frontend", backend: "serverless /api", shared: "shared/contracts.ts" },
+      providers,
+      /* Kept as a boolean for anything that already reads it, but it now means
+         "the database answered", not "a variable is set". */
+      ledger: ledger.reachable === true,
+      database: ledger,
+      moderation: !!process.env.MODERATION_KEY,
+      stripe: { checkout: !!process.env.STRIPE_SECRET_KEY, webhook: !!process.env.STRIPE_WEBHOOK_SECRET },
+      forge: {
+        /** Which provider a forge would try first, or null if none can run. */
+        leadProvider: ready[0] ?? null,
+        /** How many are behind it. 0 means a single vendor outage stops every build. */
+        fallbacks: Math.max(0, ready.length - 1),
+        ready,
+      },
+      mode: ready.length
+        ? "live"
+        : "demo (no AI provider key is set — every build would fall back to the deterministic engine)",
+    });
+  } catch (err: any) {
+    /* Last resort. Still 200, because the question asked was "are you there"
+       and the answer is yes — with the reason this check could not complete. */
+    return res.status(200).json({
+      ok: false,
+      service: "joshrix-studio",
+      error: "the health check itself failed",
+      detail: redact(String(err?.message ?? err)).slice(0, 300),
+      category: classify(err),
+    });
+  }
 }
