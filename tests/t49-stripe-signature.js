@@ -234,6 +234,77 @@ const EVENTS = {
       routed.amountMinor === topup.priceMinor, `${routed.amountMinor} vs ${topup.priceMinor}`);
   }
 
+  console.log('\nA FAILING SETTLEMENT SAYS WHY, AND NEVER CREDITS TWICE');
+  {
+    /* 17 Nov 2026, 19:16 UTC: this endpoint began returning 500 on every live
+       event and did so 29 times. The 500 itself was correct — a ledger write was
+       failing and Stripe must retry — but the body said only "settlement failed
+       — will retry", so the one place an operator can read a webhook's response
+       without log access, the Stripe dashboard, showed nothing about the cause.
+       These assertions are on the source because the failure needs a database
+       to reproduce and this environment has none; what they pin is the shape of
+       the answer. */
+    const src = fs.readFileSync(path.join(ROOT, 'api/stripe-webhook.ts'), 'utf8');
+
+    t('the 500 body carries a reference and a category',
+      /reference, category, detail/.test(src) && /status\(500\)/.test(src));
+    t('and the detail is redacted before it leaves the building',
+      /redact\(String\(err\?\.message \?\? err\)\)/.test(src),
+      'a Postgres driver puts the connection string in the message when it cannot connect');
+    t('the log line carries the same reference',
+      /ledgerError: \{ reference, category, detail/.test(src));
+
+    /* THE DOUBLE CREDIT. creditAcu is idempotent on the Stripe session;
+       creditWallet is a bare balance increment with no key. So releasing the
+       idempotency claim after the wallet has been credited makes the retry add
+       the ACUs a second time while the credit row silently no-ops. */
+    t('the claim is released ONLY when nothing was written',
+      /if \(!mutated\) \{\s*\n\s*try \{ await unclaimEvent/.test(src),
+      'unclaiming after money has moved turns one payment into two credits');
+    t('every settlement path flags its first write',
+      (src.match(/mutated = true;/g) || []).length >= 7,
+      'credit_acu, marketplace_sale, plan_activated, plan_renewed, plan_ended, refund, founder_pass');
+    t('the renewal path flags the per-invoice claim, not just the credit',
+      /mutated = true;\n            const firstForInvoice/.test(src),
+      'releasing the event claim while the invoice claim survives makes the retry SKIP a paid-for credit');
+    t('a partial settlement alerts a human instead of being silently retried',
+      /PARTIAL SETTLEMENT on Stripe event/.test(src));
+    t('and the body says which of the two situations it is',
+      /safe to retry/.test(src) && /rejected as a duplicate/.test(src),
+      'an operator reading the Stripe dashboard needs to know whether a resend is safe');
+  }
+
+  console.log('\nHEALTH TELLS THE TRUTH ABOUT THE DATABASE');
+  {
+    /* /api/health reported `ledger: true` throughout the outage, because it
+       tested whether an environment VARIABLE was set. The one endpoint whose
+       job is "is this deployment well" could not see the thing that was wrong. */
+    const h = fs.readFileSync(path.join(ROOT, 'api/health.ts'), 'utf8');
+    t('it connects rather than reading an environment variable', /sql`SELECT 1`/.test(h));
+    t('the probe is bounded, so a hung connection cannot hold it open',
+      /probe timed out after/.test(h) && /Promise\.race/.test(h));
+    t('it reports the REASON a connection failed', /category: classify\(err\)/.test(h));
+    t('redacted, because this endpoint is public', /redact\(String\(err\?\.message/.test(h));
+    t('ok stops being true while the database is refusing',
+      /ok: ledger\.reachable !== false/.test(h),
+      'a health endpoint that says ok while settlement is failing is worse than none');
+    t('and it is never cached', /Cache-Control", "no-store/.test(h));
+
+    /* Driven for real: with no DATABASE_URL the probe must report "not
+       configured" rather than claiming the database is reachable. */
+    const health = require('./build/api/health.js');
+    const prev = process.env.DATABASE_URL;
+    delete process.env.DATABASE_URL;
+    const res = mkRes();
+    await health.default({ method: 'GET', headers: {}, query: {} }, res);
+    if (prev !== undefined) process.env.DATABASE_URL = prev;
+    t('with no database configured it says so, and does not claim reachable',
+      res.body.database.configured === false && res.body.database.reachable === null,
+      JSON.stringify(res.body.database));
+    t('and ok stays true, because an unconfigured ledger is not a broken one',
+      res.body.ok === true, JSON.stringify(res.body.ok));
+  }
+
   console.log('\nTHE RECOVERY DRILL REFUSES THE DANGEROUS THING');
   {
     /* tools/restore-drill.mjs points a firehose at a database, so its refusals

@@ -20,8 +20,10 @@ import Stripe from "stripe";
 import { TOPUP_PACKAGES, topupPostings, PLANS, marketplaceSplit, salePostings, effectiveSellerPlan, EARNINGS_CLEARING_DAYS, grantCheck } from "../shared/payments";
 import { REFERRAL_REWARD_ACU, GROWTH, verifiedNetRevenueMinor, commissionMinor } from "../shared/growth";
 import { getDb, ensureSchema, ensureGameSchema, claimEvent, postTx, creditAcu, recordFounder, creditWallet, setWalletPlan, markWalletPurchased, unclaimEvent, claimAcuClawback, clawbackWallet, getListing, grantEntitlement, ensurePayoutSchema, creditEarnings, getWallet, revokeEntitlementByPaymentIntent, reverseEarnings, ensureReferralSchema, convertReferral, referrerForWallet, referralStats,
-  ensureCommissionSchema, commissionEarnedFromCustomer, recordCommission, reverseCommissionForPaymentIntent } from "./_ledger";
+  ensureCommissionSchema, commissionEarnedFromCustomer, recordCommission, reverseCommissionForPaymentIntent,
+  ensureErrorSchema, recordError } from "./_ledger";
 import { notify } from "./_notify";
+import { classify, redact, correlationId } from "./_observe";
 
 // Vercel: disable body parsing so the raw payload is available for verification
 export const config = { api: { bodyParser: false } };
@@ -248,6 +250,21 @@ export default async function handler(req: any, res: any) {
   // Persist to the Postgres ledger when DATABASE_URL is configured
   const sql = getDb();
   let persisted: "yes" | "duplicate" | "no_db" | "error" = "no_db";
+  /* HAS ANY MONEY MOVED YET.
+   *
+   * The catch below used to release the idempotency claim on every failure, so
+   * Stripe's retry would settle the event again from the top. That is correct
+   * only while nothing has been written. Past the first mutation it is a
+   * DOUBLE CREDIT: `creditAcu` is idempotent on the Stripe session, but
+   * `creditWallet` is a bare balance increment with no key, so the retry adds
+   * the ACUs a second time while the credit row silently no-ops — and
+   * `postTx` books a second set of ledger postings for one payment.
+   *
+   * This flag is set immediately before the first write of each path. After
+   * that point a failure keeps the claim, so the retry sees the event as
+   * already settled and stops, and the operator is told that a settlement
+   * finished partially rather than a customer being credited twice. */
+  let mutated = false;
   if (sql) {
     try {
       await ensureSchema(sql);
@@ -273,6 +290,7 @@ export default async function handler(req: any, res: any) {
           if (gc.discounted) {
             console.warn(JSON.stringify({ topupDiscounted: { packageId: r.packageId, paidMinor: gc.paidMinor, listMinor: r.amountMinor, eventId: event.id } }));
           }
+          mutated = true;
           await postTx(sql, "acu_topup", r.ledger.postings, { eventId: event.id, session: session.id ?? "", packageId: r.packageId });
           await creditAcu(sql, {
             stripeSession: session.id ?? event.id, email, packageId: r.packageId, acu: r.acu,
@@ -305,6 +323,7 @@ export default async function handler(req: any, res: any) {
             const split = marketplaceSplit({ grossMinor: priceMinor, method: "card", sellerPlan, hasLineage: false });
             const entitlementId = (session.id ?? event.id) + ":" + listing.id;
             const paymentIntent = typeof (session as any).payment_intent === "string" ? (session as any).payment_intent : null;
+            mutated = true;
             const granted = await grantEntitlement(sql, {
               id: entitlementId,
               gameId: listing.id,
@@ -347,6 +366,7 @@ export default async function handler(req: any, res: any) {
             // bought. The ACUs are the part that costs us provider money, so they
             // follow the money: a £0 first invoice (free trial, 100% coupon)
             // activates the plan but grants no credit.
+            mutated = true;
             await setWalletPlan(sql, wid, plan.id);
             await markWalletPurchased(sql, wid);
             // A subscription is a first payment too — the partner who brought
@@ -383,6 +403,12 @@ export default async function handler(req: any, res: any) {
                with no id cannot be claimed, so it falls back to the event-level
                guard rather than skipping the credit a customer has paid for. */
             const invoiceId = (result as any).invoiceId as string | null;
+            /* The per-invoice claim is itself a WRITE, and it is the first one
+               on this path. If the event-level claim were released after it,
+               the retry would find the invoice already claimed, skip the
+               credit, and the customer would lose a month of ACUs they paid
+               for — the mirror image of the double credit. */
+            mutated = true;
             const firstForInvoice = invoiceId
               ? await claimEvent(sql, `renewal:${invoiceId}`, "renewal_credit", { invoiceId, walletId: wid, eventId: event.id })
               : true;
@@ -415,6 +441,7 @@ export default async function handler(req: any, res: any) {
           const wid = (result as any).walletId as string;
           const why = (result as any).reason as string | undefined;
           await ensureGameSchema(sql);
+          mutated = true;
           await setWalletPlan(sql, wid, "explorer");
           console.log(JSON.stringify({ planEnded: { walletId: wid, reason: why ?? "deleted", eventId: event.id } }));
           await notify("subscription.cancelled", email, {});
@@ -426,6 +453,7 @@ export default async function handler(req: any, res: any) {
           // reverse the revenue in the ledger and flag the operator for ACU clawback
           const amt = Number((result as any).amountMinor ?? 0);
           if (amt > 0) {
+            mutated = true;
             await postTx(sql, "refund_reversal", [
               { account: "gateway_clearing", deltaMinor: -amt },
               { account: "deferred_acu_revenue", deltaMinor: amt },
@@ -487,17 +515,64 @@ export default async function handler(req: any, res: any) {
             ].filter(Boolean).join("; ") + ` (event ${event.id})`,
           });
         } else if (result.ok && (result as any).action === "founder_pass") {
+          mutated = true;
           await recordFounder(sql, { stripeSession: session.id ?? event.id, pass: (result as any).pass, email, amountMinor: (session.amount_total as number) ?? null });
         }
         persisted = "yes";
       }
     } catch (err: any) {
       persisted = "error";
-      console.error(JSON.stringify({ ledgerError: String(err?.message ?? err), eventId: event.id }));
-      // release the idempotency claim and fail LOUDLY so Stripe retries —
-      // a charged customer must never silently lose their credits
-      try { await unclaimEvent(sql, event.id); } catch { /* claim row may not exist */ }
-      return res.status(500).json({ received: false, persisted, error: "settlement failed — will retry" });
+      const reference = correlationId();
+      const category = classify(err);
+      const detail = redact(String(err?.message ?? err)).slice(0, 300);
+
+      console.error(JSON.stringify({
+        ledgerError: { reference, category, detail, eventId: event.id, type: event.type, mutated },
+      }));
+
+      /* Into the failure sink, so it appears in /admin -> What Is Breaking
+         beside everything else — but ONLY when the database is not itself the
+         problem. Writing to Postgres to record that Postgres is refusing adds
+         two doomed queries to every retry and records nothing. */
+      if (category !== "database" && category !== "timeout") {
+        try {
+          await ensureErrorSchema(sql);
+          await recordError(sql, { operation: "stripe.settlement", category, reference, message: `${event.type}: ${detail}` });
+        } catch { /* the sink must never be the reason a settlement answer changes */ }
+      }
+
+      /* Release the claim ONLY if nothing was written. Before the first
+         mutation a retry is a clean re-run; after it, releasing the claim is
+         how one payment becomes two credits. */
+      if (!mutated) {
+        try { await unclaimEvent(sql, event.id); } catch { /* claim row may not exist */ }
+      } else {
+        /* Money moved and then something failed. The claim stands, so Stripe's
+           retry will report `duplicate` and stop — but a human has to look,
+           because the second half of this settlement did not happen. */
+        try {
+          await notify("executive.alert", process.env.CONTACT_INBOX || process.env.SMTP_USER || null, {
+            item: `PARTIAL SETTLEMENT on Stripe event ${event.id} (${event.type}): the ledger was written and then failed with a ${category} error. `
+                + `Reference ${reference}. The idempotency claim was KEPT so the retry cannot credit twice — check this wallet by hand.`,
+          });
+        } catch { /* an alert that fails must not change the response */ }
+      }
+
+      /* THE RESPONSE BODY IS THE DIAGNOSTIC.
+       *
+       * Stripe's dashboard shows this body against every failed attempt, which
+       * makes it the one place an operator can read the cause without access to
+       * the platform's logs. On 17 Nov 2026 this endpoint returned
+       * "settlement failed — will retry" twenty-nine times and said nothing
+       * about why. The message is redacted first: this body leaves the
+       * building. */
+      return res.status(500).json({
+        received: false, persisted, reference, category, detail,
+        mutated,
+        error: mutated
+          ? "settlement was partially applied and has NOT been rolled back — the retry will be rejected as a duplicate"
+          : "settlement failed before anything was written — safe to retry",
+      });
     }
   }
 

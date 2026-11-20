@@ -3,8 +3,57 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-11-17 (ICO registration published; every bold term on the
-legal pages had been invisible)
+Last updated: 2026-11-20 (P0: the Stripe webhook has returned 500 on every live
+event since 17 Nov — cause not yet identified, diagnosis made one click)
+
+---
+
+## P0 — THE STRIPE WEBHOOK HAS BEEN FAILING SINCE 17 NOV
+
+Stripe's own failure notice, forwarded 20 Nov: 29 live events, all HTTP 500,
+first at **17 Nov 19:16:17 UTC**. Stripe stops retrying **26 Nov 19:16 UTC**.
+Full record in `launch-audit/incident-2026-11-17-webhook-500.md`.
+
+**The 500 is deliberate and was correct.** The signature verified, the event
+routed, and the ledger write failed — at which point the handler returns 500 so
+Stripe retries rather than treating a payment as settled. Every one of those 29
+events is a real payment that produced no ACUs.
+
+**The cause has NOT been identified.** This environment cannot reach
+joshrix.com or Neon, so the live error cannot be read from here. What was fixed
+is everything that made it undiagnosable:
+
+- **The 500 body said nothing** — twenty-nine times it returned "settlement
+  failed — will retry". Stripe's dashboard shows a webhook's response body
+  against every attempt, which makes it the only place an operator can read a
+  cause without log access. It now carries the category, a redacted detail, a
+  reference, and whether anything had been written.
+- **`/api/health` said `ledger: true` throughout.** It tested whether an
+  environment variable was SET. It connects now — one bounded `SELECT 1` — and
+  reports the reason and category when it fails. `ok` is no longer true while
+  the database is refusing.
+- **A retry could have credited twice.** The catch released the idempotency
+  claim on every failure. That is right only before the first write:
+  `creditAcu` is idempotent on the Stripe session, but `creditWallet` is a bare
+  balance increment with no key, so releasing the claim after the wallet was
+  credited meant the retry added the ACUs again while the credit row silently
+  no-opped. Every settlement path now flags its first write — including the
+  renewal path's per-invoice claim, where releasing the event claim while that
+  one survived would make the retry SKIP a credit the customer paid for.
+
+**Justin's next step is one URL.** `https://www.joshrix.com/api/health` once
+this deploys: the `database` block says reachable or not, and why. Then resend
+the failed events from the Stripe dashboard — safe, because `claimEvent` dedupes
+on the event id.
+
+**Recorded, not done:** `creditWallet` still has no idempotency key of its own.
+The claim flag makes the retry path safe; giving wallet credits a settlement key
+is the real fix, and it is a schema change to a money table rather than
+something to fold into an incident patch at speed.
+
+**Also noted:** the Stripe account is **JNN Global Ltd**. That is evidence on the
+open question from 17 Nov about which legal entity holds the ICO registration —
+see `shared/legal.ts`. Still Justin's call, not changed unilaterally.
 
 ---
 
