@@ -1,5 +1,14 @@
 # INCIDENT — Stripe webhook returning 500 on every live event
 
+> **RESOLVED 20 Nov 2026.** `/api/health` returns `ok: true`, `database.reachable: true`
+> (399 ms), `build: adfc657`, `mode: live`. The cause was NOT the database — Neon was
+> healthy throughout. Two faults stacked: `vercel.json` carried a `//forge-duration`
+> pseudo-comment that failed schema validation, so **every deployment since 18
+> September failed** and the site served 11 September code; and once that was fixed,
+> Vercel emitted ESM `.js` against a CommonJS `package.json`, so **every function
+> crashed at import**. The webhook was never reached. Remaining action: resend the 29
+> failed events from the Stripe dashboard before **26 Nov 19:16 UTC**.
+
 **Opened:** 20 Nov 2026, from Stripe's own failure notice.
 **Started:** 17 Nov 2026, 19:16:17 UTC (first failure, per Stripe).
 **Scope:** 29 live events, all HTTP 500. Stripe stops retrying **26 Nov 2026, 19:16 UTC**.

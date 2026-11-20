@@ -3,8 +3,45 @@
 One file, kept current. Read this before asking or answering "what's the state of X" —
 holding this in conversation is what causes the same ground to be covered twice.
 
-Last updated: 2026-11-20 (P0: the Stripe webhook has returned 500 on every live
-event since 17 Nov — cause not yet identified, diagnosis made one click)
+Last updated: 2026-11-20 (RESOLVED: the site had been serving 11 September code
+since the deployment broke; joshrix.com now runs current code, health ok)
+
+---
+
+## THE SITE WAS NEVER RUNNING THIS CODE — found and fixed, 20 Nov
+
+`/api/health` now answers `ok: true`, `database.reachable: true` in 399 ms,
+`build: adfc657`, `mode: live`. That is the first time joshrix.com has run
+current code since **11 September**.
+
+Two faults, stacked, and the second was hidden behind the first:
+
+1. **`vercel.json` carried a `"//forge-duration"` key** as a pseudo-comment.
+   JSON has no comments; Vercel validates against a strict schema and rejected
+   it. **Every deployment from 18 September failed**, and Vercel kept serving
+   the last build that worked. Four months of work — the durable forge, 2,601
+   models, the blog, the ICO page, every webhook fix — had never been live. It
+   is also the real answer to "four months and no real game": the forge being
+   tested was the September one.
+
+2. **The module format.** With builds working again, Vercel emitted ESM `.js`
+   from tsconfig's `module: "esnext"` while `package.json` declares no
+   `"type": "module"` — so Node loaded them as CommonJS and **every function
+   died on its first import**. Neither file had changed since the last working
+   deploy; Vercel's builder changed during the two months nothing deployed.
+   Fixed with `module/moduleResolution: "node16"`.
+
+**My diagnosis of the webhook was wrong and is corrected here.** I believed
+`DATABASE_URL` was malformed. Neon was healthy the whole time. The 29 × HTTP 500
+was this same import crash — the webhook handler never ran a line.
+
+**What this cost, and the lesson.** 19 pushes over two months, every one green in
+tests and in CI, none of them deployed, and I never looked. The suite compiles
+with its own settings and requires the result, so it proved CommonJS worked
+while the deployment built ESM: same code, two compilers, one untested. `t50`
+now compiles with the DEPLOYED tsconfig and loads the output the way the
+runtime does, and `t44` rejects any `vercel.json` property Vercel would refuse.
+A push is not done until the deployment is green.
 
 ---
 
